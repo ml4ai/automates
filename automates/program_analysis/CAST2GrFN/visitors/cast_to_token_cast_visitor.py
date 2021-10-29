@@ -57,9 +57,10 @@ class CASTToTokenCASTVisitor(CASTVisitor):
     a giant string composed of lisp-like expressions (i.e. parenthesized s-expressions) like
         "(add 1 2)"
 
-    The visitors follow a general pattern of:
-        - Visit the node's children to generate their tokenized CAST
-        - Add the current node's tokenized CAST information along with their children
+    The visitors use a depth-first traversal to generate the tokenized CAST
+    and they follow a general pattern of:
+        - Visiting the node's children to generate their tokenized CAST
+        - Adding the current node's tokenized CAST information along with their children
           to create the token CAST for this node (as a string) and return it.
     
     A couple of maps are generated while visiting the CAST and are 
