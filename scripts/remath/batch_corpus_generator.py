@@ -199,7 +199,8 @@ def try_compile(config: Config, src_filepath: str):
 
     dst_filepath = os.path.splitext(src_filepath)[0] + binary_postfix
 
-    command_list = [config.gcc, f'-fplugin={config.gcc_plugin_filepath}', '-O0', src_filepath, '-o', dst_filepath]
+    command_list = [config.gcc, f'-fplugin={config.gcc_plugin_filepath}', '-C', '-x', 'c', '-O0', src_filepath, '-o', dst_filepath]
+    print(command_list)
 
     result = subprocess.run(command_list, stdout=subprocess.PIPE)
 
@@ -234,7 +235,6 @@ def try_generate(config: Config, i: int, sig_digits: int):
 
         if result != 0:
             success = False
-            continue
 
         if attempt >= config.total_attempts:
             keep_going = False
@@ -256,7 +256,7 @@ def main():
                  config.ghidra_instructions_root,
                  config.corpus_input_tokens_root,
                  config.corpus_output_tokens_root):
-    Path(path).mkdir(parents=True, exist_ok=False)
+        Path(path).mkdir(parents=True, exist_ok=False)
 
     for i in range(config.num_samples):
         try_generate(config=config, i=i, sig_digits=len(str(config.num_samples)))
