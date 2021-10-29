@@ -7,6 +7,7 @@ import uuid
 import platform
 import subprocess
 import gen_c_prog
+from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 
 
 @dataclass
@@ -216,8 +217,15 @@ def try_compile(config: Config, src_filepath: str):
     return result, dst_filepath
 
 
-def try_execute(bin_filepath: str):
-    pass
+def gcc_ast_to_cast(filename_base: str, verbose_p: bool = False):
+    ast_filename = filename_base + '_gcc_ast.json'
+    ast_json = json.load(open(ast_filename))
+    if verbose_p:
+        print("Translate GCC AST into CAST:")
+    cast = GCC2CAST([ast_json]).to_cast()
+    cast_filename = filename_base + '--CAST.json'
+    json.dump(cast.to_json_object(), open(cast_filename, "w"))
+    return cast_filename
 
 
 def log_failure(filename_c:str, reason: str):
@@ -228,7 +236,7 @@ def log_failure(filename_c:str, reason: str):
 def try_generate(config: Config, i: int, sig_digits: int):
     num_str = f'{i}'.zfill(sig_digits)
     filename_base = f'{config.base_name}_{num_str}'
-    filename_c = filename_base + '.c'
+    filename_src = filename_base + '.c'
 
     attempt = 0
     keep_going = True
@@ -251,30 +259,34 @@ def try_generate(config: Config, i: int, sig_digits: int):
         filename_uuid_c = filename_base_uuid + '.c'
 
         # generate candidate source code
-        gen_c_prog.gen_prog(filename_c)  # filepath_uuid_c)
+        gen_c_prog.gen_prog(filename_src)  # filepath_uuid_c)
 
         # compile candidate
-        result, bin_filepath = try_compile(config=config, src_filepath=filename_c)  # filepath_uuid_c)
+        result, bin_filename = try_compile(config=config, src_filepath=filename_src)  # filepath_uuid_c)
 
         if result.returncode != 0:
             print(f'FAILURE - COMPILE - {result.returncode}')
-            log_failure(filename_c, f'compilation return {result}')
-            subprocess.call(['cp ' + filename_c + ' ' + filename_uuid_c])
+            log_failure(filename_src, f'compilation return {result}')
+            subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
 
         # execute_candidate
-        result = subprocess.run([f'./{bin_filepath}'], stdout=subprocess.PIPE)
+        result = subprocess.run([f'./{bin_filename}'], stdout=subprocess.PIPE)
 
         if result.returncode != 0:
             print(f'FAILURE - EXECUTE - {result.returncode}')
-            log_failure(filename_c, f'execution return {result.returncode}')
-            subprocess.call(['cp ' + filename_c + ' ' + filename_uuid_c])
+            log_failure(filename_src, f'execution return {result.returncode}')
+            subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
 
+        # gcc ast to CAST
+        cast_filename = gcc_ast_to_cast(filename_base)
+
         # run Ghidra
+        ghidra_instructions_filename = bin_filename + '-instructions.txt'
         command_list = \
             [ghidra_command, ghidra_project_dir, ghidra_project_name,
-             '-import', bin_filepath,
+             '-import', bin_filename,
              '-scriptPath', config.ghidra_script_root,
              '-postScript', config.ghidra_script_filename,
              '-deleteProject']
@@ -282,8 +294,8 @@ def try_generate(config: Config, i: int, sig_digits: int):
 
         if result.returncode != 0:
             print(f'FAILURE - GHIDRA - {result.returncode}')
-            log_failure(filename_c, f'ghidra return {result.returncode}')
-            subprocess.call(['cp ' + filename_c + ' ' + filename_uuid_c])
+            log_failure(filename_src, f'ghidra return {result.returncode}')
+            subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
 
         # tokenize CAST
@@ -295,7 +307,12 @@ def try_generate(config: Config, i: int, sig_digits: int):
         keep_going = False  # could also just break...
 
     if success:
-        # copy files to respective locations
+        # copy files to respective locations:
+        # filename_src
+        # bin_filename
+        # TODO: gcc_ast_filename
+        # cast_filename
+        # ghidra_instructions_filename
         print('Success')
     else:
         raise Exception(f"ERROR try_generate(): failed to generate a viable program after {attempt} tries.")
