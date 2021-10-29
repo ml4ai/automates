@@ -1,4 +1,5 @@
 import sys
+import argparse
 
 from automates.program_analysis.CAST2GrFN.visitors.cast_to_token_cast_visitor import (
     CASTToTokenCASTVisitor,
@@ -19,7 +20,24 @@ def main():
     """
 
     # Open the CAST json and load it as a Python object
-    f_name = sys.argv[1]
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "-f", "--file", type=str, help="CAST JSON input file"
+    )
+
+    parser.add_argument(
+        "-d", "--directory", type=str, help="A directory to store files to", default="."
+    )
+
+    args = parser.parse_args()
+
+    if args.file == None:
+        print("USAGE: python cast_to_token_cast.py -f <file_name> [-d <directory_name>]")
+        sys.exit()
+
+    f_name = args.file
+
     file_contents = open(f_name).read()
     C = CAST([], "c")
     C2 = C.from_json_str(file_contents)
@@ -28,7 +46,12 @@ def main():
 
     last_slash_idx = f_name.rfind("/")
     file_ending_idx = f_name.rfind(".")
-    token_file_name = f"{f_name[last_slash_idx + 1 : file_ending_idx]}.tcast"
+
+    dir_name = args.directory
+    if dir_name.endswith('/'):
+        dir_name = dir_name[0:-1]
+
+    token_file_name = f"{dir_name}/{f_name[last_slash_idx + 1 : file_ending_idx]}.tcast"
     V.tokenize(token_file_name)
     
 if __name__ == "__main__":
