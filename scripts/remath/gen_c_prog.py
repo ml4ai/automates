@@ -589,6 +589,12 @@ def sample_expr_tree_debug(num_ops):
 #
 # -----------------------------------------------------------------------------
 
+def gen_prog(filepath: str):
+    prog_str = sample_program_str()
+    with open(filepath, 'w') as fout:
+        fout.write(prog_str)
+
+
 def gen_prog_batch(n=1, root_dir='', base_name='expr_', verbose_p=False):
     # Don't allow if directory already exists: exist_ok=False
     Path(root_dir).mkdir(parents=True, exist_ok=False)
@@ -599,9 +605,7 @@ def gen_prog_batch(n=1, root_dir='', base_name='expr_', verbose_p=False):
         filepath = os.path.join(root_dir, filename)
         if verbose_p:
             print(f'[{i}] generating program {filepath}')
-        prog_str = sample_program_str()
-        with open(filepath, 'w') as fout:
-            fout.write(prog_str)
+        gen_prog(filepath)
 
 
 def main():
