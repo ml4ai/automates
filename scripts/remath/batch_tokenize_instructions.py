@@ -143,10 +143,11 @@ def parse_hex_float_value(hex, size):
 
 
 def parse_hex_value(value, size=None):
-    if size:
-        return ':interpreted_hex', value, int(value, 16), size
-    else:
-        return ':raw_hex', value
+    return ':interpreted_hex', value, int(value, 16), size
+    # if size:
+    #     return ':interpreted_hex', value, int(value, 16), size
+    # else:
+    #     return ':raw_hex', value, int(value, 16), 'unknown'
 
 
 def parse_metadata(metadata: str):
@@ -270,10 +271,13 @@ class Function:
                                 tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=metadata))
                     else:
                         value = parse_hex_value(elm, size=ptr_size)
-                        if ptr_size:
-                            tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=value))
-                        else:
-                            tokens.append(self.instr_set.token_map_val_other.get_token(elm))
+                        tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=value))
+
+                        # CTM 2021-10-28: for now, interpret all values as val, not val_other
+                        # if ptr_size:
+                        #     tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=value))
+                        # else:
+                        #     tokens.append(self.instr_set.token_map_val_other.get_token(elm))
                 # Address ptr
                 elif ' ptr ' in elm:
                     ptr_size = elm.split(' ')[0]
@@ -292,6 +296,16 @@ class Function:
                             tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=value))
                     else:
                         tokens.append(self.instr_set.token_map_address.get_token(elm))
+                elif elm.startswith('[') and elm.endswith(']'):
+                    clause = elm[1:-1].split(' ')
+                    tokens.append('[')
+                    for celm in clause:
+                        if celm.startswith('0x') or celm.startswith('-0x'):
+                            value = parse_hex_value(celm, size=ptr_size)
+                            tokens.append(self.instr_set.token_map_val.get_token(celm, metadata=value))
+                        else:
+                            tokens.append(celm)
+                    tokens.append(']')
                 else:
                     # Does not appear to be a special value reference, to use elm as token
                     tokens.append(elm)
