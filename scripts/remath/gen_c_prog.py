@@ -1,14 +1,21 @@
 import os
-# from pathlib import Path
+from pathlib import Path
 import random
 from typing import Set, List, Dict, Tuple
 from dataclasses import dataclass
 
 """
-ASSUMPTIONS:
+ASSUMPTIONS / OBSERVATIONS:
 (1) Not using 'long double' type for now
     Doing so leads to binary handling of long double data that Ghidra 
       does not appear to be able to recover 
+(2) GCC DOES indeed pre-compute values when (primitive?) operators only
+    involve literal values.
+    GCC appears to NOT do this when at least one of the literal values
+    is passed via a variable.
+    For this reason, will introduce at least one literal-assigned variable
+    for any operator (that is not otherwise fn of 
+        See: expr_00.c
 """
 
 
@@ -365,7 +372,7 @@ class ExprSeqSample:
         print('<<<<<<< DONE')
 
 
-def sample_expr_seq():
+def sample_program_str():
     var_gen = VarGen()
     expr_seq = ExprSeqSample(params=EXAMPLE_PARAMS, var_gen=var_gen)
     expr_seq.sample(verbose_p=False)
@@ -376,15 +383,16 @@ def sample_expr_seq():
 
     expr_seq.backward_propagate_ground_type_choices()
 
-    # create literal variables for some unassigned indices
-    # reuse some literal variables
+    # TODO: create literal variables for at least one of any binary fn that has unassigned values
+    # TODO: reuse some literal variables
+
     # finally, inline assign literals to all remaining unassigned indices
     expr_seq.assign_literals()
 
     # expr_seq.print(header='\n -------- Final Expressions:')
 
     # print()
-    print(expr_seq.to_program_str())
+    return expr_seq.to_program_str()
 
 
 # -----------------------------------------------------------------------------
@@ -540,6 +548,7 @@ class ExprTreeSample:
         print(f'value_assignments:  {self.value_assignments}')
 
 
+"""
 def test_expr_tree_sample_1():
     num_ops = 5  # TODO: make this a random variable
     expr = ExprTreeSample(num_ops=num_ops)
@@ -561,9 +570,10 @@ def test_expr_tree_sample_1():
     print('-- 3')
     expr.add_op_at(index=1, op='op4', return_type='op4.long', arg_types=('op4.int1', 'op4.long2'), verbose_p=True)
     expr.print()
+"""
 
 
-def sample_expr_tree(num_ops):
+def sample_expr_tree_debug(num_ops):
     expr = ExprTreeSample(num_ops=num_ops)
     expr.sample()
     expr.print(header='\n-- 0: sample')
@@ -579,30 +589,27 @@ def sample_expr_tree(num_ops):
 #
 # -----------------------------------------------------------------------------
 
-def gen_prog() -> str:
-    return ''
-
-
-def gen_prog_batch(n=1):
-    root_dir = 'sample_expressions'
-    # TODO
-    # Path(root_dir).mkdir(parents=True, exist_ok=True)
+def gen_prog_batch(n=1, root_dir='', base_name='expr_', verbose_p=False):
+    # Don't allow if directory already exists: exist_ok=False
+    Path(root_dir).mkdir(parents=True, exist_ok=False)
     for i in range(n):
         sig_digits = len(str(n))
-        filename = f'source_{i}.c'.zfill(sig_digits)
+        num_str = f'{i}'.zfill(sig_digits)
+        filename = f'{base_name}{num_str}.c'
         filepath = os.path.join(root_dir, filename)
-        prog_str = gen_prog()
+        if verbose_p:
+            print(f'[{i}] generating program {filepath}')
+        prog_str = sample_program_str()
         with open(filepath, 'w') as fout:
             fout.write(prog_str)
 
 
 def main():
     gen_prog_batch(n=1)
-    x = ((((14 - (-10 % 16)) & 63) ^ -91) - (((5.849503665497089 - -5.358216134466982) * 9.065075755655059) / -0.6929482786805892))
 
 
 if __name__ == "__main__":
-    sample_expr_seq()
+    main()
     # sample_expr_tree(8)
     # test_expr_tree_sample_1()
     # main()
