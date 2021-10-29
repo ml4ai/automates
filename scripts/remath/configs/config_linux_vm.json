@@ -1,0 +1,19 @@
+{
+  "corpus_root": "corpus_v1",
+  "num_samples": 20,
+  "total_attempts": 1,
+  "base_name": "expr_v1_",
+
+  "gcc": "/usr/local/gcc-10.1.0/bin/gcc-10.1",
+  "gcc_plugin_filepath": "/home/claytonm/repository/automates/automates/program_analysis/gcc_plugin/plugin/ast_dump.so",
+  "ghidra_root": "/home/claytonm/ghidra/ghidra_10.0.4_PUBLIC",
+  "ghidra_script_filepath": "/home/claytonm/repository/automates/scripts/ghidra/DumpInstructionsByFunction.py",
+
+  "stage_root_name": "stage",
+  "src_root_name": "src",
+  "bin_root_name": "bin",
+  "cast_root_name": "CAST",
+  "ghidra_instructions_root_name": "ghidra",
+  "corpus_input_tokens_root_name": "tokens_input",
+  "corpus_output_tokens_root_name": "tokens_output",
+}
