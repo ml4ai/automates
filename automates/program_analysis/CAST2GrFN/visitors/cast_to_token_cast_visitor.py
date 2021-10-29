@@ -266,10 +266,9 @@ class CASTToTokenCASTVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: Name):
-        """Visits a Name node. We check to see if this Name node
-        belongs to a class. In which case it's being called as an
-        init(), and add this node's name to the graph accordingly,
-        and return the UID of this node."""
+        """Visits a Name node. As of now, the name nodes belong
+        to variables, so we check to see if the variable is in the 
+        variable map and return a variable identifier accordingly."""
         if node.name not in self.var_map:
             self.var_map.append(node.name)
 
@@ -279,8 +278,8 @@ class CASTToTokenCASTVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: Number):
-        """Visits a Number node. We add this node's numeric value to the
-        graph and return the UID of this node."""
+        """Visits a Number node. The node's numeric value is stored in the
+        value map and a value identifier returned as a token CAST."""
         if node.number not in self.val_map:
             self.val_map.append(node.number)
 
