@@ -148,7 +148,7 @@ class CASTToTokenCASTVisitor(CASTVisitor):
         left = self.visit(node.left)
         right = self.visit(node.right)
 
-        to_ret = f"(assign {left} {right})"
+        to_ret = f"( assign {left} {right} )"
         return to_ret
 
     @visit.register
@@ -164,7 +164,7 @@ class CASTToTokenCASTVisitor(CASTVisitor):
         left = self.visit(node.left)
         right = self.visit(node.right)
 
-        return f"({node.op} {left} {right})"
+        return f"( {node.op} {left} {right} )"
 
     @visit.register
     def _(self, node: Boolean):
@@ -186,7 +186,7 @@ class CASTToTokenCASTVisitor(CASTVisitor):
 
         func_args = " ".join(args)
 
-        return f"(call {node.func.name} {func_args})"
+        return f"( call {node.func.name} {func_args} )"
 
     @visit.register
     def _(self, node: ClassDef):
@@ -219,7 +219,7 @@ class CASTToTokenCASTVisitor(CASTVisitor):
 
         func_body = " ".join(body_nodes)
 
-        return f"({node.name} {func_body})"
+        return f"( {node.name} {func_body} )"
 
     @visit.register
     def _(self, node: List):
@@ -257,7 +257,7 @@ class CASTToTokenCASTVisitor(CASTVisitor):
         value of the return is visited, and we use its token CAST
         to generate the return's token CAST string."""
         val = self.visit(node.value)
-        return f"(return {val})"
+        return f"( return {val} )"
 
     @visit.register
     def _(self, node: Module):
