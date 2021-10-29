@@ -12,6 +12,10 @@ rules:
       [chunk='B-NP' & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]
       |
       [tag = "NNP" & entity = LOCATION]+
+      |
+      [chunk = 'B-INTJ']
+      |
+      [chunk = 'I-INTJ' & tag = /FW|^N/]
       # note: last rule added to deal with the cases like "Hong Kong"
       #todo: can we add parens in avoid without making it invisible in rules?
 

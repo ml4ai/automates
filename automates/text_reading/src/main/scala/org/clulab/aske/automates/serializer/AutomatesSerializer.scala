@@ -41,6 +41,7 @@ object AutomatesJSONSerializer {
     val menType = mentionComponents("type").str
     val attachments = new ArrayBuffer[Attachment]
 
+
     if (mentionComponents.obj.contains("attachments")) {
       val attObjArray = mentionComponents("attachments").arr
       for (ao <- attObjArray) {
@@ -152,7 +153,7 @@ object AutomatesJSONSerializer {
   def toAttachment(json: ujson.Value): Attachment = {
     val attType = json("attType").str
     val toReturn = attType match {
-      case "MentionLocation" => new MentionLocationAttachment(json("pageNum").num.toInt, json("blockIdx").num.toInt, attType)
+      case "MentionLocation" => new MentionLocationAttachment(json("pageNum").arr.map(_.num.toInt), json("blockIdx").arr.map(_.num.toInt), attType)
       case "DiscontinuousCharOffset" => new DiscontinuousCharOffsetAttachment(json("charOffsets").arr.map(v => (v.arr.head.num.toInt, v.arr.last.num.toInt)), attType)
       case "ParamSetAtt" => new ParamSetAttachment(json("attachedTo").str, attType)
       case "ParamSettingIntervalAtt" => {
@@ -192,6 +193,7 @@ object AutomatesJSONSerializer {
     val sentences = docComponents("sentences").arr.map(toSentence(_)).toArray
     val doc = Document(sentences)
     doc.text = Some(docComponents("text").str)
+    doc.id = Some(docComponents("id").str)
     doc
   }
 

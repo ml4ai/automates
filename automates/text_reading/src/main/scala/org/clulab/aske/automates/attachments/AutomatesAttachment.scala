@@ -13,7 +13,7 @@ abstract class AutomatesAttachment extends Attachment with Serializable {
 
 }
 
-class MentionLocationAttachment(pageNum: Int, blockIdx: Int, attType: String) extends AutomatesAttachment {
+class MentionLocationAttachment(pageNum: Seq[Int], blockIdx: Seq[Int], attType: String) extends AutomatesAttachment {
 
   override def toJson: JsValue =  Json.obj(
     "pageNum" -> pageNum,
