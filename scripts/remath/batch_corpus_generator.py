@@ -1,15 +1,17 @@
+from typing import List
 import sys
-from dataclasses import dataclass
-import json
 import os
-import shutil
-from pathlib import Path
+import json
 import uuid
 import platform
 import subprocess
+from pathlib import Path
+from dataclasses import dataclass, field
+import timeit
+
 import gen_c_prog
-from batch_tokenize_instructions import TokenSet, extract_tokens_from_instr_file
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
+from batch_tokenize_instructions import TokenSet, extract_tokens_from_instr_file
 
 
 CTTC_SCRIPT = '../../cast_to_token_cast.py'
@@ -42,6 +44,8 @@ class Config:
     corpus_input_tokens_root: str = ''
     corpus_output_tokens_root_name: str = ''  # tCAST
     corpus_output_tokens_root: str = ''
+
+    iteration_times: List[float] = field(default_factory=list)
 
 
 # -----------------------------------------------------------------------------
@@ -244,10 +248,14 @@ def finalize(config: Config, token_set: TokenSet):
     with open(token_set_summary_filepath, 'w') as fout:
         sys.stdout = fout
         token_set.print()
+        print(config.iteration_times)
         sys.stdout = original_stdout
 
 
 def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
+
+    time_start = timeit.default_timer()
+
     num_str = f'{i}'.zfill(sig_digits)
     filename_base = f'{config.base_name}_{num_str}'
     filename_src = filename_base + '.c'
@@ -350,7 +358,18 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
         with open('counter.txt', 'w') as counter_file:
             counter_file.write(f'{i}, {sig_digits}')
         print('Success')
+
+        time_end = timeit.default_timer()
+        time_elapsed = time_end - time_start
+        with open('iteration_times.txt', 'a') as it_file:
+            it_file.write(f'{time_elapsed} ')
+        config.iteration_times.append(time_elapsed)
     else:
+        time_end = timeit.default_timer()
+        time_elapsed = time_end - time_start
+        with open('iteration_times.txt', 'a') as it_file:
+            it_file.write(f'{time_elapsed} ')
+        config.iteration_times.append(time_elapsed)
         finalize(config, token_set)  # save current token_set before bailing
         raise Exception(f"ERROR try_generate(): failed to generate a viable program after {attempt} tries.")
 
