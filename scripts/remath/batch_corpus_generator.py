@@ -305,6 +305,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         if result.returncode != 0:
             print(f'FAILURE - COMPILE - {result.returncode}')
             print(f'CWD: {os.getcwd()}')
+            print(f'listdir: {os.listdir()}')
             log_failure(filename_src, f'compilation return {result}')
             subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
@@ -315,6 +316,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         if result.returncode != 0:
             print(f'FAILURE - EXECUTE - {result.returncode}')
             print(f'CWD: {os.getcwd()}')
+            print(f'listdir: {os.listdir()}')
             log_failure(filename_src, f'execution return {result.returncode}')
             subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
@@ -334,6 +336,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
 
         if result.returncode != 0:
             print(f'CWD: {os.getcwd()}')
+            print(f'listdir: {os.listdir()}')
             print(f'FAILURE - GHIDRA - {result.returncode}')
             log_failure(filename_src, f'ghidra return {result.returncode}')
             subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
@@ -345,6 +348,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
 
         if result.returncode != 0:
             print(f'CWD: {os.getcwd()}')
+            print(f'listdir: {os.listdir()}')
             print(f'FAILURE - cast_to_token_cast.py - {result.returncode}')
             log_failure(filename_src, f'cast_to_token_cast return {result.returncode}')
             subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
