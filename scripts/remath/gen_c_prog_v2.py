@@ -40,9 +40,11 @@ class VarGen:
         self.var_counter += 1
         return vname
 
-    def is_var(self, string):
-        if string.startswith(self.base):
-            non_base = string[len(self.base):]
+    def is_var(self, _string):
+        if not isinstance(_string, str):
+            return False
+        if _string.startswith(self.base):
+            non_base = _string[len(self.base):]
             for c in non_base:
                 if not c.isdigit():
                     return False
