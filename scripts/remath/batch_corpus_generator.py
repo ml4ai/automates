@@ -255,7 +255,7 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
     filename_gcc_ast = ''
     filename_cast = ''
     filename_ghidra_instructions = ''
-    filename_tokens_input = ''
+    filename_tokens_output = ''
 
     attempt = 0
     keep_going = True
@@ -318,6 +318,7 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
             continue
 
         # tokenize CAST
+        filename_tokens_output = filename_base + '--CAST.tcast'
         result = subprocess.run(['python', CTTC_SCRIPT, '-f', filename_cast], stdout=subprocess.PIPE)
 
         if result.returncode != 0:
@@ -325,8 +326,6 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
             log_failure(filename_src, f'cast_to_token_cast return {result.returncode}')
             subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
-
-        # tokenize instructions
 
         # if get this far, then success!
         success = True
@@ -345,7 +344,7 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
         mv_files(config, token_set,
                  filename_src, filename_bin, filename_gcc_ast,
                  filename_cast, filename_ghidra_instructions,
-                 filename_tokens_input)
+                 filename_tokens_output)
 
         # Update the counter file
         with open('counter.txt', 'w') as counter_file:
@@ -359,10 +358,10 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
 def mv_files(config, token_set,
              filename_src, filename_bin, filename_gcc_ast,
              filename_cast, filename_ghidra_instructions,
-             filename_tokens_input):
+             filename_tokens_output):
     filenames = (filename_src, filename_bin, filename_gcc_ast,
                  filename_cast, filename_ghidra_instructions,
-                 filename_tokens_input)
+                 filename_tokens_output)
     dest_paths = (config.src_root, config.bin_root, config.cast_root,
                   config.cast_root, config.ghidra_instructions_root,
                   config.corpus_output_tokens_root)
