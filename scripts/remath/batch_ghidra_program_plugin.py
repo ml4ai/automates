@@ -114,10 +114,10 @@ def main():
     ghidra_root = ''
     with open('config.json', 'r') as json_file:
         data = json.load(json_file)
-        if 'ghidra' not in data:
+        if 'ghidra_root' not in data:
             print("config.json must specify field 'ghidra'")
             return
-        ghidra_root = data['ghidra']
+        ghidra_root = data['ghidra_root']
         print(f"ghidra root: {ghidra_root}")
 
     errors, times = \
