@@ -593,6 +593,7 @@ def gen_prog(filepath: str):
     prog_str = sample_program_str()
     with open(filepath, 'w') as fout:
         fout.write(prog_str)
+    return prog_str
 
 
 def gen_prog_batch(n=1, root_dir='', base_name='expr_', verbose_p=False):
