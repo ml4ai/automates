@@ -580,7 +580,7 @@ def sample_program_str():
     # TODO: create literal variables for at least one of any binary fn that has unassigned values
     # TODO: reuse some literal variables
 
-    print(expr_seq.print('Expression seq dump before assigning literals:'))
+    # print(expr_seq.print('Expression seq dump before assigning literals:'))
 
     # finally, inline assign literals to all remaining unassigned indices
     expr_seq.assign_literals()
