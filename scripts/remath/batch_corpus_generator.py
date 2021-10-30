@@ -9,7 +9,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 import timeit
 
-import gen_c_prog
+import gen_c_prog_v1 as gen_c_prog
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 from batch_tokenize_instructions import TokenSet, extract_tokens_from_instr_file
 
