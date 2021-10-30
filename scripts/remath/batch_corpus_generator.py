@@ -244,17 +244,21 @@ def gcc_ast_to_cast(filename_base: str, verbose_p: bool = False):
     return ast_filename, cast_filename
 
 
-def log_failure(filename_c:str, reason: str):
+def log_failure(filename_c:str, reason: str, archive_filename):
     with open('failures.log', 'a') as logfile:
-        logfile.write(f'{filename_c}: {reason}\n')
+        logfile.write(f'{filename_c}: {reason} : {archive_filename}\n')
 
 
-def failure(location, _result, _filename_src, _filename_uuid_c):
+def failure(location, _result, sample_prog_str, filename_src, filename_uuid_c):
     print(f'FAILURE - {location} - {_result}')
     print(f'CWD: {os.getcwd()}')
     print(f'listdir: {os.listdir()}')
-    log_failure(_filename_src, f'{location} return {_result}')
-    subprocess.call(['cp ' + _filename_src + ' ' + _filename_uuid_c])
+    log_failure(filename_src, f'{location} return {_result}', filename_uuid_c)
+    with open(filename_uuid_c, 'w') as out_file:
+        out_file.write(sample_prog_str)
+    # For some reason this won't work
+    # -- always results in "No such file or directory"
+    # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
 
 
 def finalize(config: Config, token_set: TokenSet):
@@ -305,13 +309,13 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         filename_uuid_c = filename_base_uuid + '.c'
 
         # generate candidate source code
-        gen_c_prog.gen_prog(filename_src)  # filepath_uuid_c)
+        sample_prog_str = gen_c_prog.gen_prog(filename_src)  # filepath_uuid_c)
 
         # compile candidate
         result, filename_bin = try_compile(config=config, src_filepath=filename_src)  # filepath_uuid_c)
 
         if result.returncode != 0:
-            failure('COMPILE', result, filename_src, filename_uuid_c)
+            failure('COMPILE', result, sample_prog_str, filename_src, filename_uuid_c)
             # print(f'FAILURE - COMPILE - {result.returncode}')
             # print(f'CWD: {os.getcwd()}')
             # print(f'listdir: {os.listdir()}')
@@ -323,7 +327,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         result = subprocess.run([f'./{filename_bin}'], stdout=subprocess.PIPE)
 
         if result.returncode != 0:
-            failure('EXECUTE', result, filename_src, filename_uuid_c)
+            failure('EXECUTE', result, sample_prog_str, filename_src, filename_uuid_c)
             # print(f'FAILURE - EXECUTE - {result.returncode}')
             # print(f'CWD: {os.getcwd()}')
             # print(f'listdir: {os.listdir()}')
@@ -345,7 +349,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         result = subprocess.run(command_list, stdout=subprocess.PIPE)
 
         if result.returncode != 0:
-            failure('GHIDRA', result, filename_src, filename_uuid_c)
+            failure('GHIDRA', result, sample_prog_str, filename_src, filename_uuid_c)
             # print(f'CWD: {os.getcwd()}')
             # print(f'listdir: {os.listdir()}')
             # print(f'FAILURE - GHIDRA - {result.returncode}')
@@ -358,7 +362,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         result = subprocess.run(['python', CTTC_SCRIPT, '-f', filename_cast], stdout=subprocess.PIPE)
 
         if result.returncode != 0:
-            failure('TOKEN_CAST', result, filename_src, filename_uuid_c)
+            failure('TOKEN_CAST', result, sample_prog_str, filename_src, filename_uuid_c)
             # print(f'CWD: {os.getcwd()}')
             # print(f'listdir: {os.listdir()}')
             # print(f'FAILURE - cast_to_token_cast.py - {result.returncode}')
