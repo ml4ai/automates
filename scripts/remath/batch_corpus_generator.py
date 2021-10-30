@@ -45,6 +45,7 @@ class Config:
     corpus_output_tokens_root_name: str = ''  # tCAST
     corpus_output_tokens_root: str = ''
 
+    time_start: float = 0
     iteration_times: List[float] = field(default_factory=list)
 
 
@@ -245,9 +246,13 @@ def log_failure(filename_c:str, reason: str):
 def finalize(config: Config, token_set: TokenSet):
     token_set_summary_filepath = os.path.join(config.stage_root, 'tokens_summary.txt')
     original_stdout = sys.stdout
+    time_end = timeit.default_timer()
+    total_time = config.time_start - time_end
     with open(token_set_summary_filepath, 'w') as fout:
         sys.stdout = fout
         token_set.print()
+        print(f'total time: {config.time_start} {time_end} {total_time}')
+        print('iteration_times:')
         print(config.iteration_times)
         sys.stdout = original_stdout
 
@@ -395,6 +400,8 @@ def mv_files(config, token_set,
 
 def main(start=0):
     config = load_config()
+
+    config.time_start = timeit.default_timer()
 
     # Create corpus root, but don't allow if directory already exists,
     # to prevent overwriting...
