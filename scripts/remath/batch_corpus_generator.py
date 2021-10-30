@@ -365,7 +365,7 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
 
         # Update the counter file
         with open('counter.txt', 'w') as counter_file:
-            counter_file.write(f'{i + 1}, {sig_digits}')
+            counter_file.write(f'{i}, {sig_digits}')
         print('Success')
 
         time_end = timeit.default_timer()
