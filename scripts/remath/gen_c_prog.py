@@ -372,29 +372,6 @@ class ExprSeqSample:
         print('<<<<<<< DONE')
 
 
-def sample_program_str():
-    var_gen = VarGen()
-    expr_seq = ExprSeqSample(params=EXAMPLE_PARAMS, var_gen=var_gen)
-    expr_seq.sample(verbose_p=False)
-    expr_seq.reuse_exprs_for_vars(verbose_p=False)
-
-    # expr_seq.print(header='\n -------- Expressions before backward_propagate:')
-    # print(f'expr_seq.expr_index_var_assignments: {expr_seq.expr_index_var_assignments}')
-
-    expr_seq.backward_propagate_ground_type_choices()
-
-    # TODO: create literal variables for at least one of any binary fn that has unassigned values
-    # TODO: reuse some literal variables
-
-    # finally, inline assign literals to all remaining unassigned indices
-    expr_seq.assign_literals()
-
-    # expr_seq.print(header='\n -------- Final Expressions:')
-
-    # print()
-    return expr_seq.to_program_str()
-
-
 # -----------------------------------------------------------------------------
 #
 # -----------------------------------------------------------------------------
@@ -589,6 +566,30 @@ def sample_expr_tree_debug(num_ops):
 #
 # -----------------------------------------------------------------------------
 
+def sample_program_str():
+    var_gen = VarGen()
+    expr_seq = ExprSeqSample(params=EXAMPLE_PARAMS, var_gen=var_gen)
+    expr_seq.sample(verbose_p=False)
+    expr_seq.reuse_exprs_for_vars(verbose_p=False)
+
+    # expr_seq.print(header='\n -------- Expressions before backward_propagate:')
+    # print(f'expr_seq.expr_index_var_assignments: {expr_seq.expr_index_var_assignments}')
+
+    expr_seq.backward_propagate_ground_type_choices()
+
+    # TODO: create literal variables for at least one of any binary fn that has unassigned values
+    # TODO: reuse some literal variables
+
+    print(expr_seq.print('Expression seq dump before assigning literals:'))
+
+    # finally, inline assign literals to all remaining unassigned indices
+    expr_seq.assign_literals()
+
+    # expr_seq.print(header='\n -------- Final Expressions:')
+
+    return expr_seq.to_program_str()
+
+
 def gen_prog(filepath: str):
     prog_str = sample_program_str()
     with open(filepath, 'w') as fout:
@@ -614,7 +615,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    print(sample_program_str())
+    # main()
     # sample_expr_tree(8)
     # test_expr_tree_sample_1()
     # main()
