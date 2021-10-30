@@ -21,6 +21,7 @@ CTTC_SCRIPT = '../../cast_to_token_cast.py'
 class Config:
     corpus_root: str = ''
     num_samples: int = 1
+    num_padding: int = 7
     total_attempts: int = 1
     base_name: str = ''
 
@@ -62,6 +63,7 @@ def missing_config_message():
 
     print("  \"corpus_root\": \"<str> absolute path to top-level root directory for the corpus\"")
     print("  \"num_samples\": \"<int> number of samples to generate\"")
+    print("  \"num_padding\": \"<int> number of 0's to pad to the left of the filename sample index\"")
     print("  \"total_attempts\": \"<int> total sequential attempts to generate a valid, executable program\"")
     print("  \"base_name\": \"<str> the program base name\"")
 
@@ -120,6 +122,10 @@ def load_config():
             missing_fields.append('num_samples')
         else:
             config.num_samples = cdata['num_samples']
+        if 'num_padding' not in cdata:
+            missing_fields.append('num_padding')
+        else:
+            config.num_padding = cdata['num_padding']
         if 'total_attempts' not in cdata:
             missing_fields.append('total_attempts')
         else:
@@ -257,11 +263,11 @@ def finalize(config: Config, token_set: TokenSet):
         sys.stdout = original_stdout
 
 
-def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
+def try_generate(config: Config, i: int, token_set: TokenSet):
 
     time_start = timeit.default_timer()
 
-    num_str = f'{i}'.zfill(sig_digits)
+    num_str = f'{i}'.zfill(config.num_padding)
     filename_base = f'{config.base_name}_{num_str}'
     filename_src = filename_base + '.c'
     filename_bin = ''
@@ -365,7 +371,7 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
 
         # Update the counter file
         with open('counter.txt', 'w') as counter_file:
-            counter_file.write(f'{i}, {sig_digits}')
+            counter_file.write(f'{i}, {config.num_padding}')
         print('Success')
 
         time_end = timeit.default_timer()
@@ -429,9 +435,7 @@ def main(start=0):
         raise Exception(f"ERROR: Cannot find cast_to_token_cast.py: {CTTC_SCRIPT}")
 
     for i in range(start, config.num_samples):
-        try_generate(config=config, i=i,
-                     sig_digits=len(str(config.num_samples)),
-                     token_set=token_set)
+        try_generate(config=config, i=i, token_set=token_set)
     finalize(config, token_set)
     os.chdir(original_working_dir)
 

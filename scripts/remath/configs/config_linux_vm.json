@@ -1,6 +1,7 @@
 {
   "corpus_root": "/home/claytonm/repository/automates/scripts/remath/corpus_v1",
   "num_samples": 4,
+  "num_padding": 7,
   "total_attempts": 10,
   "base_name": "expr_v1",
 
