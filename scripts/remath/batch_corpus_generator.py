@@ -247,7 +247,7 @@ def finalize(config: Config, token_set: TokenSet):
     token_set_summary_filepath = os.path.join(config.stage_root, 'tokens_summary.txt')
     original_stdout = sys.stdout
     time_end = timeit.default_timer()
-    total_time = config.time_start - time_end
+    total_time = time_end - config.time_start
     with open(token_set_summary_filepath, 'w') as fout:
         sys.stdout = fout
         token_set.print()
@@ -365,7 +365,7 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
 
         # Update the counter file
         with open('counter.txt', 'w') as counter_file:
-            counter_file.write(f'{i}, {sig_digits}')
+            counter_file.write(f'{i + 1}, {sig_digits}')
         print('Success')
 
         time_end = timeit.default_timer()
