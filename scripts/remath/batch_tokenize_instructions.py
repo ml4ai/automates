@@ -456,6 +456,72 @@ class TokenSet:
         print(f'Token val_other [{token_val_other_size}]: {self.token_val_other}')
 
 
+def extract_tokens_from_instr_file(token_set, _src_filepath, _dst_filepath, num=0,
+                                   execute_p=True, verbose_p=False):
+
+    if not execute_p:
+        print(f'{num} [TEST] tokenize {_src_filepath} -> {_dst_filepath}')
+    else:
+        if verbose_p:
+            print(f'{num} [EXECUTE] tokenize {_src_filepath} -> {_dst_filepath}')
+
+        inst_set = extract_instructions(_src_filepath)
+        main_fn = inst_set.get_fn_by_name('main')
+        main_fn.tokenize()
+
+        token_set.add(inst_set)
+
+        original_stdout = sys.stdout
+        with open(_dst_filepath, 'w') as fout:
+            sys.stdout = fout
+            inst_set.print_token_seq()
+            inst_set.print_token_maps()
+            main_fn.print_address_blocks(substitute_interpreted_values_p=True)
+            sys.stdout = original_stdout
+
+
+def batch_process(execute_p: bool,
+                  dst_dir: str,
+                  instructions_root_dir: str,
+                  instructions_file: str = ''):
+
+    token_set = TokenSet()
+
+    def get_dst_filepath(_src_filepath):
+        _dst_filepath = os.path.join(dst_dir, os.path.basename(_src_filepath))
+        return os.path.splitext(_dst_filepath)[0] + '__tokens.txt'
+
+    if instructions_file != '':
+        src_filepath = os.path.join(instructions_root_dir, instructions_file)
+        if not os.path.isfile(src_filepath):
+            raise Exception(f'ERROR: File not found: {src_filepath}')
+
+        extract_tokens_from_instr_file(src_filepath, get_dst_filepath(src_filepath))
+
+    else:
+        i = 0
+        for subdir, dirs, files in os.walk(instructions_root_dir):
+            for file in files:
+                src_filepath = subdir + os.sep + file
+                if src_filepath.endswith('-instructions.txt'):
+                    dst_filepath = get_dst_filepath(src_filepath)
+
+                    extract_tokens_from_instr_file(token_set, src_filepath, dst_filepath,
+                                                   num=i, execute_p=execute_p,
+                                                   verbose_p=execute_p)
+                    i += 1
+
+    if execute_p:
+        token_set_summary_filepath = os.path.join(dst_dir, 'tokens_summary.txt')
+        if pathlib.Path(token_set_summary_filepath).is_file():
+            token_set_summary_filepath += str(uuid.uuid4())
+        original_stdout = sys.stdout
+        with open(token_set_summary_filepath, 'w') as fout:
+            sys.stdout = fout
+            token_set.print()
+            sys.stdout = original_stdout
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--execute',
@@ -485,59 +551,10 @@ def main():
         # create destination root directory if does not already exist
         pathlib.Path(args.dst_dir).mkdir(parents=True, exist_ok=True)
 
-    token_set = TokenSet()
-
-    def process_file(_src_filepath, _dst_filepath, num=0):
-
-        if not args.execute:
-            print(f'{num} [TEST] tokenize {_src_filepath} -> {_dst_filepath}')
-        else:
-            print(f'{num} [EXECUTE] tokenize {_src_filepath} -> {_dst_filepath}')
-
-            inst_set = extract_instructions(_src_filepath)
-            main_fn = inst_set.get_fn_by_name('main')
-            main_fn.tokenize()
-
-            token_set.add(inst_set)
-
-            original_stdout = sys.stdout
-            with open(_dst_filepath, 'w') as fout:
-                sys.stdout = fout
-                inst_set.print_token_seq()
-                inst_set.print_token_maps()
-                main_fn.print_address_blocks(substitute_interpreted_values_p=True)
-                sys.stdout = original_stdout
-
-    def get_dst_filepath(_src_filepath):
-        _dst_filepath = os.path.join(args.dst_dir, os.path.basename(_src_filepath))
-        return os.path.splitext(_dst_filepath)[0] + '__tokens.txt'
-
-    if args.instructions_file != '':
-        src_filepath = os.path.join(args.instructions_root_dir, args.instructions_file)
-        if not os.path.isfile(src_filepath):
-            raise Exception(f'ERROR: File not found: {src_filepath}')
-
-        process_file(src_filepath, get_dst_filepath(src_filepath))
-
-    else:
-        i = 0
-        for subdir, dirs, files in os.walk(args.instructions_root_dir):
-            for file in files:
-                src_filepath = subdir + os.sep + file
-                if src_filepath.endswith('-instructions.txt'):
-                    dst_filepath = get_dst_filepath(src_filepath)
-
-                    process_file(src_filepath, dst_filepath, num=i)
-                    i += 1
-
-    token_set_summary_filepath = os.path.join(args.dst_dir, 'tokens_summary.txt')
-    if pathlib.Path(token_set_summary_filepath).is_file():
-        token_set_summary_filepath += str(uuid.uuid4())
-    original_stdout = sys.stdout
-    with open(token_set_summary_filepath, 'w') as fout:
-        sys.stdout = fout
-        token_set.print()
-        sys.stdout = original_stdout
+    batch_process(execute_p=args.execute,
+                  dst_dir=args.dst_dir,
+                  instructions_root_dir=args.instructions_root_dir,
+                  instructions_file=args.instructions_file)
 
 
 if __name__ == '__main__':
