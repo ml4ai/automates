@@ -426,12 +426,14 @@ def extract_instructions(filepath):
 class TokenSet:
     def __init__(self):
         self.token_seqs: List[str] = list()
+        self.token_seq_lengths: List[int] = list()
         self.token_address: Set[str] = set()
         self.token_val: Set[str] = set()
         self.token_val_other: Set[str] = set()
 
     def add(self, inst_set: InstructionSet):  # add(self, token_seq, token_address, token_val, token_val_other):
         self.token_seqs += inst_set.token_seq
+        self.token_seq_lengths.append(len(inst_set.token_seq))
         self.token_address |= inst_set.token_map_address.get_all_tokens()
         self.token_val |= inst_set.token_map_val.get_all_tokens()
         self.token_val_other |= inst_set.token_map_val_other.get_all_tokens()
@@ -445,6 +447,8 @@ class TokenSet:
     def print(self):
         token_dist = Counter(self.token_seqs)
         print(f'Token Distribution [{len(token_dist)}]: {token_dist}')
+        print(f'Token Sequence Lengths: {self.token_seq_lengths}')
+        print(f'Token Sequence Lengths dist: {Counter(self.token_seq_lengths)}')
         token_address_size = len(self.token_address)
         token_val_size = len(self.token_val)
         token_val_other_size = len(self.token_val_other)
