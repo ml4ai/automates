@@ -276,7 +276,7 @@ class ExprSeqSampleStats:
             num_ops += expr.num_ops
             num_var_literal_assignments += len(expr.var_literal_assignments)
             for value in expr.value_assignments:
-                if expr_seq_sample.var_gen.is_var(value):
+                if not expr_seq_sample.var_gen.is_var(value):
                     num_inline_literals += 1
         self.num_expressions = len(expr_seq_sample.expressions)
         self.num_operators = num_ops
