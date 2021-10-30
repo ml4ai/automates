@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 import json
 import os
@@ -7,7 +8,11 @@ import uuid
 import platform
 import subprocess
 import gen_c_prog
+from batch_tokenize_instructions import TokenSet, extract_tokens_from_instr_file
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
+
+
+CTTC_SCRIPT = '../../cast_to_token_cast.py'
 
 
 @dataclass
@@ -50,7 +55,7 @@ def missing_config_message():
     print("appropriate absolute path within a string:")
     print("{")
 
-    print("  \"corpus_root\": \"<str> overall root directory path for the corpus\"")
+    print("  \"corpus_root\": \"<str> absolute path to top-level root directory for the corpus\"")
     print("  \"num_samples\": \"<int> number of samples to generate\"")
     print("  \"total_attempts\": \"<int> total sequential attempts to generate a valid, executable program\"")
     print("  \"base_name\": \"<str> the program base name\"")
@@ -225,7 +230,7 @@ def gcc_ast_to_cast(filename_base: str, verbose_p: bool = False):
     cast = GCC2CAST([ast_json]).to_cast()
     cast_filename = filename_base + '--CAST.json'
     json.dump(cast.to_json_object(), open(cast_filename, "w"))
-    return cast_filename
+    return ast_filename, cast_filename
 
 
 def log_failure(filename_c:str, reason: str):
@@ -233,10 +238,24 @@ def log_failure(filename_c:str, reason: str):
         logfile.write(f'{filename_c}: {reason}\n')
 
 
-def try_generate(config: Config, i: int, sig_digits: int):
+def finalize(config: Config, token_set: TokenSet):
+    token_set_summary_filepath = os.path.join(config.stage_root, 'tokens_summary.txt')
+    original_stdout = sys.stdout
+    with open(token_set_summary_filepath, 'w') as fout:
+        sys.stdout = fout
+        token_set.print()
+        sys.stdout = original_stdout
+
+
+def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
     num_str = f'{i}'.zfill(sig_digits)
     filename_base = f'{config.base_name}_{num_str}'
     filename_src = filename_base + '.c'
+    filename_bin = ''
+    filename_gcc_ast = ''
+    filename_cast = ''
+    filename_ghidra_instructions = ''
+    filename_tokens_input = ''
 
     attempt = 0
     keep_going = True
@@ -262,7 +281,7 @@ def try_generate(config: Config, i: int, sig_digits: int):
         gen_c_prog.gen_prog(filename_src)  # filepath_uuid_c)
 
         # compile candidate
-        result, bin_filename = try_compile(config=config, src_filepath=filename_src)  # filepath_uuid_c)
+        result, filename_bin = try_compile(config=config, src_filepath=filename_src)  # filepath_uuid_c)
 
         if result.returncode != 0:
             print(f'FAILURE - COMPILE - {result.returncode}')
@@ -271,7 +290,7 @@ def try_generate(config: Config, i: int, sig_digits: int):
             continue
 
         # execute_candidate
-        result = subprocess.run([f'./{bin_filename}'], stdout=subprocess.PIPE)
+        result = subprocess.run([f'./{filename_bin}'], stdout=subprocess.PIPE)
 
         if result.returncode != 0:
             print(f'FAILURE - EXECUTE - {result.returncode}')
@@ -280,13 +299,13 @@ def try_generate(config: Config, i: int, sig_digits: int):
             continue
 
         # gcc ast to CAST
-        cast_filename = gcc_ast_to_cast(filename_base)
+        filename_gcc_ast, filename_cast = gcc_ast_to_cast(filename_base)
 
         # run Ghidra
-        ghidra_instructions_filename = bin_filename + '-instructions.txt'
+        filename_ghidra_instructions = filename_bin + '-instructions.txt'
         command_list = \
             [ghidra_command, ghidra_project_dir, ghidra_project_name,
-             '-import', bin_filename,
+             '-import', filename_bin,
              '-scriptPath', config.ghidra_script_root,
              '-postScript', config.ghidra_script_filename,
              '-deleteProject']
@@ -299,6 +318,13 @@ def try_generate(config: Config, i: int, sig_digits: int):
             continue
 
         # tokenize CAST
+        result = subprocess.run(['python', CTTC_SCRIPT, '-f', filename_cast], stdout=subprocess.PIPE)
+
+        if result.returncode != 0:
+            print(f'FAILURE - cast_to_token_cast.py - {result.returncode}')
+            log_failure(filename_src, f'cast_to_token_cast return {result.returncode}')
+            subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
+            continue
 
         # tokenize instructions
 
@@ -307,18 +333,49 @@ def try_generate(config: Config, i: int, sig_digits: int):
         keep_going = False  # could also just break...
 
     if success:
-        # copy files to respective locations:
-        # filename_src
-        # bin_filename
-        # TODO: gcc_ast_filename
-        # cast_filename
-        # ghidra_instructions_filename
+        # extract bin input tokens from ghidra instructions
+        filename_bin_tokens = f'{config.corpus_input_tokens_root}/{filename_bin}__tokens.txt'
+        extract_tokens_from_instr_file(token_set=token_set,
+                                       _src_filepath=filename_ghidra_instructions,
+                                       _dst_filepath=filename_bin_tokens,
+                                       execute_p=True,
+                                       verbose_p=False)
+
+        # move files to respective locations:
+        mv_files(config, token_set,
+                 filename_src, filename_bin, filename_gcc_ast,
+                 filename_cast, filename_ghidra_instructions,
+                 filename_tokens_input)
+
+        # Update the counter file
+        with open('counter.txt', 'w') as counter_file:
+            counter_file.write(f'{i}, {sig_digits}')
         print('Success')
     else:
+        finalize(config, token_set)  # save current token_set before bailing
         raise Exception(f"ERROR try_generate(): failed to generate a viable program after {attempt} tries.")
 
 
-def main():
+def mv_files(config, token_set,
+             filename_src, filename_bin, filename_gcc_ast,
+             filename_cast, filename_ghidra_instructions,
+             filename_tokens_input):
+    filenames = (filename_src, filename_bin, filename_gcc_ast,
+                 filename_cast, filename_ghidra_instructions,
+                 filename_tokens_input)
+    dest_paths = (config.src_root, config.bin_root, config.cast_root,
+                  config.cast_root, config.ghidra_instructions_root,
+                  config.corpus_output_tokens_root)
+    for src_filename, dest_path in zip(filenames, dest_paths):
+        dest_filepath = os.path.join(dest_path, src_filename)
+        result = subprocess.run(['mv', src_filename, dest_filepath], stdout=subprocess.PIPE)
+        if result.returncode != 0:
+            finalize(config, token_set)
+            raise Exception(f"ERROR mv_files(): failed mv {src_filename} --> {dest_filepath}\n"
+                            f"  current directory: {os.getcwd()}")
+
+
+def main(start=0):
     config = load_config()
 
     # Create corpus root, but don't allow if directory already exists,
@@ -330,10 +387,23 @@ def main():
                  config.corpus_output_tokens_root):
         Path(path).mkdir(parents=True, exist_ok=False)
 
+    token_set = TokenSet()
+
     original_working_dir = os.getcwd()
     os.chdir(config.stage_root)
-    for i in range(config.num_samples):
-        try_generate(config=config, i=i, sig_digits=len(str(config.num_samples)))
+
+    # verify that we can find cast_to_token_cast.py script
+    print(f'CWD: {os.getcwd()}')
+    if os.path.isfile(CTTC_SCRIPT):
+        print(f"Found cast_to_token_cast.py: {CTTC_SCRIPT}")
+    else:
+        raise Exception(f"ERROR: Cannot find cast_to_token_cast.py: {CTTC_SCRIPT}")
+
+    for i in range(start, config.num_samples):
+        try_generate(config=config, i=i,
+                     sig_digits=len(str(config.num_samples)),
+                     token_set=token_set)
+    finalize(config, token_set)
     os.chdir(original_working_dir)
 
 
