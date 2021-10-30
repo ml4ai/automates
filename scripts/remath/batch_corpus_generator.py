@@ -249,6 +249,14 @@ def log_failure(filename_c:str, reason: str):
         logfile.write(f'{filename_c}: {reason}\n')
 
 
+def failure(location, _result, _filename_src, _filename_uuid_c):
+    print(f'FAILURE - {location} - {_result}')
+    print(f'CWD: {os.getcwd()}')
+    print(f'listdir: {os.listdir()}')
+    log_failure(_filename_src, f'{location} return {_result}')
+    subprocess.call(['cp ' + _filename_src + ' ' + _filename_uuid_c])
+
+
 def finalize(config: Config, token_set: TokenSet):
     token_set_summary_filepath = os.path.join(config.stage_root, 'tokens_summary.txt')
     original_stdout = sys.stdout
@@ -303,22 +311,24 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         result, filename_bin = try_compile(config=config, src_filepath=filename_src)  # filepath_uuid_c)
 
         if result.returncode != 0:
-            print(f'FAILURE - COMPILE - {result.returncode}')
-            print(f'CWD: {os.getcwd()}')
-            print(f'listdir: {os.listdir()}')
-            log_failure(filename_src, f'compilation return {result}')
-            subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
+            failure('COMPILE', result, filename_src, filename_uuid_c)
+            # print(f'FAILURE - COMPILE - {result.returncode}')
+            # print(f'CWD: {os.getcwd()}')
+            # print(f'listdir: {os.listdir()}')
+            # log_failure(filename_src, f'compilation return {result}')
+            # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
 
         # execute_candidate
         result = subprocess.run([f'./{filename_bin}'], stdout=subprocess.PIPE)
 
         if result.returncode != 0:
-            print(f'FAILURE - EXECUTE - {result.returncode}')
-            print(f'CWD: {os.getcwd()}')
-            print(f'listdir: {os.listdir()}')
-            log_failure(filename_src, f'execution return {result.returncode}')
-            subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
+            failure('EXECUTE', result, filename_src, filename_uuid_c)
+            # print(f'FAILURE - EXECUTE - {result.returncode}')
+            # print(f'CWD: {os.getcwd()}')
+            # print(f'listdir: {os.listdir()}')
+            # log_failure(filename_src, f'execution return {result.returncode}')
+            # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
 
         # gcc ast to CAST
@@ -335,11 +345,12 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         result = subprocess.run(command_list, stdout=subprocess.PIPE)
 
         if result.returncode != 0:
-            print(f'CWD: {os.getcwd()}')
-            print(f'listdir: {os.listdir()}')
-            print(f'FAILURE - GHIDRA - {result.returncode}')
-            log_failure(filename_src, f'ghidra return {result.returncode}')
-            subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
+            failure('GHIDRA', result, filename_src, filename_uuid_c)
+            # print(f'CWD: {os.getcwd()}')
+            # print(f'listdir: {os.listdir()}')
+            # print(f'FAILURE - GHIDRA - {result.returncode}')
+            # log_failure(filename_src, f'ghidra return {result.returncode}')
+            # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
 
         # tokenize CAST
@@ -347,11 +358,12 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         result = subprocess.run(['python', CTTC_SCRIPT, '-f', filename_cast], stdout=subprocess.PIPE)
 
         if result.returncode != 0:
-            print(f'CWD: {os.getcwd()}')
-            print(f'listdir: {os.listdir()}')
-            print(f'FAILURE - cast_to_token_cast.py - {result.returncode}')
-            log_failure(filename_src, f'cast_to_token_cast return {result.returncode}')
-            subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
+            failure('TOKEN_CAST', result, filename_src, filename_uuid_c)
+            # print(f'CWD: {os.getcwd()}')
+            # print(f'listdir: {os.listdir()}')
+            # print(f'FAILURE - cast_to_token_cast.py - {result.returncode}')
+            # log_failure(filename_src, f'cast_to_token_cast return {result.returncode}')
+            # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
 
         # if get this far, then success!
