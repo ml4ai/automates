@@ -275,7 +275,7 @@ class ExprSeqSampleStats:
         for expr in expr_seq_sample.expressions.values():
             num_ops += expr.num_ops
             num_var_literal_assignments += len(expr.var_literal_assignments)
-            for value in expr.value_assignments:
+            for value in expr.value_assignments.values():
                 if not expr_seq_sample.var_gen.is_var(value):
                     num_inline_literals += 1
         self.num_expressions = len(expr_seq_sample.expressions)
@@ -729,7 +729,7 @@ def sample_program_str():
     # finally, inline assign literals to all remaining unassigned indices
     expr_seq.assign_literals()
 
-    # expr_seq.print(header='\n -------- Final Expressions:')
+    expr_seq.print(header='\n -------- Final Expressions:')
 
     return expr_seq.to_program_str(), expr_seq
 
@@ -755,12 +755,16 @@ def gen_prog_batch(n=1, root_dir='', base_name='expr_', verbose_p=False):
 
 
 def main():
-    gen_prog_batch(n=1)
+    prog_str, expr_seq = sample_program_str()
+    print(prog_str)
+
+    print('\nStats:')
+    stats = ExprSeqSampleStats(expr_seq)
+    print(stats.to_string())
 
 
 if __name__ == "__main__":
-    print(sample_program_str())
-    # main()
+    main()
     # sample_expr_tree(8)
     # test_expr_tree_sample_1()
     # main()
