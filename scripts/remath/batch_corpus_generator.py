@@ -298,6 +298,7 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
 
         if result.returncode != 0:
             print(f'FAILURE - COMPILE - {result.returncode}')
+            print(f'CWD: {os.getcwd()}')
             log_failure(filename_src, f'compilation return {result}')
             subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
@@ -307,6 +308,7 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
 
         if result.returncode != 0:
             print(f'FAILURE - EXECUTE - {result.returncode}')
+            print(f'CWD: {os.getcwd()}')
             log_failure(filename_src, f'execution return {result.returncode}')
             subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
@@ -325,6 +327,7 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
         result = subprocess.run(command_list, stdout=subprocess.PIPE)
 
         if result.returncode != 0:
+            print(f'CWD: {os.getcwd()}')
             print(f'FAILURE - GHIDRA - {result.returncode}')
             log_failure(filename_src, f'ghidra return {result.returncode}')
             subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
@@ -335,6 +338,7 @@ def try_generate(config: Config, i: int, sig_digits: int, token_set: TokenSet):
         result = subprocess.run(['python', CTTC_SCRIPT, '-f', filename_cast], stdout=subprocess.PIPE)
 
         if result.returncode != 0:
+            print(f'CWD: {os.getcwd()}')
             print(f'FAILURE - cast_to_token_cast.py - {result.returncode}')
             log_failure(filename_src, f'cast_to_token_cast return {result.returncode}')
             subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
