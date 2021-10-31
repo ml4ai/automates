@@ -392,7 +392,7 @@ class Function:
 
                     # handle cases like: '[RDX*0x4]' or '[RAX + -0x64]' or '[RSI + RCX*0x1]'
                     compound_clause = parse_compound_instructions(elm)
-                    if isinstance(compound_clause, list):
+                    if not isinstance(compound_clause, list):
                         compound_clause = [compound_clause]
                     for cc_elm in compound_clause:
                         if cc_elm.startswith('0x') or cc_elm.startswith('-0x'):
