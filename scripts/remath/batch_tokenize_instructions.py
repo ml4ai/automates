@@ -547,8 +547,8 @@ class TokenSet:
     def print(self):
         token_dist = Counter(self.token_seqs)
         print(f'Token Distribution [{len(token_dist)}]: {token_dist}')
-        print(f'Token Sequence Lengths: {self.token_seq_lengths}')
-        print(f'Token Sequence Lengths dist: {Counter(self.token_seq_lengths)}')
+        print(f'Token Sequence Lengths: {reversed(sorted(self.token_seq_lengths))}')
+        # print(f'Token Sequence Lengths dist: {Counter(self.token_seq_lengths)}')
         token_address_size = len(self.token_address)
         token_val_size = len(self.token_val)
         token_val_other_size = len(self.token_val_other)
