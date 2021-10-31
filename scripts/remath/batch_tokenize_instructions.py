@@ -391,11 +391,14 @@ class Function:
                 elif elm.startswith('[') and elm.endswith(']') and len(elm) > 2:
 
                     # handle cases like: '[RDX*0x4]' or '[RAX + -0x64]' or '[RSI + RCX*0x1]'
-                    tokenized_compound = parse_compound_instructions(elm)
-                    if isinstance(tokenized_compound, list):
-                        tokens += tokenized_compound
-                    else:
-                        tokens.append(tokenized_compound)
+                    compound_clause = parse_compound_instructions(elm)
+                    if isinstance(compound_clause, list):
+                        compound_clause = [compound_clause]
+                    for cc_elm in compound_clause:
+                        if cc_elm.startswith('0x') or cc_elm.startswith('-0x'):
+                            tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=cc_elm))
+                        else:
+                            tokens.append(cc_elm)
 
                     # clause = elm[1:-1].split(' ')
                     # tokens.append('[')
