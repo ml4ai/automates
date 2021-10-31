@@ -88,15 +88,16 @@ def generate_corpus_wrapper(params: Parameters):
 
 
 def corpora_generator_multiprocessing():
+    print('>>>>>>>>>> START corpora_generator_multiprocessing()')
 
     # lock = multiprocessing.Lock()
     num_processors = multiprocessing.cpu_count()
 
-    print(f'num_processors {num_processors}')
+    print(f'>>>>>>>>>> num_processors {num_processors}')
 
     config = load_config()
     param_set = generate_corpus_parameters(config)
-    print(f'num params: {len(param_set)}')
+    print(f'>>>>>>>>>> num params: {len(param_set)}')
 
     # with multiprocessing.Pool(num_processors, initializer=init_child, initargs=(lock,)) as p:
     #     p.map(test, param_set)
@@ -110,7 +111,7 @@ def corpora_generator_multiprocessing():
     #     print(ps)
     # print(f'total samples {tot}')
 
-    print('corpora_gen() DONE')
+    print('>>>>>>>>>> DONE corpora_generator_multiprocessing()')
 
 
 if __name__ == '__main__':
