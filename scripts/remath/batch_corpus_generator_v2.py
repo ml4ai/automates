@@ -439,10 +439,18 @@ def mv_files(config, token_set,
                             f"  current directory: {os.getcwd()}")
 
 
-def main(start=0):
+def main(start=0, num_samples=None, corpus_root=None):
     config = load_config()
 
     config.time_start = timeit.default_timer()
+
+    if corpus_root:
+        print(f'NOTE: Overriding config.corpus_root with {corpus_root}')
+        config.corpus_root = corpus_root
+
+    if num_samples:
+        print(f'NOTE: Overriding config.num_samples with {num_samples}')
+        config.num_samples = num_samples
 
     # Create corpus root, but don't allow if directory already exists,
     # to prevent overwriting...
@@ -458,14 +466,15 @@ def main(start=0):
     original_working_dir = os.getcwd()
     os.chdir(config.stage_root)
 
-    # verify that we can find cast_to_token_cast.py script
     print(f'CWD: {os.getcwd()}')
+
+    # verify that we can find cast_to_token_cast.py script
     if os.path.isfile(CTTC_SCRIPT):
-        print(f"Found cast_to_token_cast.py: {CTTC_SCRIPT}")
+        print(f"NOTE: Found cast_to_token_cast.py: {CTTC_SCRIPT}")
     else:
         raise Exception(f"ERROR: Cannot find cast_to_token_cast.py: {CTTC_SCRIPT}")
 
-    for i in range(start, config.num_samples):
+    for i in range(start, start + config.num_samples):
         try_generate(config=config, i=i, token_set=token_set)
     finalize(config, token_set)
     os.chdir(original_working_dir)

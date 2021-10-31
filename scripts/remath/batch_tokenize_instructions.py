@@ -172,7 +172,7 @@ def parse_metadata(metadata: str):
 
 def parse_compound_instructions(instr_str: str):
     """
-    This is some fucking fucked up piece of shit code.
+    OK, the following code is a hot mess...
 
     Assumptions: instruction string (instr_str) could
     (1) have an arbitrary number of infix binary '+'
@@ -222,6 +222,7 @@ def parse_compound_instructions(instr_str: str):
 
 def mytest_parse_compound_instructions(verbose_p=False):
 
+    # another hot mess...
     def equal_list(lst1, lst2):
         if not isinstance(lst1, list) or not isinstance(lst2, list):
             return False

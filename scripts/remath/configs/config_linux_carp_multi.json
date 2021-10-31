@@ -1,0 +1,6 @@
+{
+  "corpora_root": "/home/claytonm/repository/automates/scripts/remath/corpora",
+  "start": 0,
+  "num_samples": 100,
+  "batch_size": 19
+}
