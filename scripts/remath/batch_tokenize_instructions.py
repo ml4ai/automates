@@ -170,6 +170,97 @@ def parse_metadata(metadata: str):
         return [':unparsed', metadata]
 
 
+def parse_compound_instructions(instr_str: str):
+    """
+    This is some fucking fucked up piece of shit code.
+
+    Assumptions: instruction string (instr_str) could
+    (1) have an arbitrary number of infix binary '+'
+    (2) have an arbitrary number of infix binary '*'
+    (3) '*' is higher precedence than '+'
+    :param instr_str:
+    :return:
+    """
+
+    def flatten(lst):
+        flat_list = list()
+        for elm in lst:
+            if isinstance(elm, list):
+                for elm2 in elm:
+                    flat_list.append(elm2)
+            else:
+                flat_list.append(elm)
+        return flat_list
+
+    def insert_infix(seq, val='+'):
+        new_seq = list()
+        for i, elm in enumerate(seq):
+            new_seq.append(elm)
+            if i < len(seq) - 1:
+                new_seq.append(val)
+        return new_seq
+
+    def tokenize(_clause):
+        if '*' in _clause:
+            clause_times = [elm.strip(' ') for elm in _clause.split('*')]
+            clause_times = insert_infix(clause_times, '*')
+            return ['['] + clause_times + [']']
+        else:
+            return _clause
+
+    clause_top = instr_str[1:-1]
+    if '+' in clause_top:
+        clause_plus = [elm.strip(' ') for elm in clause_top.split('+')]
+        new_clause_plus = list()
+        for elm in clause_plus:
+            new_clause_plus.append(tokenize(elm))
+        clause_plus = flatten(insert_infix(new_clause_plus, '+'))
+        return ['['] + clause_plus + [']']
+    else:
+        return tokenize(clause_top)
+
+
+def mytest_parse_compound_instructions(verbose_p=False):
+
+    def equal_list(lst1, lst2):
+        if not isinstance(lst1, list) or not isinstance(lst2, list):
+            return False
+        elif len(lst1) != len(lst2):
+            return False
+        else:
+            for i, (l1elm, l2elm) in enumerate(zip(lst1, lst2)):
+                if l1elm != l2elm:
+                    return False
+        return True
+
+    case1 = '[RDX*0x4]'
+    ret = parse_compound_instructions(case1)
+    assert equal_list(ret, ['[', 'RDX', '*', '0x4', ']'])
+    if verbose_p:
+        print(f'{case1}:', ret)
+
+    case2 = '[RAX + -0x64]'
+    ret = parse_compound_instructions(case2)
+    assert equal_list(ret, ['[', 'RAX', '+', '-0x64', ']'])
+    if verbose_p:
+        print(f'{case2}:', ret)
+
+    case3 = '[RSI + RCX*0x1]'
+    ret = parse_compound_instructions(case3)
+    assert equal_list(ret, ['[', 'RSI', '+', '[', 'RCX', '*', '0x1', ']', ']'])
+    if verbose_p:
+        print(f'{case3}:', ret)
+
+    case4 = '[RSI]'
+    ret = parse_compound_instructions(case4)
+    assert ret == 'RSI'
+    if verbose_p:
+        print(f'{case4}:', ret)
+
+
+# mytest_parse_compound_instructions()
+
+
 class Function:
     def __init__(self, lines: List[str], instr_set: "InstructionSet"):
         self.instr_set = instr_set
@@ -296,18 +387,27 @@ class Function:
                             tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=value))
                     else:
                         tokens.append(self.instr_set.token_map_address.get_token(elm))
-                elif elm.startswith('[') and elm.endswith(']'):
-                    clause = elm[1:-1].split(' ')
-                    tokens.append('[')
-                    for celm in clause:
-                        if celm.startswith('0x') or celm.startswith('-0x'):
-                            value = parse_hex_value(celm, size=ptr_size)
-                            tokens.append(self.instr_set.token_map_val.get_token(celm, metadata=value))
-                        else:
-                            tokens.append(celm)
-                    tokens.append(']')
+
+                elif elm.startswith('[') and elm.endswith(']') and len(elm) > 2:
+
+                    # handle cases like: '[RDX*0x4]' or '[RAX + -0x64]' or '[RSI + RCX*0x1]'
+                    tokenized_compound = parse_compound_instructions(elm)
+                    if isinstance(tokenized_compound, list):
+                        tokens += tokenized_compound
+                    else:
+                        tokens.append(tokenized_compound)
+
+                    # clause = elm[1:-1].split(' ')
+                    # tokens.append('[')
+                    # for celm in clause:
+                    #     if celm.startswith('0x') or celm.startswith('-0x'):
+                    #         value = parse_hex_value(celm, size=ptr_size)
+                    #         tokens.append(self.instr_set.token_map_val.get_token(celm, metadata=value))
+                    #     else:
+                    #         tokens.append(celm)
+                    # tokens.append(']')
                 else:
-                    # Does not appear to be a special value reference, to use elm as token
+                    # Does not appear to be a special value reference, use elm as token
                     tokens.append(elm)
 
             # handle clase where a CALL was observed but no address/value was interpreted as fn_name
