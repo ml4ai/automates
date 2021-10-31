@@ -3,7 +3,7 @@ import os
 import json
 from dataclasses import dataclass
 
-from batch_corpus_generator_v2 import main as corpus_gen
+from batch_corpus_generator_v2 import generate_corpus
 
 
 @dataclass
@@ -21,19 +21,19 @@ class Parameters:
     num_samples: int
 
 
-def init_child(lock_):
-    global lock
-    lock = lock_
-
-
-def log(message):
-    with lock:
-        with open('log.txt', 'a') as log_file:
-            log_file.write(message + '\n')
-
-
-def test(params: Parameters):
-    log(f'{params}')
+# def init_child(lock_):
+#     global lock
+#     lock = lock_
+#
+#
+# def log(message):
+#     with lock:
+#         with open('log.txt', 'a') as log_file:
+#             log_file.write(message + '\n')
+#
+#
+# def test(params: Parameters):
+#     log(f'{params}')
 
 
 def load_config():
@@ -81,10 +81,10 @@ def generate_corpus_parameters(config: Config):
     return param_set
 
 
-def corpus_gen_wrapper(params: Parameters):
-    corpus_gen(start=params.start,
-               num_samples=params.num_samples,
-               corpus_root=params.corpus_root)
+def generate_corpus_wrapper(params: Parameters):
+    generate_corpus(start=params.start,
+                    num_samples=params.num_samples,
+                    corpus_root=params.corpus_root)
 
 
 def corpora_generator_multiprocessing():
@@ -101,8 +101,8 @@ def corpora_generator_multiprocessing():
     # with multiprocessing.Pool(num_processors, initializer=init_child, initargs=(lock,)) as p:
     #     p.map(test, param_set)
 
-    with multiprocessing.Pool(num_processors):
-        p.map(corpus_gen_wrapper, param_set)
+    with multiprocessing.Pool(num_processors) as p:
+        p.map(generate_corpus_wrapper, param_set)
 
     # tot = 0
     # for ps in param_set:
