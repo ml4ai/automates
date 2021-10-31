@@ -14,9 +14,6 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 from batch_tokenize_instructions import TokenSet, extract_tokens_from_instr_file
 
 
-CTTC_SCRIPT = '../../cast_to_token_cast.py'
-
-
 @dataclass
 class Config:
     corpus_root: str = ''
@@ -27,6 +24,7 @@ class Config:
 
     gcc: str = ''
     gcc_plugin_filepath: str = ''
+    cast_to_token_cast_filepath: str = ''
     ghidra_root: str = ''
     ghidra_script_root: str = ''
     ghidra_script_filename: str = ''
@@ -68,7 +66,8 @@ def missing_config_message():
     print("  \"base_name\": \"<str> the program base name\"")
 
     print("  \"gcc\": \"<str> path to gcc\"")
-    print("  \"gcc\": \"<str> path to gcc plugin\"")
+    print("  \"gcc_plugin_filepath\": \"<str> absolute path to gcc plugin\"")
+    print("  \"cast_to_token_cast_filepath\": \"<str> absolute path to cast_to_token_cast.py script\"")
     print("  \"ghidra_root\": \"<str> root directory path of ghidra\"")
     print("  \"ghidra_script_root\": \"<str> root directory path of ghidra plugin scripts\"")
     print("  \"ghidra_script_filename\": \"<str> filename of ghidra plugin script\""
@@ -143,6 +142,10 @@ def load_config():
             missing_fields.append('gcc_plugin_filepath')
         else:
             config.gcc_plugin_filepath = cdata['gcc_plugin_filepath']
+        if 'cast_to_token_cast_filepath' not in cdata:
+            missing_fields.append('cast_to_token_cast_filepath')
+        else:
+            config.cast_to_token_cast_filepath = cdata['cast_to_token_cast_filepath']
         if 'ghidra_root' not in cdata:
             missing_fields.append('ghidra_root')
         else:
@@ -364,7 +367,8 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
 
         # tokenize CAST
         filename_tokens_output = filename_base + '--CAST.tcast'
-        result = subprocess.run(['python', CTTC_SCRIPT, '-f', filename_cast], stdout=subprocess.PIPE)
+        result = subprocess.run(['python', config.cast_to_token_cast_filepath, '-f',
+                                 filename_cast], stdout=subprocess.PIPE)
 
         if result.returncode != 0:
             failure('TOKEN_CAST', result, sample_prog_str, filename_src, filename_uuid_c)
@@ -472,10 +476,10 @@ def generate_corpus(start=0, num_samples=None, corpus_root=None):
     print(f'CWD: {os.getcwd()}')
 
     # verify that we can find cast_to_token_cast.py script
-    if os.path.isfile(CTTC_SCRIPT):
-        print(f"NOTE: Found cast_to_token_cast.py: {CTTC_SCRIPT}")
+    if os.path.isfile(config.cast_to_token_cast_filepath):
+        print(f"NOTE: Found cast_to_token_cast.py: {config.cast_to_token_cast_filepath}")
     else:
-        raise Exception(f"ERROR: Cannot find cast_to_token_cast.py: {CTTC_SCRIPT}")
+        raise Exception(f"ERROR: Cannot find cast_to_token_cast.py: {config.cast_to_token_cast_filepath}")
 
     for i in range(start, start + config.num_samples):
         try_generate(config=config, i=i, token_set=token_set)
