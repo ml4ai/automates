@@ -192,8 +192,6 @@ def load_config():
             raise Exception("ERROR load_config(): config.json missing "
                             f"the following fields:\n  {missing_str}")
 
-        configure_paths(config)
-
         return config
 
 
@@ -439,7 +437,7 @@ def mv_files(config, token_set,
                             f"  current directory: {os.getcwd()}")
 
 
-def main(start=0, num_samples=None, corpus_root=None):
+def generate_corpus(start=0, num_samples=None, corpus_root=None):
     config = load_config()
 
     config.time_start = timeit.default_timer()
@@ -451,6 +449,11 @@ def main(start=0, num_samples=None, corpus_root=None):
     if num_samples:
         print(f'NOTE: Overriding config.num_samples with {num_samples}')
         config.num_samples = num_samples
+
+    configure_paths(config)
+
+    print(f'DEBUG: config.corpus_root: {config.corpus_root}')
+    print(f'DEBUG: config.num_smaples: {config.num_samples}')
 
     # Create corpus root, but don't allow if directory already exists,
     # to prevent overwriting...
@@ -485,4 +488,4 @@ def main(start=0, num_samples=None, corpus_root=None):
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    main()
+    generate_corpus()
