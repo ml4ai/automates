@@ -729,7 +729,7 @@ def sample_program_str():
     # finally, inline assign literals to all remaining unassigned indices
     expr_seq.assign_literals()
 
-    expr_seq.print(header='\n -------- Final Expressions:')
+    # expr_seq.print(header='\n -------- Final Expressions:')
 
     return expr_seq.to_program_str(), expr_seq
 
