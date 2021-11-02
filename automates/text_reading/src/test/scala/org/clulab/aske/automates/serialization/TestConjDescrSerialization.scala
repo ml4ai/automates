@@ -46,9 +46,4 @@ class TestConjDescrSerialization extends ExtractionTest {
     val deserializedMentions = AutomatesJSONSerializer.toMentions(uJson)
     assert(conjDefMention == deserializedMentions)
   }
-
-
-//    for (m <- crossSentenceMentions) {
-//      println(f"${m.text} ${m.asInstanceOf[CrossSentenceEventMention].}")
-//    }
 }
