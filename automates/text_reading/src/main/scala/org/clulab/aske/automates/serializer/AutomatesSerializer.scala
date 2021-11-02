@@ -43,7 +43,6 @@ object AutomatesJSONSerializer {
     val foundBy = mentionComponents("foundBy").str
     val menType = mentionComponents("type").str
     val crossSentence = if (menType == "CrossSentenceEventMention") {
-      println(mentionComponents("sentences"))
       mentionComponents("sentences").arr.map(_.num.toInt)
     } else Seq.empty
     val attachments = new ArrayBuffer[Attachment]
