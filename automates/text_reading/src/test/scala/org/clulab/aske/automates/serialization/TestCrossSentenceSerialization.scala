@@ -15,7 +15,8 @@ import org.clulab.aske.automates.apps.{Exporter, JSONDocExporter, JSONExporter, 
 import org.clulab.aske.automates.data.DataLoader
 import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
-import org.clulab.odin.{Mention, TextBoundMention}
+import org.clulab.odin.serialization.json.MentionOps
+import org.clulab.odin.{EventMention, Mention, TextBoundMention}
 import org.clulab.utils.FileUtils
 import org.clulab.serialization.DocumentSerializer
 
@@ -24,16 +25,31 @@ import org.clulab.serialization.DocumentSerializer
   class TestCrossSentenceSerialization extends ExtractionTest {
 
     val textToTest = "Rn depends on RS, but also on T and RH. The only additional parameter appearing in the suggested formula is the extraterrestrial radiation, RA."
+//    val textToTest = "LAI is leaf area index"
     passingTest should s"serialize and deserialize the mention successfully: ${textToTest}" taggedAs (Somebody) in {
       val mentions = extractMentions(textToTest)
-      val crossSentenceMentions = mentions.filter(m => m.isInstanceOf[CrossSentenceEventMention])
+      // why is what extracted cross sentence mentions?
+      val crossSentenceMentions = mentions.filter(m => m.isInstanceOf[CrossSentenceEventMention]).distinct
+//      val crossSentenceMentions = mentions.filter(m => m.isInstanceOf[EventMention]).distinct
+      for (m <- crossSentenceMentions) {
+        println(m.text + " " + m.label)
+      }
+
       val value = mentions.filter(m => m.isInstanceOf[TextBoundMention])
       val uJson = AutomatesJSONSerializer.serializeMentions(crossSentenceMentions)
       println(uJson)
       // next, let's try to export the mentions to JSON file (how can I use export method??)
       val deserializedMentions = AutomatesJSONSerializer.toMentions(uJson)
+      for (m <- deserializedMentions) println(">>" + m.text + " " + m.label)
+//      deserializedMentions should have size 1
+      deserializedMentions.head.document.equivalenceHash should equal (crossSentenceMentions.head.document.equivalenceHash)
 
-      assert(crossSentenceMentions == deserializedMentions)
+      deserializedMentions should have size (crossSentenceMentions.size)
+      val hashesDeser = deserializedMentions.map(m => m.equivalenceHash).toSet
+      val hashesOrig = crossSentenceMentions.map(_.equivalenceHash).toSet
+      hashesDeser should equal(hashesOrig)
+
+//      assert(crossSentenceMentions == deserializedMentions)
     }
     //    def textToCrossSentenceMentions(text: String): Seq[Mention] = {
     //      val Mentions = extractMentions(text)

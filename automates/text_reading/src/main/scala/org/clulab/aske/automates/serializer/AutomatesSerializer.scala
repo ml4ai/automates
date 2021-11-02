@@ -36,12 +36,15 @@ object AutomatesJSONSerializer {
     val tokenInterval = Interval(tokIntObj("start").num.toInt, tokIntObj("end").num.toInt)
     val labels = mentionComponents("labels").arr.map(_.str).toArray
     val sentence = mentionComponents("sentence").num.toInt
-    val crossSentence = Seq(sentence)
+
     val docHash = mentionComponents("document").str.toInt
     val document = docMap(docHash.toString)
     val keep = mentionComponents("keep").bool
     val foundBy = mentionComponents("foundBy").str
     val menType = mentionComponents("type").str
+    val crossSentence = if (menType == "CrossSentenceEventMention") {
+      Seq(sentence)
+    } else Seq.empty
     val attachments = new ArrayBuffer[Attachment]
 
 
@@ -514,6 +517,7 @@ object AutomatesJSONSerializer {
         "tokenInterval" -> Map("start" -> cm.tokenInterval.start, "end" -> cm.tokenInterval.end),
         "characterStartOffset" -> cm.startOffset,
         "characterEndOffset" -> cm.endOffset,
+        "sentence" -> cm.sentence,
         "sentences" -> Seq(cm.sentence),
         "document" -> cm.document.equivalenceHash.toString,
         "keep" -> cm.keep,
