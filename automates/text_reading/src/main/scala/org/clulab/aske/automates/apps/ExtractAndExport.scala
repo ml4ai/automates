@@ -184,16 +184,16 @@ case class AutomatesExporter(filename: String) extends Exporter {
 case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString()))
-    pw.write("filename\tsentence\tmention type\tfoundBy\tmention text\targs in all next columns\n")
-    val contentMentions = mentions.filter(m => (m.label.contains("Model")))
+    pw.write("filename\tsentence\tmention type\trule found this mention\tmention text\tcolumn for annotation\n")
+    val contentMentions = mentions.filter(m => (m.label.contains("Model") || m.label == "Function"))
     for (m <- contentMentions) {
       pw.write(contentMentions.head.document.id.getOrElse("unk_file") + "\t")
-      pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.foundBy + "\t" + m.text.trim())
-      for (arg <- m.arguments) {
-        if (arg._2.nonEmpty) {
-          pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
-        }
-      }
+      pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.foundBy + "\t" + m.text.trim() + "\t")
+//      for (arg <- m.arguments) {
+//        if (arg._2.nonEmpty) {
+//          pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
+//        }
+//      }
       pw.write("\n")
     }
     pw.close()

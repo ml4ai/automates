@@ -81,7 +81,8 @@ class OdinEngine(
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
-    val newModelParams = loadableAttributes.actions.paramSettingVarToModelParam(events)
+    val newModelParams1 = loadableAttributes.actions.paramSettingVarToModelParam(events)
+    val newModelParams2 = loadableAttributes.actions.functionInputsToModelParam(events)
     val modelCorefResolve = loadableAttributes.actions.resolveModelCoref(events)
 
     // process context attachments to the initially extracted mentions
@@ -93,11 +94,13 @@ class OdinEngine(
     val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
 
     val (functionMentions, nonFunctions) = nonDescrMens.partition(_.label.contains("Function"))
-    val (modelDescrs, other) = nonFunctions.partition(_.label == "ModelDescr")
+    val (modelDescrs, nonModelDescrs) = nonFunctions.partition(_.label == "ModelDescr")
+    val (modelNames, other) = nonModelDescrs.partition(_.label == "Model")
+    val modelFilter = loadableAttributes.actions.filterModelNames(modelNames)
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ newModelParams) ++ untangled ++ modelDescrs)).toVector
+    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ newModelParams1 ++ newModelParams2) ++ untangled ++ modelDescrs ++ modelFilter)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {

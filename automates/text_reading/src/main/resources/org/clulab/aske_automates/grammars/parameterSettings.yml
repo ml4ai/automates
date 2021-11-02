@@ -391,3 +391,12 @@ rules:
       variable:Identifier = <cop? nsubj
       value:Value = <cop | xcomp
 
+  - name: as_equal_to_value
+    label: ParameterSetting
+    priority: ${priority}
+    type: token
+    action: ${paramSetAction}
+    example: "Bearing in mind, we set our default setting to the refugee move speed as equal to 200 km per day and the awareness of surrounding is 1 link."
+    pattern: |
+      @variable:Phrase [word="as"] [word="equal"] [word="to"] @value:Value (?=@unit:Unit)
+

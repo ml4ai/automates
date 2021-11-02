@@ -90,6 +90,14 @@ rules:
     pattern: |
       [chunk = /B-NP|I-NP/ & !tag = /DT|-LRB-/]+ [word=/[Mm]odel|simulation|approach/ & chunk = /I-NP/]
 
+  - name: model_gazeteer
+    label: Model
+    priority: ${priority}
+    type: token
+    example: "Flee"
+    pattern: |
+      [entity = "B-model"]
+
   ## New rules for model components ###
   - name: model_repository
     label: ModelComponent
