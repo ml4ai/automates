@@ -40,12 +40,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val (descriptions, other) = (expandedIdentifiers ++ non_identifiers).partition(m => m.label.contains("Description"))
       val (functions, nonFunc) = other.partition(m => m.label.contains("Function"))
       val (modelDescrs, nonModelDescrs) = nonFunc.partition(m => m.label == "ModelDescr")
+
       // only expand concepts in param settings and units, not the identifier-looking variables (e.g., expand `temperature` in `temparature is set to 0`, but not `T` in `T is set to 0`)
       val (paramSettingsAndUnitsNoIdfr, nonExpandable) = nonModelDescrs.partition(m => (m.label.contains("ParameterSetting") || m.label.contains("UnitRelation")) && !m.arguments("variable").head.labels.contains("Identifier"))
 
       val expandedParamSettings = expansionHandler.get.expandArguments(paramSettingsAndUnitsNoIdfr, state, List("variable"))
 
       val expandedDescriptions = expansionHandler.get.expandArguments(descriptions, state, validArgs)
+
       val expandedFunction = expansionHandler.get.expandArguments(functions, state, List("input", "output"))
       val expandedModelDescrs = expansionHandler.get.expandArguments(modelDescrs, state, List("modelDescr"))
       val (conjDescrType2, otherDescrs) = expandedDescriptions.partition(_.label.contains("Type2"))
@@ -54,7 +56,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
       resolveCoref(keepOneWithSameSpanAfterExpansion(allDescrs) ++ expandedFunction ++ expandedParamSettings ++ expandedModelDescrs ++ nonExpandable)
       //      allDescrs ++ other
-
     } else {
       mentions
     }
