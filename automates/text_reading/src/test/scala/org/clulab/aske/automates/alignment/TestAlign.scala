@@ -49,7 +49,6 @@ class TestAlign extends TestAlignment {
 
   val argsForGrounding: AlignmentArguments = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, groundToSVO, groundToWiki, serializerName)
 
-
   val groundings: ujson.Value = ExtractAndAlign.groundMentions(
     payloadJson,
     argsForGrounding.identifierNames,
