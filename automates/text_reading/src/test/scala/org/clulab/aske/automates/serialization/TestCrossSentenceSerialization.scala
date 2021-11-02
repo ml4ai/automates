@@ -18,10 +18,10 @@ import org.clulab.odin.{Mention, TextBoundMention}
       val value = mentions.filter(m => m.isInstanceOf[TextBoundMention])
       val uJson = AutomatesJSONSerializer.serializeMentions(crossSentenceMentions)
       println(uJson)
-      println("HERE1: " + crossSentenceMentions.head.sentence + ", " + crossSentenceMentions.head.asInstanceOf[CrossSentenceEventMention].secondSentence)
+      println("HERE1: " + crossSentenceMentions.head.sentence + ", " + crossSentenceMentions.head.asInstanceOf[CrossSentenceEventMention].additionalSentence)
       // next, let's try to export the mentions to JSON file (how can I use export method??)
       val deserializedMentions = AutomatesJSONSerializer.toMentions(uJson)
-      println("HERE2: " + crossSentenceMentions.head.sentence + ", " + deserializedMentions.head.asInstanceOf[CrossSentenceEventMention].secondSentence)
+      println("HERE2: " + crossSentenceMentions.head.sentence + ", " + deserializedMentions.head.asInstanceOf[CrossSentenceEventMention].additionalSentence)
 
       assert(crossSentenceMentions == deserializedMentions)
     }
