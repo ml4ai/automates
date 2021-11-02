@@ -5,14 +5,17 @@ import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{CosmosJsonDataLoader, DataLoader, TextRouter}
 import org.clulab.aske.automates.OdinEngine
-import org.clulab.aske.automates.apps.ExtractAndAlign.getGlobalVars
-import org.clulab.aske.automates.attachments.AutomatesAttachment
+import org.clulab.aske.automates.apps.ExtractAndAlign.{getGlobalVars, returnAttachmentOfAGivenTypeOption}
+import org.clulab.aske.automates.attachments.{AutomatesAttachment, MentionLocationAttachment}
+import org.clulab.aske.automates.cosmosjson.CosmosJsonProcessor
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
 import org.json4s.jackson.JsonMethods._
+
+import scala.collection.mutable.ArrayBuffer
 
 /**
   * App used to extract mentions from files in a directory and produce the desired output format (i.e., serialized
@@ -38,16 +41,48 @@ object ExtractAndExport extends App {
   val outputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/output_files"
   val inputType: String = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
-//  val dataLoader = new ScienceParsedDataLoader
+  //  val dataLoader = new ScienceParsedDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
   val readerType: String = config[String]("ReaderType")
   val reader = OdinEngine.fromConfig(config[Config](readerType))
 
   //uncomment these for using the text/comment router
-//  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
-//  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
+  //  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
+  //  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
   // For each file in the input directory:
+
+  def getMentionsWithoutLocations(texts: Seq[String], file: File): Seq[Mention] = {
+    // this is for science parse
+    texts.flatMap(t => reader.extractFromText(t, filename = Some(file.getName)))
+  }
+
+  def getMentionsWithLocations(texts: Seq[String], file: File): Seq[Mention] = {
+    // this is for cosmos jsons
+    val textsAndFilenames = texts.map(_.split("<::>").slice(0,2).mkString("<::>"))
+    val locations = texts.map(_.split("<::>").takeRight(2).mkString("<::>")) //location = pageNum::blockIdx
+    val mentions = for (tf <- textsAndFilenames) yield {
+      val Array(text, filename) = tf.split("<::>")
+      reader.extractFromText(text, keepText = true, Some(filename))
+    }
+    // store location information from cosmos as an attachment for each mention
+    val menWInd = mentions.zipWithIndex
+    val mentionsWithLocations = new ArrayBuffer[Mention]()
+    for (tuple <- menWInd) {
+      // get page and block index for each block; cosmos location information will be the same for all the mentions within one block
+      val menInTextBlocks = tuple._1
+      val id = tuple._2
+      val location = locations(id).split("<::>").map(loc => loc.split(",").map(_.toInt)) //(_.toDouble.toInt)
+      val pageNum = location.head
+      val blockIdx = location.last
+
+      for (m <- menInTextBlocks) {
+        val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "MentionLocation"))
+        mentionsWithLocations.append(newMen)
+      }
+    }
+    mentionsWithLocations
+  }
 
   files.par.foreach { file =>
     // 1. Open corresponding output file and make all desired exporters
@@ -55,22 +90,28 @@ object ExtractAndExport extends App {
     // 2. Get the input file contents
     // note: for science parse format, each text is a section
     val texts = dataLoader.loadFile(file)
+
     // 3. Extract causal mentions from the texts
-    // todo: here I am choosing to pass each text/section through separately -- this may result in a difficult coref problem
-    val mentions = texts.flatMap(t => reader.extractFromText(t.split("<::>").head, filename = Some(file.getName)))
+    val mentions = if (file.getName.contains("COSMOS")) {
+      // cosmos json
+      getMentionsWithLocations(texts, file)
+    } else {
+      // other file types---those don't have locations
+      getMentionsWithoutLocations(texts, file)
+    }
     //The version of mention that includes routing between text vs. comment
-//    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
-//    for (m <- mentions) {
-//      println("----------------")
-//      println(m.text)
-//
-//      if (m.arguments.nonEmpty) {
-//        for (arg <- m.arguments) {
-//          println("arg: " + arg._1 + ": " + m.arguments(arg._1).head.text)
-//        }
-//      }
-//
-//    }
+    //    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
+    //    for (m <- mentions) {
+    //      println("----------------")
+    //      println(m.text)
+    //
+    //      if (m.arguments.nonEmpty) {
+    //        for (arg <- m.arguments) {
+    //          println("arg: " + arg._1 + ": " + m.arguments(arg._1).head.text)
+    //        }
+    //      }
+    //
+    //    }
     val descrMentions = mentions.filter(_ matches "Description")
 
     val exportGlobalVars = false
@@ -86,7 +127,7 @@ object ExtractAndExport extends App {
     for (dm <- descrMentions) {
       println("----------------")
       println(dm.text)
-//      println(dm.foundBy)
+      //      println(dm.foundBy)
       for (arg <- dm.arguments) {
         println(arg._1 + ": " + dm.arguments(arg._1).head.text)
       }
@@ -102,7 +143,7 @@ object ExtractAndExport extends App {
     for (m <- paramSettingMentions) {
       println("----------------")
       println(m.text)
-//      println(m.foundBy)
+      //      println(m.foundBy)
       for (arg <- m.arguments) {
         println(arg._1 + ": " + m.arguments(arg._1).head.text)
       }
@@ -112,7 +153,7 @@ object ExtractAndExport extends App {
     for (m <- unitMentions) {
       println("----------------")
       println(m.text)
-//      println(m.foundBy)
+      //      println(m.foundBy)
       for (arg <- m.arguments) {
         println(arg._1 + ": " + m.arguments(arg._1).head.text)
       }
@@ -132,9 +173,9 @@ object ExtractAndExport extends App {
 
     // 4. Export to all desired formats
     exportAs.foreach { format =>
-        val exporter = getExporter(format, s"$outputDir/${file.getName.replace("." + inputType, s"_mentions.${format}")}")
-        exporter.export(mentions)
-        exporter.close() // close the file when you're done
+      val exporter = getExporter(format, s"$outputDir/${file.getName.replace("." + inputType, s"_mentions.${format}")}")
+      exporter.export(mentions)
+      exporter.close() // close the file when you're done
     }
   }
 }
@@ -169,7 +210,7 @@ case class JSONExporter(filename: String) extends Exporter {
 case class AutomatesExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val serialized = ujson.write(AutomatesJSONSerializer.serializeMentions(mentions))
-//    val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(serialized))
+    //    val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(serialized))
     val file = new File(filename)
     val bw = new BufferedWriter(new FileWriter(file))
     bw.write(serialized)
@@ -184,16 +225,17 @@ case class AutomatesExporter(filename: String) extends Exporter {
 case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString()))
-    pw.write("filename\tsentence\tmention type\trule found this mention\tmention text\tcolumn for annotation\n")
+    pw.write("filename\tsentence\tmention type\trule found this mention\tmention text\tlocation in the pdf\targs in all next columns\n")
     val contentMentions = mentions.filter(m => (m.label.contains("Model") || m.label == "Function"))
     for (m <- contentMentions) {
+      val locationMention = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation").get.toUJson.obj
       pw.write(contentMentions.head.document.id.getOrElse("unk_file") + "\t")
-      pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.foundBy + "\t" + m.text.trim() + "\t")
-//      for (arg <- m.arguments) {
-//        if (arg._2.nonEmpty) {
-//          pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
-//        }
-//      }
+      pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.foundBy + "\t" + m.text.trim() + "\t" + "page:" + locationMention("pageNum").arr.mkString(",") + " block:" +  locationMention("blockIdx").arr.mkString(",") )
+     for (arg <- m.arguments) {
+       if (arg._2.nonEmpty) {
+         pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
+       }
+     }
       pw.write("\n")
     }
     pw.close()

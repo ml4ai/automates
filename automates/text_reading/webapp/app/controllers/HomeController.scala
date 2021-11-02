@@ -243,7 +243,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       // get page and block index for each block; cosmos location information will be the same for all the mentions within one block
       val menInTextBlocks = tuple._1
       val id = tuple._2
-      val location = locations(id).split("<::>").map(_.toDouble.toInt)
+      val location = locations(id).split("<::>").map(loc => loc.split(",").map(_.toInt)) //(_.toDouble.toInt)
       val pageNum = location.head
       val blockIdx = location.last
 
