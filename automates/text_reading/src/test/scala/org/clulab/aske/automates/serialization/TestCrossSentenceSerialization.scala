@@ -32,7 +32,7 @@ import org.clulab.serialization.DocumentSerializer
       val crossSentenceMentions = mentions.filter(m => m.isInstanceOf[CrossSentenceEventMention]).distinct
 //      val crossSentenceMentions = mentions.filter(m => m.isInstanceOf[EventMention]).distinct
       for (m <- crossSentenceMentions) {
-        println(m.text + " " + m.label)
+        println(m + " " + m.text + " " + m.label + " " + m.asInstanceOf[CrossSentenceEventMention].sentences.mkString("|"))
       }
 
       val value = mentions.filter(m => m.isInstanceOf[TextBoundMention])
@@ -40,14 +40,21 @@ import org.clulab.serialization.DocumentSerializer
       println(uJson)
       // next, let's try to export the mentions to JSON file (how can I use export method??)
       val deserializedMentions = AutomatesJSONSerializer.toMentions(uJson)
-      for (m <- deserializedMentions) println(">>" + m.text + " " + m.label)
+      for (m <- deserializedMentions) println(">>" + m.text + " " + m.label + " " + m.asInstanceOf[CrossSentenceEventMention].sentences.mkString("|"))
 //      deserializedMentions should have size 1
       deserializedMentions.head.document.equivalenceHash should equal (crossSentenceMentions.head.document.equivalenceHash)
 
       deserializedMentions should have size (crossSentenceMentions.size)
-      val hashesDeser = deserializedMentions.map(m => m.equivalenceHash).toSet
+
+      deserializedMentions.head.text should equal(crossSentenceMentions.head.text)
+      deserializedMentions.head.asInstanceOf[CrossSentenceEventMention].sentences should equal(crossSentenceMentions.head.asInstanceOf[CrossSentenceEventMention].sentences)
+
+      for (m <- deserializedMentions) println("dm: " + m)
+      val hashesDeser = deserializedMentions.map(m =>   m.equivalenceHash).toSet
       val hashesOrig = crossSentenceMentions.map(_.equivalenceHash).toSet
       hashesDeser should equal(hashesOrig)
+
+//      deserializedMentions.head.id should equal(crossSentenceMentions.head.id)
 
 //      assert(crossSentenceMentions == deserializedMentions)
     }
