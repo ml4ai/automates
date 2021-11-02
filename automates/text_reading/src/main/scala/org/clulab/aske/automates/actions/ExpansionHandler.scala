@@ -103,10 +103,18 @@ class ExpansionHandler() extends LazyLogging {
         for (argToExpand <- sortedClosestFirst) {
 //          println("arg to expand: " + argToExpand.text + " " + argToExpand.foundBy + " " + argToExpand.labels)
           val expanded = expandIfNotAvoid(argToExpand, ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid, m, expansionType)
-//          println("expanded arg: " + expanded.text + " " + expanded.foundBy + " " + expanded.labels)
-          expandedArgs.append(expanded)
+          // sometimes, e.g., in model descriptions, we want to expand an argument that happens to be in identifier;
+          // identifiers should not be expanded;
+          // if we expanded an identifier, it's probably not a stand-alone identifier anymore, so drop the Identifier label (it is normally the first one of the labels)
+          val expandedWithIdentifierLabelDropped = if (expanded.label == "Identifier") {
+            expanded.asInstanceOf[TextBoundMention].copy(expanded.labels.drop(1))
+          } else {
+            expanded
+          }
+//          println("expanded arg: " + expandedWithIdentifierLabelDropped.text + " " + expandedWithIdentifierLabelDropped.foundBy + " " + expandedWithIdentifierLabelDropped.label + "|" + expandedWithIdentifierLabelDropped.labels.mkString("::"))
+          expandedArgs.append(expandedWithIdentifierLabelDropped)
           // Add the mention to the ones to avoid so we don't suck it up
-          stateToAvoid = stateToAvoid.updated(Seq(expanded))
+          stateToAvoid = stateToAvoid.updated(Seq(expandedWithIdentifierLabelDropped))
         }
         // Handle attachments
         // todo: here we aren't really using attachments, but we can add them back in as needed
@@ -136,13 +144,10 @@ class ExpansionHandler() extends LazyLogging {
   // we should perhaps revisit this
   def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State, m: Mention, expansionType: String): Mention = {
 
-//    println("ORIGINAL: " + orig.text + " " + orig.labels + " " + orig.foundBy)
     val expanded = orig match {
-      case tbm: TextBoundMention => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, maxHopLength = ExpansionHandler.MAX_HOP_LENGTH, stateToAvoid, expansionType)
+      case tbm: TextBoundMention => expand(tbm, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, maxHopLength = ExpansionHandler.MAX_HOP_LENGTH, stateToAvoid, expansionType)
       case _ => orig
     }
-
-//    println("EXPANDED: " + expanded.text + " " + expanded.labels + " " + expanded.foundBy)
     //println(s"orig: ${orig.text}\texpanded: ${expanded.text}")
 
     // split expanded at trigger (only thing in state to avoid)
@@ -529,6 +534,7 @@ object ExpansionHandler {
     "^conj".r,
     "cop".r,
     "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
+    "det".r,
     "nmod_at".r,
     "nmod_through".r,
     "^nmod_as".r,
