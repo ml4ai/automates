@@ -88,4 +88,5 @@ rules:
     type: token
     example: ""
     pattern: |
-      [chunk = /B-NP|I-NP/ & !tag = /DT|-LRB-/]+ [word=/[Mm]odel$|simulation|approach/ & chunk = /I-NP/]
+      [chunk = /B-NP|I-NP/ & !tag = /DT|-LRB-/]+ [word=/[Mm]odel$|simulation|approach/ &
+      chunk = /I-NP/]
