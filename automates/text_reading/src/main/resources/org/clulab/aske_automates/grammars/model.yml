@@ -88,5 +88,12 @@ rules:
     type: token
     example: ""
     pattern: |
-      [chunk = /B-NP|I-NP/ & !tag = /DT|-LRB-/]+ [word=/[Mm]odel$|simulation|approach/ &
-      chunk = /I-NP/]
+      [chunk = /B-NP|I-NP/ & !tag = /DT|-LRB-/]+ [word=/[Mm]odel$|simulation|approach/ & chunk = /I-NP/]
+
+  - name: model_gazeteer
+    label: Model
+    priority: ${priority}
+    type: token
+    example: "Flee"
+    pattern: |
+      [entity = /B-model/]

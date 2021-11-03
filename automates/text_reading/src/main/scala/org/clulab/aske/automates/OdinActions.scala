@@ -1099,7 +1099,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
 
   def combineFunction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (functions, other) = mentions.partition(_.label == "Function")
-    val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq()).nonEmpty && m.arguments.getOrElse("output", Seq()).nonEmpty)
+    val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq.empty).nonEmpty && m.arguments.getOrElse("output", Seq.empty).nonEmpty)
     val toReturn = new ArrayBuffer[Mention]()
     for (f <- fragment) {
       val newInputs = new ArrayBuffer[Mention]()
@@ -1108,10 +1108,10 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       if (prevSentences.nonEmpty) {
         val menToAttach = prevSentences.maxBy(_.sentence)
         if (f.arguments.contains("input")) {
-          newInputs ++= menToAttach.arguments.getOrElse("input", Seq()) ++ f.arguments.getOrElse("input", Seq())
+          newInputs ++= menToAttach.arguments.getOrElse("input", Seq.empty) ++ f.arguments.getOrElse("input", Seq.empty)
         }
         if (f.arguments.contains("output")) {
-          newOutputs ++= menToAttach.arguments.getOrElse("output", Seq()) ++ f.arguments.getOrElse("output", Seq())
+          newOutputs ++= menToAttach.arguments.getOrElse("output", Seq.empty) ++ f.arguments.getOrElse("output", Seq.empty)
         }
         val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
         val sentences = new ArrayBuffer[Int]
