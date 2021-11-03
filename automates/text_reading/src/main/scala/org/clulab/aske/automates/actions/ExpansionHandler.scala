@@ -452,13 +452,11 @@ object ExpansionHandler {
 
   // avoid expanding along these dependencies
   val INVALID_OUTGOING = Set[scala.util.matching.Regex](
-    //    "^nmod_including$".r,
     "acl:relcl".r,
     "acl_until".r,
     "advcl_to".r,
     "^advcl_because".r,
     "advmod".r,
-//    "amod".r,
     "^case".r,
     "^cc$".r,
     "ccomp".r,
@@ -479,45 +477,24 @@ object ExpansionHandler {
     "^punct".r,
     "^ref$".r,
     "appos".r
-    //"nmod_for".r,
-//    "nmod".r
   )
 
   val INVALID_INCOMING = Set[scala.util.matching.Regex](
     "cop".r,
     "punct".r
-    //"^nmod_with$".r,
-    //    "^nmod_without$".r,
-    //    "^nmod_except$".r
-    //    "^nmod_despite$".r
   )
 
   // regexes describing valid outgoing dependencies
   val VALID_OUTGOING = Set[scala.util.matching.Regex](
-    //    "^amod$".r, "^advmod$".r,
-    //    "^dobj$".r,
-    //    "^compound".r, // replaces nn
-    //    "^name".r, // this is equivalent to compound when NPs are tagged as named entities, otherwise unpopulated
-    //    // ex.  "isotonic fluids may reduce the risk" -> "isotonic fluids may reduce the risk associated with X.
-    //    "^acl_to".r, // replaces vmod
-    //    "xcomp".r, // replaces vmod
-    //    // Changed from processors......
-//        "^nmod_at".r, // replaces prep_
-    //    //    "case".r
-    //    "^ccomp".r
     ".+".r
   )
 
   val VALID_INCOMING = Set[scala.util.matching.Regex](
     "acl:relcl".r,
     "^nmod_for".r,
-//    "amod".r,
-//    "^compound$".r//,
     "nmod_at".r,
     "^nmod_of".r,
-    "nmod_under".r,
-//    "nmod_in".r//,
-//    "dobj".r
+    "nmod_under".r
   )
 
   val INVALID_OUTGOING_FUNCTION = Set[scala.util.matching.Regex](
@@ -530,7 +507,6 @@ object ExpansionHandler {
     "^case".r,
     "^cc$".r,
     "ccomp".r,
-//    "compound".r,
     "^conj".r,
     "cop".r,
     "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
@@ -545,15 +521,11 @@ object ExpansionHandler {
     "^nmod_since".r,
     "^nmod_without$".r,
     "nmod_in".r,
-//    "nmod_of".r,
-//    "nmod_by".r,
-//    "nummod".r,
     "^nsubj".r,
     "^punct".r,
     "^ref$".r,
     "appos".r,
-    "xcomp".r,
-//    "amod".r
+    "xcomp".r
   )
 
   val INVALID_INCOMING_FUNCTION = Set[scala.util.matching.Regex](
@@ -571,9 +543,7 @@ object ExpansionHandler {
     "^nmod_for".r,
     "nmod_at".r,
     "^nmod_of".r,
-    "nmod_under".r,
-//    "nmod_in".r
-//    "aux".r
+    "nmod_under".r
   )
 
   val INVALID_OUTGOING_MODELDESCR = Set[scala.util.matching.Regex](
@@ -582,12 +552,9 @@ object ExpansionHandler {
     "advcl_to".r,
     "advcl_if".r,
     "^advcl_because".r,
-//    "advmod".r,
     "^case".r,
     "^cc$".r,
     "ccomp".r,
-    //    "compound".r,
-//    "^conj".r,
     "cop".r,
     "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
     "nmod_at".r,
@@ -599,15 +566,9 @@ object ExpansionHandler {
     "^nmod_given".r,
     "^nmod_since".r,
     "^nmod_without$".r,
-//    "nmod_in".r,
-    //    "nmod_by".r,
-    //    "nummod".r,
-//    "^nsubj".r,
     "^punct".r,
     "^ref$".r,
-    "appos".r,
-//    "xcomp".r,
-    //    "amod".r
+    "appos".r
   )
 
   val INVALID_INCOMING_MODELDESCR = Set[scala.util.matching.Regex](
@@ -624,12 +585,9 @@ object ExpansionHandler {
     "acl:relcl".r,
     "^nmod_for".r,
     "nmod_at".r,
-    //    "^nmod_of".r,
     "nmod_under".r,
     "nsubj:xsubj".r,
-    "nsubj".r,
-  //    "nmod_in".r
-  //    "aux".r
+    "nsubj".r
   )
 
   def apply() = new ExpansionHandler()

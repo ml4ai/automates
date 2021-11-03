@@ -338,3 +338,17 @@
 #  pattern: |
 #    trigger = [word = /[Mm]odel$/]
 #    variable:Phrase = compound [word = /[A-Z]*/]
+
+### TODO: fix later
+#  - name: computation
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "This one-dimensional model computes the daily changes in soil water content by soil layer due to infiltration of rainfall and irrigation, vertical drainage, unsaturated flow, soil evaporation, and root water uptake processes."
+#    pattern: |
+#      trigger = [lemma = "compute"]
+#      input:Phrase+ = dobj nmod_in nmod_by | xcomp dobj nmod_of conj_and | nmod_by | advcl dobj | advcl_based_on | nmod_during nmod_based_on | dobj nmod_based_on
+#      output:Phrase = dobj | nsubjpass (conj_or)?
+#      # fixme: this rule doesn't work properly (too many patterns). needs to be fixed.
+#      # note: this rule is not fully subsumed under the generalized rule.

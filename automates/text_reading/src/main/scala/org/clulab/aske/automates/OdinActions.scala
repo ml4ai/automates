@@ -458,8 +458,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def processRuleBasedContextEvent(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val contextAttachedMens = new ArrayBuffer[Mention]
     for (m <- mentions) {
-      val toAttach = m.arguments.getOrElse("event", Seq())
-      val contexts = m.arguments.getOrElse("context", Seq())
+      val toAttach = m.arguments.getOrElse("event", Seq.empty)
+      val contexts = m.arguments.getOrElse("context", Seq.empty)
       val foundBy = m.foundBy
       if (toAttach.nonEmpty) {
         for (t <- toAttach) {
@@ -1139,7 +1139,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   def filterFunctionArgs(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val toReturn = new ArrayBuffer[Mention]()
     val (functions, other) = mentions.partition(_.label == "Function")
-    val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq()).nonEmpty && m.arguments.getOrElse("output", Seq()).nonEmpty)
+    val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq.empty).nonEmpty && m.arguments.getOrElse("output", Seq.empty).nonEmpty)
     for (c <- complete) {
       val newInputs = c.arguments("input").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && m.tags.get.head != "VB" && m.tags.get.head != "VBN")
       val newOutputs = c.arguments("output").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && m.tags.get.head != "VB" && m.tags.get.head != "VBN")
@@ -1153,7 +1153,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       if (f.arguments.contains("input")) {
         val inputFilter = f.arguments("input").filter(!_.label.contains("Unit") && f.arguments.values.head.head.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
         if (inputFilter.nonEmpty) {
-          val newInputs = Map("input" -> inputFilter, "output" -> Seq())
+          val newInputs = Map("input" -> inputFilter, "output" -> Seq.empty)
           val newInputMens = copyWithArgs(f, newInputs)
           toReturn.append(newInputMens)
         }
@@ -1161,7 +1161,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       if (f.arguments.contains("output")) {
         val outputFilter = f.arguments("output").filter(!_.label.contains("Unit") && f.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
         if (outputFilter.nonEmpty) {
-          val newOutputs = Map("input" -> Seq(), "output" -> outputFilter)
+          val newOutputs = Map("input" -> Seq.empty, "output" -> outputFilter)
           val newOutputMens = copyWithArgs(f, newOutputs)
           toReturn.append(newOutputMens)
         }
@@ -1233,9 +1233,9 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
                 if (!overlappingInterval) {
                   outputNumCheck.append(i)
                 }
-                else Seq()
+                else Seq.empty
               }
-              if (outputNumCheck.length == phraseOutputMen.length) newMentions.append(i) else Seq()
+              if (outputNumCheck.length == phraseOutputMen.length) newMentions.append(i) else Seq.empty
             }
           }
         }
@@ -1421,7 +1421,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
             (m.arguments("variable").head, true)
           } else (null, false)
         }
-        case em: EventMention => (m.arguments.getOrElse("variable", Seq()).head, true)
+        case em: EventMention => (m.arguments.getOrElse("variable", Seq.empty).head, true)
         case _ => ???
       }
       if passesFilters(varMention, isArg)
@@ -1434,8 +1434,8 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       m <- mentions
       varMention = m match {
         case tb: TextBoundMention => m
-        case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head
-        case em: EventMention => m.arguments.getOrElse("variable", Seq()).head
+        case rm: RelationMention => m.arguments.getOrElse("variable", Seq.empty).head
+        case em: EventMention => m.arguments.getOrElse("variable", Seq.empty).head
         case _ => ???
       }
       if varMention.words.length < 3
@@ -1452,8 +1452,8 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       m <- mentions
       if !m.words.contains("not") //make sure, the description is not negative
 
-      variableMention = m.arguments.getOrElse("variable", Seq())
-      descrMention = m.arguments.getOrElse("description", Seq())
+      variableMention = m.arguments.getOrElse("variable", Seq.empty)
+      descrMention = m.arguments.getOrElse("description", Seq.empty)
       if (
         descrMention.nonEmpty && //there has to be a description
         looksLikeADescr(descrMention, state).nonEmpty && //make sure the descr looks like a descr
@@ -1508,7 +1508,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         case tb: TextBoundMention => m.text.split(" ")
         //for relation and event mentions, the unit is the value of the arg with the argName "unit"
         case _ => {
-          val unitArgs = m.arguments.getOrElse("unit", Seq())
+          val unitArgs = m.arguments.getOrElse("unit", Seq.empty)
           if (unitArgs.nonEmpty) {
             unitArgs.head.text.split(" ")
           }
@@ -1536,8 +1536,8 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       m <- mentions
       descrText = m match {
         case tb: TextBoundMention => m
-        case rm: RelationMention => m.arguments.getOrElse("description", Seq()).head
-        case em: EventMention => m.arguments.getOrElse("description", Seq()).head
+        case rm: RelationMention => m.arguments.getOrElse("description", Seq.empty).head
+        case em: EventMention => m.arguments.getOrElse("description", Seq.empty).head
         case _ => ???
       }
 
