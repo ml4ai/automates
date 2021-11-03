@@ -381,68 +381,6 @@ class ExpansionHandler() extends LazyLogging {
     }
   }
 
-
-  /*
-      Attachments helper methods
-   */
-
-  // During expansion, sometimes there are attachments that got sucked up, here we add them to the expanded argument mention
-//  def addSubsumedAttachments(expanded: Mention, state: State): Mention = {
-//    def addAttachments(mention: Mention, attachments: Seq[Attachment], foundByName: String): Mention = {
-//      val out = MentionUtils.withMoreAttachments(mention, attachments)
-//
-//      out match {
-//        case tb: TextBoundMention => tb.copy(foundBy=foundByName)
-//        case rm: RelationMention => rm.copy(foundBy=foundByName)
-//        case em: EventMention => em.copy(foundBy=foundByName)
-//      }
-//    }
-//
-//    def compositionalFoundBy(ms: Seq[Mention]): String = {
-//      ms.map(_.foundBy).flatMap(ruleName => ruleName.split("\\+\\+")).distinct.mkString("++")
-//    }
-//
-//    // find mentions of the same label and sentence overlap
-//    val overlapping = state.mentionsFor(expanded.sentence, expanded.tokenInterval)
-//    //    println("Overlapping:")
-//    //    overlapping.foreach(ov => println("  " + ov.text + ", " + ov.foundBy))
-//    val completeFoundBy = compositionalFoundBy(overlapping)
-//
-//    val allAttachments = overlapping.flatMap(m => m.attachments).distinct
-//    //    println(s"allAttachments: ${allAttachments.mkString(", ")}")
-//    // Add on all attachments
-//    addAttachments(expanded, allAttachments, completeFoundBy)
-//  }
-//
-//  // Add the document creation time (dct) attachment if there is no temporal attachment
-//  // i.e., a backoff
-//  def attachDCT(m: Mention, state: State): Mention = {
-//    val dct = m.document.asInstanceOf[EidosDocument].dct
-//    if (dct.isDefined && m.attachments.filter(_.isInstanceOf[Time]).isEmpty)
-//      m.withAttachment(DCTime(dct.get))
-//    else
-//      m
-//  }
-//
-//  def addOverlappingAttachmentsTextBounds(m: Mention, state: State): Mention = {
-//    m match {
-//      case tb: TextBoundMention =>
-//        val attachments = getOverlappingAttachments(tb, state)
-//        if (attachments.nonEmpty) tb.copy(attachments = tb.attachments ++ attachments) else tb
-//      case _ => m
-//    }
-//  }
-//
-//
-//  def getOverlappingAttachments(m: Mention, state: State): Set[Attachment] = {
-//    val interval = m.tokenInterval
-//    // TODO: Currently this is only Property attachments, but we can do more too
-//    val overlappingProps = state.mentionsFor(m.sentence, interval, label = "Property")
-//    overlappingProps.map(pm => Property(pm.text, None)).toSet
-//  }
-
-
-
 }
 
 object ExpansionHandler {
