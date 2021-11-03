@@ -9,7 +9,6 @@ import org.clulab.struct.{DirectedGraph, Edge, GraphMap, Interval}
 import org.clulab.odin.serialization.json._
 import org.clulab.serialization.json.{DirectedGraphOps, EdgeOps, Equivalency, GraphMapOps, JSONSerialization}
 import org.clulab.aske.automates.mentions.CrossSentenceEventMention
-import org.clulab.aske.automates.serializer.AutomatesJSONSerializer.CrossSentenceEventMentionOps
 import org.json4s.{JArray, JNothing, JNull, JObject, JValue}
 
 import scala.collection.mutable.ArrayBuffer
@@ -27,20 +26,8 @@ object AutomatesJSONSerializer {
 
     val docMap = mkDocumentMap(menUJson("documents"))
     val mentionsUJson = menUJson("mentions")
-    val toReturn = new ArrayBuffer[Mention]
 
-    for (a <- mentionsUJson.arr) {
-      if (a.obj.contains("additionalSentence")) {
-        println("### CrossSentenceMention!! ###")
-        val return_1 = mentionsUJson.arr.map(item => toCrossSentenceMention(item, docMap)).toSeq
-        toReturn ++ return_1
-      } else {
-        val return_2 = mentionsUJson.arr.map(item => toMention(item, docMap)).toSeq
-        toReturn ++ return_2
-      }
-    }
-
-    toReturn
+    mentionsUJson.arr.map(item => toMention(item, docMap)).toSeq
   }
 
 
@@ -54,6 +41,9 @@ object AutomatesJSONSerializer {
     val keep = mentionComponents("keep").bool
     val foundBy = mentionComponents("foundBy").str
     val menType = mentionComponents("type").str
+    val crossSentence = if (menType == "CrossSentenceEventMention") {
+      mentionComponents("sentences").arr.map(_.num.toInt)
+    } else Seq.empty
     val attachments = new ArrayBuffer[Attachment]
 
     if (mentionComponents.obj.contains("attachments")) {
@@ -115,53 +105,15 @@ object AutomatesJSONSerializer {
           attachments = attAsSet
         )
       }
-    }
-  }
-
-  def toCrossSentenceMention(mentionComponents: ujson.Value, docMap: Map[String, Document]): Mention = {
-    val tokIntObj = mentionComponents("tokenInterval").obj
-    val tokenInterval = Interval(tokIntObj("start").num.toInt, tokIntObj("end").num.toInt)
-    val labels = mentionComponents("labels").arr.map(_.str).toArray
-    val sentence = mentionComponents("sentence").num.toInt
-    val additionalSentence = mentionComponents("additionalSentence").num.toInt
-    //    val sentences = Seq(sentence, secondSentence)
-    val docHash = mentionComponents("document").str.toInt
-    val document = docMap(docHash.toString)
-    val keep = mentionComponents("keep").bool
-    val foundBy = mentionComponents("foundBy").str
-    val menType = mentionComponents("type").str
-    val attachments = new ArrayBuffer[Attachment]
-
-    if (mentionComponents.obj.contains("attachments")) {
-      val attObjArray = mentionComponents("attachments").arr
-      for (ao <- attObjArray) {
-        val att = toAttachment(ao)
-        attachments.append(att)
-      }
-    }
-
-
-    val attAsSet = attachments.toSet
-
-    def getArgs(argObj: ujson.Value): Map[String, Seq[Mention]] = {
-      val args = for  {
-        (k,v) <- argObj.obj
-        seqOfArgMentions = v.arr.map(toMention(_, docMap))
-
-      } yield k -> seqOfArgMentions
-      args.toMap
-    }
-
-    menType match {
       case "CrossSentenceEventMention" => {
         new CrossSentenceEventMention(
           labels,
           tokenInterval,
-          toCrossSentenceMention(mentionComponents("trigger"), docMap).asInstanceOf[TextBoundMention],
+          toMention(mentionComponents("trigger"), docMap).asInstanceOf[TextBoundMention],
           getArgs(mentionComponents("arguments")),
           Map.empty[String, Map[Mention, odin.SynPath]],
           sentence,
-          additionalSentence,
+          crossSentence,
           document,
           keep,
           foundBy,
@@ -380,14 +332,14 @@ object AutomatesJSONSerializer {
     ujson.Obj(
       "words" -> s.words.toList,
       "startOffsets" -> s.startOffsets.toList,
-        "endOffsets" -> s.endOffsets.toList,
-        "raw" -> s.raw.toList,
-        "tags" -> s.tags.get.toList,
-        "lemmas" -> s.lemmas.get.toList,
-        "entities" -> s.entities.get.toList,
-        "norms" -> s.norms.get.toList,
-        "chunks" -> s.chunks.get.toList,
-        "graphs" -> s.graphs.toUJson
+      "endOffsets" -> s.endOffsets.toList,
+      "raw" -> s.raw.toList,
+      "tags" -> s.tags.get.toList,
+      "lemmas" -> s.lemmas.get.toList,
+      "entities" -> s.entities.get.toList,
+      "norms" -> s.norms.get.toList,
+      "chunks" -> s.chunks.get.toList,
+      "graphs" -> s.graphs.toUJson
 
     )
   }
@@ -472,14 +424,6 @@ object AutomatesJSONSerializer {
     }
   }
 
-
-    private def argsAST(arguments: Map[String, Seq[Mention]]): JObject = {
-      val args = arguments.map {
-        case (name, mentions) => name -> JArray(mentions.map(_.jsonAST).toList)
-      }
-      JObject(args.toList)
-    }
-
     /** Hash representing the [[Mention.arguments]] */
     private def argsHash(args: Map[String, Seq[Mention]]): Int = {
       val argHashes = for {
@@ -489,11 +433,6 @@ object AutomatesJSONSerializer {
       } yield mix(bh, unorderedHash(hs))
       val h0 = stringHash("org.clulab.odin.Mention.arguments")
       finalizeHash(h0, unorderedHash(argHashes))
-    }
-
-    private def pathsAST(paths: Map[String, Map[Mention, odin.SynPath]]): JValue = paths match {
-      case gps if gps.nonEmpty => gps.jsonAST
-      case _ => JNothing
     }
 
   implicit class CrossSentenceEventMentionOps(cm: CrossSentenceEventMention) extends JSONSerialization with Equivalency {
@@ -512,7 +451,7 @@ object AutomatesJSONSerializer {
       // sentence index
       val h4 = mix(h3, cm.sentence)
       // 2nd sentence index
-      val h5 = mix(h4, cm.additionalSentence)
+      val h5 = mix(h4, cm.sentences.hashCode)
       // document.equivalenceHash
       val h6 = mix(h5, cm.document.equivalenceHash)
       // args
@@ -524,28 +463,6 @@ object AutomatesJSONSerializer {
 
     def jsonAST: JValue = JNull
   }
-//
-//    override def id: String = s"${CrossSentenceEventMention.toString}:$equivalenceHash"
-//
-//    def jsonAST: JValue = {
-//      ("type" -> CrossSentenceEventMention.toString) ~
-//        // used for paths map
-//      ("id" -> cm.id) ~
-//      ("text" -> cm.text) ~
-//      ("labels" -> cm.labels) ~
-//      ("trigger" -> cm.trigger.jsonAST) ~
-//      ("arguments" -> argsAST(cm.arguments)) ~
-//      // paths are encoded as (arg name -> (mentionID -> path))
-//      ("paths" -> pathsAST(cm.paths)) ~
-//      ("tokenInterval" -> Map("start" -> cm.tokenInterval.start, "end" -> cm.tokenInterval.end)) ~
-//      ("characterStartOffset" -> cm.startOffset) ~
-//      ("characterEndOffset" -> cm.endOffset) ~
-//      ("sentence" -> cm.sentence) ~
-//      ("document" -> cm.document.equivalenceHash.toString) ~
-//      ("keep" -> cm.keep) ~
-//      ("foundBy" -> cm.foundBy)
-//    }
-//  }
 
   implicit class AutomatesCrossSentenceEventMentionOps(cm: CrossSentenceEventMention) extends CrossSentenceEventMentionOps(cm: CrossSentenceEventMention) {
 
@@ -562,8 +479,7 @@ object AutomatesJSONSerializer {
         "characterStartOffset" -> cm.startOffset,
         "characterEndOffset" -> cm.endOffset,
         "sentence" -> cm.sentence,
-        "additionalSentence" -> cm.additionalSentence,
-//        "sentences" -> Seq(cm.sentence),
+        "sentences" -> cm.sentences,
         "document" -> cm.document.equivalenceHash.toString,
         "keep" -> cm.keep,
         "foundBy" -> cm.foundBy,
