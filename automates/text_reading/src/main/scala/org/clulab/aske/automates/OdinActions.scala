@@ -1142,7 +1142,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val (functions, other) = mentions.partition(_.label == "Function")
     val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq()).nonEmpty && m.arguments.getOrElse("output", Seq()).nonEmpty)
     for (c <- complete) {
-      val newInputs = c.arguments("input").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && m.tags.get.head != "VB" && m.tags.get.head != "VBN")
+      val newInputs = c.arguments("input").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && m.tags.get.head != "VB")
       val newOutputs = c.arguments("output").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && m.tags.get.head != "VB" && m.tags.get.head != "VBN")
       if (newInputs.nonEmpty && newOutputs.nonEmpty) {
         val newArgs = Map("input" -> newInputs, "output" -> newOutputs)

@@ -2,8 +2,8 @@
   - Phrase:
       - Identifier:
         - VariableGazetteer
-      - Model:
-          - ModelComponent
+      - Model
+      - ModelComponent
       - Measurement:
         - Value:
           - ValueAndUnit

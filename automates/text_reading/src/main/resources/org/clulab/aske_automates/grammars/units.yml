@@ -68,6 +68,14 @@ rules:
       [lemma="$"]
       #note: more monetary units can be added under this rule.
 
+  - name: percent
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "Global change (%)"
+    pattern: |
+      [lemma="%"]
+
   - name: unit_from_fragments
     label: Unit
     priority: ${priority}

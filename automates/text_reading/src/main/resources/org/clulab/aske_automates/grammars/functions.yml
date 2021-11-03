@@ -283,6 +283,17 @@ rules:
       input:Phrase+ = nmod_to nmod_through?
       output:Phrase = nsubj | nsubjpass
 
+  - name: reflected_in
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Thus, while annual changes in production and consumption still get reflected in Ip and Ic , and thus, in the price, no surplus or deficit is carried over into the next year’s storage."
+    pattern: |
+      trigger = [word = /reflected/] (?= "in")
+      input:Phrase+ = nsubjpass
+      output:Phrase = nmod_in
+
 # note: this rule produces too many false positives, needs to be revised.
   - name: equation
     label: Function
@@ -393,6 +404,28 @@ rules:
       trigger = [word = "calculate"]
       input:Phrase+ = xcomp dobj amod?
       output:Phrase = dobj
+
+  - name: input_account_for
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "In addition, the representation of storage in the model makes it possible to account for mechanisms like export restrictions and import policies,"
+    pattern: |
+      trigger = [word = "account"] (?= "for")
+      input:Phrase+ = <xcomp nsubj
+      output:Phrase = nmod_for nmod_like?
+
+  - name: given_with_respect_to
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Price changes are given with respect to the baseline price."
+    pattern: |
+      trigger = [word = "given"] (?= [word = "with"] [word = "respect"] [word = "to"])
+      input:Phrase+ = nmod_with_respect_to
+      output:Phrase = nsubjpass
 
   # function rules allowing for partial extraction
 
