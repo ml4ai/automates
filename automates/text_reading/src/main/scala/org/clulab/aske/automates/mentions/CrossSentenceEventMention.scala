@@ -15,7 +15,7 @@ class CrossSentenceEventMention(
                                  val arguments: Map[String, Seq[Mention]],
                                  val paths: Map[String, Map[Mention, SynPath]],
                                  val sentence: Int,
-                                 val additionalSentence: Int,
+                                 val sentences: Seq[Int],
                                  val document: Document,
                                  val keep: Boolean,
                                  val foundBy: String,
@@ -28,11 +28,11 @@ class CrossSentenceEventMention(
             arguments: Map[String, Seq[Mention]],
             paths: Map[String, Map[Mention, SynPath]],
             sentence: Int,
-            additionalSentence: Int,
+            sentences: Seq[Int],
             document: Document,
             keep: Boolean,
             foundBy: String
-          ) = this(Seq(label), mkTokenInterval(trigger, arguments), trigger, arguments, paths, sentence, additionalSentence, document, keep, foundBy, Set.empty)
+          ) = this(Seq(label), mkTokenInterval(trigger, arguments), trigger, arguments, paths, sentence, sentences, document, keep, foundBy, Set.empty)
 }
 
 object CrossSentenceEventMention

@@ -36,12 +36,14 @@ object AutomatesJSONSerializer {
     val tokenInterval = Interval(tokIntObj("start").num.toInt, tokIntObj("end").num.toInt)
     val labels = mentionComponents("labels").arr.map(_.str).toArray
     val sentence = mentionComponents("sentence").num.toInt
-    val additionalSentence = mentionComponents("sentence").num.toInt // fixme: needs to find way to properly deserialize this
     val docHash = mentionComponents("document").str.toInt
     val document = docMap(docHash.toString)
     val keep = mentionComponents("keep").bool
     val foundBy = mentionComponents("foundBy").str
     val menType = mentionComponents("type").str
+    val crossSentence = if (menType == "CrossSentenceEventMention") {
+      mentionComponents("sentences").arr.map(_.num.toInt)
+    } else Seq.empty
     val attachments = new ArrayBuffer[Attachment]
 
     if (mentionComponents.obj.contains("attachments")) {
@@ -111,7 +113,7 @@ object AutomatesJSONSerializer {
           getArgs(mentionComponents("arguments")),
           Map.empty[String, Map[Mention, odin.SynPath]],
           sentence,
-          additionalSentence,
+          crossSentence,
           document,
           keep,
           foundBy,
@@ -449,7 +451,7 @@ object AutomatesJSONSerializer {
       // sentence index
       val h4 = mix(h3, cm.sentence)
       // 2nd sentence index
-      val h5 = mix(h4, cm.additionalSentence)
+      val h5 = mix(h4, cm.sentences.hashCode)
       // document.equivalenceHash
       val h6 = mix(h5, cm.document.equivalenceHash)
       // args
@@ -477,7 +479,7 @@ object AutomatesJSONSerializer {
         "characterStartOffset" -> cm.startOffset,
         "characterEndOffset" -> cm.endOffset,
         "sentence" -> cm.sentence,
-        "additionalSentence" -> cm.additionalSentence,
+        "sentences" -> cm.sentences,
         "document" -> cm.document.equivalenceHash.toString,
         "keep" -> cm.keep,
         "foundBy" -> cm.foundBy,
