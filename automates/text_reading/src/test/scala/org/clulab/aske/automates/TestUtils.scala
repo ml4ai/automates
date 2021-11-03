@@ -7,6 +7,7 @@ import org.scalatest._
 import org.clulab.aske.automates.OdinEngine._
 import org.clulab.aske.automates.apps.{AlignmentBaseline, ExtractAndAlign}
 import org.clulab.aske.automates.apps.ExtractAndAlign.{GLOBAL_VAR_TO_UNIT_VIA_CONCEPT, allLinkTypes, whereIsGlobalVar, whereIsNotGlobalVar}
+import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
 import org.clulab.utils.TextUtils
@@ -211,6 +212,18 @@ object TestUtils {
       // Check that each of the arg values is found
       val argStrings = selectedArgs.map(_.text)
       argValues.foreach(argStrings should contain (_))
+    }
+
+
+    def getAttachmentJsonsFromArgs(mentions: Seq[Mention]): Seq[ujson.Value] = {
+      val allAttachmentsInEvent = for {
+        m <- mentions
+        arg <- m.arguments
+        a <- arg._2
+        if a.attachments.nonEmpty
+        att <- a.attachments
+      } yield att.asInstanceOf[AutomatesAttachment].toUJson
+      allAttachmentsInEvent
     }
 
   }
