@@ -11,7 +11,7 @@ import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
   class TestCrossSentenceSerialization extends ExtractionTest {
 
     val textToTest = "Rn depends on RS, but also on T and RH. The only additional parameter appearing in the suggested formula is the extraterrestrial radiation, RA."
-    failingTest should s"serialize and deserialize the mention successfully: ${textToTest}" taggedAs (Somebody) in {
+    passingTest should s"serialize and deserialize the mention successfully: ${textToTest}" taggedAs (Somebody) in {
       val mentions = extractMentions(textToTest)
       val crossSentenceMentions = mentions.filter(m => m.isInstanceOf[CrossSentenceEventMention]).distinct
       // serialize mentions (into a json object)
