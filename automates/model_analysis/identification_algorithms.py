@@ -321,7 +321,6 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
 
     # Line 4
     (cg, gamma_prime) = gm.make_cg(g, gamma)
-    print(gamma_prime)
 
     # Line 5
     if gamma_prime == "Inconsistent":
@@ -340,7 +339,6 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
         product_list = []
         id_check_list = []
         for s_element in s:
-            print("s_element:", s_element)
             s_el_orig_names = []
             for node in s_element:
                 s_el_orig_names.append(cg.vs.select(name=node)[0]["orig_name"])
@@ -350,12 +348,10 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
             subscript_orig_vars = []
             for var in subscript_variables:
                 subscript_orig_vars.append(cg.vs.select(name=var)[0]["orig_name"])
-            print("subs:", subscript_orig_vars)
 
             s_el_info = cg.vs.select(name_in=s_element)
             nxt_gamma = []
             for node in s_el_info:
-                print(node)
                 int_vars = node["int_vars"]
                 int_values = node["int_values"]
                 for subscript in subscript_orig_vars:
@@ -363,9 +359,7 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
                         int_vars.append(subscript)
                         int_values.append(None)  # todo: maybe placeholder?
                 nxt_gamma.append(gm.CF(node["orig_name"], node["obs_val"], int_vars, int_values))
-            print("pre-simplified:", nxt_gamma)
             nxt_gamma = gm.simplify_cf(nxt_gamma, g)
-            print("post-simplified:", nxt_gamma)
             nxt = cf_ID(g, nxt_gamma, v)
             product_list.append(deepcopy(nxt.p))
             id_check_list.append(deepcopy(nxt.tree.call.id_check))

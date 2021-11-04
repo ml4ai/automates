@@ -720,7 +720,6 @@ def simplify_cf(cf, g):
         for int_num, intervention in enumerate(statement.int_vars):
             if intervention not in find_related_nodes_of([statement.orig_name], g_obs, "in", "max", exclude_orig=True):
                 if intervention in new_cf[stat_num].int_vars:
-                    print("removing", intervention, "because not ancestor of node")
                     remove_index = new_cf[stat_num].int_vars.index(intervention)
                     new_cf[stat_num].int_vars.remove(new_cf[stat_num].int_vars[remove_index])
                     new_cf[stat_num].int_values.remove(new_cf[stat_num].int_values[remove_index])
@@ -732,11 +731,9 @@ def simplify_cf(cf, g):
             comparison_set = list(set(statement.int_vars) - set(intervention))
             if intervention in find_related_nodes_of(comparison_set, g_obs, "in", "max"):
                 if intervention in final_cf[stat_num].int_vars:
-                    print("removing", intervention, "because ancestor of another intervention")
                     remove_index = final_cf[stat_num].int_vars.index(intervention)
                     final_cf[stat_num].int_vars.remove(final_cf[stat_num].int_vars[remove_index])
                     final_cf[stat_num].int_values.remove(final_cf[stat_num].int_values[remove_index])
-    print(final_cf)
     return final_cf
 
 @dataclass(unsafe_hash=True)
