@@ -120,5 +120,5 @@ def test_cf_identifiability():
     results = cf_identifiability(g, gamma, delta)
 
     # Expected Results
-    exp = "P'/P'(x_prime), where P' = \\sum_{W_['X', 'Z'],X}P_{Z,W}(x_prime,y)P_{X}(W)"
+    exp = "P'/P'(x_prime), where P' = \\sum_{W}P_{W,Z}(x_prime,y)P_{X}(W)"
     assert(results == exp)
