@@ -369,7 +369,13 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
         # Outer sum
         nodes_to_remove = []
         for event in gamma_prime:
-            nodes_to_remove.append(f"{event.orig_name}_{event.int_vars}")
+            if event.int_vars is not None:
+                if len(event.int_vars) > 0:
+                    nodes_to_remove.append(f"{event.orig_name}_{event.int_vars}")
+                else:
+                    nodes_to_remove.append(event.orig_name)
+            else:
+                nodes_to_remove.append(event.orig_name)
         summation_set = list(set(cg_obs_nodes)-set(nodes_to_remove))
         return gm.CfResultsInternal(p=gm.Probability(sumset=summation_set, product=True, children=product_list),
                                     tree=tree)
