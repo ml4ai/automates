@@ -713,20 +713,31 @@ def simplify_cf(cf, g):
     :return: equivalent counterfactual statement with at most the same number interventions
     """
     g_obs = observed_graph(g)
-    for statement in cf:
-        for index, intervention in enumerate(statement.int_vars):
 
-            # Interventions should not be ancestors of another intervention
+    # Interventions should be ancestors of the original vertex
+    new_cf = copy.deepcopy(cf)
+    for stat_num, statement in enumerate(cf):
+        for int_num, intervention in enumerate(statement.int_vars):
+            if intervention not in find_related_nodes_of([statement.orig_name], g_obs, "in", "max", exclude_orig=True):
+                if intervention in new_cf[stat_num].int_vars:
+                    print("removing", intervention, "because not ancestor of node")
+                    remove_index = new_cf[stat_num].int_vars.index(intervention)
+                    new_cf[stat_num].int_vars.remove(new_cf[stat_num].int_vars[remove_index])
+                    new_cf[stat_num].int_values.remove(new_cf[stat_num].int_values[remove_index])
+
+    # Interventions should not be ancestors of another intervention
+    final_cf = copy.deepcopy(new_cf)
+    for stat_num, statement in enumerate(new_cf):
+        for intervention in statement.int_vars:
             comparison_set = list(set(statement.int_vars) - set(intervention))
             if intervention in find_related_nodes_of(comparison_set, g_obs, "in", "max"):
-                statement.int_vars.remove(statement.int_vars[index])
-                statement.int_values.remove(statement.int_values[index])
-
-            # Interventions should be ancestors of the vertex
-            if intervention not in find_related_nodes_of([statement.orig_name], g_obs, "in", "max"):
-                statement.int_vars.remove(statement.int_vars[index])
-                statement.int_values.remove(statement.int_values[index])
-    return cf
+                if intervention in final_cf[stat_num].int_vars:
+                    print("removing", intervention, "because ancestor of another intervention")
+                    remove_index = final_cf[stat_num].int_vars.index(intervention)
+                    final_cf[stat_num].int_vars.remove(final_cf[stat_num].int_vars[remove_index])
+                    final_cf[stat_num].int_values.remove(final_cf[stat_num].int_values[remove_index])
+    print(final_cf)
+    return final_cf
 
 @dataclass(unsafe_hash=True)
 class Probability:
