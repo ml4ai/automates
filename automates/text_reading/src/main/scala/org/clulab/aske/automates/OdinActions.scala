@@ -1592,28 +1592,29 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     modelParams
   }
 
-  def functionInputsToModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val functionMens = mentions.filter(_.label == "Function")
-    val modelParams = new ArrayBuffer[Mention]
-    for (f <- functionMens) {
-      val functionInputs = f.arguments.filter(m => m._1 == "input")
-      for (inputs <- functionInputs.values) {
-        val input = inputs.head
-        val newArgs = Map("modelParameter" -> Seq(input))
-        val newLabels = List("ModelComponent", "Model", "Phrase", "Entity").toSeq
-        val modelParam = new TextBoundMention(
-          newLabels,
-          input.tokenInterval,
-          input.sentence,
-          input.document,
-          input.keep,
-          "functionInputsToModelParam",
-          input.attachments)
-        modelParams.append(modelParam)
-      }
-    }
-    modelParams
-  }
+//  def functionInputsToModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+//    val functionMens = mentions.filter(_.label == "Function")
+//    val modelParams = new ArrayBuffer[Mention]
+//    for (f <- functionMens) {
+//      val functionInputs = f.arguments.filter(m => m._1 == "input")
+//      for (inputs <- functionInputs.values) {
+//        val input = inputs.head
+//        val newArgs = Map("modelParameter" -> Seq(input))
+//        val newLabels = List("ModelComponent", "Model", "Phrase", "Entity").toSeq
+//        val modelParam = new TextBoundMention(
+//          newLabels,
+//          input.tokenInterval,
+//          input.sentence,
+//          input.document,
+//          input.keep,
+//          "functionInputsToModelParam",
+//          input.attachments)
+//        modelParams.append(modelParam)
+//      }
+//    }
+////    modelParams
+//    mentions
+//  }
 }
 
 

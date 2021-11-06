@@ -8,6 +8,7 @@ import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getGlobalVars, returnAttachmentOfAGivenTypeOption}
 import org.clulab.aske.automates.attachments.{AutomatesAttachment, MentionLocationAttachment}
 import org.clulab.aske.automates.cosmosjson.CosmosJsonProcessor
+import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
 import org.clulab.odin.Mention
@@ -227,6 +228,7 @@ case class TSVExporter(filename: String) extends Exporter {
     val pw = new PrintWriter(new File(filename.toString()))
     pw.write("filename\tsentence\tmention type\trule found this mention\tmention text\tlocation in the pdf\targs in all next columns\n")
     val contentMentions = mentions.filter(m => (m.label.contains("Model") || m.label == "Function"))
+//    val nonCrossSentences = contentMentions.filter(m => !m.isInstanceOf[CrossSentenceEventMention])
     for (m <- contentMentions) {
       val locationMention = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation").get.toUJson.obj
       pw.write(contentMentions.head.document.id.getOrElse("unk_file") + "\t")
