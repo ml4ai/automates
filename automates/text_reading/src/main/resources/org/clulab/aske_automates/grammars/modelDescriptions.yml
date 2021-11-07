@@ -79,7 +79,6 @@ rules:
       model:Model = <cop nsubj
       modelDescr:Phrase = <cop
 
-    # todo: how do we know if "This" or "It" is referencing to a model?
   - name: model_allows_for
     label: ModelDescr
     priority: ${priority}

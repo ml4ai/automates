@@ -41,7 +41,7 @@ object AutomatesJSONSerializer {
     val keep = mentionComponents("keep").bool
     val foundBy = mentionComponents("foundBy").str
     val menType = mentionComponents("type").str
-    val crossSentence = if (menType == "CrossSentenceEventMention") {
+    val sentences = if (menType == "CrossSentenceEventMention") {
       mentionComponents("sentences").arr.map(_.num.toInt)
     } else Seq.empty
     val attachments = new ArrayBuffer[Attachment]
@@ -113,7 +113,7 @@ object AutomatesJSONSerializer {
           getArgs(mentionComponents("arguments")),
           Map.empty[String, Map[Mention, odin.SynPath]],
           sentence,
-          crossSentence,
+          sentences,
           document,
           keep,
           foundBy,

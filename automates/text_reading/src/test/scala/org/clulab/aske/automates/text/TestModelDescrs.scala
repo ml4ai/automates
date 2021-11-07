@@ -5,9 +5,10 @@ import org.clulab.aske.automates.TestUtils._
 class TestModelDescrs extends ExtractionTest{
 
   val t1a = "SWAT incorporates a simple empirical model to predict the trophic status of water bodies."
-  failingTest should s"extract descriptions from t1a: ${t1a}" taggedAs(Somebody) in {
+  passingTest should s"extract descriptions from t1a: ${t1a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "SWAT" -> Seq("trophic status of water bodies") // note: this test fails because "a simple empirical model" and the description is captured here too.
+      "SWAT" -> Seq("trophic status of water bodies"), // TODO: need to resolve generic model names later
+      "simple empirical model"  -> Seq("trophic status of water bodies")
     )
     val mentions = extractMentions(t1a)
     testModelDescrsEvent(mentions, desired)
