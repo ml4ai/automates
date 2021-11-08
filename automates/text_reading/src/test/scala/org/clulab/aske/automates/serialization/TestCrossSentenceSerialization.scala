@@ -32,7 +32,5 @@ import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
       val hashesDeser = deserializedMentions.map(m => AutomatesJSONSerializer.CrossSentenceEventMentionOps(m.asInstanceOf[CrossSentenceEventMention]).equivalenceHash).toSet
       val hashesOrig = crossSentenceMentions.map(m =>  AutomatesJSONSerializer.CrossSentenceEventMentionOps(m.asInstanceOf[CrossSentenceEventMention]).equivalenceHash).toSet
       hashesDeser should equal(hashesOrig)
-      println("HERE!!!" + crossSentenceMentions.head.text)
-
     }
   }
