@@ -5,9 +5,6 @@ import org.clulab.aske.automates.TestUtils.{ExtractionTest, Somebody}
 import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 
-
-   // first, let's make crossSentenceMentions to export to JSON file
-
   class TestCrossSentenceSerialization extends ExtractionTest {
 
     val textToTest = "Rn depends on RS, but also on T and RH. The only additional parameter appearing in the suggested formula is the extraterrestrial radiation, RA."
