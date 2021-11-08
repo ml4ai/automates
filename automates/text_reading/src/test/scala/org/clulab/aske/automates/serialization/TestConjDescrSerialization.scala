@@ -4,6 +4,7 @@ import org.clulab.aske.automates.TestUtils.{ExtractionTest, Somebody}
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
+import org.clulab.odin.serialization.json.MentionOps
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 
 
@@ -23,8 +24,8 @@ class TestConjDescrSerialization extends ExtractionTest {
     deserializedMentions.head.document.equivalenceHash should equal (DescrMentions.head.document.equivalenceHash)
     deserializedMentions.head.text should equal(DescrMentions.head.text)
     deserializedMentions.head.sentence should equal(DescrMentions.head.sentence)
-    val hashesDeser = deserializedMentions.map(m => AutomatesJSONSerializer.AutomatesRelationMentionOps(m.asInstanceOf[RelationMention]).equivalenceHash).toSet
-    val hashesOrig = DescrMentions.map(m =>  AutomatesJSONSerializer.AutomatesRelationMentionOps(m.asInstanceOf[RelationMention]).equivalenceHash).toSet
+    val hashesDeser = deserializedMentions.map(_.equivalenceHash)
+    val hashesOrig = DescrMentions.map(_.equivalenceHash)
     hashesDeser should equal(hashesOrig)
   }
 
@@ -49,12 +50,13 @@ class TestConjDescrSerialization extends ExtractionTest {
     val DescrMentions = mentions.filter(m => m.label == "Description")
     val uJson = AutomatesJSONSerializer.serializeMentions(DescrMentions)
     val deserializedMentions = AutomatesJSONSerializer.toMentions(uJson)
+    getAttachmentJsonsFromArgs(deserializedMentions) should equal(getAttachmentJsonsFromArgs(DescrMentions))
     deserializedMentions should have size (DescrMentions.size)
-    deserializedMentions.head.document.equivalenceHash should equal (DescrMentions.head.document.equivalenceHash)
+    deserializedMentions.head.document.equivalenceHash should equal(DescrMentions.head.document.equivalenceHash)
     deserializedMentions.head.text should equal(DescrMentions.head.text)
-    deserializedMentions.head.asInstanceOf[EventMention].sentence should equal(DescrMentions.head.asInstanceOf[EventMention].sentence)
-    val hashesDeser = deserializedMentions.map(m => AutomatesJSONSerializer.AutomatesEventMentionOps(m.asInstanceOf[EventMention]).equivalenceHash).toSet
-    val hashesOrig = DescrMentions.map(m =>  AutomatesJSONSerializer.AutomatesEventMentionOps(m.asInstanceOf[EventMention]).equivalenceHash).toSet
+    deserializedMentions.head.sentence should equal(DescrMentions.head.sentence)
+    val hashesDeser = deserializedMentions.map(_.equivalenceHash)
+    val hashesOrig = DescrMentions.map(_.equivalenceHash)
     hashesDeser should equal(hashesOrig)
   }
 
