@@ -98,7 +98,7 @@ class OdinEngine(
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((modelDescrs ++ loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter) ++ untangled)).toVector
+    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter) ++ modelDescrs ++ untangled)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
