@@ -92,11 +92,13 @@ class OdinEngine(
     val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
 
     val (functionMentions, nonFunctions) = nonDescrMens.partition(_.label.contains("Function"))
-    val (modelDescrs, other) = nonFunctions.partition(_.label == "ModelDescr")
+    val (modelDescrs, nonModelDescrs) = nonFunctions.partition(_.label == "ModelDescr")
+    val (modelNames, other) = nonModelDescrs.partition(_.label == "Model")
+    val modelFilter = loadableAttributes.actions.filterModelNames(modelNames)
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining) ++ untangled ++ modelDescrs)).toVector
+    loadableAttributes.actions.replaceWithLongerIdentifier((modelDescrs ++ loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter) ++ untangled)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
@@ -163,7 +165,7 @@ object OdinEngine {
   val UNIT_ARG: String = "unit"
   val FUNCTION_INPUT_ARG: String = "input"
   val FUNCTION_OUTPUT_ARG: String = "output"
-  val MODEL_NAME_ARG: String = "model"
+  val MODEL_NAME_ARG: String = "modelName"
   val MODEL_DESCRIPTION_ARG: String = "modelDescr"
   val CONTEXT_ARG: String = "context"
   val CONTEXT_EVENT_ARG: String = "event"
