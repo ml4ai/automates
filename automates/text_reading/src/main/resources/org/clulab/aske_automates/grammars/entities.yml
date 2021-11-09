@@ -119,7 +119,7 @@ rules:
     action: looksLikeAnIdentifier
     example: "R(t)"
     pattern: |
-      @Identifier "("? @Identifier ")"?
+      @Identifier "("? @Identifier ")"?  @Identifier?
 
 #  - name: var_greek_and_latin
 #    label: Identifier

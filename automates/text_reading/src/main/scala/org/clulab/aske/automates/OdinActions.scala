@@ -1539,7 +1539,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
 
     for {
       m <- mentions
-      if m.arguments.contains("description")
       descrText = m match {
         case tb: TextBoundMention => m
         case rm: RelationMention => m.arguments.getOrElse("description", Seq.empty).head
