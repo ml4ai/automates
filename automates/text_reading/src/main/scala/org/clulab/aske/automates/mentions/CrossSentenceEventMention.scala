@@ -102,5 +102,5 @@ class CrossSentenceEventMention(
   }
 }
 
-object CrossSentenceEventMention // note: this seems like a necessary part - is there any way that this is incorporated into other part and deleted here?
+object CrossSentenceEventMention
 

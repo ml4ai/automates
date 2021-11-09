@@ -16,6 +16,7 @@ import org.clulab.struct.Interval
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.math.Ordering
 import scala.util.Try
 import scala.util.matching.Regex
 
@@ -365,56 +366,40 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def resolveModelCoref(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (models, nonModels) = mentions.partition(m => m.label == "ModelDescr")
-    val (theModel, modelNames) = models.partition(m => m.arguments.contains("model") && m.arguments("model").head.foundBy == "the/this_model" || m.arguments.contains("model") && m.arguments("model").head.foundBy == "model_pronouns")
+    val (theModel, modelNames) = models.partition(m => m.arguments.contains("modelName") && m.arguments("modelName").head.foundBy == "the/this_model" || m.arguments.contains("modelName") && m.arguments("modelName").head.foundBy == "model_pronouns")
     val resolved: Seq[Mention] = theModel.map(m => replaceTheModel(mentions, m))
-    val resolved_filtered = resolved.filter(m => m.arguments("model").head.foundBy != "model_pronouns")
-        (resolved_filtered ++ modelNames ++ nonModels).distinct
+    (resolved ++ modelNames ++ nonModels).distinct
   }
 
   def replaceTheModel(mentions: Seq[Mention], origModel: Mention): Mention = {
-    val previousModelInterval = returnPreviousModelInt(mentions, origModel)
-    val previousModelSntnce = returnPreviousModelSntnce(mentions, origModel)
-
-    if (previousModelInterval != Interval(0,0)) {
-      val newModelArg = new TextBoundMention(
-        origModel.arguments("model").head.labels,
-        previousModelInterval,
-        previousModelSntnce,
-        origModel.document,
-        origModel.keep,
-        "resolving_coref",
-        origModel.attachments
-      )
-      val newArgs = mutable.Map[String, Seq[Mention]]()
-      for (arg <- origModel.arguments) {
-        if (arg._1 == "model") {
-          newArgs += (arg._1 -> Seq(newModelArg))
-        } else {
-          newArgs += (arg._1 -> origModel.arguments(arg._1))
+    val previousModel = returnPreviousModel(mentions, origModel)
+    val newArgs = mutable.Map[String, Seq[Mention]]()
+    for (arg <- origModel.arguments) {
+      if (arg._1 == "modelName") {
+        if (previousModel.nonEmpty) {
+          newArgs += (arg._1 -> Seq(previousModel.get))
         }
+      } else {
+        newArgs += (arg._1 -> origModel.arguments(arg._1))
       }
-      copyWithArgs(origModel, newArgs.toMap)
-    } else origModel
+    }
+    copyWithArgs(origModel, newArgs.toMap)
   }
 
-  def returnPreviousModelInt(mentions: Seq[Mention], origModel: Mention): Interval = {
+  def returnPreviousModel(mentions: Seq[Mention], origModel: Mention): Option[Mention] = {
     val (models, nonModels) = mentions.partition(m => m.label == "Model")
     val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model" || m.foundBy == "model_pronouns")
-    val previousModels = modelNames.filter(_.sentence < origModel.sentence)
+    val previousModels = modelNames.filter(_.sentence <= origModel.sentence)
+    val previousModels2 = modelNames.filter(_.sentence < origModel.sentence)
     if (previousModels.nonEmpty) {
       val selectedModel = previousModels.maxBy(_.sentence)
-      selectedModel.tokenInterval
-    } else Interval(0,0)
-  }
-
-  def returnPreviousModelSntnce(mentions: Seq[Mention], origModel: Mention): Int = {
-    val (models, nonModels) = mentions.partition(m => m.label == "Model")
-    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model" || m.foundBy == "model_pronouns")
-    val previousModels = modelNames.filter(_.sentence < origModel.sentence)
-    if (previousModels.nonEmpty) {
-      val selectedModel = previousModels.maxBy(_.sentence)
-      selectedModel.sentence
-    } else origModel.sentence
+      val finalModel = if (selectedModel.sentence == origModel.sentence) {
+        if (selectedModel.startOffset < origModel.startOffset) {
+          Some(selectedModel)
+        } else if (previousModels2.nonEmpty) Some(previousModels2.maxBy(_.sentence)) else None
+      } else Some(selectedModel)
+      finalModel
+    } else None
   }
 
   def processFunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -428,7 +413,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
       newMentions
     }
-
 
     def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
       val newMentions = new ArrayBuffer[Mention]()
@@ -1247,7 +1231,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
 
   def filterModelDescrs(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val newMentions = new ArrayBuffer[Mention]
-    val groupByModelInt = mentions.groupBy(_.arguments("model").head.tokenInterval)
+    val groupByModelInt = mentions.groupBy(_.arguments("modelName").head.tokenInterval)
     for (m <- groupByModelInt) {
       val groupByDescrInt = m._2.groupBy(_.arguments("modelDescr").head.tokenInterval)
       for (d <- groupByDescrInt) {
@@ -1257,7 +1241,12 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         }
       }
     }
-    newMentions
+    newMentions.filter(m => m.arguments.contains("modelName") && m.arguments("modelName").head.foundBy != "model_pronouns")
+  }
+
+  def filterModelNames(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val filterModelNames = mentions.filterNot(m => m.foundBy == "model_pronouns" || m.foundBy == "the/this_model")
+    filterModelNames
   }
 
   def filterModelNames(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {

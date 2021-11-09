@@ -167,7 +167,7 @@ object OdinEngine {
   val UNIT_ARG: String = "unit"
   val FUNCTION_INPUT_ARG: String = "input"
   val FUNCTION_OUTPUT_ARG: String = "output"
-  val MODEL_NAME_ARG: String = "model"
+  val MODEL_NAME_ARG: String = "modelName"
   val MODEL_DESCRIPTION_ARG: String = "modelDescr"
   val CONTEXT_ARG: String = "context"
   val CONTEXT_EVENT_ARG: String = "event"

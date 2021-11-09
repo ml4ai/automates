@@ -12,7 +12,7 @@ rules:
     example: "SWAT incorporates a simple empirical model to predict the trophic status of water bodies."
     pattern: |
       trigger = [lemma = /predict|understand|investigate|examine|suggest/]
-      model:Model = <acl_to (<dobj nsubj)? | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj (compound)?
+      modelName:Model = <acl_to (<dobj nsubj)? | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj (compound)?
       modelDescr:Phrase = dobj | ccomp
 
   - name: model_verb2
@@ -23,7 +23,7 @@ rules:
     example: "Our model also offers an opportunity to further decompose the different contributions to annual price variability."
     pattern: |
       trigger = [lemma = /offer|provide|reproduce/]
-      model:Model = nsubj (compound)? | <xcomp advcl dobj
+      modelName:Model = nsubj (compound)? | <xcomp advcl dobj
       modelDescr:Phrase = dobj
 
   - name: model_cannot
@@ -33,7 +33,7 @@ rules:
     action: ${action}
     example: "we show first that the standard Susceptible-Infected-Removed (SIR) model cannot account for the patterns observed in various regions where the disease spread."
     pattern: |
-      @model:Model (?<trigger> [word = "cannot"]) (?<modelDescr> [chunk = /B-VP/] (${PP+NP} [tag = /VBN/] ${PP+NP} [word = "where"] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP/|word = "spread"])?)
+      @modelName:Model (?<trigger> [word = "cannot"]) (?<modelDescr> [chunk = /B-VP/] (${PP+NP} [tag = /VBN/] ${PP+NP} [word = "where"] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP/|word = "spread"])?)
 
   - name: model_limitation
     label: ModelLimitation
@@ -43,7 +43,7 @@ rules:
     example: "The major limitation of MWSWAT was its reduced capability in larger water-sheds."
     pattern: |
       trigger = [lemma = "limitation"] (?= "of")
-      model:Model = nmod_of
+      modelName:Model = nmod_of
       modelDescr:Phrase = <nsubj
 
   - name: model_not_verb
@@ -54,7 +54,7 @@ rules:
     example: ""
     pattern: |
       trigger = [word = "not"] (?= [lemma = /hold/])
-      model:Model = <neg nsubj
+      modelName:Model = <neg nsubj
       modelDescr:VerbPhrase = <neg
 
   - name: model_not_adj
@@ -65,7 +65,7 @@ rules:
     example: "However, existing early warning models of forced migration focus on understanding the causes9 and are not as successful in predicting refugee movements as in predicting natural disasters10–12."
     pattern: |
       trigger = [word = "not"] [word = /as/]? [tag = /JJ/]
-      model:Model = <conj_and
+      modelName:Model = <conj_and
       modelDescr:Phrase = advcl_in
 
   - name: model_cop
@@ -76,7 +76,7 @@ rules:
     example: "The Soil and Water Assessment Tool (SWAT) model is a robust watershed modeling tool."
     pattern: |
       trigger = [lemma = "be"]
-      model:Model = <cop nsubj
+      modelName:Model = <cop nsubj
       modelDescr:Phrase = <cop
 
   - name: model_allows_for
@@ -87,7 +87,7 @@ rules:
     example: "This allows for more realistic simulation of the soil water profile and application of excess irrigation for leaching salts."
     pattern: |
       trigger = [lemma = "allow"]
-      model:Model = nsubj (nmod_in | nmod_of)?
+      modelName:Model = nsubj (nmod_in | nmod_of)?
       modelDescr:Phrase+ = nmod_for | dobj | xcomp ccomp
 
   - name: model_contributes_to
@@ -98,7 +98,7 @@ rules:
     example: "It also contributes to understanding complex ecosystems as well as water availability, water quality, climate change, and agricultural production issues across the world"
     pattern: |
       trigger = [lemma = "contribute"]
-      model:Model = nsubj
+      modelName:Model = nsubj
       modelDescr:Phrase+ = advcl_to
 
   - name: model_capability
@@ -109,7 +109,7 @@ rules:
     example: "QSWAT has added capabilities of merging small subbasins and has static and dynamic visualizations of outputs."
     pattern: |
       trigger = [lemma = "capability"]
-      model:Model = <dobj? nsubj
+      modelName:Model = <dobj? nsubj
       modelDescr:Phrase+ = acl_of | acl_to
 
   - name: model_can_verb
@@ -120,7 +120,7 @@ rules:
     example: "QSWAT can also show the total, daily, monthly orannual means, maxima and minima for reach and subbasin out-puts."
     pattern: |
       trigger = [lemma = "can"]
-      model:Model = <aux nsubj
+      modelName:Model = <aux nsubj
       modelDescr:VerbPhrase+ = <aux
 
 # note: This rule overlaps with model_cop rule. If it turns out that this rule can be fully incorporated into model_cop rule, we can delete this rule.
@@ -143,7 +143,7 @@ rules:
     example: "A high-resolution SWAT model, consisting of sub-field level hydrologic response units, was applied to Lake Champlain’s Missisquoi Bay Watershed, located along the United States–Canadian border."
     pattern: |
       trigger = [lemma = "consist"] (?= "of")
-      model:Model = <acl
+      modelName:Model = <acl
       modelDescr:Phrase = nmod_of
 
   - name: model_applied_to
@@ -154,7 +154,7 @@ rules:
     example: "Computational models have been widely applied to study migration processes."
     pattern: |
       trigger = [lemma = "apply"]
-      model:Model = nsubjpass | dobj
+      modelName:Model = nsubjpass | dobj
       modelDescr:VerbPhrase = xcomp | advcl_to
 
   - name: model_purpose
@@ -165,7 +165,7 @@ rules:
     example: "It was developed to predict the impact of land management practices on water, sediment and agricultural chemical yields (e.g., fertilizer and pesticides) in large complex watersheds with varying soils, land uses and management conditions over long periods of time."
     pattern: |
       trigger = [word = /developed|designed/] (?=[word = /^to$|^for$/])
-      model:Model = nsubjpass | <acl nsubj
+      modelName:Model = nsubjpass | <acl nsubj
       modelDescr:VerbPhrase = xcomp
 
   - name: model_languageInfo
@@ -176,7 +176,7 @@ rules:
     example: ""
     pattern: |
       trigger = [word = /written|implemented/] (?=[word = /^in$/])
-      model:Model = nsubjpass
+      modelName:Model = nsubjpass
       modelDescr:Phrase+ = nmod_in
 
   - name: model_characteristic
@@ -187,7 +187,7 @@ rules:
     example: "A main characteristic of our model is that the supply function refers not only to current production, but includes supply from storage."
     pattern: |
       trigger = [word = "characteristic"]
-      model:Model = nmod_of
+      modelName:Model = nmod_of
       modelDescr:VerbPhrase+ = <nsubj ccomp
 
   - name: model_version
@@ -198,7 +198,7 @@ rules:
     example: "Based on these findings, we chose to use the FabSim3 toolkit, which is an improved version of FabSim."
     pattern: |
       trigger = [tag = /JJ|VBN/]? [word = "version"]
-      model:Model = nsubj compound?
+      modelName:Model = nsubj compound?
       modelDescr:Model+ = nmod_of
 
   - name: model_focus
@@ -208,7 +208,7 @@ rules:
     action: ${action}
     example: "However, existing early warning models of forced migration focus on understanding the causes and are not as successful in predicting refugee movements as in predicting natural disasters."
     pattern: |
-      @model:Model (${PP+NP})? (?<trigger> [word = "focus"] [word = "on"]) (?<modelDescr> [tag = /VBG/] [chunk = /B-NP|I-NP/]*)
+      @modelName:Model (${PP+NP})? (?<trigger> [word = "focus"] [word = "on"]) (?<modelDescr> [tag = /VBG/] [chunk = /B-NP|I-NP/]*)
 
   - name: apply_model_in_order_to
     label: ModelDescr
@@ -218,7 +218,7 @@ rules:
     example: "In this paper, we apply a global, annual supply-demand equilibrium model in order to quantify to what degree i) observed annual wheat price fluctuations over the last four decades can be explained by reported variations in production in the presence of dynamic storage; and ii) the remaining unexplained price variations in the last decade can be traced back to reported trade policy responses in the wheat market, as opposed to external drivers."
     pattern: |
       trigger = [word = "apply"]
-      model:Model = dobj
+      modelName:Model = dobj
       modelDescr:Phrase = advcl_in_order
 
   ## New rules for model construction ###
