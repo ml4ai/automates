@@ -18,11 +18,8 @@ GCC_TEST_DATA_DIRECTORY = "tests/data/program_analysis/GCC2GrFN"
 
 
 def cleanup():
-    if os.path.exists("./ast.json"):
-        os.remove("ast.json")
-
     for item in os.listdir("./"):
-        if item.endswith(".o"):
+        if item.endswith(".o") or item.endswith("gcc_ast.json"):
             os.remove("./" + item)
 
 
@@ -66,7 +63,9 @@ def run_around_tests():
 
 
 def run_gcc_plugin_with_c_file(c_file):
-    gpp_command = GCC_10_BIN_DIRECTORY + "g++-10.1"
+    gpp_command = os.getenv("CUSTOM_GCC_10_PATH")
+    if gpp_command is None:
+        gpp_command = GCC_10_BIN_DIRECTORY + "g++-10.1"
     plugin_option = f"-fplugin={GCC_PLUGIN_IMAGE}"
     # Runs g++ with the given c file. This should create the file ast.json
     # with the programs ast inside of it.
