@@ -5,9 +5,11 @@ int main() {
 
     if (a > b) {
         x = b;
+        b = a;
     }
 
     if (x == 3) {
+        a = x;
         x = 10;
     }
 
