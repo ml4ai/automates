@@ -33,6 +33,20 @@ class CrossSentenceEventMention(
             foundBy: String
           ) = this(Seq(label), mkTokenInterval(trigger, arguments), trigger, arguments, paths, sentence, sentences, document, keep, foundBy, Set.empty)
 
+  def copy(
+            labels: Seq[String] = this.labels,
+            tokenInterval: Interval = this.tokenInterval,
+            trigger: TextBoundMention = this.trigger,
+            arguments: Map[String, Seq[Mention]] = this.arguments,
+            paths: Map[String, Map[Mention, SynPath]] = this.paths,
+            sentence: Int = this.sentence,
+            sentences: Seq[Int] = this.sentences,
+            document: Document = this.document,
+            keep: Boolean = this.keep,
+            foundBy: String = this.foundBy,
+            attachments: Set[Attachment] = this.attachments
+          ): CrossSentenceEventMention = new CrossSentenceEventMention(labels, tokenInterval, trigger, arguments, paths, sentence, sentences, document, keep, foundBy, attachments)
+
   override def text: String = {
     val sentenceAndMentionsSeq = (arguments
       .values

@@ -1,8 +1,8 @@
 package org.clulab.utils
 
 import java.io.PrintWriter
-
 import org.clulab.aske.automates.attachments.{AutomatesAttachment, DiscontinuousCharOffsetAttachment}
+import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.odin._
 import org.clulab.processors.{Document, Sentence}
 
@@ -61,6 +61,13 @@ object DisplayUtils {
         sb.append(argumentsToString(em, nl, tab) + nl)
         if (em.attachments.nonEmpty) {
           sb.append(s"$tab Event Attachments: ${attachmentsString(em.attachments)} $nl")
+        }
+      case cr: CrossSentenceEventMention =>
+        sb.append(s"$tab trigger => ${cr.trigger.text} $nl")
+        if (cr.trigger.attachments.nonEmpty) sb.append(s"$tab  * Attachments: ${attachmentsString(cr.trigger.attachments)} $nl")
+        sb.append(argumentsToString(cr, nl, tab) + nl)
+        if (cr.attachments.nonEmpty) {
+          sb.append(s"$tab CrossSentence Attachments: ${attachmentsString(cr.attachments)} $nl")
         }
       case rel: RelationMention =>
         sb.append(argumentsToString(rel, nl, tab) + nl)

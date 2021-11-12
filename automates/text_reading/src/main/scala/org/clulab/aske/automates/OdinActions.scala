@@ -1117,7 +1117,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         toReturn.append(newFunctions)
       } else toReturn.append(f)
     }
-    toReturn ++ other ++ complete
+    toReturn.distinct ++ other ++ complete
   }
 
   def filterFunctionArgs(mentions: Seq[Mention], state: State): Seq[Mention] = {
