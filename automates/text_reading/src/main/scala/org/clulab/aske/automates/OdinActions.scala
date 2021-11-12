@@ -398,7 +398,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           Some(selectedModel)
         } else if (previousModels2.nonEmpty) Some(previousModels2.maxBy(_.sentence)) else None
       } else Some(selectedModel)
-      finalModel
+      if (origModel.sentence - finalModel.get.sentence < 10) finalModel else None
     } else None
   }
 
@@ -1117,7 +1117,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         toReturn.append(newFunctions)
       } else toReturn.append(f)
     }
-    toReturn ++ other ++ complete
+    toReturn.distinct ++ other ++ complete
   }
 
   def filterFunctionArgs(mentions: Seq[Mention], state: State): Seq[Mention] = {
