@@ -1241,7 +1241,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         }
       }
     }
-    newMentions.filter(m => m.arguments.contains("modelName") && m.arguments("modelName").head.foundBy != "model_pronouns")
+    newMentions
   }
 
   def filterModelNames(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
