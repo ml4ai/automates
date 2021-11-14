@@ -39,6 +39,16 @@ rules:
       variable:Phrase = nsubj
       value:Value = /nmod_to|dobj/ nummod
 
+  - name: var-word-equals_value-token
+    label: ParameterSetting
+    priority: ${priority}
+    type: token
+    example: "Bearing in mind , we set our default setting to the refugee move speed is equal to 200 km per day and the awareness of surrounding is 1 link ."
+    action: ${paramSetAction}
+    pattern: |
+      @variable: Phrase [lemma = "be"] [lemma='equal'] "to" @value:Value
+
+
   - name: var-equals_value2
     label: ParameterSetting
     priority: ${priority}
@@ -346,7 +356,7 @@ rules:
     example: "CDN is the denitrification constant (~-0.035)."
     action: ${paramSetAction}
     pattern: |
-      (@variable:Phrase [!tag="CD"] ) "("? [word="~"] @value:Value ")"?
+      @variable:Phrase "("? [word="~"] @value:Value ")"?
 
 
   - name: set_to_setting

@@ -4,6 +4,7 @@
         - VariableGazetteer
       - Location
       - Date
+      - Year
       - Model
       - Measurement:
         - Value:

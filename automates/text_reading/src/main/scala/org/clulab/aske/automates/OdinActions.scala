@@ -375,21 +375,29 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       for (m <- mentions) {
         // assume there's only one arg of each type
         val tokenIntervals = m.arguments.map(_._2.head).map(_.tokenInterval).toSeq
-        // takes care of accidental arg overlap
-        if (tokenIntervals.distinct.length == tokenIntervals.length) {
-          val newArgs = mutable.Map[String, Seq[Mention]]()
-          val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) {
+        val labelsOfTextBoundMentions = m.arguments.map(_._2.head.label).toSeq
+        println(m.text + " \n" + labelsOfTextBoundMentions.mkString("|") )
+        print(labelsOfTextBoundMentions.distinct.length)
+        print(labelsOfTextBoundMentions.length)
+        // make sure mention labels are no identical (basically, checking if both are Values---they should not be)
+        if (labelsOfTextBoundMentions.distinct.length == labelsOfTextBoundMentions.length) {
+          // takes care of accidental arg overlap
+          if (tokenIntervals.distinct.length == tokenIntervals.length) {
+            val newArgs = mutable.Map[String, Seq[Mention]]()
+            val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) {
 
-            newArgs += ("variable" -> Seq(copyWithLabel(m.arguments("variable").head, "Identifier")), "value" -> m.arguments("value"))
-            "variable"
-          } else {
-            newArgs += ("variable" -> m.arguments("variable"), "value" -> m.arguments("value"))
-            "concept"
+              newArgs += ("variable" -> Seq(copyWithLabel(m.arguments("variable").head, "Identifier")), "value" -> m.arguments("value"))
+              "variable"
+            } else {
+              newArgs += ("variable" -> m.arguments("variable"), "value" -> m.arguments("value"))
+              "concept"
+            }
+
+            val att = new ParamSetAttachment(attachedTo, "ParamSetAtt")
+            newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
           }
-
-          val att = new ParamSetAttachment(attachedTo, "ParamSetAtt")
-          newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
         }
+
 
       }
       newMentions
@@ -1349,21 +1357,28 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   def descrIsNotVar(mentions: Seq[Mention], state: State): Seq[Mention] = {
     //returns mentions in which descriptions are not also variables
     //and the variable and the description don't overlap
+
+    for (m <- mentions) {
+      println(m.text + " " + m.label)
+    }
     for {
       m <- mentions
       if !m.words.contains("not") //make sure, the description is not negative
 
       variableMention = m.arguments.getOrElse("variable", Seq())
       descrMention = m.arguments.getOrElse("description", Seq())
+      if descrMention.nonEmpty //there has to be a description
+      descrMen = descrMention.head
       if (
-        descrMention.nonEmpty && //there has to be a description
         looksLikeADescr(descrMention, state).nonEmpty && //make sure the descr looks like a descr
-        descrMention.head.text.length > 4 && //the descr can't be the length of a var
+          descrMen.text.length > 4 && //the descr can't be the length of a var
         !descrMention.head.text.contains("=") &&
         looksLikeAnIdentifier(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be an identifier)
         &&
-        descrMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
-        ) || (descrMention.nonEmpty && freqWords.contains(descrMention.head.text)) //the description can be one short, frequent word
+          descrMen.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
+        ) || (descrMention.nonEmpty && freqWords.contains(descrMen.text)) //the description can be one short, frequent word: fixme: should be looking at lemmas, not head text bc frequent words are (for the most part) not plural
+      // make sure there's at least one noun or participle/gerund; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
+      if descrMen.tags.get.exists(t => (t.startsWith("N") || t == "VBN") || descrMen.words.exists(w => capitalized(w)))
     } yield m
   }
 
@@ -1433,20 +1448,17 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   def looksLikeADescr(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
     val singleCapitalWord = """^[A-Z]+$""".r
-
     for {
       m <- mentions
       descrText = m match {
-        case tb: TextBoundMention => m
-        case rm: RelationMention => m.arguments.getOrElse("description", Seq()).head
-        case em: EventMention => m.arguments.getOrElse("description", Seq()).head
+        case tb: TextBoundMention => tb
+        case rm: RelationMention => rm.arguments.getOrElse("description", Seq()).head
+        case em: EventMention => em.arguments.getOrElse("description", Seq()).head
         case _ => ???
       }
 
       if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.75
       if (descrText.words.exists(_.length > 1))
-      // make sure there's at least one noun or participle/gerund; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
-      if (descrText.tags.get.exists(t => t.startsWith("N") || t == "VBN") || descrText.words.exists(w => capitalized(w)))
       if singleCapitalWord.findFirstIn(descrText.text).isEmpty
       if !descrText.text.startsWith(")")
 
