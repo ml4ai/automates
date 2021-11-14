@@ -33,6 +33,7 @@ class CrossSentenceEventMention(
             foundBy: String
           ) = this(Seq(label), mkTokenInterval(trigger, arguments), trigger, arguments, paths, sentence, sentences, document, keep, foundBy, Set.empty)
 
+  // note: the method below is for copying a mention with some modification to its components.
   def copy(
             labels: Seq[String] = this.labels,
             tokenInterval: Interval = this.tokenInterval,
