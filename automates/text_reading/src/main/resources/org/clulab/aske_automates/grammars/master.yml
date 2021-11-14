@@ -37,6 +37,7 @@ rules:
       priority: 8
       action: unitActionFlow
 
+# note: model rules moved back to model.yml and thus enabled again.
   - import: "org/clulab/aske_automates/grammars/model.yml"
     vars:
       priority: 9
@@ -59,7 +60,10 @@ rules:
     vars:
       priority: 10
 
-
+  - import: "org/clulab/aske_automates/grammars/modelDescriptions.yml"
+    vars:
+      action: filterModelDescrs
+      priority: 10
 
 #  - import: "org/clulab/aske_automates/grammars/template.yml"
 #    vars:

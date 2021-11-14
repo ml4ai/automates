@@ -80,7 +80,6 @@ object AlignmentJsonUtils {
       Some(textMentions)
     } else None
 
-
     val descriptionMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get

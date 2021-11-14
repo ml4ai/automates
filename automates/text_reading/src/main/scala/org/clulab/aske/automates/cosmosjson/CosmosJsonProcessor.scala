@@ -84,6 +84,7 @@ object CosmosJsonProcessor {
     val cls = json("postprocess_cls").str
     val detectCls = json("detect_cls").str
     val postprocessScore = json("postprocess_score").num
+    val detect_cls = json("detect_cls").str
 
     CosmosObject(pdfName, Some(Seq(pageNum)), Some(Seq(blockIdx)), Some(content), Some(cls), Some(detectCls), Some(postprocessScore)) //todo: add bounding box?
   }
