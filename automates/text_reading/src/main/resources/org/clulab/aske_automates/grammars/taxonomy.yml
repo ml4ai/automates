@@ -8,6 +8,7 @@
           - ValueAndUnit
         - Unit:
           - UnitRelation
+  - VerbPhrase
 - Event:
   - ContextEvent
   - Conj
@@ -15,6 +16,8 @@
   - Description:
     - ConjDescription
     - ConjDescriptionType2
+  - ModelDescr:
+    - ModelLimitation
   - ParameterSetting
   - IntervalParameterSetting
   - Function

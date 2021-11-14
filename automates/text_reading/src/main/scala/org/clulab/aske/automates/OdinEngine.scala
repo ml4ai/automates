@@ -81,18 +81,25 @@ class OdinEngine(
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
+    val modelCorefResolve = loadableAttributes.actions.resolveModelCoref(events)
 
     // process context attachments to the initially extracted mentions
-    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(events)
+    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(modelCorefResolve)
     val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
     val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
 
     // post-process the mentions with untangleConj and combineFunction
     val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
-    val (functionMentions, other) = nonDescrMens.partition(_.label.contains("Function"))
+
+    val (functionMentions, nonFunctions) = nonDescrMens.partition(_.label.contains("Function"))
+    val (modelDescrs, nonModelDescrs) = nonFunctions.partition(_.label == "ModelDescr")
+    val (modelNames, other) = nonModelDescrs.partition(_.label == "Model")
+    val modelFilter = loadableAttributes.actions.filterModelNames(modelNames)
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining) ++ untangled)).toVector
+    val finalModelDescrs = modelDescrs.filter(m => m.arguments.contains("modelName"))
+
+    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter) ++ finalModelDescrs ++ untangled)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
@@ -136,6 +143,8 @@ object OdinEngine {
 
   // Mention labels
   val DESCRIPTION_LABEL: String = "Description"
+  val MODEL_DESCRIPTION_LABEL: String = "ModelDescr"
+  val MODEL_LIMITATION_LABEL: String = "ModelLimitation"
   val CONJ_DESCRIPTION_LABEL: String = "ConjDescription"
   val CONJ_DESCRIPTION_TYPE2_LABEL: String = "ConjDescriptionType2"
   val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"
@@ -157,6 +166,8 @@ object OdinEngine {
   val UNIT_ARG: String = "unit"
   val FUNCTION_INPUT_ARG: String = "input"
   val FUNCTION_OUTPUT_ARG: String = "output"
+  val MODEL_NAME_ARG: String = "modelName"
+  val MODEL_DESCRIPTION_ARG: String = "modelDescr"
   val CONTEXT_ARG: String = "context"
   val CONTEXT_EVENT_ARG: String = "event"
 

@@ -76,14 +76,6 @@ rules:
     pattern: |
       (?<=product of|values for) @variable:Phrase and @variable:Phrase
 
-  - name: model
-    label: Model
-    priority: ${priority1}
-    type: token
-    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-    pattern: |
-      [word=/^DSSAT|^CSM/]
-
   - name: identifier_greek
     label: Identifier
     priority: ${priority1}
@@ -128,7 +120,6 @@ rules:
     example: "R(t)"
     pattern: |
       @Identifier "("? @Identifier ")"? @Identifier?
-
 
 #  - name: var_greek_and_latin
 #    label: Identifier

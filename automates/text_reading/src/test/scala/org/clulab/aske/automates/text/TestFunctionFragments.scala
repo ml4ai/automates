@@ -19,4 +19,11 @@ class TestFunctionFragments extends ExtractionTest {
     testUnaryEvent(mentions, eventType = "Function", "input", desired)
   }
 
+  val t3 = "Each day’s observations were averaged separately;"
+  failingTest should s"find functions from t1m: ${t3}" taggedAs(Somebody) in {
+    val desired = Seq("Each day's observations")
+    val mentions = extractMentions(t3)
+    testUnaryEvent(mentions, eventType = "Function", arg1Role = "input", desired)
+  } // note: "Each" is not captured as a part of input as it is a determiner. Needs to fix this.
+
 }

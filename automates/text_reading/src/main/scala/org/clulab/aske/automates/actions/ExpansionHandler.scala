@@ -25,13 +25,14 @@ class ExpansionHandler() extends LazyLogging {
 
     // until there's evidence to the contrary, assume concepts  in parameter settings should expand in the same way as they do in functions
     // use `contains` and not `=` for param settings to take care of both Parameter Settings and Interval Parameter Settings
-    val (functions, other) = mentions.partition(m => m.label == "Function" || m.label.contains("ParameterSetting"))
-
+    val (functions, nonFunctions) = mentions.partition(m => m.label == "Function" || m.label.contains("ParameterSetting"))
+    val (modelDescrs, other) = nonFunctions.partition(_.label == "ModelDescr")
     val function_res = functions.flatMap(expandArgs(_, state, validArgs, "function"))
+    val modelDescr_res = modelDescrs.flatMap(expandArgs(_, state, validArgs, expansionType = "modelDescr"))
     val other_res = other.flatMap(expandArgs(_, state, validArgs, "standard"))
 
     // Useful for debug
-    function_res ++ other_res
+    function_res ++ modelDescr_res ++ other_res
   }
 
   def expandArgs(mention: Mention, state: State, validArgs: List[String], expansionType: String): Seq[Mention] = {
@@ -102,10 +103,18 @@ class ExpansionHandler() extends LazyLogging {
         for (argToExpand <- sortedClosestFirst) {
 //          println("arg to expand: " + argToExpand.text + " " + argToExpand.foundBy + " " + argToExpand.labels)
           val expanded = expandIfNotAvoid(argToExpand, ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid, m, expansionType)
-//          println("expanded arg: " + expanded.text + " " + expanded.foundBy + " " + expanded.labels)
-          expandedArgs.append(expanded)
+          // sometimes, e.g., in model descriptions, we want to expand an argument that happens to be in identifier;
+          // identifiers should not be expanded;
+          // if we expanded an identifier, it's probably not a stand-alone identifier anymore, so drop the Identifier label (it is normally the first one of the labels)
+          val expandedWithIdentifierLabelDropped = if (expanded.label == "Identifier") {
+            expanded.asInstanceOf[TextBoundMention].copy(expanded.labels.drop(1))
+          } else {
+            expanded
+          }
+//          println("expanded arg: " + expandedWithIdentifierLabelDropped.text + " " + expandedWithIdentifierLabelDropped.foundBy + " " + expandedWithIdentifierLabelDropped.label + "|" + expandedWithIdentifierLabelDropped.labels.mkString("::"))
+          expandedArgs.append(expandedWithIdentifierLabelDropped)
           // Add the mention to the ones to avoid so we don't suck it up
-          stateToAvoid = stateToAvoid.updated(Seq(expanded))
+          stateToAvoid = stateToAvoid.updated(Seq(expandedWithIdentifierLabelDropped))
         }
         // Handle attachments
         // todo: here we aren't really using attachments, but we can add them back in as needed
@@ -135,13 +144,10 @@ class ExpansionHandler() extends LazyLogging {
   // we should perhaps revisit this
   def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State, m: Mention, expansionType: String): Mention = {
 
-//    println("ORIGINAL: " + orig.text + " " + orig.labels + " " + orig.foundBy)
     val expanded = orig match {
-      case tbm: TextBoundMention => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, maxHopLength = ExpansionHandler.MAX_HOP_LENGTH, stateToAvoid, expansionType)
+      case tbm: TextBoundMention => expand(tbm, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, maxHopLength = ExpansionHandler.MAX_HOP_LENGTH, stateToAvoid, expansionType)
       case _ => orig
     }
-
-//    println("EXPANDED: " + expanded.text + " " + expanded.labels + " " + expanded.foundBy)
     //println(s"orig: ${orig.text}\texpanded: ${expanded.text}")
 
     // split expanded at trigger (only thing in state to avoid)
@@ -288,11 +294,13 @@ class ExpansionHandler() extends LazyLogging {
     val validOutgoingSet = expansionType match {
       case "standard" => VALID_OUTGOING
       case "function" => VALID_OUTGOING_FUNCTION
+      case "modelDescr" => VALID_OUTGOING_MODELDESCR
       case _ => ???
     }
     val invalidOutgoingSet = expansionType match {
       case "standard" => INVALID_OUTGOING
       case "function" => INVALID_OUTGOING_FUNCTION
+      case "modelDescr" => INVALID_OUTGOING_MODELDESCR
       case _ => ???
     }
 //    println("valid outgoing"+expansionType+" "+validOutgoingSet.mkString("|"))
@@ -313,6 +321,7 @@ class ExpansionHandler() extends LazyLogging {
     val validIncomingSet = expansionType match {
       case "standard" => VALID_INCOMING
       case "function" => VALID_INCOMING_FUNCTION
+      case "modelDescr" => VALID_INCOMING_MODELDESCR
       case _ => ???
     }
     validIncomingSet.exists(pattern => pattern.findFirstIn(dep).nonEmpty)
@@ -338,6 +347,7 @@ class ExpansionHandler() extends LazyLogging {
       val incomingSet = expansionType match {
         case "standard" => INVALID_INCOMING
         case "function" => INVALID_INCOMING_FUNCTION
+        case "modelDescr" => INVALID_INCOMING_MODELDESCR
         case _ => ???
       }
       incomingDependencies(tokenIdx).forall(pair => ! incomingSet.exists(pattern => pattern.findFirstIn(pair._2).nonEmpty))
@@ -357,7 +367,6 @@ class ExpansionHandler() extends LazyLogging {
       getNewTokenInterval(allIntervals)
     }
     else orig.tokenInterval
-
     val paths = for {
       (argName, argPathsMap) <- orig.paths
       origPath = argPathsMap(orig.arguments(argName).head)
@@ -372,68 +381,6 @@ class ExpansionHandler() extends LazyLogging {
     }
   }
 
-
-  /*
-      Attachments helper methods
-   */
-
-  // During expansion, sometimes there are attachments that got sucked up, here we add them to the expanded argument mention
-//  def addSubsumedAttachments(expanded: Mention, state: State): Mention = {
-//    def addAttachments(mention: Mention, attachments: Seq[Attachment], foundByName: String): Mention = {
-//      val out = MentionUtils.withMoreAttachments(mention, attachments)
-//
-//      out match {
-//        case tb: TextBoundMention => tb.copy(foundBy=foundByName)
-//        case rm: RelationMention => rm.copy(foundBy=foundByName)
-//        case em: EventMention => em.copy(foundBy=foundByName)
-//      }
-//    }
-//
-//    def compositionalFoundBy(ms: Seq[Mention]): String = {
-//      ms.map(_.foundBy).flatMap(ruleName => ruleName.split("\\+\\+")).distinct.mkString("++")
-//    }
-//
-//    // find mentions of the same label and sentence overlap
-//    val overlapping = state.mentionsFor(expanded.sentence, expanded.tokenInterval)
-//    //    println("Overlapping:")
-//    //    overlapping.foreach(ov => println("  " + ov.text + ", " + ov.foundBy))
-//    val completeFoundBy = compositionalFoundBy(overlapping)
-//
-//    val allAttachments = overlapping.flatMap(m => m.attachments).distinct
-//    //    println(s"allAttachments: ${allAttachments.mkString(", ")}")
-//    // Add on all attachments
-//    addAttachments(expanded, allAttachments, completeFoundBy)
-//  }
-//
-//  // Add the document creation time (dct) attachment if there is no temporal attachment
-//  // i.e., a backoff
-//  def attachDCT(m: Mention, state: State): Mention = {
-//    val dct = m.document.asInstanceOf[EidosDocument].dct
-//    if (dct.isDefined && m.attachments.filter(_.isInstanceOf[Time]).isEmpty)
-//      m.withAttachment(DCTime(dct.get))
-//    else
-//      m
-//  }
-//
-//  def addOverlappingAttachmentsTextBounds(m: Mention, state: State): Mention = {
-//    m match {
-//      case tb: TextBoundMention =>
-//        val attachments = getOverlappingAttachments(tb, state)
-//        if (attachments.nonEmpty) tb.copy(attachments = tb.attachments ++ attachments) else tb
-//      case _ => m
-//    }
-//  }
-//
-//
-//  def getOverlappingAttachments(m: Mention, state: State): Set[Attachment] = {
-//    val interval = m.tokenInterval
-//    // TODO: Currently this is only Property attachments, but we can do more too
-//    val overlappingProps = state.mentionsFor(m.sentence, interval, label = "Property")
-//    overlappingProps.map(pm => Property(pm.text, None)).toSet
-//  }
-
-
-
 }
 
 object ExpansionHandler {
@@ -443,13 +390,11 @@ object ExpansionHandler {
 
   // avoid expanding along these dependencies
   val INVALID_OUTGOING = Set[scala.util.matching.Regex](
-    //    "^nmod_including$".r,
     "acl:relcl".r,
     "acl_until".r,
     "advcl_to".r,
     "^advcl_because".r,
     "advmod".r,
-//    "amod".r,
     "^case".r,
     "^cc$".r,
     "ccomp".r,
@@ -470,45 +415,24 @@ object ExpansionHandler {
     "^punct".r,
     "^ref$".r,
     "appos".r
-    //"nmod_for".r,
-//    "nmod".r
   )
 
   val INVALID_INCOMING = Set[scala.util.matching.Regex](
     "cop".r,
     "punct".r
-    //"^nmod_with$".r,
-    //    "^nmod_without$".r,
-    //    "^nmod_except$".r
-    //    "^nmod_despite$".r
   )
 
   // regexes describing valid outgoing dependencies
   val VALID_OUTGOING = Set[scala.util.matching.Regex](
-    //    "^amod$".r, "^advmod$".r,
-    //    "^dobj$".r,
-    //    "^compound".r, // replaces nn
-    //    "^name".r, // this is equivalent to compound when NPs are tagged as named entities, otherwise unpopulated
-    //    // ex.  "isotonic fluids may reduce the risk" -> "isotonic fluids may reduce the risk associated with X.
-    //    "^acl_to".r, // replaces vmod
-    //    "xcomp".r, // replaces vmod
-    //    // Changed from processors......
-//        "^nmod_at".r, // replaces prep_
-    //    //    "case".r
-    //    "^ccomp".r
     ".+".r
   )
 
   val VALID_INCOMING = Set[scala.util.matching.Regex](
     "acl:relcl".r,
     "^nmod_for".r,
-//    "amod".r,
-//    "^compound$".r//,
     "nmod_at".r,
     "^nmod_of".r,
-    "nmod_under".r,
-//    "nmod_in".r//,
-//    "dobj".r
+    "nmod_under".r
   )
 
   val INVALID_OUTGOING_FUNCTION = Set[scala.util.matching.Regex](
@@ -521,10 +445,10 @@ object ExpansionHandler {
     "^case".r,
     "^cc$".r,
     "ccomp".r,
-//    "compound".r,
     "^conj".r,
     "cop".r,
     "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
+    "det".r,
     "nmod_at".r,
     "nmod_through".r,
     "^nmod_as".r,
@@ -535,15 +459,11 @@ object ExpansionHandler {
     "^nmod_since".r,
     "^nmod_without$".r,
     "nmod_in".r,
-//    "nmod_of".r,
-//    "nmod_by".r,
-//    "nummod".r,
     "^nsubj".r,
     "^punct".r,
     "^ref$".r,
     "appos".r,
-    "xcomp".r,
-//    "amod".r
+    "xcomp".r
   )
 
   val INVALID_INCOMING_FUNCTION = Set[scala.util.matching.Regex](
@@ -560,10 +480,52 @@ object ExpansionHandler {
     "acl:relcl".r,
     "^nmod_for".r,
     "nmod_at".r,
-//    "^nmod_of".r,
+    "^nmod_of".r,
+    "nmod_under".r
+  )
+
+  val INVALID_OUTGOING_MODELDESCR = Set[scala.util.matching.Regex](
+    "acl:relcl".r,
+    "acl_until".r,
+    "advcl_to".r,
+    "advcl_if".r,
+    "^advcl_because".r,
+    "^case".r,
+    "^cc$".r,
+    "ccomp".r,
+    "cop".r,
+    "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
+    "nmod_at".r,
+    "nmod_through".r,
+    "^nmod_as".r,
+    "^nmod_because".r,
+    "^nmod_due_to".r,
+    "^nmod_except".r,
+    "^nmod_given".r,
+    "^nmod_since".r,
+    "^nmod_without$".r,
+    "^punct".r,
+    "^ref$".r,
+    "appos".r
+  )
+
+  val INVALID_INCOMING_MODELDESCR = Set[scala.util.matching.Regex](
+    "cop".r,
+    "punct".r
+  )
+
+  // regexes describing valid outgoing dependencies
+  val VALID_OUTGOING_MODELDESCR = Set[scala.util.matching.Regex](
+    ".+".r
+  )
+
+  val VALID_INCOMING_MODELDESCR = Set[scala.util.matching.Regex](
+    "acl:relcl".r,
+    "^nmod_for".r,
+    "nmod_at".r,
     "nmod_under".r,
-//    "nmod_in".r
-//    "aux".r
+    "nsubj:xsubj".r,
+    "nsubj".r
   )
 
   def apply() = new ExpansionHandler()

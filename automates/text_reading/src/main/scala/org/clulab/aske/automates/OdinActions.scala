@@ -1,6 +1,7 @@
 package org.clulab.aske.automates
 
 import com.typesafe.scalalogging.LazyLogging
+import edu.stanford.nlp.dcoref.Dictionaries.MentionType
 import org.clulab.aske.automates.actions.ExpansionHandler
 import org.clulab.odin.{Mention, _}
 import org.clulab.odin.impl.Taxonomy
@@ -9,11 +10,13 @@ import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
 import org.clulab.aske.automates.attachments.{ContextAttachment, DiscontinuousCharOffsetAttachment, FunctionAttachment, ParamSetAttachment, ParamSettingIntAttachment, UnitAttachment}
+import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.math.Ordering
 import scala.util.Try
 import scala.util.matching.Regex
 
@@ -37,19 +40,23 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val expandedIdentifiers = keepLongestIdentifier(identifiers)
       val (descriptions, other) = (expandedIdentifiers ++ non_identifiers).partition(m => m.label.contains("Description"))
       val (functions, nonFunc) = other.partition(m => m.label.contains("Function"))
+      val (modelDescrs, nonModelDescrs) = nonFunc.partition(m => m.label == "ModelDescr")
+
       // only expand concepts in param settings and units, not the identifier-looking variables (e.g., expand `temperature` in `temparature is set to 0`, but not `T` in `T is set to 0`)
-      val (paramSettingsAndUnitsNoIdfr, nonExpandable) = nonFunc.partition(m => (m.label.contains("ParameterSetting") || m.label.contains("UnitRelation")) && !m.arguments("variable").head.labels.contains("Identifier"))
+      val (paramSettingsAndUnitsNoIdfr, nonExpandable) = nonModelDescrs.partition(m => (m.label.contains("ParameterSetting") || m.label.contains("UnitRelation")) && !m.arguments("variable").head.labels.contains("Identifier"))
 
       val expandedParamSettings = expansionHandler.get.expandArguments(paramSettingsAndUnitsNoIdfr, state, List("variable"))
 
       val expandedDescriptions = expansionHandler.get.expandArguments(descriptions, state, validArgs)
+
       val expandedFunction = expansionHandler.get.expandArguments(functions, state, List("input", "output"))
+      val expandedModelDescrs = expansionHandler.get.expandArguments(modelDescrs, state, List("modelDescr"))
       val (conjDescrType2, otherDescrs) = expandedDescriptions.partition(_.label.contains("Type2"))
       // only keep type 2 conj definitions that do not have definition arg overlap AFTER expansion
       val allDescrs = noDescrOverlap(conjDescrType2) ++ otherDescrs
-      resolveCoref(keepOneWithSameSpanAfterExpansion(allDescrs) ++ expandedFunction ++ expandedParamSettings ++ nonExpandable)
-      //      allDescrs ++ other
 
+      resolveCoref(keepOneWithSameSpanAfterExpansion(allDescrs) ++ expandedFunction ++ expandedParamSettings ++ expandedModelDescrs ++ nonExpandable)
+      //      allDescrs ++ other
     } else {
       mentions
     }
@@ -357,6 +364,44 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     resolved ++ woIt
   }
 
+  def resolveModelCoref(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val (models, nonModels) = mentions.partition(m => m.label == "ModelDescr")
+    val (theModel, modelNames) = models.partition(m => m.arguments.contains("modelName") && m.arguments("modelName").head.foundBy == "the/this_model" || m.arguments.contains("modelName") && m.arguments("modelName").head.foundBy == "model_pronouns")
+    val resolved: Seq[Mention] = theModel.map(m => replaceTheModel(mentions, m))
+    (resolved ++ modelNames ++ nonModels).distinct
+  }
+
+  def replaceTheModel(mentions: Seq[Mention], origModel: Mention): Mention = {
+    val previousModel = returnPreviousModel(mentions, origModel)
+    val newArgs = mutable.Map[String, Seq[Mention]]()
+    for (arg <- origModel.arguments) {
+      if (arg._1 == "modelName") {
+        if (previousModel.nonEmpty) {
+          newArgs += (arg._1 -> Seq(previousModel.get))
+        }
+      } else {
+        newArgs += (arg._1 -> origModel.arguments(arg._1))
+      }
+    }
+    copyWithArgs(origModel, newArgs.toMap)
+  }
+
+  def returnPreviousModel(mentions: Seq[Mention], origModel: Mention): Option[Mention] = {
+    val (models, nonModels) = mentions.partition(m => m.label == "Model")
+    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model" || m.foundBy == "model_pronouns")
+    val previousModels = modelNames.filter(_.sentence <= origModel.sentence)
+    val previousModels2 = modelNames.filter(_.sentence < origModel.sentence)
+    if (previousModels.nonEmpty) {
+      val selectedModel = previousModels.maxBy(_.sentence)
+      val finalModel = if (selectedModel.sentence == origModel.sentence) {
+        if (selectedModel.startOffset < origModel.startOffset) {
+          Some(selectedModel)
+        } else if (previousModels2.nonEmpty) Some(previousModels2.maxBy(_.sentence)) else None
+      } else Some(selectedModel)
+      if (origModel.sentence - finalModel.get.sentence < 10) finalModel else None
+    } else None
+  }
+
   def processFunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val newMentions = new ArrayBuffer[Mention]()
     for (m <- mentions) {
@@ -368,7 +413,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
       newMentions
     }
-
 
     def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
       val newMentions = new ArrayBuffer[Mention]()
@@ -398,8 +442,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def processRuleBasedContextEvent(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val contextAttachedMens = new ArrayBuffer[Mention]
     for (m <- mentions) {
-      val toAttach = m.arguments.getOrElse("event", Seq())
-      val contexts = m.arguments.getOrElse("context", Seq())
+      val toAttach = m.arguments.getOrElse("event", Seq.empty)
+      val contexts = m.arguments.getOrElse("context", Seq.empty)
       val foundBy = m.foundBy
       if (toAttach.nonEmpty) {
         for (t <- toAttach) {
@@ -974,6 +1018,15 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     mentionsDisplayOnlyArgs
   }
 
+  def modelDescrArguments(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val mentionsDisplayOnlyArgs = for {
+      m <- mentions
+      arg <- m.arguments.values.flatten
+    } yield copyWithLabel(arg, "ModelDescr")
+
+    mentionsDisplayOnlyArgs
+  }
+
   def filterFunction(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val toReturn = new ArrayBuffer[Mention]()
     val (functions, other) = mentions.partition(_.label == "Function")
@@ -1030,7 +1083,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
 
   def combineFunction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (functions, other) = mentions.partition(_.label == "Function")
-    val (complete, fragment) = functions.partition(m => m.arguments("input").nonEmpty && m.arguments("output").nonEmpty)
+    val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq.empty).nonEmpty && m.arguments.getOrElse("output", Seq.empty).nonEmpty)
     val toReturn = new ArrayBuffer[Mention]()
     for (f <- fragment) {
       val newInputs = new ArrayBuffer[Mention]()
@@ -1039,23 +1092,38 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       if (prevSentences.nonEmpty) {
         val menToAttach = prevSentences.maxBy(_.sentence)
         if (f.arguments.contains("input")) {
-          newInputs ++= menToAttach.arguments.getOrElse("input", Seq()) ++ f.arguments.getOrElse("input", Seq())
+          newInputs ++= menToAttach.arguments.getOrElse("input", Seq.empty) ++ f.arguments.getOrElse("input", Seq.empty)
         }
         if (f.arguments.contains("output")) {
-          newOutputs ++= menToAttach.arguments.getOrElse("output", Seq()) ++ f.arguments.getOrElse("output", Seq())
+          newOutputs ++= menToAttach.arguments.getOrElse("output", Seq.empty) ++ f.arguments.getOrElse("output", Seq.empty)
         }
         val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
-        val newFunctions = copyWithArgs(f, newArgs)
+        val sentences = new ArrayBuffer[Int]
+        sentences.append(f.sentence)
+        sentences.append(menToAttach.sentence)
+        val newFunctions = new CrossSentenceEventMention(
+          menToAttach.labels,
+          menToAttach.tokenInterval, // tokenInterval is only for the first sentence
+          menToAttach.asInstanceOf[EventMention].trigger,
+          newArgs,
+          menToAttach.paths, // path is off
+          menToAttach.sentence,
+          sentences,
+          menToAttach.document,
+          menToAttach.keep,
+          menToAttach.foundBy,
+          menToAttach.attachments
+        )
         toReturn.append(newFunctions)
       } else toReturn.append(f)
     }
-    toReturn ++ other ++ complete
+    toReturn.distinct ++ other ++ complete
   }
 
   def filterFunctionArgs(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val toReturn = new ArrayBuffer[Mention]()
     val (functions, other) = mentions.partition(_.label == "Function")
-    val (complete, fragment) = functions.partition(m => m.arguments("input").nonEmpty && m.arguments("output").nonEmpty)
+    val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq.empty).nonEmpty && m.arguments.getOrElse("output", Seq.empty).nonEmpty)
     for (c <- complete) {
       val newInputs = c.arguments("input").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && m.tags.get.head != "VB" && m.tags.get.head != "VBN")
       val newOutputs = c.arguments("output").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && m.tags.get.head != "VB" && m.tags.get.head != "VBN")
@@ -1067,9 +1135,9 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     }
     for (f <- fragment) {
       if (f.arguments.contains("input")) {
-        val inputFilter = f.arguments("input").filter(!_.label.contains("Unit") && f.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
+        val inputFilter = f.arguments("input").filter(!_.label.contains("Unit") && f.arguments.values.head.head.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
         if (inputFilter.nonEmpty) {
-          val newInputs = Map("input" -> inputFilter, "output" -> Seq())
+          val newInputs = Map("input" -> inputFilter, "output" -> Seq.empty)
           val newInputMens = copyWithArgs(f, newInputs)
           toReturn.append(newInputMens)
         }
@@ -1077,7 +1145,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       if (f.arguments.contains("output")) {
         val outputFilter = f.arguments("output").filter(!_.label.contains("Unit") && f.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
         if (outputFilter.nonEmpty) {
-          val newOutputs = Map("input" -> Seq(), "output" -> outputFilter)
+          val newOutputs = Map("input" -> Seq.empty, "output" -> outputFilter)
           val newOutputMens = copyWithArgs(f, newOutputs)
           toReturn.append(newOutputMens)
         }
@@ -1149,9 +1217,9 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
                 if (!overlappingInterval) {
                   outputNumCheck.append(i)
                 }
-                else Seq()
+                else Seq.empty
               }
-              if (outputNumCheck.length == phraseOutputMen.length) newMentions.append(i) else Seq()
+              if (outputNumCheck.length == phraseOutputMen.length) newMentions.append(i) else Seq.empty
             }
           }
         }
@@ -1159,6 +1227,26 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       } else newMentions ++= group._2
     }
     newMentions
+  }
+
+  def filterModelDescrs(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]
+    val groupByModelInt = mentions.groupBy(_.arguments("modelName").head.tokenInterval)
+    for (m <- groupByModelInt) {
+      val groupByDescrInt = m._2.groupBy(_.arguments("modelDescr").head.tokenInterval)
+      for (d <- groupByDescrInt) {
+        val groupByTrigInt = d._2.groupBy(_.asInstanceOf[EventMention].trigger.tokenInterval)
+        for (t <- groupByTrigInt) {
+          newMentions.append(t._2.head)
+        }
+      }
+    }
+    newMentions
+  }
+
+  def filterModelNames(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val filterModelNames = mentions.filterNot(m => m.foundBy == "model_pronouns" || m.foundBy == "the/this_model")
+    filterModelNames
   }
 
   def makeNewMensWithContexts(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -1184,10 +1272,11 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
                   contextSelected.append(c)
                 }
               }
-              if (contextSelected.nonEmpty) {
-                val newMen = contextToAttachment(m, contextSelected, foundBy = "tokenInterval overlap", state)
+              val filteredContext = filterContextSelected(contextSelected, m)
+              if (filteredContext.nonEmpty) {
+                val newMen = contextToAttachment(m, filteredContext, foundBy = "tokenInterval overlap", state)
                 toReturn.append(newMen)
-              }
+              } else toReturn.append(m)
             }
           }
         } else toReturn.append(m)
@@ -1200,15 +1289,14 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val filteredContext = new ArrayBuffer[Mention]
     val contextNumCheck = new ArrayBuffer[Mention]
     val completeFilterContext = new ArrayBuffer[Mention]
-    val trigger = new ArrayBuffer[Mention]
-    if (mention.isInstanceOf[EventMention]) trigger.append(mention.asInstanceOf[EventMention].trigger)
+    val trigger = if (mention.isInstanceOf[EventMention]) mention.asInstanceOf[EventMention].trigger.tokenInterval else null
     for (c <- contexts) {
       for (argType <- mention.arguments) {
         for {
           arg <- argType._2
           newMention = mention match {
-            case rm: RelationMention => if (!(c.startOffset == arg.startOffset && c.endOffset == arg.endOffset)) contextNumCheck.append(c)
-            case em: EventMention => if (!(c.startOffset == arg.startOffset && c.endOffset == arg.endOffset)) contextNumCheck.append(c)
+            case rm: RelationMention => if (!c.tokenInterval.overlaps(arg.tokenInterval)) contextNumCheck.append(c)
+            case em: EventMention => if (!c.tokenInterval.overlaps(arg.tokenInterval) && !c.tokenInterval.overlaps(trigger)) contextNumCheck.append(c)
             case _ => ???
           }
         } yield contextNumCheck
@@ -1322,7 +1410,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
             (m.arguments("variable").head, true)
           } else (null, false)
         }
-        case em: EventMention => (m.arguments.getOrElse("variable", Seq()).head, true)
+        case em: EventMention => (m.arguments.getOrElse("variable", Seq.empty).head, true)
         case _ => ???
       }
       if passesFilters(varMention, isArg)
@@ -1335,8 +1423,8 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       m <- mentions
       varMention = m match {
         case tb: TextBoundMention => m
-        case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head
-        case em: EventMention => m.arguments.getOrElse("variable", Seq()).head
+        case rm: RelationMention => m.arguments.getOrElse("variable", Seq.empty).head
+        case em: EventMention => m.arguments.getOrElse("variable", Seq.empty).head
         case _ => ???
       }
       if varMention.words.length < 3
@@ -1353,8 +1441,8 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       m <- mentions
       if !m.words.contains("not") //make sure, the description is not negative
 
-      variableMention = m.arguments.getOrElse("variable", Seq())
-      descrMention = m.arguments.getOrElse("description", Seq())
+      variableMention = m.arguments.getOrElse("variable", Seq.empty)
+      descrMention = m.arguments.getOrElse("description", Seq.empty)
       if (
         descrMention.nonEmpty && //there has to be a description
         looksLikeADescr(descrMention, state).nonEmpty && //make sure the descr looks like a descr
@@ -1397,7 +1485,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val toReturn = if (filteredArgs.nonEmpty) processFunctions(filteredArgs, state) else Seq.empty
 
     toReturn
-    //    mentions
   }
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
@@ -1410,7 +1497,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         case tb: TextBoundMention => m.text.split(" ")
         //for relation and event mentions, the unit is the value of the arg with the argName "unit"
         case _ => {
-          val unitArgs = m.arguments.getOrElse("unit", Seq())
+          val unitArgs = m.arguments.getOrElse("unit", Seq.empty)
           if (unitArgs.nonEmpty) {
             unitArgs.head.text.split(" ")
           }
@@ -1438,8 +1525,8 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       m <- mentions
       descrText = m match {
         case tb: TextBoundMention => m
-        case rm: RelationMention => m.arguments.getOrElse("description", Seq()).head
-        case em: EventMention => m.arguments.getOrElse("description", Seq()).head
+        case rm: RelationMention => m.arguments.getOrElse("description", Seq.empty).head
+        case em: EventMention => m.arguments.getOrElse("description", Seq.empty).head
         case _ => ???
       }
 
