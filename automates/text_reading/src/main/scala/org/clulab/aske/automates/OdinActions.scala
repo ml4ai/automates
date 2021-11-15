@@ -367,11 +367,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def resolveModelCoref(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (models, nonModels) = mentions.partition(m => m.label == "ModelDescr")
     val (theModel, modelNames) = models.partition(m => m.arguments.contains("modelName") && m.arguments("modelName").head.foundBy == "the/this_model" || m.arguments.contains("modelName") && m.arguments("modelName").head.foundBy == "model_pronouns")
-    val resolved: Seq[Mention] = theModel.map(m => replaceTheModel(mentions, m))
+    val resolved: Seq[Mention] = theModel.map(m => replaceTheModel(mentions, m).get)
     (resolved ++ modelNames ++ nonModels).distinct
   }
 
-  def replaceTheModel(mentions: Seq[Mention], origModel: Mention): Mention = {
+  def replaceTheModel(mentions: Seq[Mention], origModel: Mention): Option[Mention] = {
     val previousModel = returnPreviousModel(mentions, origModel)
     val newArgs = mutable.Map[String, Seq[Mention]]()
     for (arg <- origModel.arguments) {
@@ -383,7 +383,26 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         newArgs += (arg._1 -> origModel.arguments(arg._1))
       }
     }
-    copyWithArgs(origModel, newArgs.toMap)
+    val finalMen = if (previousModel.nonEmpty) {
+      val sentences = new ArrayBuffer[Int]
+      sentences.append(previousModel.get.sentence)
+      sentences.append(origModel.sentence)
+      val resolvedMen = new CrossSentenceEventMention(
+        origModel.labels,
+        origModel.tokenInterval,
+        origModel.asInstanceOf[EventMention].trigger,
+        newArgs.toMap,
+        origModel.paths,
+        origModel.sentence,
+        sentences,
+        origModel.document,
+        origModel.keep,
+        origModel.foundBy ++ "++ resolveModelCoref",
+        origModel.attachments
+      )
+      Some(resolvedMen)
+    } else Some(copyWithArgs(origModel, newArgs.toMap))
+    finalMen
   }
 
   def returnPreviousModel(mentions: Seq[Mention], origModel: Mention): Option[Mention] = {
@@ -1241,12 +1260,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         }
       }
     }
-    newMentions.filter(m => m.arguments.contains("modelName") && m.arguments("modelName").head.foundBy != "model_pronouns")
-  }
-
-  def filterModelNames(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val filterModelNames = mentions.filterNot(m => m.foundBy == "model_pronouns" || m.foundBy == "the/this_model")
-    filterModelNames
+    newMentions
   }
 
   def filterModelNames(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
