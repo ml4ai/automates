@@ -10,6 +10,7 @@ int main() {
 
     if (x == 3) {
         a = x;
+        b = a;
         x = 10;
     }
 
