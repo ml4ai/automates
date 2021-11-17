@@ -97,7 +97,7 @@ object ExtractAndAssembleMentionEvents extends App {
     val texts = dataLoader.loadFile(file)
 
 
-    // todo: make a json with things like "model_names": {}, countries: {}, dates: {can I also get the event here? maybe with my new found previously found mention as a trigger power?}, params: {vars from units, param settings, and descriptions}, model_info: {model descr, model limitation, etc}, param settings and units --- method to combine units and param setting based on var overlap
+    // todo: make a json with things like "models": [{name: Blah, descr: Blah}], countries: {}, dates: {can I also get the event here? maybe with my new found previously found mention as a trigger power?}, params: {vars from units, param settings, and descriptions}, model_info: {model descr, model limitation, etc}, param settings and units --- method to combine units and param setting based on var overlap
     val obj = ujson.Obj()
     // 3. Extract causal mentions from the texts
     val mentions = if (file.getName.contains("COSMOS")) {
@@ -108,6 +108,85 @@ object ExtractAndAssembleMentionEvents extends App {
       getMentionsWithoutLocations(texts, file)
     }
 
+    val groupedByLabel = mentions.groupBy(_.label)
+    for (g <- groupedByLabel) {
+      g._1 match {
+        case "ModelDescr" => {
+          val modelObjs = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+            val oneModel = ujson.Obj(
+              "name" -> m.arguments("modelName").head.text,
+              "description" -> m.arguments("modelDescr").head.text
+            )
+            modelObjs.append(oneModel)
+          }
+          obj("models") = ujson.Obj("descriptions" -> modelObjs)
+        }
+        case "ModelLimitation" => {
+          val modelObjs = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+            val oneModel = ujson.Obj(
+              "name" -> m.arguments("modelName").head.text,
+              "limitation" -> m.arguments("modelDescr").head.text
+            )
+            modelObjs.append(oneModel)
+          }
+          obj("models")("limitations") = modelObjs
+        }
+        case "ParamAndUnit" => {
+          val paramUnitObjs = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+            println("men: " + m.text + " " + m.label)
+            if (m.arguments.keys.toList.contains("value") & m.arguments.keys.toList.contains("unit")) {
+//              println("m: " + m.text + " " + m.label)
+//              println("args: " + m.arguments.keys.mkString("|"))
+              val oneVar = ujson.Obj(
+                "variable" -> m.arguments("variable").head.text,
+                "value" -> m.arguments("value").head.text,
+                "unit" -> m.arguments("unit").head.text
+              )
+              paramUnitObjs.append(oneVar)
+            }
+
+          }
+          obj("parameters") = paramUnitObjs
+        }
+
+        case "UnitRelation" => {
+          val paramUnitObjs = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+//            println("men: " + m.text + " " + m.label)
+//              println("m: " + m.text + " " + m.label)
+//              println("args: " + m.arguments.keys.mkString("|"))
+              val oneVar = ujson.Obj(
+                "variable" -> m.arguments("variable").head.text,
+//                "value" -> m.arguments("value").head.text,
+                "unit" -> m.arguments("unit").head.text
+              )
+              paramUnitObjs.append(oneVar)
+
+
+          }
+          obj("units") = paramUnitObjs
+        }
+        case "Location" => {
+          val locations = g._2.map(_.text).distinct.sorted
+          obj("locations") = locations
+        }
+        case "Date" => {
+          val dates = g._2.map(_.text).distinct.sorted
+          obj("dates") = dates
+        }
+        case _ => println("Other")
+      }
+    }
+
+    println("OBJECT: " + obj)
+
+    val json = ujson.write(obj, indent = 2)
+    val pw = new PrintWriter(new File("/Users/alexeeva/Desktop/test-nov17.json"))
+    pw.write(json)
+    pw.close()
     val labels = mentions.map(_.label).distinct.mkString("||")
     println("Labels: " + labels)
 
@@ -147,64 +226,64 @@ object ExtractAndAssembleMentionEvents extends App {
     //      }
     //
     //    }
-    val descrMentions = mentions.filter(_ matches "Description")
-
-    val exportGlobalVars = false
-    if (exportGlobalVars) {
-      val exporter = GlobalVarTSVExporter(file.getAbsolutePath, numOfWikiGroundings)
-      val globalVars = getGlobalVars(descrMentions, None, true)
-
-      exporter.export(globalVars)
-    }
-
-
-    println("Description mentions: ")
-    for (dm <- descrMentions) {
-      println("----------------")
-      println(dm.text)
-      //      println(dm.foundBy)
-      for (arg <- dm.arguments) {
-        println(arg._1 + ": " + dm.arguments(arg._1).map(_.text).mkString("||"))
-      }
-      if (dm.attachments.nonEmpty) {
-        for (att <- dm.attachments) println("att: " + att.asInstanceOf[AutomatesAttachment].toUJson)
-      }
-    }
-    val paramSettingMentions = mentions.filter(_ matches "ParameterSetting")
-
-
-
-    println("\nParam setting mentions: ")
-    for (m <- paramSettingMentions) {
-      println("----------------")
-      println(m.text)
-      //      println(m.foundBy)
-      for (arg <- m.arguments) {
-        println(arg._1 + ": " + m.arguments(arg._1).head.text)
-      }
-    }
-    val unitMentions = mentions.filter(_ matches "UnitRelation")
-    println("Unit mentions: ")
-    for (m <- unitMentions) {
-      println("----------------")
-      println(m.text)
-      //      println(m.foundBy)
-      for (arg <- m.arguments) {
-        println(arg._1 + ": " + m.arguments(arg._1).head.text)
-      }
-    }
-
-
-    val contextMentions = mentions.filter(_ matches "Context")
-    println("Context setting mentions: ")
-    for (m <- contextMentions) {
-      println("----------------")
-      println(m.text)
-      //      println(m.foundBy)
-      for (arg <- m.arguments) {
-        println(arg._1 + ": " + m.arguments(arg._1).head.text)
-      }
-    }
+//    val descrMentions = mentions.filter(_ matches "Description")
+//
+//    val exportGlobalVars = false
+//    if (exportGlobalVars) {
+//      val exporter = GlobalVarTSVExporter(file.getAbsolutePath, numOfWikiGroundings)
+//      val globalVars = getGlobalVars(descrMentions, None, true)
+//
+//      exporter.export(globalVars)
+//    }
+//
+//
+//    println("Description mentions: ")
+//    for (dm <- descrMentions) {
+//      println("----------------")
+//      println(dm.text)
+//      //      println(dm.foundBy)
+//      for (arg <- dm.arguments) {
+//        println(arg._1 + ": " + dm.arguments(arg._1).map(_.text).mkString("||"))
+//      }
+//      if (dm.attachments.nonEmpty) {
+//        for (att <- dm.attachments) println("att: " + att.asInstanceOf[AutomatesAttachment].toUJson)
+//      }
+//    }
+//    val paramSettingMentions = mentions.filter(_ matches "ParameterSetting")
+//
+//
+//
+//    println("\nParam setting mentions: ")
+//    for (m <- paramSettingMentions) {
+//      println("----------------")
+//      println(m.text)
+//      //      println(m.foundBy)
+//      for (arg <- m.arguments) {
+//        println(arg._1 + ": " + m.arguments(arg._1).head.text)
+//      }
+//    }
+//    val unitMentions = mentions.filter(_ matches "UnitRelation")
+//    println("Unit mentions: ")
+//    for (m <- unitMentions) {
+//      println("----------------")
+//      println(m.text)
+//      //      println(m.foundBy)
+//      for (arg <- m.arguments) {
+//        println(arg._1 + ": " + m.arguments(arg._1).head.text)
+//      }
+//    }
+//
+//
+//    val contextMentions = mentions.filter(_ matches "Context")
+//    println("Context setting mentions: ")
+//    for (m <- contextMentions) {
+//      println("----------------")
+//      println(m.text)
+//      //      println(m.foundBy)
+//      for (arg <- m.arguments) {
+//        println(arg._1 + ": " + m.arguments(arg._1).head.text)
+//      }
+//    }
 
     // 4. Export to all desired formats
 //    exportAs.foreach { format =>
