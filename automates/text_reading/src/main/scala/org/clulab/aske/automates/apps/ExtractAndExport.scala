@@ -186,14 +186,15 @@ case class AutomatesExporter(filename: String) extends Exporter {
 case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString()))
-    pw.write("filename\tsentence\tmention type\tmention text\targs in all next columns\n")
+    pw.write("filename\tsentence\tmention type\tfound by\tmention text\targs in all next columns\n")
     val contentMentions = mentions.filter(_.label != "Phrase")//(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation") || (m.label matches "Command")) //|| (m.label matches "Context"))
     for (m <- contentMentions) {
       pw.write(contentMentions.head.document.id.getOrElse("unk_file") + "\t")
-      pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.text.trim())
+      pw.write(m.sentenceObj.words.mkString(" ").replace("\t", "").replace("\n","") + "\t" + 
+        m.label + "\t" + m.foundBy + "\t" + m.text.trim().replace("\t", "").replace("\n",""))
       for (arg <- m.arguments) {
         if (arg._2.nonEmpty) {
-          pw.write("\t" + arg._1 + ": " + arg._2.map(_.text.trim()).mkString("::"))
+          pw.write("\t" + arg._1 + ": " + arg._2.map(_.text.trim().replace("\t", "").replace("\n","")).mkString("::"))
         }
       }
       pw.write("\n")

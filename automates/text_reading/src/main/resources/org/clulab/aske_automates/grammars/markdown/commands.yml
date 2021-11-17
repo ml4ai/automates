@@ -20,6 +20,14 @@ rules:
     example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
     pattern: |
       [word = /.*\.[a-zA-Z]{2,}/]
+  
+  - name: var-rule
+    label: CommandLineArg
+    priority: 1
+    type: token
+    example: "include_prodDecline"
+    pattern: |
+      (?<variable>[word = /[a-zA-Z0-9_]+/])
     
   - name: parameter-rule
     label: CommandLineArg
@@ -64,6 +72,14 @@ rules:
     pattern: |
       [tag = 'CD'] 
 
+  - name: camelCase-rule
+    label: Context
+    priority: 1
+    type: token
+    example: "camelCase"
+    pattern: |
+      (?<variable>[word = /[a-z]+((0-9)|([A-Z0-9][a-z0-9]+))*([A-Z])?/])
+
   - name: list-rule1
     label: Context
     priority: 3
@@ -73,6 +89,7 @@ rules:
       trigger = [word = ":"]
       parameter:Phrase = <punct
       value:String+ = <punct dep 
+    # 
   
   - name: list-rule2
     label: Context
@@ -83,5 +100,23 @@ rules:
       trigger = [word = ":"]
       parameter:Phrase = <punct
       value:Phrase+ = <punct dep 
+  
+# write rules for parsing blocks
 
-      
+# Masha's rule
+  - name: list-rule3
+    label: Context
+    priority: 3
+    type: token
+    example: "- --crop: Wheat, Rice or Corn"
+    pattern: |
+      @param:Phrase [word = ":"] @value:String+
+  
+  - name: list-rule4
+    label: Context
+    priority: 3
+    type: token
+    example: "- --crop: Wheat, Rice or Corn"
+    pattern: |
+      @param:Phrase [word = ":"] @value:Phrase+
+

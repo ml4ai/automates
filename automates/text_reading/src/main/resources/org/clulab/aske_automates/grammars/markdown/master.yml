@@ -4,8 +4,32 @@ vars: "org/clulab/aske_automates/grammars/triggers.yml"
 
 rules:
 
+  - import: "org/clulab/aske_automates/grammars/entities.yml"
+    vars:
+      priority1: 1
+      priority2: 2
+      priority3: 3
+  
+  - import: "org/clulab/aske_automates/grammars/functions.yml"
+    vars:
+      priority: 1
+      action: "Function"
+  
+  - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"
+    vars:
+      priority: 1
+      action: "ParameterSetting"
+  
+  - import: "org/clulab/aske_automates/grammars/units.yml"
+    vars:
+      priority: 1
+  
+  - import: "org/clulab/aske_automates/grammars/unitRels.yml"
+    vars:
+      priority: 1
+      action: "UnitRelation"
+
   - import: "org/clulab/aske_automates/grammars/markdown/commands.yml"
     vars:
       priority: 1
-
 
