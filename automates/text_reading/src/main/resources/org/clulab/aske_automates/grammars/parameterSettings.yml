@@ -208,6 +208,28 @@ rules:
       variable:Phrase = nsubj | nsubjpass
       value:Value = /nmod_to/ nmod_of? nummod? | xcomp /nummod|compound/
 
+  - name: var_set_at
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramSetAction}
+    example: "The probability of traversing a link is determined by the move chance, which we initially set at 1.0 for refugees in transit between locations, 1.0 for refugees in conflict locations, 0.001 for those in refugee camps, and 0.3 for those in all other locations."
+    pattern: |
+      trigger = [word="set"]
+      variable:Phrase = <acl:relcl
+      value:Value = nmod_at
+
+  - name: var_equals
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramSetAction}
+    example: "The attractiveness value of the destinations equals 0.25 for conflict zones, 1.0 for other locations in the country of conflict, and 2.0 for locations abroad."
+    pattern: |
+      trigger = [word="equals"]
+      variable:Phrase = nsubj
+      value:Value = dobj | conj_and
+
 
   - name: var_taken_as
     label: ParameterSetting
@@ -334,7 +356,7 @@ rules:
     example: "At planting time, the model takes a soil sample and applies up to 15 kg/ha of N fertilizer if needed."
     action: ${paramSetAction}
     pattern: |
-      @value:Value [word=/\w*/]{,4} of (variable:Phrase [!tag = "CD"])
+      @value:Value [word=/\w*/]{,4} "of" (@variable:Phrase [!tag = "CD"])
 
   - name: value_of
     label: ParameterSetting
@@ -378,4 +400,13 @@ rules:
       trigger = [lemma= /^be$|become/]
       variable:Identifier = <cop? nsubj
       value:Value = <cop | xcomp
+
+  - name: as_equal_to_value
+    label: ParameterSetting
+    priority: ${priority}
+    type: token
+    action: ${paramSetAction}
+    example: "Bearing in mind, we set our default setting to the refugee move speed as equal to 200 km per day and the awareness of surrounding is 1 link."
+    pattern: |
+      @variable:Phrase [word="as"] [word="equal"] [word="to"] @value:Value (?=@unit:Unit)
 

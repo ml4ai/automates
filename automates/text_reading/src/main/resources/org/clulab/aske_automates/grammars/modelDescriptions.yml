@@ -220,3 +220,15 @@ rules:
       trigger = [word = "apply"]
       modelName:Model = dobj
       modelDescr:Phrase = advcl_in_order
+
+  ## New rules for model construction ###
+
+  - name: model_input_data
+    label: ModelDescr
+    priority: ${priority}
+    type: token
+    action: ${action}
+    example: "Three formats of csv files, namely locations.csv, routes.csv and closures.csv, are integrated with FLEE’s input interface."
+    pattern: |
+      (@modelDescr:ModelComponent [word = /\,|and/]?)+ [word = /.*/]{,5} @model:Model [word = "'"] [word = "s"] (?<trigger> [word = "input"])
+

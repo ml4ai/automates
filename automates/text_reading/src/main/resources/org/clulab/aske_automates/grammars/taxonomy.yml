@@ -6,6 +6,7 @@
       - Date
       - Year
       - Model
+      - ModelComponent
       - Measurement:
         - Value:
           - ValueAndUnit

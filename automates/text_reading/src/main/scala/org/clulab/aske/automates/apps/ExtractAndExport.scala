@@ -8,8 +8,9 @@ import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getGlobalVars, returnAttachmentOfAGivenTypeOption}
 import org.clulab.aske.automates.attachments.{AutomatesAttachment, MentionLocationAttachment}
 import org.clulab.aske.automates.cosmosjson.CosmosJsonProcessor
+import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
-import org.clulab.utils.{FileUtils, Serializer}
+import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
@@ -37,8 +38,8 @@ object ExtractAndExport extends App {
   val config = ConfigFactory.load()
 
   val numOfWikiGroundings: Int = config[Int]("apps.numOfWikiGroundings")
-  val inputDir: String = config[String]("apps.inputDirectory")
-  val outputDir: String = config[String]("apps.outputDirectory")
+  val inputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/input_files"
+  val outputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/output_files"
   val inputType: String = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
   //  val dataLoader = new ScienceParsedDataLoader
@@ -129,7 +130,7 @@ object ExtractAndExport extends App {
       println(dm.text)
       //      println(dm.foundBy)
       for (arg <- dm.arguments) {
-        println(arg._1 + ": " + dm.arguments(arg._1).map(_.text).mkString("||"))
+        println(arg._1 + ": " + dm.arguments(arg._1).head.text)
       }
       if (dm.attachments.nonEmpty) {
         for (att <- dm.attachments) println("att: " + att.asInstanceOf[AutomatesAttachment].toUJson)
@@ -226,16 +227,18 @@ case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString()))
     pw.write("filename\tsentence\tmention type\tfound by\tmention text\tlocation in the pdf\targs in all next columns\n")
-    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation") || (m.label matches "Command") || (m.label matches "Date") || (m.label matches "Location")) //|| (m.label matches "Context"))
+    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation") || (m.label matches "Command") || (m.label matches "Date") || (m.label matches "Location") || m.label.contains("Model")) //|| (m.label matches "Context"))
+
     for (m <- contentMentions) {
       val locationMention = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation").get.toUJson.obj
       pw.write(contentMentions.head.document.id.getOrElse("unk_file") + "\t")
       pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.foundBy + "\t" + m.text.trim() + "\t" + "page:" + locationMention("pageNum").arr.mkString(",") + " block:" +  locationMention("blockIdx").arr.mkString(",") )
-      for (arg <- m.arguments) {
-        if (arg._2.nonEmpty) {
-          pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
-        }
-      }
+
+     for (arg <- m.arguments) {
+       if (arg._2.nonEmpty) {
+         pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
+       }
+     }
       pw.write("\n")
     }
     pw.close()
