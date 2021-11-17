@@ -1,5 +1,6 @@
 package org.clulab.aske.automates
 
+
 import com.typesafe.scalalogging.LazyLogging
 import edu.stanford.nlp.dcoref.Dictionaries.MentionType
 import org.clulab.aske.automates.actions.ExpansionHandler
@@ -19,6 +20,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 import scala.util.Try
 import scala.util.matching.Regex
+import scala.util.control.Breaks._
 
 
 
@@ -420,9 +422,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         // assume there's only one arg of each type
         val tokenIntervals = m.arguments.map(_._2.head).map(_.tokenInterval).toSeq
         val labelsOfTextBoundMentions = m.arguments.map(_._2.head.label).toSeq
-        println(m.text + " \n" + labelsOfTextBoundMentions.mkString("|") )
-        print(labelsOfTextBoundMentions.distinct.length)
-        print(labelsOfTextBoundMentions.length)
+//        println(m.text + " \n" + labelsOfTextBoundMentions.mkString("|") )
+//        print(labelsOfTextBoundMentions.distinct.length)
+//        print(labelsOfTextBoundMentions.length)
         // make sure mention labels are no identical (basically, checking if both are Values---they should not be)
         if (labelsOfTextBoundMentions.distinct.length == labelsOfTextBoundMentions.length) {
           // takes care of accidental arg overlap
@@ -510,6 +512,68 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
       maxInGroup.distinct
     }
+
+  def locationsAreNotVariablesOrModels(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // makes sure there are no mentions where variables are actually most likely locations
+    // for now only applied to descriptions, but may want to extend to other mentions
+    val (locations, nonLocations) = mentions.partition(_.label == "Location")
+    val (phrases, nonPhrases) = nonLocations.partition(_.label=="Phrase")
+    val noLocations = new ArrayBuffer[Mention]()
+
+    def isInLocations(sent: Int, tokInt: Interval, locations: Seq[Mention]): Boolean = {
+      locations.exists(loc => loc.sentence == sent & loc.tokenInterval==tokInt)
+    }
+    for (m <- nonPhrases) {
+
+      val args = m.arguments.values.flatten
+      m match {
+        case m: TextBoundMention => {
+
+          // todo: should I filter out tbm that look like identifiers but are locations?
+//          val sent = m.sentence
+//          val tokInt = m.tokenInterval
+//          if (!isInLocations(sent, tokInt, locations))
+            noLocations.append(m)
+
+        }
+        case _ => {
+          var noLoc = true
+//          println("M: " + m.text + " " + m.label + " " + m.foundBy)
+//          for (m <- locations) {
+//            println("sent, int: " + m.sentence + " " + m.tokenInterval)
+//          }
+          for (arg <- args) {
+//            println("arg: " + arg.text)
+          breakable {
+            val sent = arg.sentence
+//            println("arg sent: " + sent)
+            val tokInt = arg.tokenInterval
+//            println("arg tok int: " + arg.tokenInterval)
+            if (noLoc) {
+              if (isInLocations(sent, tokInt, locations)) {
+                noLoc = false
+              }
+            } else break
+
+          }
+
+          }
+//          println("no loc 0: " + noLoc)
+//          println("current no loc: " + noLocations.map(_.text).mkString(" || "))
+          if (noLoc) {
+//            println("no loc 1: " + noLoc)
+            noLocations.append(m)
+          }
+
+        }
+      }
+    }
+    val toReturn =  (noLocations ++ locations ++ phrases).distinct
+//    for (t <- noLocations) {
+//      println("RM: " + t.text + " " + t.label + " " + t.foundBy)
+//    }
+    toReturn
+  }
 
   /** Keeps the longest mention for each group of overlapping mentions * */
   // note: edited to allow functions to have overlapping inputs/outputs
@@ -1446,9 +1510,9 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     //returns mentions in which descriptions are not also variables
     //and the variable and the description don't overlap
 
-    for (m <- mentions) {
-      println(m.text + " " + m.label)
-    }
+//    for (m <- mentions) {
+//      println(m.text + " " + m.label)
+//    }
     for {
       m <- mentions
       if !m.words.contains("not") //make sure, the description is not negative
@@ -1562,6 +1626,12 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       case rm: RelationMention => rm.copy(labels = taxonomy.hypernymsFor(label))
       case em: EventMention => em.copy(labels = taxonomy.hypernymsFor(label))
     }
+  }
+
+  def relabelLocation(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val (locationMentions, other) = mentions.partition(_.label matches "Location")
+    val onlyNewLocation = locationMentions.map(m => copyWithLabel(m.arguments("loc").head, "Location"))
+    onlyNewLocation ++ other
   }
 }
 

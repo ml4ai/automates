@@ -53,6 +53,8 @@ class TestIdentifiers extends ExtractionTest {
 
     val desired = Seq("Kcdmin", "Kcd", "LAI", "Kcdmax", "LAI", "SKc", "Kcd", "LAI")
     val mentions = extractMentions(t3a)
+//    val identifiers = mentions.filter(_.label == "Identifier")
+//    for (i <- identifiers) println(">>", i.text)
     testTextBoundMention(mentions, IDENTIFIER_LABEL, desired)
   }
 

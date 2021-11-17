@@ -7,9 +7,9 @@ rules:
 
   - import: "org/clulab/aske_automates/grammars/entities.yml"
     vars:
-      priority1: 1
-      priority2: 2
-      priority3: 3
+      priority1: 3
+      priority2: 4
+      priority3: 5
 
 
   - import: "org/clulab/aske_automates/grammars/values.yml"
@@ -17,10 +17,15 @@ rules:
       priority: 3
       compoundPriority: 4
 
+  - import: "org/clulab/aske_automates/grammars/locations.yml"
+    vars:
+      priority1: 1
+      priority2: 2
+
   - import: "org/clulab/aske_automates/grammars/descriptions.yml"
     vars:
       action: descriptionActionFlow #note: there are two rules that do not use this action flow
-      priority: 5
+      priority: 6
 
   - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"
     vars:
@@ -30,7 +35,7 @@ rules:
 
   - import: "org/clulab/aske_automates/grammars/units.yml"
     vars:
-      priority: 6
+      priority: 7
 
   - import: "org/clulab/aske_automates/grammars/unitRels.yml"
     vars:
@@ -39,11 +44,6 @@ rules:
 
 # note: model rules moved back to model.yml and thus enabled again.
   - import: "org/clulab/aske_automates/grammars/model.yml"
-    vars:
-      priority: 9
-
-
-  - import: "org/clulab/aske_automates/grammars/locations.yml"
     vars:
       priority: 9
 

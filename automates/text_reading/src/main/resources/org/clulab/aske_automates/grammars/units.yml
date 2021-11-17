@@ -49,7 +49,7 @@ rules:
     type: token
     example: "It's been 7-10 days."
     pattern: |
-      (?<= [tag = "CD"]) [entity="DURATION"]
+      (?<= [tag = "CD"]) [entity="DURATION" & !chunk = "O"]
 
   - name: person
     label: Unit

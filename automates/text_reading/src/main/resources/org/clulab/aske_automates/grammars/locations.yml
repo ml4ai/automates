@@ -4,7 +4,7 @@ rules:
 
   - name: entity-location
     label: Location
-    priority: 7
+    priority: ${priority1}
     type: token
     example: "These crises include the 2015 - 2016 civil war in Burundi and the 2013 - 2016 conflict in the Central African Republic ( CAR )"
     pattern: |
@@ -13,17 +13,18 @@ rules:
 
   - name: entity-location-appos
     label: Location
-    priority: 10
+    priority: ${priority2}
     type: dependency
+    action: relabelLocation
     example: "These crises include the 2015 - 2016 civil war in Burundi and the 2013 - 2016 conflict in the Central African Republic ( CAR )"
     pattern: |
-      trigger = Location
+      trigger: Location
       loc: Phrase = appos
 
 
   - name: entity-date
     label: Date
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     example: "The crisis continued for several years and to capture it simulation period is 820 days from 1 December 2013 to 29 February 2016 ."
     pattern: |
@@ -31,7 +32,7 @@ rules:
 
   - name: entity-year
     label: Year
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     example: "to a value of 200 mm 2 per plant"
     pattern: |

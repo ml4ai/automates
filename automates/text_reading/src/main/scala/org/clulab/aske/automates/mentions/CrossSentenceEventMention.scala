@@ -85,6 +85,10 @@ class CrossSentenceEventMention(
 
     text
   }
+
+  def newWithAttachment(mod: Attachment): CrossSentenceEventMention = {
+    copy(attachments = this.attachments + mod)
+  }
 }
 
 object CrossSentenceEventMention

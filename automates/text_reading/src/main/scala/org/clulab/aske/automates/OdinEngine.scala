@@ -95,11 +95,11 @@ class OdinEngine(
     val (modelDescrs, nonModelDescrs) = nonFunctions.partition(_.label == "ModelDescr")
     val (modelNames, other) = nonModelDescrs.partition(_.label == "Model")
     val modelFilter = loadableAttributes.actions.filterModelNames(modelNames)
-    val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
+    val untangled = loadableAttributes.actions.locationsAreNotVariablesOrModels( (loadableAttributes.actions.untangleConj(descriptionMentions)))
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
     val finalModelDescrs = modelDescrs.filter(m => m.arguments.contains("modelName"))
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter) ++ finalModelDescrs ++ untangled)).toVector
+   loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter) ++ finalModelDescrs ++ untangled)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
