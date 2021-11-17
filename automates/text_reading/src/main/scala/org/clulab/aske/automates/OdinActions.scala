@@ -12,6 +12,7 @@ import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
 import org.clulab.aske.automates.attachments.{ContextAttachment, DiscontinuousCharOffsetAttachment, FunctionAttachment, ParamSetAttachment, ParamSettingIntAttachment, UnitAttachment}
 import org.clulab.aske.automates.mentions.CrossSentenceEventMention
+import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
@@ -512,6 +513,40 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
       maxInGroup.distinct
     }
+
+
+  // sentence for debugging Bearing in mind , we set our default setting to the refugee move speed is equal to 200 km per day and the awareness of surrounding is 1 link .
+  // to do: create an event mention with unit and param setting with the var probably being the trigger (might display better)
+  // somehow link them to definitions, maybe in previous three sent window
+  // check why awareness of surrounding become param and unit
+  // see how this works with interval param settings
+  def assembleVarsWithParamsAndUnits(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val (withVar, noVar) = mentions.partition(_.arguments.keys.toList.contains("variable"))
+    val groupedBySent = withVar.groupBy(_.sentence)
+    val toReturn = new ArrayBuffer[Mention]()
+    for (g <- groupedBySent) {
+      val groupedByVar = g._2.groupBy(_.arguments("variable"))
+      // event mentions grouped by var (so, checking which ones have an overlapping variable mention)
+      for (gv <- groupedByVar) {
+        // if there are more than two in a group, that means we can assemble them into an event
+        if (gv._2.length > 1) {
+          for (v <- gv._2) toReturn.append(v)
+          val newArgs = mutable.Map[String, Seq[Mention]]()
+          for (m <- gv._2) {
+            // it's fine if the var mention is overwritten because they are the same; the other args that matter are not gonna get overwritten
+            for (arg <- m.arguments) {
+              newArgs(arg._1) = arg._2
+
+            }
+          }
+          val assembledMention = copyWithLabel(copyWithArgs(gv._2.head, newArgs.toMap), "ParamAndUnit")
+          toReturn.append(assembledMention)
+
+        } else toReturn.append(gv._2.head)
+      }
+    }
+    toReturn.distinct ++ noVar
+  }
 
   def locationsAreNotVariablesOrModels(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     // makes sure there are no mentions where variables are actually most likely locations

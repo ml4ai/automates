@@ -80,7 +80,8 @@ class OdinEngine(
     // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
     // Run the main extraction engine, pre-populated with the initial state
-    val events =  engine.extractFrom(doc, initialState).toVector
+    val events =  loadableAttributes.actions.assembleVarsWithParamsAndUnits(  engine.extractFrom(doc, initialState)).toVector
+
     val modelCorefResolve = loadableAttributes.actions.resolveModelCoref(events)
 
     // process context attachments to the initially extracted mentions

@@ -96,6 +96,9 @@ object ExtractAndAssembleMentionEvents extends App {
     // note: for science parse format, each text is a section
     val texts = dataLoader.loadFile(file)
 
+
+    // todo: make a json with things like "model_names": {}, countries: {}, dates: {can I also get the event here? maybe with my new found previously found mention as a trigger power?}, params: {vars from units, param settings, and descriptions}, model_info: {model descr, model limitation, etc}, param settings and units --- method to combine units and param setting based on var overlap
+    val obj = ujson.Obj()
     // 3. Extract causal mentions from the texts
     val mentions = if (file.getName.contains("COSMOS")) {
       // cosmos json
@@ -105,7 +108,11 @@ object ExtractAndAssembleMentionEvents extends App {
       getMentionsWithoutLocations(texts, file)
     }
 
-    val func = mentions.filter(_.label contains "Function")
+    val labels = mentions.map(_.label).distinct.mkString("||")
+    println("Labels: " + labels)
+
+//    val modelComp = mentions.filter(_.label contains "ModelComponent")
+//    val func = mentions.filter(_.label contains "Function")
 //    for (g <- descr) {
 //      print(g.text + "\n")
 //      val texts = g.arguments.flatMap(_._2).map(_.text)
@@ -114,16 +121,19 @@ object ExtractAndAssembleMentionEvents extends App {
 //      println("======")
 //    }
 
-    for (g <- func) {
-      print(g.text + "\n")
-      for (arg <- g.arguments) {
-        println(arg._1)
-        for (a <- arg._2) {
-          println("-> " + a.text)
-        }
-      }
-      println("======")
-    }
+//    for (g <- modelComp) {
+//      println("MC: " + g.text + " " + g.label)
+//    }
+//    for (g <- func) {
+//      print(g.text + "\n")
+//      for (arg <- g.arguments) {
+//        println(arg._1)
+//        for (a <- arg._2) {
+//          println("-> " + a.text)
+//        }
+//      }
+//      println("======")
+//    }
     //The version of mention that includes routing between text vs. comment
     //    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
     //    for (m <- mentions) {
