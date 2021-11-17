@@ -227,7 +227,7 @@ case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString()))
     pw.write("filename\tsentence\tmention type\trule found this mention\tmention text\tlocation in the pdf\targs in all next columns\n")
-    val contentMentions = mentions.filter(m => (m.label.contains("Model") || m.label == "Function"))
+    val contentMentions = mentions.filter(m => m.label.contains("Model"))
 //    val nonCrossSentences = contentMentions.filter(m => !m.isInstanceOf[CrossSentenceEventMention])
     for (m <- contentMentions) {
       val locationMention = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation").get.toUJson.obj

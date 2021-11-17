@@ -417,7 +417,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           Some(selectedModel)
         } else if (previousModels2.nonEmpty) Some(previousModels2.maxBy(_.sentence)) else None
       } else Some(selectedModel)
-      if (origModel.sentence - finalModel.get.sentence < 10) finalModel else None
+      if (finalModel.nonEmpty && origModel.sentence - finalModel.get.sentence < 10) finalModel else None
     } else None
   }
 
@@ -1594,31 +1594,37 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     modelParams
   }
 
-//  def functionInputsToModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-//    val functionMens = mentions.filter(_.label == "Function")
-//    val modelParams = new ArrayBuffer[Mention]
-//    for (f <- functionMens) {
-//      val functionInputs = f.arguments.filter(m => m._1 == "input")
-//      for (inputs <- functionInputs.values) {
-//        val input = inputs.head
-//        val newArgs = Map("modelParameter" -> Seq(input))
-//        val newLabels = List("ModelComponent", "Model", "Phrase", "Entity").toSeq
-//        val modelParam = new TextBoundMention(
-//          newLabels,
-//          input.tokenInterval,
-//          input.sentence,
-//          input.document,
-//          input.keep,
-//          "functionInputsToModelParam",
-//          input.attachments)
-//        modelParams.append(modelParam)
-//      }
-//    }
-////    modelParams
-//    mentions
-//  }
-}
+  def functionArgsToModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val functionMens = mentions.filter(_.label == "Function")
+    val modelParams = new ArrayBuffer[Mention]
+    for (f <- functionMens) {
+      for (args <- f.arguments.values) {
+        val newLabels = List("ModelComponent", "Model", "Phrase", "Entity").toSeq
+        for (arg <- args) {
+          val modelParam = new TextBoundMention(
+            newLabels,
+            arg.tokenInterval,
+            arg.sentence,
+            arg.document,
+            arg.keep,
+            "functionArgsToModelParam",
+            arg.attachments)
+          modelParams.append(modelParam)
+        }
+      }
+    }
+    modelParams
+  }
 
+  def filterModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val filter1 = mentions.filter(m => m.text.length < 40) // Note: Too long args are unlikely to be a model parameter. length can be adjusted later.
+    val filter2 = filter1.filterNot(m => m.tags.head.contains("CD") || m.tags.head.contains("PRP")) // Note: arg with a numeric value is unlikely to be a model parameter.
+    val filter3 = filter2.filterNot(m => m.entities.head.contains("LOCATION")) // Note: arg with LOCATION entity is unlikely to be a model parameter.
+    val filter4 = filter3.filterNot(m => m.text.contains("data"))
+    // more filters can be added here
+    filter4
+  }
+}
 
 
 object OdinActions {
