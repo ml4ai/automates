@@ -73,7 +73,7 @@ rules:
       [tag = 'CD'] 
 
   - name: camelCase-rule
-    label: Context
+    label: MD_Context
     priority: 1
     type: token
     example: "camelCase"
@@ -81,7 +81,7 @@ rules:
       (?<variable>[word = /[a-z]+((0-9)|([A-Z0-9][a-z0-9]+))*([A-Z])?/])
 
   - name: list-rule1
-    label: Context
+    label: MD_Context
     priority: 3
     type: dependency
     example: "- Wheat: 'RUS', 'UKR', 'KAZ', 'RUS,UKR' or 'RUS,UKR,KAZ'"
@@ -92,7 +92,7 @@ rules:
     # 
   
   - name: list-rule2
-    label: Context
+    label: MD_Context
     priority: 3
     type: dependency
     example: "- --crop: Wheat, Rice or Corn"
@@ -105,7 +105,7 @@ rules:
 
 # Masha's rule
   - name: list-rule3
-    label: Context
+    label: MD_Context
     priority: 3
     type: token
     example: "- --crop: Wheat, Rice or Corn"
@@ -113,7 +113,7 @@ rules:
       @param:Phrase [word = ":"] @value:String+
   
   - name: list-rule4
-    label: Context
+    label: MD_Context
     priority: 3
     type: token
     example: "- --crop: Wheat, Rice or Corn"

@@ -82,13 +82,13 @@ class OdinEngine(
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
 
-//    // process context attachments to the initially extracted mentions
-//    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(events)
-//    val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
-//    val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
+    // process context attachments to the initially extracted mentions
+    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(events)
+    val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
+    val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
 
     // post-process the mentions with untangleConj and combineFunction
-    val (descriptionMentions, nonDescrMens) = (events).partition(_.label.contains("Description"))
+    val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
     val (functionMentions, other) = nonDescrMens.partition(_.label.contains("Function"))
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
