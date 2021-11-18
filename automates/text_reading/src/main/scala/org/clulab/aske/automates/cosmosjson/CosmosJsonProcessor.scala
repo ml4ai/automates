@@ -32,7 +32,7 @@ object CosmosJsonProcessor {
       }
     else {
         val previousBlock = newBlocks.last
-        if (!endsWithBlockEndPunkt(previousBlock.content.get) && !block.content.get.head.isUpper) {
+        if (!endsWithBlockEndPunkt(previousBlock.content.get) && !block.content.get.head.isUpper && !block.content.get.head.isDigit) {
         // then combine
         val newBlock = CosmosObject(
           block.pdfName,

@@ -19,7 +19,7 @@ rules:
     example: "These crises include the 2015 - 2016 civil war in Burundi and the 2013 - 2016 conflict in the Central African Republic ( CAR )"
     pattern: |
       trigger: Location
-      loc: Phrase = appos
+      loc: Phrase = appos [!tag = "CD" & !word = /.*\d+.*/]
 
 
   - name: entity-date
@@ -38,3 +38,13 @@ rules:
     pattern: |
       [word = /19\d\d/ & entity = "DATE"] | [word = /20\d\d/ & entity = "DATE"]
 
+  - name: date-event
+    label: DateEvent
+    priority: ${priority2}
+    type: dependency
+#    action: relabelLocation
+    example: "These crises include the 2015 - 2016 civil war in Burundi and the 2013 - 2016 conflict in the Central African Republic ( CAR )"
+    pattern: |
+      trigger: Date
+      verb: VerbPhrase = </nmod_*/
+      subj: Phrase = </nmod_*/ nsubj

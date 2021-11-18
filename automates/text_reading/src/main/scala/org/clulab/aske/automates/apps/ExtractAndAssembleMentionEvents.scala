@@ -11,7 +11,7 @@ import org.clulab.aske.automates.cosmosjson.CosmosJsonProcessor
 import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.utils.{FileUtils, Serializer}
-import org.clulab.odin.Mention
+import org.clulab.odin.{EventMention, Mention}
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
 import org.json4s.jackson.JsonMethods._
@@ -99,6 +99,7 @@ object ExtractAndAssembleMentionEvents extends App {
 
     // todo: make a json with things like "models": [{name: Blah, descr: Blah}], countries: {}, dates: {can I also get the event here? maybe with my new found previously found mention as a trigger power?}, params: {vars from units, param settings, and descriptions}, model_info: {model descr, model limitation, etc}, param settings and units --- method to combine units and param setting based on var overlap
     val obj = ujson.Obj()
+    obj("file_name") = file.getName
     // 3. Extract causal mentions from the texts
     val mentions = if (file.getName.contains("COSMOS")) {
       // cosmos json
@@ -108,15 +109,28 @@ object ExtractAndAssembleMentionEvents extends App {
       getMentionsWithoutLocations(texts, file)
     }
 
-    val groupedByLabel = mentions.groupBy(_.label)
+    val groupedByLabel = mentions.groupBy(_.label)//.filter(_._1 == "Location")
+    for (g <- groupedByLabel) {
+      println(g._1.toUpperCase)
+      for (m <- g._2) {
+        println(m.text + " " + m.label + " " + m.foundBy)
+      }
+    }
+
     for (g <- groupedByLabel) {
       g._1 match {
         case "ModelDescr" => {
           val modelObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
+            val trigger = m match {
+              case csem: CrossSentenceEventMention => csem.trigger.text
+              case em: EventMention => em.trigger.text
+              case _ => null
+            }
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
-              "description" -> m.arguments("modelDescr").head.text
+              "description" -> m.arguments("modelDescr").head.text,
+              "trigger" -> trigger
             )
             modelObjs.append(oneModel)
           }
@@ -125,9 +139,16 @@ object ExtractAndAssembleMentionEvents extends App {
         case "ModelLimitation" => {
           val modelObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
+            val trigger = m match {
+              case csem: CrossSentenceEventMention => csem.trigger.text
+              case em: EventMention => em.trigger.text
+              case _ => null
+            }
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
-              "limitation" -> m.arguments("modelDescr").head.text
+              "limitation" -> m.arguments("modelDescr").head.text,
+              "trigger" -> trigger
+
             )
             modelObjs.append(oneModel)
           }
@@ -149,7 +170,7 @@ object ExtractAndAssembleMentionEvents extends App {
             }
 
           }
-          obj("parameters") = paramUnitObjs
+          obj("paramSettingsAndUnits") = paramUnitObjs
         }
 
         case "UnitRelation" => {
@@ -169,6 +190,25 @@ object ExtractAndAssembleMentionEvents extends App {
           }
           obj("units") = paramUnitObjs
         }
+
+        case "DateEvent" => {
+          val dateEventObjs = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+            //            println("men: " + m.text + " " + m.label)
+            //              println("m: " + m.text + " " + m.label)
+            //              println("args: " + m.arguments.keys.mkString("|"))
+            val event = m.arguments("subj").head.text + " " + m.arguments("verb").head.text
+            val oneVar = ujson.Obj(
+              "date" -> m.asInstanceOf[EventMention].trigger.text,
+              //                "value" -> m.arguments("value").head.text,
+              "event" -> event
+            )
+            dateEventObjs.append(oneVar)
+
+
+          }
+          obj("dateEvents") = dateEventObjs
+        }
         case "Location" => {
           val locations = g._2.map(_.text).distinct.sorted
           obj("locations") = locations
@@ -177,6 +217,28 @@ object ExtractAndAssembleMentionEvents extends App {
           val dates = g._2.map(_.text).distinct.sorted
           obj("dates") = dates
         }
+        case "Parameter" => {
+          val modelComps = g._2.map(_.text).distinct.sorted
+          obj("parameters") = modelComps
+        }
+        case "ParameterSetting" => {
+          val paramSetObjs = new ArrayBuffer[ujson.Value]()
+
+          for (m <- g._2) {
+            //            println("men: " + m.text + " " + m.label)
+            //              println("m: " + m.text + " " + m.label)
+            //              println("args: " + m.arguments.keys.mkString("|"))
+            val oneVar = ujson.Obj(
+              "variable" -> m.arguments("variable").head.text,
+              //                "value" -> m.arguments("value").head.text,
+              "value" -> m.arguments("value").head.text
+            )
+            paramSetObjs.append(oneVar)
+
+
+          }
+          obj("paramSettings") = paramSetObjs
+        }
         case _ => println("Other")
       }
     }
@@ -184,7 +246,8 @@ object ExtractAndAssembleMentionEvents extends App {
     println("OBJECT: " + obj)
 
     val json = ujson.write(obj, indent = 2)
-    val pw = new PrintWriter(new File("/Users/alexeeva/Desktop/test-nov17.json"))
+    val outputDir = "/Users/alexeeva/Desktop/automates-related/MentionAssemblyDebug/mentions/"
+    val pw = new PrintWriter(new File(outputDir + file.getName.replace(".json", "-assembled-mentions.json")))
     pw.write(json)
     pw.close()
     val labels = mentions.map(_.label).distinct.mkString("||")

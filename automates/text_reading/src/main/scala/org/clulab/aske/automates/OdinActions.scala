@@ -441,30 +441,35 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val newMentions = new ArrayBuffer[Mention]()
     for (m <- mentions) {
-      // assume there's only one arg of each type
-      val tokenIntervals = m.arguments.map(_._2.head).map(_.tokenInterval).toSeq
-      val labelsOfTextBoundMentions = m.arguments.map(_._2.head.label).toSeq
-      //        println(m.text + " \n" + labelsOfTextBoundMentions.mkString("|") )
-      //        print(labelsOfTextBoundMentions.distinct.length)
-      //        print(labelsOfTextBoundMentions.length)
-      // make sure mention labels are no identical (basically, checking if both are Values---they should not be)
-      if (labelsOfTextBoundMentions.distinct.length == labelsOfTextBoundMentions.length) {
-        // takes care of accidental arg overlap
-        if (tokenIntervals.distinct.length == tokenIntervals.length) {
-          val newArgs = mutable.Map[String, Seq[Mention]]()
-          val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) {
+      val firstTokenOfValue = m.arguments("value").head.tokenInterval.start
+      // if value is first token in a sentence, that is probably just the section number in a paper
+      if (firstTokenOfValue != 0) {
+        // assume there's only one arg of each type
+        val tokenIntervals = m.arguments.map(_._2.head).map(_.tokenInterval).toSeq
+        val labelsOfTextBoundMentions = m.arguments.map(_._2.head.label).toSeq
+        //        println(m.text + " \n" + labelsOfTextBoundMentions.mkString("|") )
+        //        print(labelsOfTextBoundMentions.distinct.length)
+        //        print(labelsOfTextBoundMentions.length)
+        // make sure mention labels are no identical (basically, checking if both are Values---they should not be)
+        if (labelsOfTextBoundMentions.distinct.length == labelsOfTextBoundMentions.length) {
+          // takes care of accidental arg overlap
+          if (tokenIntervals.distinct.length == tokenIntervals.length) {
+            val newArgs = mutable.Map[String, Seq[Mention]]()
+            val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) {
 
-            newArgs += ("variable" -> Seq(copyWithLabel(m.arguments("variable").head, "Identifier")), "value" -> m.arguments("value"))
-            "variable"
-          } else {
-            newArgs += ("variable" -> m.arguments("variable"), "value" -> m.arguments("value"))
-            "concept"
+              newArgs += ("variable" -> Seq(copyWithLabel(m.arguments("variable").head, "Identifier")), "value" -> m.arguments("value"))
+              "variable"
+            } else {
+              newArgs += ("variable" -> m.arguments("variable"), "value" -> m.arguments("value"))
+              "concept"
+            }
+
+            val att = new ParamSetAttachment(attachedTo, "ParamSetAtt")
+            newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
           }
-
-          val att = new ParamSetAttachment(attachedTo, "ParamSetAtt")
-          newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
         }
       }
+
 
 
     }
@@ -1687,7 +1692,10 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
 
   def relabelLocation(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val (locationMentions, other) = mentions.partition(_.label matches "Location")
-    val onlyNewLocation = locationMentions.map(m => copyWithLabel(m.arguments("loc").head, "Location"))
+    for (lm <- locationMentions) {
+      println("LM: " + lm.text + " " + lm.arguments.keys.mkString("|"))
+    }
+    val onlyNewLocation = locationMentions.map(m => copyWithLabel(m.arguments("loc").head, "Location").asInstanceOf[TextBoundMention].copy(foundBy = m.foundBy + "++relabelLocation"))
     onlyNewLocation ++ other
   }
 
@@ -1696,11 +1704,12 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val paramSettingMens = mentions.filter(m => m.labels.contains("ParameterSetting"))
     val modelParams = new ArrayBuffer[Mention]
     for (p <- paramSettingMens) {
+      println("par set: " + p.text)
       val paramSettingVars = p.arguments.filter(m => m._1 == "variable")
       for (vars <- paramSettingVars.values) {
         val variable = vars.head
-        val newArgs = Map("modelParameter" -> Seq(variable))
-        val newLabels = List("ModelComponent", "Model", "Phrase", "Entity").toSeq
+//        val newArgs = Map("modelParameter" -> Seq(variable))
+        val newLabels = List("Parameter", "Model", "Phrase", "Entity").toSeq
         val modelParam = new TextBoundMention(
           newLabels,
           variable.tokenInterval,
@@ -1720,7 +1729,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val modelParams = new ArrayBuffer[Mention]
     for (f <- functionMens) {
       for (args <- f.arguments.values) {
-        val newLabels = List("ModelComponent", "Model", "Phrase", "Entity").toSeq
+        val newLabels = List("Parameter", "Model", "Phrase", "Entity").toSeq
         for (arg <- args) {
           val modelParam = new TextBoundMention(
             newLabels,

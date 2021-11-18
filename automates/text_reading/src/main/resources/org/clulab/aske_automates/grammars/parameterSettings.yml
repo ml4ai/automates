@@ -356,7 +356,7 @@ rules:
     example: "At planting time, the model takes a soil sample and applies up to 15 kg/ha of N fertilizer if needed."
     action: ${paramSetAction}
     pattern: |
-      @value:Value [word=/\w*/]{,4} "of" (@variable:Phrase [!tag = "CD"])
+      (?<! [word="Day"]) @value:Value [word=/\w*/ & !word=":"]{,4} "of" (@variable:Phrase [!tag = "CD"])
 
   - name: value_of
     label: ParameterSetting
