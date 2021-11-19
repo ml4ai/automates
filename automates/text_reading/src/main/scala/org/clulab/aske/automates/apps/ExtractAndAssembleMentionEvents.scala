@@ -113,7 +113,7 @@ object ExtractAndAssembleMentionEvents extends App {
     for (g <- groupedByLabel) {
       println(g._1.toUpperCase)
       for (m <- g._2) {
-        println(m.text + " " + m.label + " " + m.foundBy)
+        println(m.text + " " + m.label + " " + m.foundBy + " " + m.attachments)
       }
     }
 
@@ -127,10 +127,25 @@ object ExtractAndAssembleMentionEvents extends App {
               case em: EventMention => em.trigger.text
               case _ => null
             }
+
+            def getSource(m: Mention, filename: String): ujson.Value = {
+              val source = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation")
+              println("SOURCE: " + source)
+              val sourceJson = ujson.Obj()
+              if (source.isDefined) {
+                val sourceAsJson = source.get.toUJson
+                sourceJson("page") = sourceAsJson("pageNum")
+                sourceJson("blockIdx") = sourceAsJson("blockIdx")
+              }
+              sourceJson("file") = filename
+              sourceJson
+            }
+            val source = getSource(m, file.getName)
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
               "description" -> m.arguments("modelDescr").head.text,
-              "trigger" -> trigger
+              "trigger" -> trigger,
+              "source" -> source
             )
             modelObjs.append(oneModel)
           }
