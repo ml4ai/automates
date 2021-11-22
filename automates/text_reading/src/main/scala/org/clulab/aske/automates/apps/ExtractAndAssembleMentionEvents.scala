@@ -53,63 +53,9 @@ object ExtractAndAssembleMentionEvents extends App {
   //  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
   // For each file in the input directory:
 
-  def getMentionsWithoutLocations(texts: Seq[String], file: File): Seq[Mention] = {
-    // this is for science parse
-    texts.flatMap(t => reader.extractFromText(t, filename = Some(file.getName)))
-  }
-
-  def getMentionsWithLocations(texts: Seq[String], file: File): Seq[Mention] = {
-    // this is for cosmos jsons
-    val textsAndFilenames = texts.map(_.split("<::>").slice(0,2).mkString("<::>"))
-    val locations = texts.map(_.split("<::>").takeRight(2).mkString("<::>")) //location = pageNum::blockIdx
-    val mentions = for (tf <- textsAndFilenames) yield {
-      val Array(text, filename) = tf.split("<::>")
-      reader.extractFromText(text, keepText = true, Some(filename))
-    }
-    // store location information from cosmos as an attachment for each mention
-    val menWInd = mentions.zipWithIndex
-    val mentionsWithLocations = new ArrayBuffer[Mention]()
-    for (tuple <- menWInd) {
-      // get page and block index for each block; cosmos location information will be the same for all the mentions within one block
-      val menInTextBlocks = tuple._1
-      val id = tuple._2
-      val location = locations(id).split("<::>").map(loc => loc.split(",").map(_.toInt)) //(_.toDouble.toInt)
-      val pageNum = location.head
-      val blockIdx = location.last
-
-      for (m <- menInTextBlocks) {
-        val newAttachment = new MentionLocationAttachment(file.getName, pageNum, blockIdx, "MentionLocation")
-        val newMen = m match {
-          case m: CrossSentenceEventMention => m.asInstanceOf[CrossSentenceEventMention].newWithAttachment(newAttachment)
-          case _ => m.withAttachment(newAttachment)
-        }
-        mentionsWithLocations.append(newMen)
-      }
-    }
-    mentionsWithLocations
-  }
-
-  files.par.foreach { file =>
-    // 1. Open corresponding output file and make all desired exporters
-    println(s"Extracting from ${file.getName}")
-    // 2. Get the input file contents
-    // note: for science parse format, each text is a section
-    val texts = dataLoader.loadFile(file)
-
-
-    // todo: make a json with things like "models": [{name: Blah, descr: Blah}], countries: {}, dates: {can I also get the event here? maybe with my new found previously found mention as a trigger power?}, params: {vars from units, param settings, and descriptions}, model_info: {model descr, model limitation, etc}, param settings and units --- method to combine units and param setting based on var overlap
+  def assembleMentions(textMentions: Seq[Mention], mdMentions: Seq[Mention]): ujson.Value = {
     val obj = ujson.Obj()
-    obj("file_name") = file.getName
-    // 3. Extract causal mentions from the texts
-    val mentions = if (file.getName.contains("COSMOS")) {
-      // cosmos json
-      getMentionsWithLocations(texts, file)
-    } else {
-      // other file types---those don't have locations
-      getMentionsWithoutLocations(texts, file)
-    }
-
-    val groupedByLabel = mentions.groupBy(_.label)//.filter(_._1 == "Location")
+    val groupedByLabel = textMentions.groupBy(_.label)//.filter(_._1 == "Location")
     for (g <- groupedByLabel) {
       println(g._1.toUpperCase)
       for (m <- g._2) {
@@ -128,7 +74,7 @@ object ExtractAndAssembleMentionEvents extends App {
               case _ => null
             }
 
-            def getSource(m: Mention, filename: String): ujson.Value = {
+            def getSource(m: Mention): ujson.Value = {
               val source = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation")
               println("SOURCE: " + source)
               val sourceJson = ujson.Obj()
@@ -136,11 +82,12 @@ object ExtractAndAssembleMentionEvents extends App {
                 val sourceAsJson = source.get.toUJson
                 sourceJson("page") = sourceAsJson("pageNum")
                 sourceJson("blockIdx") = sourceAsJson("blockIdx")
+                sourceJson("filename") = sourceAsJson("filename")
               }
-              sourceJson("filename") = filename
+//              sourceJson("filename") = filename
               sourceJson
             }
-            val source = getSource(m, file.getName)
+            val source = getSource(m)
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
               "description" -> m.arguments("modelDescr").head.text,
@@ -174,8 +121,8 @@ object ExtractAndAssembleMentionEvents extends App {
           for (m <- g._2) {
             println("men: " + m.text + " " + m.label)
             if (m.arguments.keys.toList.contains("value") & m.arguments.keys.toList.contains("unit")) {
-//              println("m: " + m.text + " " + m.label)
-//              println("args: " + m.arguments.keys.mkString("|"))
+              //              println("m: " + m.text + " " + m.label)
+              //              println("args: " + m.arguments.keys.mkString("|"))
               val oneVar = ujson.Obj(
                 "variable" -> m.arguments("variable").head.text,
                 "value" -> m.arguments("value").head.text,
@@ -191,15 +138,15 @@ object ExtractAndAssembleMentionEvents extends App {
         case "UnitRelation" => {
           val paramUnitObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
-//            println("men: " + m.text + " " + m.label)
-//              println("m: " + m.text + " " + m.label)
-//              println("args: " + m.arguments.keys.mkString("|"))
-              val oneVar = ujson.Obj(
-                "variable" -> m.arguments("variable").head.text,
-//                "value" -> m.arguments("value").head.text,
-                "unit" -> m.arguments("unit").head.text
-              )
-              paramUnitObjs.append(oneVar)
+            //            println("men: " + m.text + " " + m.label)
+            //              println("m: " + m.text + " " + m.label)
+            //              println("args: " + m.arguments.keys.mkString("|"))
+            val oneVar = ujson.Obj(
+              "variable" -> m.arguments("variable").head.text,
+              //                "value" -> m.arguments("value").head.text,
+              "unit" -> m.arguments("unit").head.text
+            )
+            paramUnitObjs.append(oneVar)
 
 
           }
@@ -257,6 +204,66 @@ object ExtractAndAssembleMentionEvents extends App {
         case _ => println("Other")
       }
     }
+    obj
+  }
+
+  def getMentionsWithoutLocations(texts: Seq[String], file: File): Seq[Mention] = {
+    // this is for science parse
+    texts.flatMap(t => reader.extractFromText(t, filename = Some(file.getName)))
+  }
+
+  def getMentionsWithLocations(texts: Seq[String], file: File): Seq[Mention] = {
+    // this is for cosmos jsons
+    val textsAndFilenames = texts.map(_.split("<::>").slice(0,2).mkString("<::>"))
+    val locations = texts.map(_.split("<::>").takeRight(2).mkString("<::>")) //location = pageNum::blockIdx
+    val mentions = for (tf <- textsAndFilenames) yield {
+      val Array(text, filename) = tf.split("<::>")
+      reader.extractFromText(text, keepText = true, Some(filename))
+    }
+    // store location information from cosmos as an attachment for each mention
+    val menWInd = mentions.zipWithIndex
+    val mentionsWithLocations = new ArrayBuffer[Mention]()
+    for (tuple <- menWInd) {
+      // get page and block index for each block; cosmos location information will be the same for all the mentions within one block
+      val menInTextBlocks = tuple._1
+      val id = tuple._2
+      val location = locations(id).split("<::>").map(loc => loc.split(",").map(_.toInt)) //(_.toDouble.toInt)
+      val pageNum = location.head
+      val blockIdx = location.last
+
+      for (m <- menInTextBlocks) {
+        val newAttachment = new MentionLocationAttachment(file.getName, pageNum, blockIdx, "MentionLocation")
+        val newMen = m match {
+          case m: CrossSentenceEventMention => m.asInstanceOf[CrossSentenceEventMention].newWithAttachment(newAttachment)
+          case _ => m.withAttachment(newAttachment)
+        }
+        mentionsWithLocations.append(newMen)
+      }
+    }
+    mentionsWithLocations
+  }
+
+  files.par.foreach { file =>
+    // 1. Open corresponding output file and make all desired exporters
+    println(s"Extracting from ${file.getName}")
+    // 2. Get the input file contents
+    // note: for science parse format, each text is a section
+    val texts = dataLoader.loadFile(file)
+
+
+    // todo: make a json with things like "models": [{name: Blah, descr: Blah}], countries: {}, dates: {can I also get the event here? maybe with my new found previously found mention as a trigger power?}, params: {vars from units, param settings, and descriptions}, model_info: {model descr, model limitation, etc}, param settings and units --- method to combine units and param setting based on var overlap
+
+//    obj("file_name") = file.getName
+    // 3. Extract causal mentions from the texts
+    val mentions = if (file.getName.contains("COSMOS")) {
+      // cosmos json
+      getMentionsWithLocations(texts, file)
+    } else {
+      // other file types---those don't have locations
+      getMentionsWithoutLocations(texts, file)
+    }
+
+    val obj = assembleMentions(mentions, Seq.empty)
 
     println("OBJECT: " + obj)
 
