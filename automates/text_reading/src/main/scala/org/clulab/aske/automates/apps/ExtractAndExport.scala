@@ -78,7 +78,7 @@ object ExtractAndExport extends App {
       val blockIdx = location.last
 
       for (m <- menInTextBlocks) {
-        val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "MentionLocation"))
+        val newMen = m.withAttachment(new MentionLocationAttachment(file.getName, pageNum, blockIdx, "MentionLocation"))
         mentionsWithLocations.append(newMen)
       }
     }

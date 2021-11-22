@@ -78,7 +78,7 @@ object ExtractAndAssembleMentionEvents extends App {
       val blockIdx = location.last
 
       for (m <- menInTextBlocks) {
-        val newAttachment = new MentionLocationAttachment(pageNum, blockIdx, "MentionLocation")
+        val newAttachment = new MentionLocationAttachment(file.getName, pageNum, blockIdx, "MentionLocation")
         val newMen = m match {
           case m: CrossSentenceEventMention => m.asInstanceOf[CrossSentenceEventMention].newWithAttachment(newAttachment)
           case _ => m.withAttachment(newAttachment)
@@ -137,7 +137,7 @@ object ExtractAndAssembleMentionEvents extends App {
                 sourceJson("page") = sourceAsJson("pageNum")
                 sourceJson("blockIdx") = sourceAsJson("blockIdx")
               }
-              sourceJson("file") = filename
+              sourceJson("filename") = filename
               sourceJson
             }
             val source = getSource(m, file.getName)

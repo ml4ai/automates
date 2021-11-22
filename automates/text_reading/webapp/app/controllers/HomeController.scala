@@ -248,7 +248,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val blockIdx = location.last
 
       for (m <- menInTextBlocks) {
-        val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "MentionLocation"))
+        val newMen = m.withAttachment(new MentionLocationAttachment("Fixme: pass filename", pageNum, blockIdx, "MentionLocation"))
         mentionsWithLocations.append(newMen)
       }
     }
