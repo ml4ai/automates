@@ -267,114 +267,25 @@ object ExtractAndAssembleMentionEvents extends App {
 
     println("OBJECT: " + obj)
 
-    val json = ujson.write(obj, indent = 2)
     val outputDir = "/Users/alexeeva/Desktop/automates-related/MentionAssemblyDebug/mentions/"
-    val pw = new PrintWriter(new File(outputDir + file.getName.replace(".json", "-assembled-mentions.json")))
-    pw.write(json)
-    pw.close()
+    writeJsonToFile(obj, outputDir, "assembledMentions-Nov22.json")
+
+
+
+
     val labels = mentions.map(_.label).distinct.mkString("||")
     println("Labels: " + labels)
 
-//    val modelComp = mentions.filter(_.label contains "ModelComponent")
-//    val func = mentions.filter(_.label contains "Function")
-//    for (g <- descr) {
-//      print(g.text + "\n")
-//      val texts = g.arguments.flatMap(_._2).map(_.text)
-//      for (t <- texts)
-//        print(t + "\n")
-//      println("======")
-//    }
+  }
 
-//    for (g <- modelComp) {
-//      println("MC: " + g.text + " " + g.label)
-//    }
-//    for (g <- func) {
-//      print(g.text + "\n")
-//      for (arg <- g.arguments) {
-//        println(arg._1)
-//        for (a <- arg._2) {
-//          println("-> " + a.text)
-//        }
-//      }
-//      println("======")
-//    }
-    //The version of mention that includes routing between text vs. comment
-    //    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
-    //    for (m <- mentions) {
-    //      println("----------------")
-    //      println(m.text)
-    //
-    //      if (m.arguments.nonEmpty) {
-    //        for (arg <- m.arguments) {
-    //          println("arg: " + arg._1 + ": " + m.arguments(arg._1).head.text)
-    //        }
-    //      }
-    //
-    //    }
-//    val descrMentions = mentions.filter(_ matches "Description")
-//
-//    val exportGlobalVars = false
-//    if (exportGlobalVars) {
-//      val exporter = GlobalVarTSVExporter(file.getAbsolutePath, numOfWikiGroundings)
-//      val globalVars = getGlobalVars(descrMentions, None, true)
-//
-//      exporter.export(globalVars)
-//    }
-//
-//
-//    println("Description mentions: ")
-//    for (dm <- descrMentions) {
-//      println("----------------")
-//      println(dm.text)
-//      //      println(dm.foundBy)
-//      for (arg <- dm.arguments) {
-//        println(arg._1 + ": " + dm.arguments(arg._1).map(_.text).mkString("||"))
-//      }
-//      if (dm.attachments.nonEmpty) {
-//        for (att <- dm.attachments) println("att: " + att.asInstanceOf[AutomatesAttachment].toUJson)
-//      }
-//    }
-//    val paramSettingMentions = mentions.filter(_ matches "ParameterSetting")
-//
-//
-//
-//    println("\nParam setting mentions: ")
-//    for (m <- paramSettingMentions) {
-//      println("----------------")
-//      println(m.text)
-//      //      println(m.foundBy)
-//      for (arg <- m.arguments) {
-//        println(arg._1 + ": " + m.arguments(arg._1).head.text)
-//      }
-//    }
-//    val unitMentions = mentions.filter(_ matches "UnitRelation")
-//    println("Unit mentions: ")
-//    for (m <- unitMentions) {
-//      println("----------------")
-//      println(m.text)
-//      //      println(m.foundBy)
-//      for (arg <- m.arguments) {
-//        println(arg._1 + ": " + m.arguments(arg._1).head.text)
-//      }
-//    }
-//
-//
-//    val contextMentions = mentions.filter(_ matches "Context")
-//    println("Context setting mentions: ")
-//    for (m <- contextMentions) {
-//      println("----------------")
-//      println(m.text)
-//      //      println(m.foundBy)
-//      for (arg <- m.arguments) {
-//        println(arg._1 + ": " + m.arguments(arg._1).head.text)
-//      }
-//    }
+  def writeJsonToFile(obj: ujson.Value, outputDir: String, outputFileName: String): Unit = {
 
-    // 4. Export to all desired formats
-//    exportAs.foreach { format =>
-//      val exporter = getExporter(format, s"$outputDir/${file.getName.replace("." + inputType, s"_mentions.${format}")}")
-//      exporter.export(mentions)
-//      exporter.close() // close the file when you're done
-//    }
+    val json = ujson.write(obj, indent = 2)
+
+    //      val pw = new PrintWriter(new File(outputDir + file.getName.replace(".json", "-assembled-mentions.json")))
+    val pw = new PrintWriter(new File(outputDir + outputFileName))
+    pw.write(json)
+    pw.close()
+
   }
 }
