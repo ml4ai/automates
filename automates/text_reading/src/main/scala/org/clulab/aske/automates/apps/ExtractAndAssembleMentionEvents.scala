@@ -40,8 +40,8 @@ object ExtractAndAssembleMentionEvents extends App {
   //  val dataLoader = new ScienceParsedDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
-  val readerType: String = config[String]("ReaderType")
-  val reader = OdinEngine.fromConfig(config[Config](readerType))
+//  val readerType: String = config[String]("ReaderType")
+//  val reader = OdinEngine.fromConfig(config[Config](readerType))
 
   //uncomment these for using the text/comment router
   //  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
@@ -50,12 +50,12 @@ object ExtractAndAssembleMentionEvents extends App {
 
 
 
-  def getMentionsWithoutLocations(texts: Seq[String], file: File): Seq[Mention] = {
+  def getMentionsWithoutLocations(texts: Seq[String], file: File, reader: OdinEngine): Seq[Mention] = {
     // this is for science parse
     texts.flatMap(t => reader.extractFromText(t, filename = Some(file.getName)))
   }
 
-  def getMentionsWithLocations(texts: Seq[String], file: File): Seq[Mention] = {
+  def getMentionsWithLocations(texts: Seq[String], file: File, reader: OdinEngine): Seq[Mention] = {
     // this is for cosmos jsons
     val textsAndFilenames = texts.map(_.split("<::>").slice(0,2).mkString("<::>"))
     val locations = texts.map(_.split("<::>").takeRight(2).mkString("<::>")) //location = pageNum::blockIdx
@@ -88,23 +88,23 @@ object ExtractAndAssembleMentionEvents extends App {
 
   val textMentions = new ArrayBuffer[Mention]()
   files.par.foreach { file =>
+    val fileExt = file.toString.split("\\.").last
+    val reader = fileExt match {
+      case "json" => OdinEngine.fromConfig(config[Config]("TextEngine"))
+      case "md" => OdinEngine.fromConfig(config[Config]("MarkdownEngine"))
+      case _ => ???
+    }
     // 1. Open corresponding output file and make all desired exporters
     println(s"Extracting from ${file.getName}")
     // 2. Get the input file contents
     // note: for science parse format, each text is a section
     val texts = dataLoader.loadFile(file)
-
-
-    // todo: make a json with things like "models": [{name: Blah, descr: Blah}], countries: {}, dates: {can I also get the event here? maybe with my new found previously found mention as a trigger power?}, params: {vars from units, param settings, and descriptions}, model_info: {model descr, model limitation, etc}, param settings and units --- method to combine units and param setting based on var overlap
-
-//    obj("file_name") = file.getName
-    // 3. Extract causal mentions from the texts
     val mentions = if (file.getName.contains("COSMOS")) {
       // cosmos json
-      getMentionsWithLocations(texts, file)
+      getMentionsWithLocations(texts, file, reader)
     } else {
       // other file types---those don't have locations
-      getMentionsWithoutLocations(texts, file)
+      getMentionsWithoutLocations(texts, file, reader)
     }
 
 
@@ -112,6 +112,8 @@ object ExtractAndAssembleMentionEvents extends App {
   }
 
   val obj = assembleMentions(textMentions, Seq.empty)
+
+  //todo: here can check if there is a json of jsons from readmes and if yes, enrich json with that info
 
   println("OBJECT: " + obj)
 
