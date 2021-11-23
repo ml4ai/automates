@@ -22,7 +22,7 @@ rules:
     the conductances (C, kg s m−4) between adjacent components in the soil–plant system."
     action: ${action}
     pattern: |
-      @variable:Phrase [word="("] [word=/.*|,/]*? @unit: Unit (?=[word=")"])
+      (@variable:Phrase [!tag="CD"]) [word="("] [word=/.*|,/]*? @unit: Unit (?=[word=")"])
 
   - name: concept_unit
     label: UnitRelation

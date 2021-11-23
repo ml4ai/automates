@@ -1692,9 +1692,9 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
 
   def relabelLocation(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val (locationMentions, other) = mentions.partition(_.label matches "Location")
-    for (lm <- locationMentions) {
-      println("LM: " + lm.text + " " + lm.arguments.keys.mkString("|"))
-    }
+//    for (lm <- locationMentions) {
+//      println("LM: " + lm.text + " " + lm.arguments.keys.mkString("|"))
+//    }
     val onlyNewLocation = locationMentions.map(m => copyWithLabel(m.arguments("loc").head, "Location").asInstanceOf[TextBoundMention].copy(foundBy = m.foundBy + "++relabelLocation"))
     onlyNewLocation ++ other
   }
@@ -1704,7 +1704,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val paramSettingMens = mentions.filter(m => m.labels.contains("ParameterSetting"))
     val modelParams = new ArrayBuffer[Mention]
     for (p <- paramSettingMens) {
-      println("par set: " + p.text)
+//      println("par set: " + p.text)
       val paramSettingVars = p.arguments.filter(m => m._1 == "variable")
       for (vars <- paramSettingVars.values) {
         val variable = vars.head

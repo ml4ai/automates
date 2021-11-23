@@ -14,10 +14,7 @@ import org.clulab.odin.{EventMention, Mention}
 import scala.collection.mutable.ArrayBuffer
 
 /**
-  * App used to extract mentions from files in a directory and produce the desired output format (i.e., serialized
-  * mentions or any other format we may need).  The input and output directories as well as the desired export
-  * formats are specified in the config file (located in src/main/resources).
-  * This makes ONE output file for each of the input files.
+  * App used to extract mentions from paper jsons and readmes
   */
 object ExtractAndAssembleMentionEvents extends App {
 
@@ -42,6 +39,13 @@ object ExtractAndAssembleMentionEvents extends App {
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
 //  val readerType: String = config[String]("ReaderType")
 //  val reader = OdinEngine.fromConfig(config[Config](readerType))
+
+  val readmeJsonsFile = new File("/Users/alexeeva/Desktop/automates-related/MentionAssemblyDebug/jsonsFromReadme/json_extractions.json")
+  val readmeJsonsFileStr = FileUtils.getTextFromFile(readmeJsonsFile)
+  val jsonifiedReadmeJsons = ujson.read(readmeJsonsFileStr)
+
+  println("jsonified: " + jsonifiedReadmeJsons)
+
 
   //uncomment these for using the text/comment router
   //  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
@@ -115,7 +119,8 @@ object ExtractAndAssembleMentionEvents extends App {
 
   //todo: here can check if there is a json of jsons from readmes and if yes, enrich json with that info
 
-  println("OBJECT: " + obj)
+
+//  println("OBJECT: " + obj)
 
 
   writeJsonToFile(obj, outputDir, "assembledMentions-Nov22.json")
@@ -140,12 +145,12 @@ object ExtractAndAssembleMentionEvents extends App {
   def assembleMentions(textMentions: Seq[Mention], mdMentions: Seq[Mention]): ujson.Value = {
     val obj = ujson.Obj()
     val groupedByLabel = textMentions.groupBy(_.label)//.filter(_._1 == "Location")
-    for (g <- groupedByLabel) {
-      println(g._1.toUpperCase)
-      for (m <- g._2) {
-        println(m.text + " " + m.label + " " + m.foundBy + " " + m.attachments)
-      }
-    }
+//    for (g <- groupedByLabel) {
+//      println(g._1.toUpperCase)
+//      for (m <- g._2) {
+//        println(m.text + " " + m.label + " " + m.foundBy + " " + m.attachments)
+//      }
+//    }
 
     for (g <- groupedByLabel) {
       g._1 match {
@@ -160,7 +165,7 @@ object ExtractAndAssembleMentionEvents extends App {
 
             def getSource(m: Mention): ujson.Value = {
               val source = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation")
-              println("SOURCE: " + source)
+//              println("SOURCE: " + source)
               val sourceJson = ujson.Obj()
               if (source.isDefined) {
                 val sourceAsJson = source.get.toUJson
@@ -203,7 +208,7 @@ object ExtractAndAssembleMentionEvents extends App {
         case "ParamAndUnit" => {
           val paramUnitObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
-            println("men: " + m.text + " " + m.label)
+//            println("men: " + m.text + " " + m.label)
             if (m.arguments.keys.toList.contains("value") & m.arguments.keys.toList.contains("unit")) {
               //              println("m: " + m.text + " " + m.label)
               //              println("args: " + m.arguments.keys.mkString("|"))
