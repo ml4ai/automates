@@ -221,6 +221,17 @@ rules:
       modelName:Model = dobj
       modelDescr:Phrase = advcl_in_order
 
+  - name: optimised_for
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "FLEE is optimised for simplicity and flexibility and provides a range of scripts to handle and convert refugee data from the UNHCR database."
+    pattern: |
+      trigger = [word = "optimised"]
+      modelName:Model = nsubjpass
+      modelDescr:Phrase = nmod_for
+
   ## New rules for model construction ###
 
   - name: model_input_data

@@ -4,6 +4,7 @@
         - VariableGazetteer
       - Model
       - ModelComponent
+      - ModelParameter
       - Measurement:
         - Value:
           - ValueAndUnit
