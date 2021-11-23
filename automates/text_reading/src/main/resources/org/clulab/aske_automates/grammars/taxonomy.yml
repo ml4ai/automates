@@ -13,6 +13,10 @@
           - ValueAndUnit
         - Unit:
           - UnitRelation
+      - Filename
+      - Language
+  - String
+  - CommandStarter
   - VerbPhrase
 - Event:
   - ContextEvent
@@ -30,3 +34,6 @@
   - Function
   - Context
   - Command
+  - CommandLineArg
+  - MD_Context
+  - Repository

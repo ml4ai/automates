@@ -131,8 +131,11 @@ class MarkdownTextDataLoader extends DataLoader {
     * @param f the File being loaded
     * @return string content of file (wrapped in sequence)
     */
-  def loadFile(f: File): Seq[String] = getTextFromFile(f).split("\n").filter(_.nonEmpty)
+  def loadFile(f: File): Seq[String] = getTextFromFile(f).split("\n").filter(_.nonEmpty).map(t=>t.replace("`", ""))
   override val extension: String = "md"
+  // split on #
+  // filter out empty strings (see above)
+  // replace \n with NEWLINE (or add before \n)
 }
 
 class TokenizedLatexDataLoader extends DataLoader {

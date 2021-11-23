@@ -37,6 +37,7 @@ object ExtractAndAssembleMentionEvents extends App {
   //  val dataLoader = new ScienceParsedDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
+  val mdfiles = FileUtils.findFiles(inputDir, "md")
 //  val readerType: String = config[String]("ReaderType")
 //  val reader = OdinEngine.fromConfig(config[Config](readerType))
 
@@ -91,11 +92,18 @@ object ExtractAndAssembleMentionEvents extends App {
   }
 
   val textMentions = new ArrayBuffer[Mention]()
-  files.par.foreach { file =>
+  val mdMentions = new ArrayBuffer[Mention]()
+  val allFiles = files ++ mdfiles
+  allFiles.par.foreach { file =>
     val fileExt = file.toString.split("\\.").last
     val reader = fileExt match {
       case "json" => OdinEngine.fromConfig(config[Config]("TextEngine"))
       case "md" => OdinEngine.fromConfig(config[Config]("MarkdownEngine"))
+      case _ => ???
+    }
+    val dataLoader = fileExt match {
+      case "json" => DataLoader.selectLoader("json")
+      case "md" => DataLoader.selectLoader("md")
       case _ => ???
     }
     // 1. Open corresponding output file and make all desired exporters
@@ -111,8 +119,13 @@ object ExtractAndAssembleMentionEvents extends App {
       getMentionsWithoutLocations(texts, file, reader)
     }
 
+    fileExt match {
+      case "json" => textMentions.appendAll(mentions)
+      case "md" => mdMentions.appendAll(mentions)
+      case _ => ???
+    }
 
-    textMentions.appendAll(mentions)
+
   }
 
   val obj = assembleMentions(textMentions, Seq.empty)
@@ -130,6 +143,17 @@ object ExtractAndAssembleMentionEvents extends App {
 
   val labels = textMentions.map(_.label).distinct.mkString("||")
   println("Labels: " + labels)
+
+  val mdLabels = mdMentions.map(_.label).distinct.mkString("||")
+  println("MDLabels: " + mdLabels)
+
+  val groupedMdMentions = mdMentions.groupBy(_.label)
+
+  for (g <- groupedMdMentions) {
+    for (m <- g._2) {
+      println("m: " + m.label + " " + m.text)
+    }
+  }
 
   def writeJsonToFile(obj: ujson.Value, outputDir: String, outputFileName: String): Unit = {
 

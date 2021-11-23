@@ -232,13 +232,13 @@ case class TSVExporter(filename: String) extends Exporter {
     for (m <- contentMentions) {
       val locationMention = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation").get.toUJson.obj
       pw.write(contentMentions.head.document.id.getOrElse("unk_file") + "\t")
-      pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.foundBy + "\t" + m.text.trim() + "\t" + "page:" + locationMention("pageNum").arr.mkString(",") + " block:" +  locationMention("blockIdx").arr.mkString(",") )
-
-     for (arg <- m.arguments) {
-       if (arg._2.nonEmpty) {
-         pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
-       }
-     }
+      pw.write(m.sentenceObj.words.mkString(" ").replace("\t", "").replace("\n","") + "\t" + 
+        m.label + "\t" + m.foundBy + "\t" + m.text.trim().replace("\t", "").replace("\n",""))
+      for (arg <- m.arguments) {
+        if (arg._2.nonEmpty) {
+          pw.write("\t" + arg._1 + ": " + arg._2.map(_.text.trim().replace("\t", "").replace("\n","")).mkString("::"))
+        }
+      }
       pw.write("\n")
     }
     pw.close()

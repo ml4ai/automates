@@ -103,6 +103,7 @@ class OdinEngine(
     val finalModelParam = loadableAttributes.actions.filterModelParam(newModelParams1 ++ newModelParams2)
 
     loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam) ++ untangled ++ finalModelDescrs)).toVector
+
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
