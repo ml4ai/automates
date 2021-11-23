@@ -79,7 +79,7 @@ rules:
     type: token
     example: "<extracts: run_TWIST.py> --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      [word = /.*\.py|bash|git|mkdir|cd|python|docker/]
+      [word = /.*\.py|\b(bash|git|mkdir|cd|python|docker)\b/]
   
   - name: command-from-starter-rule
     label: Command

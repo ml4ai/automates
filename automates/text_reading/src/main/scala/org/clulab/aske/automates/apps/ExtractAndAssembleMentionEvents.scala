@@ -149,7 +149,7 @@ object ExtractAndAssembleMentionEvents extends App {
 
   val groupedMdMentions = mdMentions.groupBy(_.label)
 
-  for (g <- groupedMdMentions) {
+  for (g <- groupedMdMentions.filter(_._1=="Command")) {
     for (m <- g._2) {
       println("m: " + m.label + " " + m.text)
     }
