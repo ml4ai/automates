@@ -11,6 +11,7 @@
       - Filename
       - Language
   - String
+  - CommandStarter
 - Event:
   - ContextEvent
   - Conj
@@ -25,3 +26,4 @@
   - Command
   - CommandLineArg
   - MD_Context
+  - Repository
