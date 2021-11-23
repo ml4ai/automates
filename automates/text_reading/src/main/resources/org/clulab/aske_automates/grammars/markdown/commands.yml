@@ -38,15 +38,6 @@ rules:
     pattern: |
       (?<=[word="-"]{2}) (?<parameter>[word = /[a-zA-Z_]/])
 
-# NOT WORKING: needs update
-  # - name: command-rule
-  #   label: Command
-  #   priority: 1
-  #   type: token
-  #   example: "```./run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'```"
-  #   pattern: |
-  #     (?<=[word="`"]) [word = /.*/]+ (?=[word="``"])
-
   - name: arg-rule
     label: CommandLineArg
     priority: 2
