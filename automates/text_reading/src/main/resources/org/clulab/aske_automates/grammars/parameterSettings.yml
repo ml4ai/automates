@@ -358,6 +358,7 @@ rules:
     pattern: |
       (?<! [word="Day"]) @value:Value [word=/\w*/ & !word=":"]{,4} "of" (@variable:Phrase [!tag = "CD"])
 
+
   - name: value_of
     label: ParameterSetting
     priority: ${priority}

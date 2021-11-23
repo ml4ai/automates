@@ -93,7 +93,7 @@ class OdinEngine(
     val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
 
     val (functionMentions, nonFunctions) = nonDescrMens.partition(_.label.contains("Function"))
-    val (modelDescrs, nonModelDescrs) = nonFunctions.partition(_.label == "ModelDescr")
+    val (modelDescrs, nonModelDescrs) = nonFunctions.partition(_.labels.contains("ModelDescr"))
     val (modelNames, other) = nonModelDescrs.partition(_.label == "Model")
     val modelFilter = loadableAttributes.actions.filterModelNames(modelNames)
     val untangled = loadableAttributes.actions.locationsAreNotVariablesOrModels( (loadableAttributes.actions.untangleConj(descriptionMentions)))
@@ -102,7 +102,11 @@ class OdinEngine(
     val finalModelDescrs = modelDescrs.filter(_.arguments.contains("modelName"))
     val finalModelParam = loadableAttributes.actions.filterModelParam(newModelParams1 ++ newModelParams2)
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam) ++ untangled ++ finalModelDescrs)).toVector
+
+//    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam) ++ untangled ++ finalModelDescrs)).toVector
+
+
+    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam  ++ finalModelDescrs) ++ untangled)).toVector
 
   }
 

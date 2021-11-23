@@ -23,10 +23,10 @@ class ExpansionHandler() extends LazyLogging {
     // end of the action
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
 
-    // until there's evidence to the contrary, assume concepts  in parameter settings should expand in the same way as they do in functions
+    // until there's evidence to the contrary, assume concepts  in parameter settings should expand in the same way as they do in functions -> this caused a problem. Guess we need separate type of expansion for parameter setting!
     // use `contains` and not `=` for param settings to take care of both Parameter Settings and Interval Parameter Settings
-    val (functions, nonFunctions) = mentions.partition(m => m.label == "Function" || m.label.contains("ParameterSetting"))
-    val (modelDescrs, other) = nonFunctions.partition(_.label == "ModelDescr")
+    val (functions, nonFunctions) = mentions.partition(m => m.label == "Function" || m.labels.contains("ParameterSetting"))
+    val (modelDescrs, other) = nonFunctions.partition(m => m.labels.contains("ModelDescr"))
     val function_res = functions.flatMap(expandArgs(_, state, validArgs, "function"))
     val modelDescr_res = modelDescrs.flatMap(expandArgs(_, state, validArgs, expansionType = "modelDescr"))
     val other_res = other.flatMap(expandArgs(_, state, validArgs, "standard"))

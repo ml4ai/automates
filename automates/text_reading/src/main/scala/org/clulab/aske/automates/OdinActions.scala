@@ -43,7 +43,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val expandedIdentifiers = keepLongestIdentifier(identifiers)
       val (descriptions, other) = (expandedIdentifiers ++ non_identifiers).partition(m => m.label.contains("Description"))
       val (functions, nonFunc) = other.partition(m => m.label.contains("Function"))
-      val (modelDescrs, nonModelDescrs) = nonFunc.partition(m => m.label == "ModelDescr")
+      val (modelDescrs, nonModelDescrs) = nonFunc.partition(m => m.labels.contains("ModelDescr"))
 
       // only expand concepts in param settings and units, not the identifier-looking variables (e.g., expand `temperature` in `temparature is set to 0`, but not `T` in `T is set to 0`)
       val (paramSettingsAndUnitsNoIdfr, nonExpandable) = nonModelDescrs.partition(m => (m.label.contains("ParameterSetting") || m.label.contains("UnitRelation")) && !m.arguments("variable").head.labels.contains("Identifier"))
@@ -640,7 +640,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   /** Keeps the longest mention for each group of overlapping mentions * */
   // note: edited to allow functions to have overlapping inputs/outputs
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val (functions, other) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
+    val (functions, nonFunctions) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
+    val (modelDescrs, other) = nonFunctions.partition(m => m.label == "ModelDescr")
+    // distinguish between EventMention and CrossSentenceMention in modelDescr mentions
+    val (modelDescrCm, modelDescrEm) = modelDescrs.partition(_.isInstanceOf[CrossSentenceEventMention])
     // distinguish between EventMention and RelationMention in functionMentions
     val (functionEm, functionRm) = functions.partition(_.isInstanceOf[EventMention])
     val mns: Iterable[Mention] = for {
@@ -656,8 +659,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       m <- b
       longest = b.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
+    val mcs: Iterable[Mention] = for {
+      (k, v) <- modelDescrCm.groupBy(m => (m.sentence, m.asInstanceOf[CrossSentenceEventMention].trigger.tokenInterval))
+      m <- v
+      longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
+    } yield longest
+    val mes: Iterable[Mention] = for {
+      (k, v) <- modelDescrEm.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval))
+      m <- v
+      longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
+    } yield longest
 
-    mns.toVector.distinct ++ ems.toVector.distinct ++ functionRm
+    mns.toVector.distinct ++ ems.toVector.distinct ++ mcs.toVector.distinct ++ mes.toVector.distinct ++ functionRm
   }
 
 
@@ -1363,24 +1376,45 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     newMentions
   }
 
-  def filterModelDescrs(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val newMentions = new ArrayBuffer[Mention]
-    val groupByModelInt = mentions.groupBy(_.arguments("modelName").head.tokenInterval)
-    for (m <- groupByModelInt) {
-      val groupByDescrInt = m._2.groupBy(_.arguments("modelDescr").head.tokenInterval)
-      for (d <- groupByDescrInt) {
-        val groupByTrigInt = d._2.groupBy(_.asInstanceOf[EventMention].trigger.tokenInterval)
-        for (t <- groupByTrigInt) {
-          newMentions.append(t._2.head)
+  def filterModelDescrs(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newModelDescr = new ArrayBuffer[Mention]
+    val groupBySentence = mentions.groupBy(_.sentence) // group by sentence
+    for (s <- groupBySentence) {
+      val groupByModelInt = s._2.groupBy(_.arguments("modelName").head.tokenInterval) // group again by model name token interval
+      for (m <- groupByModelInt) {
+        val groupByTrigInt = m._2.groupBy(_.asInstanceOf[EventMention].trigger.tokenInterval) // group again by trigger token interval
+        for (d <- groupByTrigInt) {
+         val groupByModelDescr = d._2.groupBy(_.arguments("modelDescr").head.tokenInterval)
+          for (g <- groupByModelDescr) {
+            newModelDescr.append(g._2.head)
+            }
+          }
         }
       }
-    }
-    newMentions
+    newModelDescr
   }
 
   def filterModelNames(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val filterModelNames = mentions.filterNot(m => m.foundBy == "model_pronouns" || m.foundBy == "the/this_model")
-    filterModelNames
+    val filter1 = mentions.filterNot(m => m.foundBy == "model_pronouns" || m.foundBy == "the/this_model" || m.foundBy == "our_model")
+    val filter2 = filter1.filterNot(m => m.text == "flee") // couldn't get rid of verb "flee" by using VB tag, because real model name "Flee" also got VB tag.
+    filter2
+  }
+
+  def compoundModelCompletion(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]
+    for (m <- mentions) {
+      val completion = new TextBoundMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        "compoundModelCompletion",
+        m.attachments
+      )
+      newMentions.append(completion)
+    }
+    newMentions
   }
 
   def makeNewMensWithContexts(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -1710,6 +1744,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         val variable = vars.head
 //        val newArgs = Map("modelParameter" -> Seq(variable))
         val newLabels = List("Parameter", "Model", "Phrase", "Entity").toSeq
+
         val modelParam = new TextBoundMention(
           newLabels,
           variable.tokenInterval,
@@ -1747,7 +1782,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   }
 
   def filterModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val filter1 = mentions.filter(m => m.text.length < 40) // Note: Too long args are unlikely to be a model parameter. length can be adjusted later.
+    val filter1 = mentions.filterNot(m => m.text.length > 40 && !m.text.contains("_")) // Note: Too long args are unlikely to be a model parameter. length can be adjusted later.
     val filter2 = filter1.filterNot(m => m.tags.head.contains("CD") || m.tags.head.contains("PRP")) // Note: arg with a numeric value is unlikely to be a model parameter.
     val filter3 = filter2.filterNot(m => m.entities.head.contains("LOCATION")) // Note: arg with LOCATION entity is unlikely to be a model parameter.
     val filter4 = filter3.filterNot(m => m.text.contains("data"))
