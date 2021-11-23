@@ -527,6 +527,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (functions, nonFunctions) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
     val (modelDescrs, other) = nonFunctions.partition(m => m.label == "ModelDescr")
+    // distinguish between EventMention and CrossSentenceMention in modelDescr mentions
+    val (modelDescrCm, modelDescrEm) = modelDescrs.partition(_.isInstanceOf[CrossSentenceEventMention])
     // distinguish between EventMention and RelationMention in functionMentions
     val (functionEm, functionRm) = functions.partition(_.isInstanceOf[EventMention])
     val mns: Iterable[Mention] = for {
@@ -542,13 +544,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       m <- b
       longest = b.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
-    val mms: Iterable[Mention] = for {
-      (k, v) <- modelDescrs.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval))
+    val mcs: Iterable[Mention] = for {
+      (k, v) <- modelDescrCm.groupBy(m => (m.sentence, m.asInstanceOf[CrossSentenceEventMention].trigger.tokenInterval))
+      m <- v
+      longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
+    } yield longest
+    val mes: Iterable[Mention] = for {
+      (k, v) <- modelDescrEm.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval))
       m <- v
       longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
 
-    mns.toVector.distinct ++ ems.toVector.distinct ++ mms.toVector.distinct ++ functionRm
+    mns.toVector.distinct ++ ems.toVector.distinct ++ mcs.toVector.distinct ++ mes.toVector.distinct ++ functionRm
   }
 
 

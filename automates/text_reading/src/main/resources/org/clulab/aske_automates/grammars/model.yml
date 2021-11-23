@@ -96,6 +96,7 @@ rules:
     priority: ${priority}
     type: token
     example: "Flee"
+    action: filterModelNames
     pattern: |
       [entity = "B-model"]
 
