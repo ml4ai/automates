@@ -57,7 +57,18 @@ object ExtractAndAssembleMentionEvents extends App {
 
   def getMentionsWithoutLocations(texts: Seq[String], file: File, reader: OdinEngine): Seq[Mention] = {
     // this is for science parse
-    texts.flatMap(t => reader.extractFromText(t, filename = Some(file.getName)))
+    val mentions = texts.flatMap(t => reader.extractFromText(t, filename = Some(file.getName)))
+    // most fields here will be null, but there will be a filename field; doing this so that all mentions, regardless of whether they have dtailed location (in the document) can be processed the same way
+    val mentionsWithLocations = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val newAttachment = new MentionLocationAttachment(file.getName, Seq(-1), Seq(-1), "MentionLocation")
+      val newMen = m match {
+        case m: CrossSentenceEventMention => m.asInstanceOf[CrossSentenceEventMention].newWithAttachment(newAttachment)
+        case _ => m.withAttachment(newAttachment)
+      }
+      mentionsWithLocations.append(newMen)
+    }
+    mentionsWithLocations
   }
 
   def getMentionsWithLocations(texts: Seq[String], file: File, reader: OdinEngine): Seq[Mention] = {
@@ -128,7 +139,7 @@ object ExtractAndAssembleMentionEvents extends App {
 
   }
 
-  val obj = assembleMentions(textMentions, Seq.empty)
+  val obj = assembleMentions(textMentions, mdMentions)
 
   //todo: here can check if there is a json of jsons from readmes and if yes, enrich json with that info
 
@@ -149,7 +160,19 @@ object ExtractAndAssembleMentionEvents extends App {
 
   val groupedMdMentions = mdMentions.groupBy(_.label)
 
-  for (g <- groupedMdMentions.filter(_._1=="Command")) {
+  for (g <- groupedMdMentions.filter(_._1=="UnitRelation")) {
+    for (m <- g._2) {
+      println("m: " + m.label + " " + m.text)
+    }
+  }
+
+  for (g <- groupedMdMentions.filter(_._1=="ParameterSetting")) {
+    for (m <- g._2) {
+      println("m: " + m.label + " " + m.text)
+    }
+  }
+
+  for (g <- groupedMdMentions.filter(_._1=="Parameter")) {
     for (m <- g._2) {
       println("m: " + m.label + " " + m.text)
     }
@@ -168,13 +191,29 @@ object ExtractAndAssembleMentionEvents extends App {
 
   def assembleMentions(textMentions: Seq[Mention], mdMentions: Seq[Mention]): ujson.Value = {
     val obj = ujson.Obj()
-    val groupedByLabel = textMentions.groupBy(_.label)//.filter(_._1 == "Location")
+    val groupedByLabel = (textMentions++mdMentions).groupBy(_.label)//.filter(_._1 == "Location")
 //    for (g <- groupedByLabel) {
 //      println(g._1.toUpperCase)
 //      for (m <- g._2) {
 //        println(m.text + " " + m.label + " " + m.foundBy + " " + m.attachments)
 //      }
 //    }
+
+    def getSource(m: Mention): ujson.Value = {
+      println("m: " + m.text + " " + m.attachments)
+      val source = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation")
+                    println("SOURCE: " + source)
+      val sourceJson = ujson.Obj()
+      println("Source: " + source.get.toUJson)
+      if (source.isDefined) {
+        val sourceAsJson = source.get.toUJson
+        sourceJson("page") = sourceAsJson("pageNum")
+        sourceJson("blockIdx") = sourceAsJson("blockIdx")
+        sourceJson("filename") = sourceAsJson("filename")
+      }
+      //              sourceJson("filename") = filename
+      sourceJson
+    }
 
     for (g <- groupedByLabel) {
       g._1 match {
@@ -187,25 +226,14 @@ object ExtractAndAssembleMentionEvents extends App {
               case _ => null
             }
 
-            def getSource(m: Mention): ujson.Value = {
-              val source = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation")
-//              println("SOURCE: " + source)
-              val sourceJson = ujson.Obj()
-              if (source.isDefined) {
-                val sourceAsJson = source.get.toUJson
-                sourceJson("page") = sourceAsJson("pageNum")
-                sourceJson("blockIdx") = sourceAsJson("blockIdx")
-                sourceJson("filename") = sourceAsJson("filename")
-              }
-              //              sourceJson("filename") = filename
-              sourceJson
-            }
+
             val source = getSource(m)
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
               "description" -> m.arguments("modelDescr").head.text,
               "trigger" -> trigger,
-              "source" -> source
+              "source" -> source,
+               "sentence" -> m.sentenceObj.getSentenceText
             )
             modelObjs.append(oneModel)
           }
@@ -219,10 +247,13 @@ object ExtractAndAssembleMentionEvents extends App {
               case em: EventMention => em.trigger.text
               case _ => null
             }
+            val source = getSource(m)
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
               "limitation" -> m.arguments("modelDescr").head.text,
-              "trigger" -> trigger
+              "trigger" -> trigger,
+              "source" -> source,
+              "sentence" -> m.sentenceObj.getSentenceText
 
             )
             modelObjs.append(oneModel)
@@ -236,10 +267,13 @@ object ExtractAndAssembleMentionEvents extends App {
             if (m.arguments.keys.toList.contains("value") & m.arguments.keys.toList.contains("unit")) {
               //              println("m: " + m.text + " " + m.label)
               //              println("args: " + m.arguments.keys.mkString("|"))
+              val source = getSource(m)
               val oneVar = ujson.Obj(
                 "variable" -> m.arguments("variable").head.text,
                 "value" -> m.arguments("value").head.text,
-                "unit" -> m.arguments("unit").head.text
+                "unit" -> m.arguments("unit").head.text,
+                "source" -> source,
+                "sentence" -> m.sentenceObj.getSentenceText
               )
               paramUnitObjs.append(oneVar)
             }
@@ -254,10 +288,13 @@ object ExtractAndAssembleMentionEvents extends App {
             //            println("men: " + m.text + " " + m.label)
             //              println("m: " + m.text + " " + m.label)
             //              println("args: " + m.arguments.keys.mkString("|"))
+            val source = getSource(m)
             val oneVar = ujson.Obj(
               "variable" -> m.arguments("variable").head.text,
               //                "value" -> m.arguments("value").head.text,
-              "unit" -> m.arguments("unit").head.text
+              "unit" -> m.arguments("unit").head.text,
+              "source" -> source,
+              "sentence" -> m.sentenceObj.getSentenceText
             )
             paramUnitObjs.append(oneVar)
 
@@ -273,10 +310,13 @@ object ExtractAndAssembleMentionEvents extends App {
             //              println("m: " + m.text + " " + m.label)
             //              println("args: " + m.arguments.keys.mkString("|"))
             val event = m.arguments("subj").head.text + " " + m.arguments("verb").head.text
+            val source = getSource(m)
             val oneVar = ujson.Obj(
               "date" -> m.asInstanceOf[EventMention].trigger.text,
               //                "value" -> m.arguments("value").head.text,
-              "event" -> event
+              "event" -> event,
+              "source" -> source,
+              "sentence" -> m.sentenceObj.getSentenceText
             )
             dateEventObjs.append(oneVar)
 
@@ -285,16 +325,54 @@ object ExtractAndAssembleMentionEvents extends App {
           obj("dateEvents") = dateEventObjs
         }
         case "Location" => {
-          val locations = g._2.map(_.text).distinct.sorted
+//          val locations = g._2.map(_.text).distinct.sorted
+//          obj("locations") = locations
+
+          val locations = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+            val paramObj = ujson.Obj()
+            val source = getSource(m)
+            paramObj("text") = m.text
+            paramObj("source") = source
+            paramObj("sentence") = m.sentenceObj.getSentenceText
+            locations.append(paramObj)
+          }
+          //          g._2.map(_.text).distinct.sorted
           obj("locations") = locations
+
         }
         case "Date" => {
-          val dates = g._2.map(_.text).distinct.sorted
+//          val dates = g._2.map(_.text).distinct.sorted
+//          obj("dates") = dates
+
+
+
+          val dates = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+            val paramObj = ujson.Obj()
+            val source = getSource(m)
+            paramObj("text") = m.text
+            paramObj("context") = m.sentenceObj.getSentenceText
+            paramObj("source") = source
+            paramObj("sentence") = m.sentenceObj.getSentenceText
+            dates.append(paramObj)
+          }
+          //          g._2.map(_.text).distinct.sorted
           obj("dates") = dates
         }
         case "Parameter" => {
-          val modelComps = g._2.map(_.text).distinct.sorted
-          obj("parameters") = modelComps
+
+          val modelComps = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+            val paramObj = ujson.Obj()
+            val source = getSource(m)
+            paramObj("text") = m.text
+            paramObj("source") = source
+            paramObj("sentence") = m.sentenceObj.getSentenceText
+            modelComps.append(paramObj)
+          }
+//          g._2.map(_.text).distinct.sorted
+          obj("parameters") = modelComps.distinct
         }
         case "ParameterSetting" => {
           val paramSetObjs = new ArrayBuffer[ujson.Value]()
@@ -303,10 +381,13 @@ object ExtractAndAssembleMentionEvents extends App {
             //            println("men: " + m.text + " " + m.label)
             //              println("m: " + m.text + " " + m.label)
             //              println("args: " + m.arguments.keys.mkString("|"))
+            val source = getSource(m)
             val oneVar = ujson.Obj(
               "variable" -> m.arguments("variable").head.text,
               //                "value" -> m.arguments("value").head.text,
-              "value" -> m.arguments("value").head.text
+              "value" -> m.arguments("value").head.text,
+              "source" -> source,
+              "sentence" -> m.sentenceObj.getSentenceText
             )
             paramSetObjs.append(oneVar)
 
