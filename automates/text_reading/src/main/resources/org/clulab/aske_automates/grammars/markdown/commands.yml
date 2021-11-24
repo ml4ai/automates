@@ -19,16 +19,16 @@ rules:
     type: token
     example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
     pattern: |
-      [word = /.*\.[a-zA-Z]{2,}/]
+      (?<filename>[word = /.*\.[a-zA-Z]{2,}/])
   
-  # NOT WORKING: matches mostly garbage
-  # - name: var-rule
-  #   label: CommandLineArg
-  #   priority: 1
-  #   type: token
-  #   example: "include_prodDecline"
-  #   pattern: |
-  #     (?<variable>[word = /[a-zA-Z0-9_]+/])
+# NOT WORKING: matches mostly garbage
+# - name: var-rule
+#   label: CommandLineArg
+#   priority: 1
+#   type: token
+#   example: "include_prodDecline"
+#   pattern: |
+#     (?<variable>[word = /[a-zA-Z0-9_]+/])
     
   - name: parameter-rule
     label: CommandLineArg
@@ -36,7 +36,7 @@ rules:
     type: token
     example: "--crop"
     pattern: |
-      (?<=[word="-"]{2}) (?<parameter>[word = /[a-zA-Z_]/])
+      (?<=[word="-"]{2}) (?<parameter>[word = /[a-zA-Z_]+/])
 
 # NOT WORKING: needs update
   # - name: command-rule
@@ -53,7 +53,7 @@ rules:
     type: token
     example: "./run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      @parameter:CommandLineArg (?<=[tag = /" | POS/])? (?<argument>[word = /[a-zA-Z0-9'"]+/]+)
+      (?<keywordArg>@parameter:CommandLineArg (?<=[tag = /" | POS/])? (?<argument>[word = /[a-zA-Z0-9'"]+/]+))
 
 
   # - name: language
@@ -71,7 +71,7 @@ rules:
     type: token
     example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
     pattern: |
-      [word = /(https:\/\/)?(gitlab|github|bitbucket)[\w\d\/-_.]+\w/]
+      (?<repo>[word = /(https:\/\/)?(gitlab|github|bitbucket)[\w\d\/-_.]+\w/])
 
   - name: command-starter-rule
     label: CommandStarter
@@ -79,7 +79,7 @@ rules:
     type: token
     example: "<extracts: run_TWIST.py> --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      [word = /.*\.py|\b(bash|git|mkdir|cd|python|docker)\b/]
+      [word = /.*\.py|\b(bash|git|mkdir|cd|python|docker|python3)\b/]
   
   - name: command-from-starter-rule
     label: Command
@@ -88,6 +88,15 @@ rules:
     example: "run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
       @commandstarter:CommandStarter (?<argument>[word = /.*/]+)
+  
+  # - name: command-filename-rule
+  #   label: Command
+  #   priority: 3
+  #   type: token
+  #   example: "python run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
+  #   pattern: |
+  #     [word = /\b(bash|git|mkdir|cd|python|docker)\b/]
+  #   # [word = /.*/]* @filename:Filename* @repo:Repository* @keywordArg:CommandLineArg* [word = /.*/]*
 
   - name: string-rule
     label: String
@@ -137,7 +146,7 @@ rules:
   
 # write rules for parsing blocks
 
-# Masha's rules
+##### Masha's rules
   - name: list-rule3
     label: MD_Context
     priority: 3
@@ -153,4 +162,16 @@ rules:
     example: "- --crop: Wheat, Rice or Corn"
     pattern: |
       @param:Phrase [word = ":"] @value:Phrase+
+
+#####
+
+  - name: list-rule5
+    label: MD_Context
+    priority: 3
+    type: dependency
+    example: "- --crop: Wheat, Rice or Corn"
+    pattern: |
+      trigger = CommandLineArgument
+      value:Phrase+ = dep 
+
 

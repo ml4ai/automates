@@ -131,7 +131,15 @@ class MarkdownTextDataLoader extends DataLoader {
     * @param f the File being loaded
     * @return string content of file (wrapped in sequence)
     */
-  def loadFile(f: File): Seq[String] = getTextFromFile(f).split("\n").filter(_.nonEmpty).map(t=>t.replace("`", ""))
+  def loadFile(f: File): Seq[String] = {
+    return (getTextFromFile(f)
+            .split("\n")
+            .filter(_.nonEmpty)
+            .map(t=>t.replace("`", "")))
+  }
+  // .filter(_.split(" ").toSet.intersect(Set("bash","git","mkdir","cd","python","docker")).nonEmpty)
+
+
   override val extension: String = "md"
   // split on #
   // filter out empty strings (see above)

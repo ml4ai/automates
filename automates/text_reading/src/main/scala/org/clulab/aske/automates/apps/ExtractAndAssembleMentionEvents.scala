@@ -31,7 +31,7 @@ object ExtractAndAssembleMentionEvents extends App {
 
   val numOfWikiGroundings: Int = config[Int]("apps.numOfWikiGroundings")
   val inputDir: String = config[String]("apps.inputDirectory")
-  val outputDir: String = "/Users/alexeeva/Desktop/automates-related/MentionAssemblyDebug/mentions/"//config[String]("apps.outputDirectory")
+  val outputDir: String = config[String]("apps.outputDirectory")
   val inputType: String = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
   //  val dataLoader = new ScienceParsedDataLoader
@@ -41,11 +41,11 @@ object ExtractAndAssembleMentionEvents extends App {
 //  val readerType: String = config[String]("ReaderType")
 //  val reader = OdinEngine.fromConfig(config[Config](readerType))
 
-  val readmeJsonsFile = new File("/Users/alexeeva/Desktop/automates-related/MentionAssemblyDebug/jsonsFromReadme/json_extractions.json")
-  val readmeJsonsFileStr = FileUtils.getTextFromFile(readmeJsonsFile)
-  val jsonifiedReadmeJsons = ujson.read(readmeJsonsFileStr)
+  // val readmeJsonsFile = new File("/Users/alexeeva/Desktop/automates-related/MentionAssemblyDebug/jsonsFromReadme/json_extractions.json")
+  // val readmeJsonsFileStr = FileUtils.getTextFromFile(readmeJsonsFile)
+  // val jsonifiedReadmeJsons = ujson.read(readmeJsonsFileStr)
 
-  println("jsonified: " + jsonifiedReadmeJsons)
+  // println("jsonified: " + jsonifiedReadmeJsons)
 
 
   //uncomment these for using the text/comment router
@@ -151,7 +151,7 @@ object ExtractAndAssembleMentionEvents extends App {
 
   for (g <- groupedMdMentions.filter(_._1=="Command")) {
     for (m <- g._2) {
-      println("m: " + m.label + " " + m.text)
+      println(m.text)
     }
   }
 

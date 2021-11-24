@@ -38,8 +38,8 @@ object ExtractAndExport extends App {
   val config = ConfigFactory.load()
 
   val numOfWikiGroundings: Int = config[Int]("apps.numOfWikiGroundings")
-  val inputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/input_files"
-  val outputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/output_files"
+  val inputDir: String = config[String]("apps.inputDirectory")
+  val outputDir: String = config[String]("apps.outputDirectory")
   val inputType: String = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
   //  val dataLoader = new ScienceParsedDataLoader
@@ -227,10 +227,10 @@ case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString()))
     pw.write("filename\tsentence\tmention type\tfound by\tmention text\tlocation in the pdf\targs in all next columns\n")
-    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation") || (m.label matches "Command") || (m.label matches "Date") || (m.label matches "Location") || m.label.contains("Model")) //|| (m.label matches "Context"))
+    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation") || (m.label matches "Command") || (m.label matches "Date") || (m.label matches "Location") || m.label.contains("Model")|| (m.label matches "Repository") || (m.label matches "CommandLineArg")) //|| (m.label matches "Context"))
 
     for (m <- contentMentions) {
-      val locationMention = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation").get.toUJson.obj
+      // val locationMention = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation").get.toUJson.obj
       pw.write(contentMentions.head.document.id.getOrElse("unk_file") + "\t")
       pw.write(m.sentenceObj.words.mkString(" ").replace("\t", "").replace("\n","") + "\t" + 
         m.label + "\t" + m.foundBy + "\t" + m.text.trim().replace("\t", "").replace("\n",""))
