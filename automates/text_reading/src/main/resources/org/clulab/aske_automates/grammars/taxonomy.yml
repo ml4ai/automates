@@ -9,6 +9,7 @@
       - ModelComponent
       - Parameter
       - ModelParameter
+      - CommLineParameter
       - Measurement:
         - Value:
           - ValueAndUnit
@@ -20,6 +21,7 @@
   - CommandStarter
   - VerbPhrase
 - Event:
+  - CommandLineParamValuePair
   - ContextEvent
   - Conj
   - Causal

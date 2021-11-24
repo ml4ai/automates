@@ -19,7 +19,7 @@ rules:
     type: token
     example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
     pattern: |
-      [word = /.*\.[a-zA-Z]{2,}/]
+      [word = /.*\.[a-zA-Z]{2,}/ & !word=/^http/] | [word = /Dockerfile/]
   
   # NOT WORKING: matches mostly garbage
   # - name: var-rule
@@ -31,12 +31,12 @@ rules:
   #     (?<variable>[word = /[a-zA-Z0-9_]+/])
     
   - name: parameter-rule
-    label: CommandLineArg
+    label: CommLineParameter
     priority: 1
     type: token
     example: "--crop"
     pattern: |
-      (?<=[word="-"]{2}) (?<parameter>[word = /[a-zA-Z_]/])
+      (?<=[word="-"]{2}) [word = /[a-zA-Z_]/]
 
 # NOT WORKING: needs update
   # - name: command-rule
@@ -48,12 +48,12 @@ rules:
   #     (?<=[word="`"]) [word = /.*/]+ (?=[word="``"])
 
   - name: arg-rule
-    label: CommandLineArg
+    label: CommandLineParamValuePair
     priority: 2
     type: token
     example: "./run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      @parameter:CommandLineArg (?<=[tag = /" | POS/])? (?<argument>[word = /[a-zA-Z0-9'"]+/]+)
+      @parameter:CommLineParameter (?<=[tag = /" | POS/])? (?<value>[word = /[a-zA-Z0-9'"]+/]+)
 
 
   # - name: language
@@ -79,7 +79,7 @@ rules:
     type: token
     example: "<extracts: run_TWIST.py> --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      [word = /.*\.py|\b(bash|git|mkdir|cd|python|docker)\b/]
+      [word = /.*\.py|\b(bash|git|mkdir|cd|python|docker)\b/] (?! [word = /\)|\]/])
   
   - name: command-from-starter-rule
     label: Command
@@ -87,7 +87,7 @@ rules:
     type: token
     example: "run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      @commandstarter:CommandStarter (?<argument>[word = /.*/]+)
+      @commandstarter:CommandStarter (?<allArguments>[word = /.*/ & !word = ","]+)
 
   - name: string-rule
     label: String

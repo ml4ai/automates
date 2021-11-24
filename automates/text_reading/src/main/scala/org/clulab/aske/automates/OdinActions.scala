@@ -574,6 +574,50 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn.distinct ++ noVar
   }
 
+  def processCommands(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val groupBySent = mentions.groupBy(_.sentence)
+    val toReturn = new ArrayBuffer[Mention]()
+    for (g <- groupBySent) {
+      val (commands, other) = g._2.partition(_.label == "Command")
+      for (o <- other) toReturn.append(o)
+      val otherGroupedByLabel = other.groupBy(_.label)
+      for (c <- commands) {
+        val curArgs = c.arguments
+        val newArgs = mutable.Map[String, Seq[Mention]]()
+        // for every other mention group
+        for (og <- otherGroupedByLabel.filter(m => (m._1 == "Filename" || m._1 == "Repository" || m._1 == "CommandLineParamValuePair" || m._1 == "CommLineParameter"))) {
+          // there could be multiple mentions that we will want to become command args
+          val newMentionArgValues = new ArrayBuffer[Mention]()
+          for (o <- og._2) {
+            println("c ti: " + c.tokenInterval)
+            println("o ti: " + o.tokenInterval)
+
+            // if the other mention is completely subsumed by command mention, add the other mention to command args
+            if (o.tokenInterval.intersect(c.tokenInterval).length == o.tokenInterval.length) {
+              newMentionArgValues.append(o)
+              println("appending")
+
+            } else println("not appending")
+          }
+
+          def firstCharLower(string: String): String = {
+            string.head.toLower + string.tail
+          }
+          if (newMentionArgValues.nonEmpty) {
+            newArgs(firstCharLower(og._1)) = newMentionArgValues.distinct
+          }
+
+        }
+//        toReturn.append(copyWithArgs(c, curArgs++newArgs))
+        toReturn.append(copyWithArgs(c, curArgs++newArgs.toMap))
+
+      }
+
+    }
+    toReturn
+
+  }
+
   def locationsAreNotVariablesOrModels(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     // makes sure there are no mentions where variables are actually most likely locations
     // for now only applied to descriptions, but may want to extend to other mentions

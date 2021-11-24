@@ -174,8 +174,8 @@ object ExtractAndAssembleMentionEvents extends App {
 
   for (g <- groupedMdMentions.filter(_._1=="Command")) {
     for (m <- g._2) {
-//      println("m: " + m.label + " " + m.text + " " + m.foundBy)
-      println(m.text)
+      println("m: " + m.label + " " + m.text + " " + m.foundBy + " " + m.arguments.keys.mkString("|"))
+//      println(m.text)
     }
   }
 
