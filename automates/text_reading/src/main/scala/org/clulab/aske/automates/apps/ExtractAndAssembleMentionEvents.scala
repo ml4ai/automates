@@ -31,7 +31,7 @@ object ExtractAndAssembleMentionEvents extends App {
 
   val numOfWikiGroundings: Int = config[Int]("apps.numOfWikiGroundings")
   val inputDir: String = config[String]("apps.inputDirectory")
-  val outputDir: String = "/Users/alexeeva/Desktop/automates-related/MentionAssemblyDebug/mentions/"//config[String]("apps.outputDirectory")
+  val outputDir: String = config[String]("apps.outputDirectory")
   val inputType: String = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
   //  val dataLoader = new ScienceParsedDataLoader
@@ -41,7 +41,7 @@ object ExtractAndAssembleMentionEvents extends App {
 //  val readerType: String = config[String]("ReaderType")
 //  val reader = OdinEngine.fromConfig(config[Config](readerType))
 
-  val readmeJsonsFile = new File("/Users/alexeeva/Desktop/automates-related/MentionAssemblyDebug/jsonsFromReadme/json_extractions.json")
+  val readmeJsonsFile = new File("/Users/alexeeva/Desktop/automates-related/MentionAssemblyDebug/Flee/jsonsFromReadme/json_extractions.json")
   val readmeJsonsFileStr = FileUtils.getTextFromFile(readmeJsonsFile)
   val jsonifiedReadmeJsons = ujson.read(readmeJsonsFileStr)
 
@@ -105,7 +105,7 @@ object ExtractAndAssembleMentionEvents extends App {
   val textMentions = new ArrayBuffer[Mention]()
   val mdMentions = new ArrayBuffer[Mention]()
   val allFiles = files ++ mdfiles
-  allFiles.par.foreach { file =>
+  mdfiles.par.foreach { file =>
     val fileExt = file.toString.split("\\.").last
     val reader = fileExt match {
       case "json" => OdinEngine.fromConfig(config[Config]("TextEngine"))
@@ -160,21 +160,22 @@ object ExtractAndAssembleMentionEvents extends App {
 
   val groupedMdMentions = mdMentions.groupBy(_.label)
 
-  for (g <- groupedMdMentions.filter(_._1=="UnitRelation")) {
-    for (m <- g._2) {
-      println("m: " + m.label + " " + m.text)
-    }
-  }
+//  for (g <- groupedMdMentions.filter(_._1=="UnitRelation")) {
+//    for (m <- g._2) {
+//      println("m: " + m.label + " " + m.text)
+//    }
+//  }
+//
+//  for (g <- groupedMdMentions.filter(_._1=="ParameterSetting")) {
+//    for (m <- g._2) {
+//      println("m: " + m.label + " " + m.text)
+//    }
+//  }
 
-  for (g <- groupedMdMentions.filter(_._1=="ParameterSetting")) {
+  for (g <- groupedMdMentions.filter(_._1=="Command")) {
     for (m <- g._2) {
-      println("m: " + m.label + " " + m.text)
-    }
-  }
-
-  for (g <- groupedMdMentions.filter(_._1=="Parameter")) {
-    for (m <- g._2) {
-      println("m: " + m.label + " " + m.text)
+//      println("m: " + m.label + " " + m.text + " " + m.foundBy)
+      println(m.text)
     }
   }
 
