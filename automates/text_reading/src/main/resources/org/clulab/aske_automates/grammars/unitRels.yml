@@ -12,7 +12,7 @@ rules:
     example: "T = daily mean air temperature [°C]"
     action: ${action}
     pattern: |
-      @variable:Identifier [word=/.*/ & !word = /,|\]|\./]+? [word="["] (?<unit> [word = /.*/ & !tag="CD"]+) (?=[word="]"])
+      @variable:Identifier [word=/.*/ & !word = /,|\]|\./ & !word="|"]+? [word="["] (?<unit> [word = /.*/ & !tag="CD"]+) (?=[word="]"])
 
   - name: concept_paren_unit
     label: UnitRelation

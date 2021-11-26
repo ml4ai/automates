@@ -105,7 +105,7 @@ object ExtractAndAssembleMentionEvents extends App {
   val textMentions = new ArrayBuffer[Mention]()
   val mdMentions = new ArrayBuffer[Mention]()
   val allFiles = files ++ mdfiles
-  mdfiles.par.foreach { file =>
+  allFiles.par.foreach { file =>
     val fileExt = file.toString.split("\\.").last
     val reader = fileExt match {
       case "json" => OdinEngine.fromConfig(config[Config]("TextEngine"))
@@ -139,7 +139,21 @@ object ExtractAndAssembleMentionEvents extends App {
 
   }
 
-  val obj = assembleMentions(textMentions.distinct, mdMentions.distinct)
+  def distinctByText(mentions: Seq[Mention]): Seq[Mention] = {
+    val toReturn = new ArrayBuffer[Mention]()
+    val groupedByLabel = mentions.groupBy(_.label)
+    for (gr <- groupedByLabel) {
+      val groupedByText = gr._2.groupBy(_.text)
+      for (g <- groupedByText) {
+        val distinctInGroup = g._2.head
+        toReturn.append(distinctInGroup)
+      }
+
+    }
+    toReturn
+
+  }
+  val obj = assembleMentions(distinctByText(textMentions.distinct), distinctByText(mdMentions.distinct))
 
   //todo: here can check if there is a json of jsons from readmes and if yes, enrich json with that info
 
@@ -233,6 +247,12 @@ object ExtractAndAssembleMentionEvents extends App {
             val oneModel = ujson.Obj(
               "text" -> m.text,
 //              "description" -> m.arguments("modelDescr").head.text,
+              "annotation" -> ujson.Obj(
+                "match" -> 0,
+                "acceptable" -> 1,
+                "dojo-entry" -> ujson.Arr("")
+              ),
+
 
 
 //              "commandArgs" -> Seq.empty,
@@ -295,6 +315,11 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
+              "annotation" -> ujson.Obj(
+                "match" -> 0,
+                "acceptable" -> 1,
+                "dojo-entry" -> ujson.Arr("")
+              ),
               "description" -> m.arguments("modelDescr").head.text,
               "trigger" -> trigger,
               "source" -> source,
@@ -315,6 +340,11 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
+              "annotation" -> ujson.Obj(
+                "match" -> 0,
+                "acceptable" -> 1,
+                "dojo-entry" -> ujson.Arr("")
+              ),
               "limitation" -> m.arguments("modelDescr").head.text,
               "trigger" -> trigger,
               "source" -> source,
@@ -335,6 +365,11 @@ object ExtractAndAssembleMentionEvents extends App {
               val source = getSource(m)
               val oneVar = ujson.Obj(
                 "variable" -> m.arguments("variable").head.text,
+                "annotation" -> ujson.Obj(
+                  "match" -> 0,
+                  "acceptable" -> 1,
+                  "dojo-entry" -> ujson.Arr("")
+                ),
                 "value" -> m.arguments("value").head.text,
                 "unit" -> m.arguments("unit").head.text,
                 "source" -> source,
@@ -345,6 +380,7 @@ object ExtractAndAssembleMentionEvents extends App {
 
           }
           obj("paramSettingsAndUnits") = paramUnitObjs
+
         }
 
         case "UnitRelation" => {
@@ -356,6 +392,11 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneVar = ujson.Obj(
               "variable" -> m.arguments("variable").head.text,
+              "annotation" -> ujson.Obj(
+                "match" -> 0,
+                "acceptable" -> 1,
+                "dojo-entry" -> ujson.Arr("")
+              ),
               //                "value" -> m.arguments("value").head.text,
               "unit" -> m.arguments("unit").head.text,
               "source" -> source,
@@ -378,6 +419,11 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneVar = ujson.Obj(
               "date" -> m.asInstanceOf[EventMention].trigger.text,
+              "annotation" -> ujson.Obj(
+                "match" -> 0,
+                "acceptable" -> 1,
+                "dojo-entry" -> ujson.Arr("")
+              ),
               //                "value" -> m.arguments("value").head.text,
               "event" -> event,
               "source" -> source,
@@ -398,6 +444,11 @@ object ExtractAndAssembleMentionEvents extends App {
             val paramObj = ujson.Obj()
             val source = getSource(m)
             paramObj("text") = m.text
+            paramObj("annotation") = ujson.Obj(
+              "match" -> 0,
+              "acceptable" -> 1,
+              "dojo-entry" -> ujson.Arr("")
+            )
             paramObj("source") = source
             paramObj("sentence") = m.sentenceObj.getSentenceText
             locations.append(paramObj)
@@ -417,6 +468,11 @@ object ExtractAndAssembleMentionEvents extends App {
             val paramObj = ujson.Obj()
             val source = getSource(m)
             paramObj("text") = m.text
+            paramObj("annotation") = ujson.Obj(
+              "match" -> 0,
+              "acceptable" -> 1,
+              "dojo-entry" -> ujson.Arr("")
+            )
             paramObj("context") = m.sentenceObj.getSentenceText
             paramObj("source") = source
             paramObj("sentence") = m.sentenceObj.getSentenceText
@@ -432,6 +488,11 @@ object ExtractAndAssembleMentionEvents extends App {
             val paramObj = ujson.Obj()
             val source = getSource(m)
             paramObj("text") = m.text
+            paramObj("annotation") = ujson.Obj(
+              "match" -> 0,
+              "acceptable" -> 1,
+              "dojo-entry" -> ujson.Arr("")
+            )
             paramObj("source") = source
             paramObj("sentence") = m.sentenceObj.getSentenceText
             modelComps.append(paramObj)
@@ -449,6 +510,11 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneVar = ujson.Obj(
               "variable" -> m.arguments("variable").head.text,
+              "annotation" -> ujson.Obj(
+                "match" -> 0,
+                "acceptable" -> 1,
+                "dojo-entry" -> ujson.Arr("")
+              ),
               //                "value" -> m.arguments("value").head.text,
               "value" -> m.arguments("value").head.text,
               "source" -> source,

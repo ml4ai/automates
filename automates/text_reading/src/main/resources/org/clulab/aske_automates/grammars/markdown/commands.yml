@@ -88,7 +88,7 @@ rules:
     type: token
     example: "<extracts: run_TWIST.py> --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      [word = /.*\.py|\b(mpirun|bash|git|mkdir|cd|python|docker|python3)\b/] (?! [word = /\)|\]/])
+      [word = /.*\.py|\b(fabsim|fab|mpirun|bash|git|mkdir|cd|python|docker|python3)\b/] (?! [word = /\)|\]/])
   #fabsim|fab|
   - name: command-from-starter-rule
     label: CommandSequence
@@ -112,7 +112,7 @@ rules:
     type: token
     example: "0"
     pattern: |
-      [tag = 'CD'] 
+      [tag = 'CD' & !word="|"]
 
 # NOT WORKING: for some reason is matching strings starting with capital letters? And also just generally non-camelCased strings
   # - name: camelCase-rule
