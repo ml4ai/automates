@@ -18,7 +18,7 @@
       - Filename
       - Language
   - String
-  - CommandStarter
+  - Command
   - VerbPhrase
 - Event:
   - CommandLineParamValuePair
@@ -36,7 +36,6 @@
   - IntervalParameterSetting
   - Function
   - Context
-  - Command
-  - CommandLineArg
+  - CommandSequence
   - MD_Context
   - Repository

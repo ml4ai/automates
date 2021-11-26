@@ -578,10 +578,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val groupBySent = mentions.groupBy(_.sentence)
     val toReturn = new ArrayBuffer[Mention]()
     for (g <- groupBySent) {
-      val (commands, other) = g._2.partition(_.label == "Command")
+      val (commands, other) = g._2.partition(_.label == "CommandSequence")
       for (o <- other) toReturn.append(o)
       val otherGroupedByLabel = other.groupBy(_.label)
-      for (c <- commands) {
+      val commandStartSameAsSentStart = commands.filter(m => m.tokenInterval.start == 0)
+      for (c <- commandStartSameAsSentStart) {
         val curArgs = c.arguments
         val newArgs = mutable.Map[String, Seq[Mention]]()
         // for every other mention group
@@ -608,8 +609,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           }
 
         }
+
+        val (newTrigger, args) = (curArgs ++ newArgs.toMap).partition(_._1 == "command")
+
+        println(newTrigger.keys.mkString("|"))
+        println(newTrigger.values.flatten.mkString("||"))
+        val trigger = newTrigger.values.flatten.head.asInstanceOf[TextBoundMention]
 //        toReturn.append(copyWithArgs(c, curArgs++newArgs))
-        toReturn.append(copyWithArgs(c, curArgs++newArgs.toMap))
+        toReturn.append(copyWithArgs(c, args).asInstanceOf[RelationMention].toEventMention(trigger))
 
       }
 

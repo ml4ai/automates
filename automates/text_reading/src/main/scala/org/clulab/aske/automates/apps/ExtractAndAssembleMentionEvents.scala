@@ -139,7 +139,7 @@ object ExtractAndAssembleMentionEvents extends App {
 
   }
 
-  val obj = assembleMentions(textMentions, mdMentions)
+  val obj = assembleMentions(textMentions.distinct, mdMentions.distinct)
 
   //todo: here can check if there is a json of jsons from readmes and if yes, enrich json with that info
 
@@ -172,7 +172,7 @@ object ExtractAndAssembleMentionEvents extends App {
 //    }
 //  }
 
-  for (g <- groupedMdMentions.filter(_._1=="Command")) {
+  for (g <- groupedMdMentions.filter(_._1=="CommandSequence")) {
     for (m <- g._2) {
       println("m: " + m.label + " " + m.text + " " + m.foundBy + " " + m.arguments.keys.mkString("|"))
 //      println(m.text)
@@ -218,6 +218,65 @@ object ExtractAndAssembleMentionEvents extends App {
 
     for (g <- groupedByLabel) {
       g._1 match {
+
+        case "CommandSequence" => {
+          val modelObjs = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+            val trigger = m match {
+              case csem: CrossSentenceEventMention => csem.trigger.text
+              case em: EventMention => em.trigger.text
+              case _ => null
+            }
+
+
+            val source = getSource(m)
+            val oneModel = ujson.Obj(
+              "text" -> m.text,
+//              "description" -> m.arguments("modelDescr").head.text,
+
+
+//              "commandArgs" -> Seq.empty,
+              "source" -> source,
+              "sentence" -> m.sentenceObj.getSentenceText,
+              "command" -> trigger
+            )
+            val commandArgs = ujson.Obj()
+
+            val (paramValueParArgs, other) = m.arguments.partition(_._1 == "commandLineParamValuePair")
+            // don't include comm line param separately in the output
+            val (_, theRest) = other.partition(_._1 == "commLineParameter")
+            val (allCommandArgs, remaining) = theRest.partition(_._1 == "commandArgs")
+            commandArgs("allArgs") = allCommandArgs.head._2.head.text
+            val argComponents = new ArrayBuffer[ujson.Value]()
+            for (arg <- remaining) {
+              for (v <- arg._2) {
+                argComponents.append(ujson.Obj(arg._1 -> v.text))
+              }
+            }
+
+            val paramValuePairs = new ArrayBuffer[ujson.Value]()
+            if (paramValueParArgs.nonEmpty) {
+              for (arg <- paramValueParArgs) {
+
+                // for every arg mention
+                for (v <- arg._2) {
+                  // need to create another nested obj with two keys: parameter and value
+                  val oneArgObj = ujson.Obj(
+                    "parameter" -> v.arguments("parameter").head.text,
+                    "value" -> v.arguments("value").head.text
+                  )
+                  //                commandArgs.append(oneArgObj)
+                  paramValuePairs.append(oneArgObj)
+                }
+              }
+            }
+            if (paramValuePairs.nonEmpty) argComponents.append(ujson.Obj("paramValuePairs" -> paramValuePairs))
+            commandArgs("components") = argComponents
+            oneModel("commandArgs") = commandArgs
+            modelObjs.append(oneModel)
+          }
+          obj("commandSequences") = modelObjs
+        }
         case "ModelDescr" => {
           val modelObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {

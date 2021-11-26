@@ -38,6 +38,15 @@ rules:
     pattern: |
       (?<=[word="-"]{2}) [word = /[a-zA-Z_]/]
 
+  - name: parameter-rule1
+    label: CommLineParameter
+    priority: 1
+    type: token
+    example: "-N"
+    pattern: |
+      [word="-"] [word = /[a-zA-Z]{1}/] # incl dash in flags
+      # (?<=[word="-"]) [word = /[a-zA-Z]{1}/] # excl dash in flags
+
 # NOT WORKING: needs update
   # - name: command-rule
   #   label: Command
@@ -74,20 +83,20 @@ rules:
       [word = /(https:\/\/)?(gitlab|github|bitbucket)[\w\d\/-_.]+\w/]
 
   - name: command-starter-rule
-    label: CommandStarter
+    label: Command
     priority: 1
     type: token
     example: "<extracts: run_TWIST.py> --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      [word = /.*\.py|\b(bash|git|mkdir|cd|python|docker)\b/] (?! [word = /\)|\]/])
-  
+      [word = /.*\.py|\b(mpirun|bash|git|mkdir|cd|python|docker|python3)\b/] (?! [word = /\)|\]/])
+  #fabsim|fab|
   - name: command-from-starter-rule
-    label: Command
+    label: CommandSequence
     priority: 2
     type: token
     example: "run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      @commandstarter:CommandStarter (?<allArguments>[word = /.*/ & !word = ","]+)
+      @command:Command (?<commandArgs>[word = /.*/ & !word = ","]+)
 
   - name: string-rule
     label: String
