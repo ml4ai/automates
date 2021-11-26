@@ -247,11 +247,16 @@ object ExtractAndAssembleMentionEvents extends App {
             val (_, theRest) = other.partition(_._1 == "commLineParameter")
             val (allCommandArgs, remaining) = theRest.partition(_._1 == "commandArgs")
             commandArgs("allArgs") = allCommandArgs.head._2.head.text
-            val argComponents = new ArrayBuffer[ujson.Value]()
+            val argComponents = ujson.Obj()//new ArrayBuffer[ujson.Value]()
+
             for (arg <- remaining) {
+              // for each arg type, create a "arg_type": [Str] json
+              val argTypeObj = new ArrayBuffer[String]()
               for (v <- arg._2) {
-                argComponents.append(ujson.Obj(arg._1 -> v.text))
+                argTypeObj.append(v.text)
+
               }
+              argComponents(arg._1) = argTypeObj
             }
 
             val paramValuePairs = new ArrayBuffer[ujson.Value]()
@@ -270,7 +275,7 @@ object ExtractAndAssembleMentionEvents extends App {
                 }
               }
             }
-            if (paramValuePairs.nonEmpty) argComponents.append(ujson.Obj("paramValuePairs" -> paramValuePairs))
+            if (paramValuePairs.nonEmpty) argComponents("paramValuePairs") = paramValuePairs
             commandArgs("components") = argComponents
             oneModel("commandArgs") = commandArgs
             modelObjs.append(oneModel)
