@@ -141,6 +141,7 @@ object ExtractAndAssembleMentionEvents extends App {
 
   def distinctByText(mentions: Seq[Mention]): Seq[Mention] = {
     val toReturn = new ArrayBuffer[Mention]()
+
     val groupedByLabel = mentions.groupBy(_.label)
     for (gr <- groupedByLabel) {
       val groupedByText = gr._2.groupBy(_.text)
@@ -153,7 +154,10 @@ object ExtractAndAssembleMentionEvents extends App {
     toReturn
 
   }
-  val obj = assembleMentions(distinctByText(textMentions.distinct), distinctByText(mdMentions.distinct))
+
+  val distinctTextMention = distinctByText(textMentions.distinct)
+  val distinctMdMentions = distinctByText(mdMentions.distinct)
+  val obj = assembleMentions(distinctTextMention, distinctMdMentions)
 
   //todo: here can check if there is a json of jsons from readmes and if yes, enrich json with that info
 
@@ -161,7 +165,7 @@ object ExtractAndAssembleMentionEvents extends App {
 //  println("OBJECT: " + obj)
 
 
-  writeJsonToFile(obj, outputDir, "assembledMentions-Nov22.json")
+  writeJsonToFile(obj, outputDir, "assembledMentions-Nov27.json")
 
 
 
@@ -354,6 +358,52 @@ object ExtractAndAssembleMentionEvents extends App {
             modelObjs.append(oneModel)
           }
           obj("models")("limitations") = modelObjs
+        }
+
+        case "Model" => {
+          //          val locations = g._2.map(_.text).distinct.sorted
+          //          obj("locations") = locations
+
+          val locations = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+            val paramObj = ujson.Obj()
+            val source = getSource(m)
+            paramObj("text") = m.text
+            paramObj("annotation") = ujson.Obj(
+              "match" -> 0,
+              "acceptable" -> 1,
+              "dojo-entry" -> ujson.Arr("")
+            )
+            paramObj("source") = source
+            paramObj("sentence") = m.sentenceObj.getSentenceText
+            locations.append(paramObj)
+          }
+          //          g._2.map(_.text).distinct.sorted
+          obj("model_names") = locations
+
+        }
+
+        case "Repository" => {
+          //          val locations = g._2.map(_.text).distinct.sorted
+          //          obj("locations") = locations
+
+          val locations = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+            val paramObj = ujson.Obj()
+            val source = getSource(m)
+            paramObj("text") = m.text
+            paramObj("annotation") = ujson.Obj(
+              "match" -> 0,
+              "acceptable" -> 1,
+              "dojo-entry" -> ujson.Arr("")
+            )
+            paramObj("source") = source
+            paramObj("sentence") = m.sentenceObj.getSentenceText
+            locations.append(paramObj)
+          }
+          //          g._2.map(_.text).distinct.sorted
+          obj("repos") = locations
+
         }
         case "ParamAndUnit" => {
           val paramUnitObjs = new ArrayBuffer[ujson.Value]()

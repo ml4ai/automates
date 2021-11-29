@@ -44,7 +44,8 @@ rules:
     type: token
     example: "-N"
     pattern: |
-      [word="-"] [word = /[a-zA-Z]{1}/] # incl dash in flags
+      (?<=[word="-"]) [word = /[a-zA-Z]{1}/] # excl dash in flags
+#      [word="-"] [word = /[a-zA-Z]{1}/] # incl dash in flags
       # (?<=[word="-"]) [word = /[a-zA-Z]{1}/] # excl dash in flags
 
 # NOT WORKING: needs update
