@@ -11,7 +11,6 @@ import scala.collection.mutable.ArrayBuffer
 
 object CosmosJsonProcessor {
   def mkDocument(file: File): CosmosDocument = {
-    println("FILE: " + file)
     val json = ujson.read(file.readString())
     mkDocument(json)
   }

@@ -447,9 +447,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         // assume there's only one arg of each type
         val tokenIntervals = m.arguments.map(_._2.head).map(_.tokenInterval).toSeq
         val labelsOfTextBoundMentions = m.arguments.map(_._2.head.label).toSeq
-        //        println(m.text + " \n" + labelsOfTextBoundMentions.mkString("|") )
-        //        print(labelsOfTextBoundMentions.distinct.length)
-        //        print(labelsOfTextBoundMentions.length)
         // make sure mention labels are no identical (basically, checking if both are Values---they should not be)
         if (labelsOfTextBoundMentions.distinct.length == labelsOfTextBoundMentions.length) {
           // takes care of accidental arg overlap
@@ -542,10 +539,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   // sentence for debugging Bearing in mind , we set our default setting to the refugee move speed is equal to 200 km per day and the awareness of surrounding is 1 link .
-  // to do: create an event mention with unit and param setting with the var probably being the trigger (might display better)
-  // somehow link them to definitions, maybe in previous three sent window
+  // createw an event mention with unit and param setting with the var probably being the trigger
+  // todo: somehow link resulting events to definitions, maybe in previous three sent window
   // check why awareness of surrounding become param and unit
-  // see how this works with interval param settings
+  // todo: include interval param settings
   def assembleVarsWithParamsAndUnits(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (withVar, noVar) = mentions.partition(_.arguments.keys.toList.contains("variable"))
     val groupedBySent = withVar.groupBy(_.sentence)
@@ -590,15 +587,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           // there could be multiple mentions that we will want to become command args
           val newMentionArgValues = new ArrayBuffer[Mention]()
           for (o <- og._2) {
-            println("c ti: " + c.tokenInterval)
-            println("o ti: " + o.tokenInterval)
-
             // if the other mention is completely subsumed by command mention, add the other mention to command args
             if (o.tokenInterval.intersect(c.tokenInterval).length == o.tokenInterval.length) {
               newMentionArgValues.append(o)
-              println("appending")
-
-            } else println("not appending")
+            }
           }
 
           def firstCharLower(string: String): String = {
@@ -611,18 +603,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         }
 
         val (newTrigger, args) = (curArgs ++ newArgs.toMap).partition(_._1 == "command")
-
-        println(newTrigger.keys.mkString("|"))
-        println(newTrigger.values.flatten.mkString("||"))
         val trigger = newTrigger.values.flatten.head.asInstanceOf[TextBoundMention]
-//        toReturn.append(copyWithArgs(c, curArgs++newArgs))
         toReturn.append(copyWithArgs(c, args).asInstanceOf[RelationMention].toEventMention(trigger))
-
       }
-
     }
     toReturn
-
   }
 
   def locationsAreNotVariablesOrModels(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -651,17 +636,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         }
         case _ => {
           var noLoc = true
-          //          println("M: " + m.text + " " + m.label + " " + m.foundBy)
-          //          for (m <- locations) {
-          //            println("sent, int: " + m.sentence + " " + m.tokenInterval)
-          //          }
           for (arg <- args) {
-            //            println("arg: " + arg.text)
             breakable {
               val sent = arg.sentence
-              //            println("arg sent: " + sent)
               val tokInt = arg.tokenInterval
-              //            println("arg tok int: " + arg.tokenInterval)
               if (noLoc) {
                 if (isInLocations(sent, tokInt, locations)) {
                   noLoc = false
@@ -671,10 +649,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             }
 
           }
-          //          println("no loc 0: " + noLoc)
-          //          println("current no loc: " + noLocations.map(_.text).mkString(" || "))
           if (noLoc) {
-            //            println("no loc 1: " + noLoc)
             noLocations.append(m)
           }
 
@@ -682,9 +657,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
     }
     val toReturn = (noLocations ++ locations ++ phrases).distinct
-    //    for (t <- noLocations) {
-    //      println("RM: " + t.text + " " + t.label + " " + t.foundBy)
-    //    }
     toReturn
   }
 
@@ -1656,10 +1628,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   def descrIsNotVar(mentions: Seq[Mention], state: State): Seq[Mention] = {
     //returns mentions in which descriptions are not also variables
     //and the variable and the description don't overlap
-
-    //    for (m <- mentions) {
-    //      println(m.text + " " + m.label)
-    //    }
     for {
       m <- mentions
       if !m.words.contains("not") //make sure, the description is not negative
@@ -1777,9 +1745,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
 
   def relabelLocation(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val (locationMentions, other) = mentions.partition(_.label matches "Location")
-//    for (lm <- locationMentions) {
-//      println("LM: " + lm.text + " " + lm.arguments.keys.mkString("|"))
-//    }
     val onlyNewLocation = locationMentions.map(m => copyWithLabel(m.arguments("loc").head, "Location").asInstanceOf[TextBoundMention].copy(foundBy = m.foundBy + "++relabelLocation"))
     onlyNewLocation ++ other
   }
@@ -1789,11 +1754,9 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val paramSettingMens = mentions.filter(m => m.labels.contains("ParameterSetting"))
     val modelParams = new ArrayBuffer[Mention]
     for (p <- paramSettingMens) {
-//      println("par set: " + p.text)
       val paramSettingVars = p.arguments.filter(m => m._1 == "variable")
       for (vars <- paramSettingVars.values) {
         val variable = vars.head
-//        val newArgs = Map("modelParameter" -> Seq(variable))
         val newLabels = List("Parameter", "Model", "Phrase", "Entity").toSeq
 
         val modelParam = new TextBoundMention(

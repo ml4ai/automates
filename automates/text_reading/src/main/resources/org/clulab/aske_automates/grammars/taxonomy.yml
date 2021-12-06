@@ -17,9 +17,10 @@
           - UnitRelation
       - Filename
       - Language
-  - String
-  - Command
-  - VerbPhrase
+      - Repository
+      - String
+      - Command
+      - VerbPhrase
 - Event:
   - CommandLineParamValuePair
   - ContextEvent
@@ -38,4 +39,3 @@
   - Context
   - CommandSequence
   - MD_Context
-  - Repository

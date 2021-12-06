@@ -20,15 +20,6 @@ rules:
     example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
     pattern: |
       [word = /.*\.[a-zA-Z]{2,}/ & !word=/^http/] | [word = /Dockerfile/]
-  
-  # NOT WORKING: matches mostly garbage
-  # - name: var-rule
-  #   label: CommandLineArg
-  #   priority: 1
-  #   type: token
-  #   example: "include_prodDecline"
-  #   pattern: |
-  #     (?<variable>[word = /[a-zA-Z0-9_]+/])
     
   - name: parameter-rule
     label: CommLineParameter
@@ -45,17 +36,6 @@ rules:
     example: "-N"
     pattern: |
       (?<=[word="-"]) [word = /[a-zA-Z]{1}/] # excl dash in flags
-#      [word="-"] [word = /[a-zA-Z]{1}/] # incl dash in flags
-      # (?<=[word="-"]) [word = /[a-zA-Z]{1}/] # excl dash in flags
-
-# NOT WORKING: needs update
-  # - name: command-rule
-  #   label: Command
-  #   priority: 1
-  #   type: token
-  #   example: "```./run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'```"
-  #   pattern: |
-  #     (?<=[word="`"]) [word = /.*/]+ (?=[word="``"])
 
   - name: arg-rule
     label: CommandLineParamValuePair
@@ -64,15 +44,6 @@ rules:
     example: "./run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
       @parameter:CommLineParameter (?<=[tag = /" | POS/])? (?<value>[word = /[a-zA-Z0-9'"]+/]+)
-
-
-  # - name: language
-  #   label: Language
-  #   priority: 2
-  #   type: token
-  #   example: "```git clone https://gitlab.pik-potsdam.de/twist/twist-global-model.git```"
-  #   pattern: |
-# (?<=[tag = /``/ | word = /\. | \//]+) (?<command>[word = /[a-zA-Z]+/]) (?<argument>[word = /[a-zA-Z]+/]+)? @filename:Filename 
       
 # @argument:CommandLineArg*
   - name: repo-rule
@@ -114,15 +85,6 @@ rules:
     example: "0"
     pattern: |
       [tag = 'CD' & !word="|"]
-
-# NOT WORKING: for some reason is matching strings starting with capital letters? And also just generally non-camelCased strings
-  # - name: camelCase-rule
-  #   label: MD_Context
-  #   priority: 1
-  #   type: token
-  #   example: "camelCase"
-  #   pattern: |
-  #     (?<variable>[word = /[a-z]+((0-9)|([A-Z0-9]+[a-z0-9]+))*([A-Z])?/])
 
   - name: list-rule1
     label: MD_Context

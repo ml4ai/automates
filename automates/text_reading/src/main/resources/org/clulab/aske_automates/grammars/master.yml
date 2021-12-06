@@ -22,6 +22,11 @@ rules:
       priority1: 1
       priority2: 2
 
+  - import: "org/clulab/aske_automates/grammars/dates.yml"
+    vars:
+      priority1: 1
+      priority2: 2
+
   - import: "org/clulab/aske_automates/grammars/descriptions.yml"
     vars:
       action: descriptionActionFlow #note: there are two rules that do not use this action flow
