@@ -20,7 +20,10 @@
     - ConjDescriptionType2
   - ModelDescr:
     - ModelLimitation
-  - ParameterSetting
+  - ParameterSetting:
+    - MaxValue
+    - MinValue
+    - DefaultValue
   - IntervalParameterSetting
   - Function
   - Context

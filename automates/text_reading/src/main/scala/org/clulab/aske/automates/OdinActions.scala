@@ -17,6 +17,7 @@ import org.clulab.struct.Interval
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
+import scala.math.Ordering.Implicits.seqDerivedOrdering
 import scala.util.Try
 import scala.util.matching.Regex
 
@@ -284,6 +285,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       newMentions.append(newMen.withAttachment(att))
     }
     newMentions
+  }
+
+  def processParamSettings(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val (standard, interval) = mentions.partition(_.label == "ParameterSetting")
+    val standardAction = processParamSetting(standard)
+    val intervalAction = processParamSettingInt(interval)
+    val actionMaxMin = paramSettingMaxMin(standardAction ++ intervalAction)
+    standardAction ++ intervalAction ++ actionMaxMin
   }
 
   def processUnits(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -1625,7 +1634,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         modelParams.append(modelParam)
       }
     }
-    modelParams
+    modelParams.distinct
   }
 
   def functionArgsToModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -1647,7 +1656,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         }
       }
     }
-    modelParams
+    modelParams.distinct
   }
 
   def filterModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -1657,6 +1666,43 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val filter4 = filter3.filterNot(m => m.text.contains("data"))
     // more filters can be added here
     filter4
+  }
+
+  def paramSettingMaxMin(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val finalMentions = new ArrayBuffer[Mention]
+    val groupByVariable = mentions.groupBy(m => m.arguments("variable").head.text)
+    val groupAgain = groupByVariable.groupBy(_._1)
+    for (g <- groupAgain) {
+      println("HERE: " ++ g._1)
+    }
+
+    for (group <- groupByVariable) {
+      val maxValue = new ArrayBuffer[Float]
+      val minValue = new ArrayBuffer[Float]
+      val (standard, interval) = group._2.partition(m => m.label == "ParameterSetting")
+      if (standard.nonEmpty) {
+        val standardValues = new ArrayBuffer[Float]
+        for (s <- standard) {standardValues.append(s.arguments("value").head.text.toFloat)}
+        maxValue.append(standardValues.max)
+        minValue.append(standardValues.min)
+      }
+      if (interval.nonEmpty){
+        val intervalMax = interval.maxBy(m => m.arguments("valueMost").head)
+        maxValue.append(intervalMax.arguments("valueMost").head.text.toFloat)
+        val intervalMin = interval.minBy(m => m.arguments("valueLeast").head)
+        maxValue.append(intervalMin.arguments("valueLeast").head.text.toFloat)
+      }
+      val finalMax = maxValue.max
+      val finalMin = minValue.min
+
+      for (m <- group._2) {
+        if (m.arguments.getOrElse("value", Seq.empty).nonEmpty && m.arguments("value").head.text.toFloat == finalMax) {finalMentions.append(copyWithLabel(m, "MaxValue"))}
+        if (m.arguments.getOrElse("value", Seq.empty).nonEmpty && m.arguments("value").head.text.toFloat == finalMin) {finalMentions.append(copyWithLabel(m, "MinValue"))}
+        if (m.arguments.getOrElse("valueMost", Seq.empty).nonEmpty && m.arguments("valueMost").head.text.toFloat == finalMax) {finalMentions.append(copyWithLabel(m, "MaxValue"))}
+        if (m.arguments.getOrElse("valueLeast", Seq.empty).nonEmpty && m.arguments("valueLeast").head.text.toFloat == finalMin) {finalMentions.append(copyWithLabel(m, "MinValue"))}
+      }
+    }
+    finalMentions.distinct
   }
 }
 

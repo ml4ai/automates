@@ -2,17 +2,17 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-#  - name: three_capital_letters
-#    label: Model
-#    priority: ${priority}
-#    type: token
-#    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-#    pattern: |
-#      [word=/[A-Z]{3,}$/ & !entity = /LOCATION/ & !word = /${modelAvoids}/] ([tag= /CD/]|[word = /[Vv]\d\.\d/])? #note: got rid of organization from the entity to avoid, because it filtered out some correct model names too
-#      |
-#      [word=/[A-Z]{3,}\d+/]
-#      |
-#      [word=/[A-Z]{3,}$/] [word = "-"] [word=/[A-Z]+/] ([tag= /CD/])?
+  - name: three_capital_letters
+    label: Model
+    priority: ${priority}
+    type: token
+    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+    pattern: |
+      [word=/[A-Z]{3,}$/ & !entity = /LOCATION/ & !word = /${modelAvoids}/] ([tag= /CD/]|[word = /[Vv]\d\.\d/])? #note: got rid of organization from the entity to avoid, because it filtered out some correct model names too
+      |
+      [word=/[A-Z]{3,}\d+/]
+      |
+      [word=/[A-Z]{3,}$/] [word = "-"] [word=/[A-Z]+/] ([tag= /CD/])?
 
   - name: capital_plus_lower_letter
     label: Model
