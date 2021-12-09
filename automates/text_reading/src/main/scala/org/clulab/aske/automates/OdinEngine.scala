@@ -58,6 +58,7 @@ class OdinEngine(
   }
 
   var loadableAttributes = LoadableAttributes()
+  val actions = loadableAttributes.actions
 
   // These public variables are accessed directly by clients which
   // don't know they are loadable and which had better not keep copies.
@@ -80,14 +81,14 @@ class OdinEngine(
     // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
     // Run the main extraction engine, pre-populated with the initial state
-    val events = loadableAttributes.actions.processCommands(  loadableAttributes.actions.assembleVarsWithParamsAndUnits(  engine.extractFrom(doc, initialState)).toVector)
-    val newModelParams1 = loadableAttributes.actions.paramSettingVarToModelParam(events)
-    val modelCorefResolve = loadableAttributes.actions.resolveModelCoref(events)
+    val events = actions.processCommands(actions.assembleVarsWithParamsAndUnits(  engine.extractFrom(doc, initialState)).toVector)
+    val newModelParams1 = actions.paramSettingVarToModelParam(events)
+    val modelCorefResolve = actions.resolveModelCoref(events)
 
     // process context attachments to the initially extracted mentions
-    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(modelCorefResolve)
+    val newEventsWithContexts = actions.makeNewMensWithContexts(modelCorefResolve)
     val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
-    val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
+    val mensWithContextAttachment = actions.processRuleBasedContextEvent(contextEvents)
 
     // post-process the mentions with untangleConj and combineFunction
     val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
@@ -95,14 +96,14 @@ class OdinEngine(
     val (functionMentions, nonFunctions) = nonDescrMens.partition(_.label.contains("Function"))
     val (modelDescrs, nonModelDescrs) = nonFunctions.partition(_.labels.contains("ModelDescr"))
     val (modelNames, other) = nonModelDescrs.partition(_.label == "Model")
-    val modelFilter = loadableAttributes.actions.filterModelNames(modelNames)
-    val untangled = loadableAttributes.actions.locationsAreNotVariablesOrModels( (loadableAttributes.actions.untangleConj(descriptionMentions)))
-    val combining = loadableAttributes.actions.combineFunction(functionMentions)
-    val newModelParams2 = loadableAttributes.actions.functionArgsToModelParam(combining)
+    val modelFilter = actions.filterModelNames(modelNames)
+    val untangled = actions.locationsAreNotVariablesOrModels(actions.untangleConj(descriptionMentions))
+    val combining = actions.combineFunction(functionMentions)
+    val newModelParams2 = actions.functionArgsToModelParam(combining)
     val finalModelDescrs = modelDescrs.filter(_.arguments.contains("modelName"))
-    val finalModelParam = loadableAttributes.actions.filterModelParam(newModelParams1 ++ newModelParams2)
+    val finalModelParam = actions.filterModelParam(newModelParams1 ++ newModelParams2)
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam  ++ finalModelDescrs) ++ untangled)).toVector
+    actions.replaceWithLongerIdentifier((actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam  ++ finalModelDescrs) ++ untangled)).toVector.distinct
 
   }
 

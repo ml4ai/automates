@@ -539,10 +539,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   // sentence for debugging Bearing in mind , we set our default setting to the refugee move speed is equal to 200 km per day and the awareness of surrounding is 1 link .
-  // createw an event mention with unit and param setting with the var probably being the trigger
   // todo: somehow link resulting events to definitions, maybe in previous three sent window
-  // check why awareness of surrounding become param and unit
-  // todo: include interval param settings
   def assembleVarsWithParamsAndUnits(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (withVar, noVar) = mentions.partition(_.arguments.keys.toList.contains("variable"))
     val groupedBySent = withVar.groupBy(_.sentence)
@@ -551,21 +548,25 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val groupedByVar = g._2.groupBy(_.arguments("variable"))
       // event mentions grouped by var (so, checking which ones have an overlapping variable mention)
       for (gv <- groupedByVar) {
-        // if there are more than two in a group, that means we can assemble them into an event
-        if (gv._2.length > 1) {
-          for (v <- gv._2) toReturn.append(v)
+        // if there are more than two in a group that are distinct by text, that means we can assemble them into an event
+        val mentionsInGroup = gv._2
+        if (distinctByText(mentionsInGroup).length > 1) {
+          // do not exclude component events (param settings and units) from output
+          for (v <- mentionsInGroup) toReturn.append(v)
           val newArgs = mutable.Map[String, Seq[Mention]]()
-          for (m <- gv._2) {
+          for (m <- mentionsInGroup) {
             // it's fine if the var mention is overwritten because they are the same; the other args that matter are not gonna get overwritten
             for (arg <- m.arguments) {
               newArgs(arg._1) = arg._2
-
             }
           }
           val assembledMention = copyWithLabel(copyWithArgs(gv._2.head, newArgs.toMap), "ParamAndUnit")
           toReturn.append(assembledMention)
 
-        } else toReturn.append(gv._2.head)
+        } else {
+          // since the mentions in the group are not distinct by text, keep all of them
+            for (m <- mentionsInGroup) toReturn.append(m)
+        }
       }
     }
     toReturn.distinct ++ noVar
@@ -1802,6 +1803,20 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val filter4 = filter3.filterNot(m => m.text.contains("data"))
     // more filters can be added here
     filter4
+  }
+
+  def distinctByText(mentions: Seq[Mention]): Seq[Mention] = {
+    val toReturn = new ArrayBuffer[Mention]()
+
+    val groupedByLabel = mentions.groupBy(_.label)
+    for (gr <- groupedByLabel) {
+      val groupedByText = gr._2.groupBy(_.text)
+      for (g <- groupedByText) {
+        val distinctInGroup = g._2.head
+        toReturn.append(distinctInGroup)
+      }
+    }
+    toReturn
   }
 }
 

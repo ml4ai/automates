@@ -139,10 +139,8 @@ object ExtractAndAssembleMentionEvents extends App {
         val distinctInGroup = g._2.head
         toReturn.append(distinctInGroup)
       }
-
     }
     toReturn
-
   }
 
   val distinctTextMention = distinctByText(textMentions.distinct)
