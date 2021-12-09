@@ -181,50 +181,57 @@ object ExtractAndAssembleMentionEvents extends App {
       "acceptable" -> 1,
       "dojo-entry" -> ujson.Arr("")
     )
+
+    def addSharedFields(m: Mention, currentFields: ujson.Value): ujson.Value = {
+      val source = getSource(m)
+      currentFields("source") = source
+      currentFields("sentence") = m.sentenceObj.getSentenceText
+//      val sharedFields = ujson.Obj(
+//        "text" -> m.text,
+//        "source" -> source,
+//        "sentence" -> m.sentenceObj.getSentenceText
+//      )
+      if (includeAnnotationField) currentFields("annotations") = annotationFields
+      currentFields
+    }
+
+    def getTriggerText(m: Mention): String = {
+      m match {
+        case csem: CrossSentenceEventMention => csem.trigger.text
+        case em: EventMention => em.trigger.text
+        case _ => null
+      }
+    }
+
     for (g <- groupedByLabel) {
       g._1 match {
 
         case "CommandSequence" => {
           val modelObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
-            val trigger = m match {
-              case csem: CrossSentenceEventMention => csem.trigger.text
-              case em: EventMention => em.trigger.text
-              case _ => null
-            }
-
-
-            val source = getSource(m)
+            val trigger = getTriggerText(m)
             val oneModel = ujson.Obj(
               "text" -> m.text,
-              "source" -> source,
-              "sentence" -> m.sentenceObj.getSentenceText,
               "command" -> trigger
             )
-            if (includeAnnotationField) oneModel("annotations") = annotationFields
             val commandArgs = ujson.Obj()
-
             val (paramValueParArgs, other) = m.arguments.partition(_._1 == "commandLineParamValuePair")
             // don't include comm line param separately in the output
             val (_, theRest) = other.partition(_._1 == "commLineParameter")
             val (allCommandArgs, remaining) = theRest.partition(_._1 == "commandArgs")
             commandArgs("allArgs") = allCommandArgs.head._2.head.text
-            val argComponents = ujson.Obj()//new ArrayBuffer[ujson.Value]()
-
+            val argComponents = ujson.Obj()
             for (arg <- remaining) {
               // for each arg type, create a "arg_type": [Str] json
               val argTypeObj = new ArrayBuffer[String]()
               for (v <- arg._2) {
                 argTypeObj.append(v.text)
-
               }
               argComponents(arg._1) = argTypeObj
             }
-
             val paramValuePairs = new ArrayBuffer[ujson.Value]()
             if (paramValueParArgs.nonEmpty) {
               for (arg <- paramValueParArgs) {
-
                 // for every arg mention
                 for (v <- arg._2) {
                   // need to create another nested obj with two keys: parameter and value
@@ -232,7 +239,6 @@ object ExtractAndAssembleMentionEvents extends App {
                     "parameter" -> v.arguments("parameter").head.text,
                     "value" -> v.arguments("value").head.text
                   )
-                  //                commandArgs.append(oneArgObj)
                   paramValuePairs.append(oneArgObj)
                 }
               }
@@ -240,106 +246,73 @@ object ExtractAndAssembleMentionEvents extends App {
             if (paramValuePairs.nonEmpty) argComponents("paramValuePairs") = paramValuePairs
             commandArgs("components") = argComponents
             oneModel("commandArgs") = commandArgs
-            modelObjs.append(oneModel)
+            modelObjs.append(addSharedFields(m, oneModel))
           }
           obj("commandSequences") = modelObjs
         }
         case "ModelDescr" => {
           val modelObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
-            val trigger = m match {
-              case csem: CrossSentenceEventMention => csem.trigger.text
-              case em: EventMention => em.trigger.text
-              case _ => null
-            }
-
-
-            val source = getSource(m)
+            val trigger = getTriggerText(m)
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
               "description" -> m.arguments("modelDescr").head.text,
-              "trigger" -> trigger,
-              "source" -> source,
-               "sentence" -> m.sentenceObj.getSentenceText
+              "trigger" -> trigger
             )
-            if (includeAnnotationField) oneModel("annotations") = annotationFields
-            modelObjs.append(oneModel)
+            modelObjs.append(addSharedFields(m, oneModel))
           }
           obj("models") = ujson.Obj("descriptions" -> modelObjs)
         }
         case "ModelLimitation" => {
           val modelObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
-            val trigger = m match {
-              case csem: CrossSentenceEventMention => csem.trigger.text
-              case em: EventMention => em.trigger.text
-              case _ => null
-            }
+            val trigger = getTriggerText(m)
             val source = getSource(m)
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
               "limitation" -> m.arguments("modelDescr").head.text,
-              "trigger" -> trigger,
-              "source" -> source,
-              "sentence" -> m.sentenceObj.getSentenceText
-
+              "trigger" -> trigger
             )
-            if (includeAnnotationField) oneModel("annotations") = annotationFields
-            modelObjs.append(oneModel)
+            modelObjs.append(addSharedFields(m, oneModel))
           }
           obj("models")("limitations") = modelObjs
         }
 
         case "Model" => {
-          //          val locations = g._2.map(_.text).distinct.sorted
-          //          obj("locations") = locations
-
           val locations = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
-            val paramObj = ujson.Obj()
-            val source = getSource(m)
-            paramObj("text") = m.text
-            if (includeAnnotationField) paramObj("annotations") = annotationFields
-            paramObj("source") = source
-            paramObj("sentence") = m.sentenceObj.getSentenceText
-            locations.append(paramObj)
+            val paramObj = ujson.Obj(
+              "text" -> m.text
+            )
+            locations.append(addSharedFields(m, paramObj))
           }
-          //          g._2.map(_.text).distinct.sorted
           obj("model_names") = locations
 
         }
 
         case "Repository" => {
-          val locations = new ArrayBuffer[ujson.Value]()
+          val repos = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
-            val paramObj = ujson.Obj()
+            val oneRepoObj = ujson.Obj(
+              "text" -> m.text
+            )
             val source = getSource(m)
-            paramObj("text") = m.text
-            if (includeAnnotationField) paramObj("annotations") = annotationFields
-            paramObj("source") = source
-            paramObj("sentence") = m.sentenceObj.getSentenceText
-            locations.append(paramObj)
+            repos.append(addSharedFields(m, oneRepoObj))
           }
-          //          g._2.map(_.text).distinct.sorted
-          obj("repos") = locations
+          obj("repos") = repos
 
         }
         case "ParamAndUnit" => {
           val paramUnitObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
             if (m.arguments.keys.toList.contains("value") & m.arguments.keys.toList.contains("unit")) {
-              val source = getSource(m)
               val oneVar = ujson.Obj(
                 "variable" -> m.arguments("variable").head.text,
                 "value" -> m.arguments("value").head.text,
-                "unit" -> m.arguments("unit").head.text,
-                "source" -> source,
-                "sentence" -> m.sentenceObj.getSentenceText
+                "unit" -> m.arguments("unit").head.text
               )
-              if (includeAnnotationField) oneVar("annotations") = annotationFields
-              paramUnitObjs.append(oneVar)
+              paramUnitObjs.append(addSharedFields(m, oneVar))
             }
-
           }
           obj("paramSettingsAndUnits") = paramUnitObjs
 
@@ -348,15 +321,11 @@ object ExtractAndAssembleMentionEvents extends App {
         case "UnitRelation" => {
           val paramUnitObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
-            val source = getSource(m)
             val oneVar = ujson.Obj(
               "variable" -> m.arguments("variable").head.text,
-              "unit" -> m.arguments("unit").head.text,
-              "source" -> source,
-              "sentence" -> m.sentenceObj.getSentenceText
+              "unit" -> m.arguments("unit").head.text
             )
-            if (includeAnnotationField) oneVar("annotations") = annotationFields
-            paramUnitObjs.append(oneVar)
+            paramUnitObjs.append(addSharedFields(m, oneVar))
 
 
           }
@@ -368,61 +337,46 @@ object ExtractAndAssembleMentionEvents extends App {
           for (m <- g._2) {
             val event = m.arguments("subj").head.text + " " + m.arguments("verb").head.text
             val source = getSource(m)
-            val oneVar = ujson.Obj(
+            val oneDateEvent = ujson.Obj(
               "date" -> m.asInstanceOf[EventMention].trigger.text,
-              "event" -> event,
-              "source" -> source,
-              "sentence" -> m.sentenceObj.getSentenceText
+              "event" -> event
             )
-            if (includeAnnotationField) oneVar("annotations") = annotationFields
-            dateEventObjs.append(oneVar)
+            dateEventObjs.append(addSharedFields(m, oneDateEvent))
 
 
           }
           obj("dateEvents") = dateEventObjs
         }
         case "Location" => {
-
           val locations = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
-            val paramObj = ujson.Obj()
-            val source = getSource(m)
-            paramObj("text") = m.text
-            if (includeAnnotationField) paramObj("annotations") = annotationFields
-            paramObj("source") = source
-            paramObj("sentence") = m.sentenceObj.getSentenceText
-            locations.append(paramObj)
+            val oneLocation = ujson.Obj(
+              "text" -> m.text
+            )
+            locations.append(addSharedFields(m, oneLocation))
           }
           obj("locations") = locations
-
         }
         case "Date" => {
           val dates = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
-            val paramObj = ujson.Obj()
+            val oneDate = ujson.Obj(
+              "text" -> m.text
+            )
             val source = getSource(m)
-            paramObj("text") = m.text
-            if (includeAnnotationField) paramObj("annotations") = annotationFields
-            paramObj("context") = m.sentenceObj.getSentenceText
-            paramObj("source") = source
-            paramObj("sentence") = m.sentenceObj.getSentenceText
-            dates.append(paramObj)
+            dates.append(addSharedFields(m, oneDate))
           }
           obj("dates") = dates
         }
         case "Parameter" => {
-
-          val modelComps = new ArrayBuffer[ujson.Value]()
+          val parameterObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
-            val paramObj = ujson.Obj()
-            val source = getSource(m)
-            paramObj("text") = m.text
-            if (includeAnnotationField) paramObj("annotations") = annotationFields
-            paramObj("source") = source
-            paramObj("sentence") = m.sentenceObj.getSentenceText
-            modelComps.append(paramObj)
+            val paramObj = ujson.Obj(
+              "text" -> m.text
+            )
+            parameterObjs.append(addSharedFields(m, paramObj))
           }
-          obj("parameters") = modelComps.distinct
+          obj("parameters") = parameterObjs.distinct
         }
         case "ParameterSetting" => {
           val paramSetObjs = new ArrayBuffer[ujson.Value]()
@@ -431,14 +385,9 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneVar = ujson.Obj(
               "variable" -> m.arguments("variable").head.text,
-              "value" -> m.arguments("value").head.text,
-              "source" -> source,
-              "sentence" -> m.sentenceObj.getSentenceText
+              "value" -> m.arguments("value").head.text
             )
-            if (includeAnnotationField) oneVar("annotations") = annotationFields
-            paramSetObjs.append(oneVar)
-
-
+            paramSetObjs.append(addSharedFields(m, oneVar))
           }
           obj("paramSettings") = paramSetObjs
         }
