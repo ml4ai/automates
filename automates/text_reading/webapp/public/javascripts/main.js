@@ -124,19 +124,17 @@ var collData = {
                "borderColor": "darken",
                 "arcs": [
                     {"type": "commandLineParamValuePair", "labels": ["ParamValuePair"], "borderColor": "darken", "bgColor":"violet"}
-//                    {"type": "description", "labels": ["description"], "borderColor": "darken", "bgColor":"violet"}
                              ]
                            },
        {
-                      "type": "CommandLineParamValuePair",
-                      "labels": ["PARAM_VALUE_PAIR"],
-                      "bgColor": commandPairValueColor,
-                      "borderColor": "darken",
-                       "arcs": [
-                           {"type": "commandLineParamValuePair", "labels": ["ParamValuePair"], "borderColor": "darken", "bgColor":"violet"}
-       //                    {"type": "description", "labels": ["description"], "borderColor": "darken", "bgColor":"violet"}
-                                    ]
-                                  }
+              "type": "CommandLineParamValuePair",
+              "labels": ["PARAM_VALUE_PAIR"],
+              "bgColor": commandPairValueColor,
+              "borderColor": "darken",
+              "arcs": [
+                    {"type": "commandLineParamValuePair", "labels": ["ParamValuePair"], "borderColor": "darken", "bgColor":"violet"}
+                             ]
+                           }
     ]
 };
 

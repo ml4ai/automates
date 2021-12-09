@@ -3,8 +3,8 @@
       - Identifier:
         - VariableGazetteer
       - Location
-      - Date
-      - Year
+      - Date:
+        - Year
       - Model
       - ModelComponent
       - Parameter
