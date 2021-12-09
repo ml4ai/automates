@@ -42,6 +42,7 @@ object ExtractAndAssembleMentionEvents extends App {
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
   val mdfiles = FileUtils.findFiles(inputDir, "md")
+  val includeAnnotationField: Boolean = config[Boolean]("apps.includeAnnotationField")
 
 
   def getMentionsWithoutLocations(texts: Seq[String], file: File, reader: OdinEngine): Seq[Mention] = {
@@ -175,7 +176,11 @@ object ExtractAndAssembleMentionEvents extends App {
   def assembleMentions(textMentions: Seq[Mention], mdMentions: Seq[Mention]): ujson.Value = {
     val obj = ujson.Obj()
     val groupedByLabel = (textMentions++mdMentions).groupBy(_.label)
-
+    val annotationFields = ujson.Obj(
+      "match" -> 0,
+      "acceptable" -> 1,
+      "dojo-entry" -> ujson.Arr("")
+    )
     for (g <- groupedByLabel) {
       g._1 match {
 
@@ -192,16 +197,11 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneModel = ujson.Obj(
               "text" -> m.text,
-              "annotation" -> ujson.Obj(
-                "match" -> 0,
-                "acceptable" -> 1,
-                "dojo-entry" -> ujson.Arr("")
-              ),
-
               "source" -> source,
               "sentence" -> m.sentenceObj.getSentenceText,
               "command" -> trigger
             )
+            if (includeAnnotationField) oneModel("annotations") = annotationFields
             val commandArgs = ujson.Obj()
 
             val (paramValueParArgs, other) = m.arguments.partition(_._1 == "commandLineParamValuePair")
@@ -257,16 +257,12 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
-              "annotation" -> ujson.Obj(
-                "match" -> 0,
-                "acceptable" -> 1,
-                "dojo-entry" -> ujson.Arr("")
-              ),
               "description" -> m.arguments("modelDescr").head.text,
               "trigger" -> trigger,
               "source" -> source,
                "sentence" -> m.sentenceObj.getSentenceText
             )
+            if (includeAnnotationField) oneModel("annotations") = annotationFields
             modelObjs.append(oneModel)
           }
           obj("models") = ujson.Obj("descriptions" -> modelObjs)
@@ -282,17 +278,13 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
-              "annotation" -> ujson.Obj(
-                "match" -> 0,
-                "acceptable" -> 1,
-                "dojo-entry" -> ujson.Arr("")
-              ),
               "limitation" -> m.arguments("modelDescr").head.text,
               "trigger" -> trigger,
               "source" -> source,
               "sentence" -> m.sentenceObj.getSentenceText
 
             )
+            if (includeAnnotationField) oneModel("annotations") = annotationFields
             modelObjs.append(oneModel)
           }
           obj("models")("limitations") = modelObjs
@@ -307,11 +299,7 @@ object ExtractAndAssembleMentionEvents extends App {
             val paramObj = ujson.Obj()
             val source = getSource(m)
             paramObj("text") = m.text
-            paramObj("annotation") = ujson.Obj(
-              "match" -> 0,
-              "acceptable" -> 1,
-              "dojo-entry" -> ujson.Arr("")
-            )
+            if (includeAnnotationField) paramObj("annotations") = annotationFields
             paramObj("source") = source
             paramObj("sentence") = m.sentenceObj.getSentenceText
             locations.append(paramObj)
@@ -327,11 +315,7 @@ object ExtractAndAssembleMentionEvents extends App {
             val paramObj = ujson.Obj()
             val source = getSource(m)
             paramObj("text") = m.text
-            paramObj("annotation") = ujson.Obj(
-              "match" -> 0,
-              "acceptable" -> 1,
-              "dojo-entry" -> ujson.Arr("")
-            )
+            if (includeAnnotationField) paramObj("annotations") = annotationFields
             paramObj("source") = source
             paramObj("sentence") = m.sentenceObj.getSentenceText
             locations.append(paramObj)
@@ -347,16 +331,12 @@ object ExtractAndAssembleMentionEvents extends App {
               val source = getSource(m)
               val oneVar = ujson.Obj(
                 "variable" -> m.arguments("variable").head.text,
-                "annotation" -> ujson.Obj(
-                  "match" -> 0,
-                  "acceptable" -> 1,
-                  "dojo-entry" -> ujson.Arr("")
-                ),
                 "value" -> m.arguments("value").head.text,
                 "unit" -> m.arguments("unit").head.text,
                 "source" -> source,
                 "sentence" -> m.sentenceObj.getSentenceText
               )
+              if (includeAnnotationField) oneVar("annotations") = annotationFields
               paramUnitObjs.append(oneVar)
             }
 
@@ -371,15 +351,11 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneVar = ujson.Obj(
               "variable" -> m.arguments("variable").head.text,
-              "annotation" -> ujson.Obj(
-                "match" -> 0,
-                "acceptable" -> 1,
-                "dojo-entry" -> ujson.Arr("")
-              ),
               "unit" -> m.arguments("unit").head.text,
               "source" -> source,
               "sentence" -> m.sentenceObj.getSentenceText
             )
+            if (includeAnnotationField) oneVar("annotations") = annotationFields
             paramUnitObjs.append(oneVar)
 
 
@@ -394,15 +370,11 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneVar = ujson.Obj(
               "date" -> m.asInstanceOf[EventMention].trigger.text,
-              "annotation" -> ujson.Obj(
-                "match" -> 0,
-                "acceptable" -> 1,
-                "dojo-entry" -> ujson.Arr("")
-              ),
               "event" -> event,
               "source" -> source,
               "sentence" -> m.sentenceObj.getSentenceText
             )
+            if (includeAnnotationField) oneVar("annotations") = annotationFields
             dateEventObjs.append(oneVar)
 
 
@@ -416,11 +388,7 @@ object ExtractAndAssembleMentionEvents extends App {
             val paramObj = ujson.Obj()
             val source = getSource(m)
             paramObj("text") = m.text
-            paramObj("annotation") = ujson.Obj(
-              "match" -> 0,
-              "acceptable" -> 1,
-              "dojo-entry" -> ujson.Arr("")
-            )
+            if (includeAnnotationField) paramObj("annotations") = annotationFields
             paramObj("source") = source
             paramObj("sentence") = m.sentenceObj.getSentenceText
             locations.append(paramObj)
@@ -434,11 +402,7 @@ object ExtractAndAssembleMentionEvents extends App {
             val paramObj = ujson.Obj()
             val source = getSource(m)
             paramObj("text") = m.text
-            paramObj("annotation") = ujson.Obj(
-              "match" -> 0,
-              "acceptable" -> 1,
-              "dojo-entry" -> ujson.Arr("")
-            )
+            if (includeAnnotationField) paramObj("annotations") = annotationFields
             paramObj("context") = m.sentenceObj.getSentenceText
             paramObj("source") = source
             paramObj("sentence") = m.sentenceObj.getSentenceText
@@ -453,11 +417,7 @@ object ExtractAndAssembleMentionEvents extends App {
             val paramObj = ujson.Obj()
             val source = getSource(m)
             paramObj("text") = m.text
-            paramObj("annotation") = ujson.Obj(
-              "match" -> 0,
-              "acceptable" -> 1,
-              "dojo-entry" -> ujson.Arr("")
-            )
+            if (includeAnnotationField) paramObj("annotations") = annotationFields
             paramObj("source") = source
             paramObj("sentence") = m.sentenceObj.getSentenceText
             modelComps.append(paramObj)
@@ -471,22 +431,18 @@ object ExtractAndAssembleMentionEvents extends App {
             val source = getSource(m)
             val oneVar = ujson.Obj(
               "variable" -> m.arguments("variable").head.text,
-              "annotation" -> ujson.Obj(
-                "match" -> 0,
-                "acceptable" -> 1,
-                "dojo-entry" -> ujson.Arr("")
-              ),
               "value" -> m.arguments("value").head.text,
               "source" -> source,
               "sentence" -> m.sentenceObj.getSentenceText
             )
+            if (includeAnnotationField) oneVar("annotations") = annotationFields
             paramSetObjs.append(oneVar)
 
 
           }
           obj("paramSettings") = paramSetObjs
         }
-        case _ => println("Other")
+        case _ =>
       }
     }
     obj
