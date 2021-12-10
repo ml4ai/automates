@@ -14,6 +14,7 @@ import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
+import org.clulab.utils.MentionUtils.{getMentionsWithLocations, getMentionsWithoutLocations}
 import org.json4s.jackson.JsonMethods._
 
 import scala.collection.mutable.ArrayBuffer
@@ -52,39 +53,6 @@ object ExtractAndExport extends App {
   //  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
   //  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
   // For each file in the input directory:
-
-  def getMentionsWithoutLocations(texts: Seq[String], file: File): Seq[Mention] = {
-    // this is for science parse
-    texts.flatMap(t => reader.extractFromText(t, filename = Some(file.getName)))
-  }
-
-  def getMentionsWithLocations(texts: Seq[String], file: File): Seq[Mention] = {
-    // this is for cosmos jsons
-    val textsAndFilenames = texts.map(_.split("<::>").slice(0,2).mkString("<::>"))
-    val locations = texts.map(_.split("<::>").takeRight(2).mkString("<::>")) //location = pageNum::blockIdx
-    val mentions = for (tf <- textsAndFilenames) yield {
-      val Array(text, filename) = tf.split("<::>")
-      reader.extractFromText(text, keepText = true, Some(filename))
-    }
-    // store location information from cosmos as an attachment for each mention
-    val menWInd = mentions.zipWithIndex
-    val mentionsWithLocations = new ArrayBuffer[Mention]()
-    for (tuple <- menWInd) {
-      // get page and block index for each block; cosmos location information will be the same for all the mentions within one block
-      val menInTextBlocks = tuple._1
-      val id = tuple._2
-      val location = locations(id).split("<::>").map(loc => loc.split(",").map(_.toInt)) //(_.toDouble.toInt)
-      val pageNum = location.head
-      val blockIdx = location.last
-
-      for (m <- menInTextBlocks) {
-        val newMen = m.withAttachment(new MentionLocationAttachment(file.getName, pageNum, blockIdx, "MentionLocation"))
-        mentionsWithLocations.append(newMen)
-      }
-    }
-    mentionsWithLocations
-  }
-
   files.par.foreach { file =>
     // 1. Open corresponding output file and make all desired exporters
     println(s"Extracting from ${file.getName}")
@@ -95,10 +63,10 @@ object ExtractAndExport extends App {
     // 3. Extract causal mentions from the texts
     val mentions = if (file.getName.contains("COSMOS")) {
       // cosmos json
-      getMentionsWithLocations(texts, file)
+      getMentionsWithLocations(texts, file, reader)
     } else {
       // other file types---those don't have locations
-      getMentionsWithoutLocations(texts, file)
+      getMentionsWithoutLocations(texts, file, reader)
     }
     //The version of mention that includes routing between text vs. comment
     //    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
