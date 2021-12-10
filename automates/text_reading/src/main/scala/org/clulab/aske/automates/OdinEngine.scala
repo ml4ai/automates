@@ -97,13 +97,13 @@ class OdinEngine(
     val (modelDescrs, nonModelDescrs) = nonFunctions.partition(_.labels.contains("ModelDescr"))
     val (modelNames, other) = nonModelDescrs.partition(_.label == "Model")
     val modelFilter = actions.filterModelNames(modelNames)
-    val untangled = actions.locationsAreNotVariablesOrModels(actions.untangleConj(descriptionMentions))
+    val untangled = actions.untangleConj(descriptionMentions)
     val combining = actions.combineFunction(functionMentions)
     val newModelParams2 = actions.functionArgsToModelParam(combining)
     val finalModelDescrs = modelDescrs.filter(_.arguments.contains("modelName"))
     val finalModelParam = actions.filterModelParam(newModelParams1 ++ newModelParams2)
 
-    actions.replaceWithLongerIdentifier((actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam  ++ finalModelDescrs) ++ untangled)).toVector.distinct
+    actions.replaceWithLongerIdentifier(actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam  ++ finalModelDescrs) ++ untangled).toVector.distinct
 
   }
 

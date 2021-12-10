@@ -460,15 +460,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
               newArgs += ("variable" -> m.arguments("variable"), "value" -> m.arguments("value"))
               "concept"
             }
-
             val att = new ParamSetAttachment(attachedTo, "ParamSetAtt")
             newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
           }
         }
       }
-
-
-
     }
     newMentions
   }
@@ -613,26 +609,26 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def locationsAreNotVariablesOrModels(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     // makes sure there are no mentions where variables are actually most likely locations
-    // for now only applied to descriptions, but may want to extend to other mentions
+    // currently not used because NER labels identifiers as LOCATION
     val (locations, nonLocations) = mentions.partition(_.label == "Location")
+    // everything that is not a location needs to be checked for potential location-likeness
+    // we only want to check mentions that are contentful---not just Phrases, which are basically building blocks for other mentions
     val (phrases, nonPhrases) = nonLocations.partition(_.label == "Phrase")
     val noLocations = new ArrayBuffer[Mention]()
-
     def isInLocations(sent: Int, tokInt: Interval, locations: Seq[Mention]): Boolean = {
       locations.exists(loc => loc.sentence == sent & loc.tokenInterval == tokInt)
     }
 
     for (m <- nonPhrases) {
-
       val args = m.arguments.values.flatten
       m match {
         case m: TextBoundMention => {
-
-          // todo: should I filter out tbm that look like identifiers but are locations?
-          //          val sent = m.sentence
-          //          val tokInt = m.tokenInterval
-          //          if (!isInLocations(sent, tokInt, locations))
-          noLocations.append(m)
+          // keep standalone identifiers that look like locations, but add info to the foundBy
+          val sent = m.sentence
+          val tokInt = m.tokenInterval
+          if (isInLocations(sent, tokInt, locations)) {
+            noLocations.append(m.asInstanceOf[TextBoundMention].copy(foundBy = m.foundBy + "++possibleLocation"))
+          } else noLocations.append(m)
 
         }
         case _ => {
@@ -646,14 +642,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   noLoc = false
                 }
               } else break
-
             }
-
           }
           if (noLoc) {
             noLocations.append(m)
           }
-
         }
       }
     }
