@@ -10,29 +10,17 @@ import org.clulab.aske.automates.attachments.MentionLocationAttachment
 import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.utils.{FileUtils, Serializer}
 import org.clulab.odin.{EventMention, Mention}
+import org.clulab.utils.MentionUtils.{distinctByText, getMentionsWithLocations, getMentionsWithoutLocations, getTriggerText}
 
 import scala.collection.mutable.ArrayBuffer
 
 
-//TODOs:
-// make a method to include annotation if needed
-// reduce redundant code in the assembly method
 /**
-  * App used to extract mentions from paper jsons and readmes
+  * App used to extract mentions from paper jsons and readmes related to one model and writing them to a json
   */
 object ExtractAndAssembleMentionEvents extends App {
 
-  def getExporter(exporterString: String, filename: String): Exporter = {
-    exporterString match {
-      case "serialized" => SerializedExporter(filename)
-      case "json" => AutomatesExporter(filename)
-      case "tsv" => TSVExporter(filename)
-      case _ => throw new NotImplementedError(s"Export mode $exporterString is not supported.")
-    }
-  }
-
   val config = ConfigFactory.load()
-
   val numOfWikiGroundings: Int = config[Int]("apps.numOfWikiGroundings")
   val inputDir: String = config[String]("apps.inputDirectory")
   val outputDir: String = config[String]("apps.outputDirectory")
@@ -40,58 +28,9 @@ object ExtractAndAssembleMentionEvents extends App {
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
   //  val dataLoader = new ScienceParsedDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
+  val includeAnnotationField: Boolean = config[Boolean]("apps.includeAnnotationField")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
   val mdfiles = FileUtils.findFiles(inputDir, "md")
-  val includeAnnotationField: Boolean = config[Boolean]("apps.includeAnnotationField")
-
-
-  def getMentionsWithoutLocations(texts: Seq[String], file: File, reader: OdinEngine): Seq[Mention] = {
-    // this is for science parse
-    val mentions = texts.flatMap(t => reader.extractFromText(t, filename = Some(file.getName)))
-    // most fields here will be null, but there will be a filename field; doing this so that all mentions, regardless of whether they have dtailed location (in the document) can be processed the same way
-    val mentionsWithLocations = new ArrayBuffer[Mention]()
-    for (m <- mentions) {
-      val newAttachment = new MentionLocationAttachment(file.getName, Seq(-1), Seq(-1), "MentionLocation")
-      val newMen = m match {
-        case m: CrossSentenceEventMention => m.asInstanceOf[CrossSentenceEventMention].newWithAttachment(newAttachment)
-        case _ => m.withAttachment(newAttachment)
-      }
-      mentionsWithLocations.append(newMen)
-    }
-    mentionsWithLocations
-  }
-
-  def getMentionsWithLocations(texts: Seq[String], file: File, reader: OdinEngine): Seq[Mention] = {
-    // this is for cosmos jsons
-    val textsAndFilenames = texts.map(_.split("<::>").slice(0,2).mkString("<::>"))
-    val locations = texts.map(_.split("<::>").takeRight(2).mkString("<::>")) //location = pageNum::blockIdx
-    val mentions = for (tf <- textsAndFilenames) yield {
-      val Array(text, filename) = tf.split("<::>")
-      reader.extractFromText(text, keepText = true, Some(filename))
-    }
-    // store location information from cosmos as an attachment for each mention
-    val menWInd = mentions.zipWithIndex
-    val mentionsWithLocations = new ArrayBuffer[Mention]()
-    for (tuple <- menWInd) {
-      // get page and block index for each block; cosmos location information will be the same for all the mentions within one block
-      val menInTextBlocks = tuple._1
-      val id = tuple._2
-      val location = locations(id).split("<::>").map(loc => loc.split(",").map(_.toInt)) //(_.toDouble.toInt)
-      val pageNum = location.head
-      val blockIdx = location.last
-
-      for (m <- menInTextBlocks) {
-        val newAttachment = new MentionLocationAttachment(file.getName, pageNum, blockIdx, "MentionLocation")
-        val newMen = m match {
-          case m: CrossSentenceEventMention => m.asInstanceOf[CrossSentenceEventMention].newWithAttachment(newAttachment)
-          case _ => m.withAttachment(newAttachment)
-        }
-        mentionsWithLocations.append(newMen)
-      }
-    }
-    mentionsWithLocations
-  }
-
   val textMentions = new ArrayBuffer[Mention]()
   val mdMentions = new ArrayBuffer[Mention]()
   val allFiles = files ++ mdfiles
@@ -110,7 +49,6 @@ object ExtractAndAssembleMentionEvents extends App {
     // 1. Open corresponding output file and make all desired exporters
     println(s"Extracting from ${file.getName}")
     // 2. Get the input file contents
-    // note: for science parse format, each text is a section
     val texts = dataLoader.loadFile(file)
     val mentions = if (file.getName.contains("COSMOS")) {
       // cosmos json
@@ -125,22 +63,6 @@ object ExtractAndAssembleMentionEvents extends App {
       case "md" => mdMentions.appendAll(mentions)
       case _ => ???
     }
-
-
-  }
-
-  def distinctByText(mentions: Seq[Mention]): Seq[Mention] = {
-    val toReturn = new ArrayBuffer[Mention]()
-
-    val groupedByLabel = mentions.groupBy(_.label)
-    for (gr <- groupedByLabel) {
-      val groupedByText = gr._2.groupBy(_.text)
-      for (g <- groupedByText) {
-        val distinctInGroup = g._2.head
-        toReturn.append(distinctInGroup)
-      }
-    }
-    toReturn
   }
 
   val distinctTextMention = distinctByText(textMentions.distinct)
@@ -150,57 +72,10 @@ object ExtractAndAssembleMentionEvents extends App {
   writeJsonToFile(obj, outputDir, "assembledMentions.json")
 
 
-  def writeJsonToFile(obj: ujson.Value, outputDir: String, outputFileName: String): Unit = {
-
-    val json = ujson.write(obj, indent = 2)
-    val pw = new PrintWriter(new File(outputDir + outputFileName))
-    pw.write(json)
-    pw.close()
-
-  }
-
-  def getSource(m: Mention): ujson.Value = {
-    val source = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation")
-    val sourceJson = ujson.Obj()
-    if (source.isDefined) {
-      val sourceAsJson = source.get.toUJson
-      sourceJson("page") = sourceAsJson("pageNum")
-      sourceJson("blockIdx") = sourceAsJson("blockIdx")
-      sourceJson("filename") = sourceAsJson("filename")
-    }
-    sourceJson
-  }
-
+  // Support methods
   def assembleMentions(textMentions: Seq[Mention], mdMentions: Seq[Mention]): ujson.Value = {
     val obj = ujson.Obj()
     val groupedByLabel = (textMentions++mdMentions).groupBy(_.label)
-    val annotationFields = ujson.Obj(
-      "match" -> 0,
-      "acceptable" -> 1,
-      "dojo-entry" -> ujson.Arr("")
-    )
-
-    def addSharedFields(m: Mention, currentFields: ujson.Value): ujson.Value = {
-      val source = getSource(m)
-      currentFields("source") = source
-      currentFields("sentence") = m.sentenceObj.getSentenceText
-//      val sharedFields = ujson.Obj(
-//        "text" -> m.text,
-//        "source" -> source,
-//        "sentence" -> m.sentenceObj.getSentenceText
-//      )
-      if (includeAnnotationField) currentFields("annotations") = annotationFields
-      currentFields
-    }
-
-    def getTriggerText(m: Mention): String = {
-      m match {
-        case csem: CrossSentenceEventMention => csem.trigger.text
-        case em: EventMention => em.trigger.text
-        case _ => null
-      }
-    }
-
     for (g <- groupedByLabel) {
       g._1 match {
 
@@ -265,7 +140,6 @@ object ExtractAndAssembleMentionEvents extends App {
           val modelObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
             val trigger = getTriggerText(m)
-            val source = getSource(m)
             val oneModel = ujson.Obj(
               "name" -> m.arguments("modelName").head.text,
               "limitation" -> m.arguments("modelDescr").head.text,
@@ -285,7 +159,6 @@ object ExtractAndAssembleMentionEvents extends App {
             locations.append(addSharedFields(m, paramObj))
           }
           obj("model_names") = locations
-
         }
 
         case "Repository" => {
@@ -294,11 +167,9 @@ object ExtractAndAssembleMentionEvents extends App {
             val oneRepoObj = ujson.Obj(
               "text" -> m.text
             )
-            val source = getSource(m)
             repos.append(addSharedFields(m, oneRepoObj))
           }
           obj("repos") = repos
-
         }
         case "ParamAndUnit" => {
           val paramUnitObjs = new ArrayBuffer[ujson.Value]()
@@ -313,7 +184,6 @@ object ExtractAndAssembleMentionEvents extends App {
             }
           }
           obj("paramSettingsAndUnits") = paramUnitObjs
-
         }
 
         case "UnitRelation" => {
@@ -324,8 +194,6 @@ object ExtractAndAssembleMentionEvents extends App {
               "unit" -> m.arguments("unit").head.text
             )
             paramUnitObjs.append(addSharedFields(m, oneVar))
-
-
           }
           obj("units") = paramUnitObjs
         }
@@ -334,7 +202,6 @@ object ExtractAndAssembleMentionEvents extends App {
           val dateEventObjs = new ArrayBuffer[ujson.Value]()
           for (m <- g._2) {
             val event = m.arguments("subj").head.text + " " + m.arguments("verb").head.text
-            val source = getSource(m)
             val oneDateEvent = ujson.Obj(
               "date" -> m.asInstanceOf[EventMention].trigger.text,
               "event" -> event
@@ -380,7 +247,6 @@ object ExtractAndAssembleMentionEvents extends App {
           val paramSetObjs = new ArrayBuffer[ujson.Value]()
 
           for (m <- g._2) {
-            val source = getSource(m)
             val oneVar = ujson.Obj(
               "variable" -> m.arguments("variable").head.text,
               "value" -> m.arguments("value").head.text
@@ -394,4 +260,49 @@ object ExtractAndAssembleMentionEvents extends App {
     }
     obj
   }
+
+  def getSource(m: Mention): ujson.Value = {
+    val source = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation")
+    val sourceJson = ujson.Obj()
+    if (source.isDefined) {
+      val sourceAsJson = source.get.toUJson
+      sourceJson("page") = sourceAsJson("pageNum")
+      sourceJson("blockIdx") = sourceAsJson("blockIdx")
+      sourceJson("filename") = sourceAsJson("filename")
+    }
+    sourceJson
+  }
+
+  def addSharedFields(m: Mention, currentFields: ujson.Value): ujson.Value = {
+    val source = getSource(m)
+    currentFields("source") = source
+    currentFields("sentence") = m.sentenceObj.getSentenceText
+    val annotationFields = ujson.Obj(
+      "match" -> 0,
+      "acceptable" -> 1,
+      "dojo-entry" -> ujson.Arr("")
+    )
+    if (includeAnnotationField) currentFields("annotations") = annotationFields
+    currentFields
+  }
+
+
+  def writeJsonToFile(obj: ujson.Value, outputDir: String, outputFileName: String): Unit = {
+
+    val json = ujson.write(obj, indent = 2)
+    val pw = new PrintWriter(new File(outputDir + outputFileName))
+    pw.write(json)
+    pw.close()
+
+  }
+
+  def getExporter(exporterString: String, filename: String): Exporter = {
+    exporterString match {
+      case "serialized" => SerializedExporter(filename)
+      case "json" => AutomatesExporter(filename)
+      case "tsv" => TSVExporter(filename)
+      case _ => throw new NotImplementedError(s"Export mode $exporterString is not supported.")
+    }
+  }
+
 }

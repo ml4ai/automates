@@ -15,6 +15,7 @@ import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
+import org.clulab.utils.MentionUtils.distinctByText
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -1798,19 +1799,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     filter4
   }
 
-  def distinctByText(mentions: Seq[Mention]): Seq[Mention] = {
-    val toReturn = new ArrayBuffer[Mention]()
-
-    val groupedByLabel = mentions.groupBy(_.label)
-    for (gr <- groupedByLabel) {
-      val groupedByText = gr._2.groupBy(_.text)
-      for (g <- groupedByText) {
-        val distinctInGroup = g._2.head
-        toReturn.append(distinctInGroup)
-      }
-    }
-    toReturn
-  }
 }
 
 

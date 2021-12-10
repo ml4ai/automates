@@ -4,7 +4,7 @@ import ai.lum.common.ConfigFactory
 
 import java.io.{File, PrintWriter}
 import java.util.UUID
-import org.clulab.utils.TextUtils._
+import org.clulab.utils.MentionUtils._
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
 import com.typesafe.config.Config
