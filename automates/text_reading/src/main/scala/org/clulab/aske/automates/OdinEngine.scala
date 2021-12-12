@@ -113,8 +113,6 @@ class OdinEngine(
     odinMentions  // CTM: collection of mentions ; to be converted to some form (json)
   }
 
-
-
   // Supports web service, when existing entities are already known but from outside the project
   def extractFromDocWithGazetteer(doc: Document, gazetteer: Seq[String]): Seq[Mention] = {
     val label = OdinEngine.VARIABLE_GAZETTEER_LABEL

@@ -83,6 +83,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   //      API entry points for SVOGrounder
   // -------------------------------------------
 
+  // the API has been disabled by the hosting organization
   def groundMentionsToSVO: Action[AnyContent] = Action { request =>
     val k = 10 //todo: set as param in curl
 
@@ -109,7 +110,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   def groundMentionsToWikidata: Action[AnyContent] = Action { request =>
     // writes a json file with groundings associated with identifier strings
-
+    println("Started grounding")
     val data = request.body.asJson.get.toString()
     val json = ujson.read(data)
 
@@ -175,7 +176,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   /**
-    * Extract mentions from a pdf. Expected fields in the json obj passed in:
+    * Extract mentions from a pdf. Requires Science-Parse running. Expected fields in the json obj passed in:
     *  'pdf' : path to the pdf file
     * @return Seq[Mention] (json serialized)
     */

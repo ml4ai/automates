@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{CosmosJsonDataLoader, DataLoader, TextRouter}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getGlobalVars, returnAttachmentOfAGivenTypeOption}
-import org.clulab.aske.automates.attachments.MentionLocationAttachment
+import org.clulab.aske.automates.attachments.{MentionLocationAttachment, ParamSettingIntAttachment}
 import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.utils.{FileUtils, Serializer}
 import org.clulab.odin.{EventMention, Mention}
@@ -254,6 +254,25 @@ object ExtractAndAssembleMentionEvents extends App {
             paramSetObjs.append(addSharedFields(m, oneVar))
           }
           obj("paramSettings") = paramSetObjs
+        }
+        case "IntervalParameterSetting" => {
+          val paramSetObjs = new ArrayBuffer[ujson.Value]()
+          for (m <- g._2) {
+            val oneVar = ujson.Obj()
+            for (arg <- m.arguments) {
+              oneVar(arg._1) = arg._2.head.text
+            }
+            val attachment = returnAttachmentOfAGivenTypeOption(m.attachments, "ParamSettingIntervalAtt")
+            if (attachment.isDefined) {
+              val paramSetAttJson = attachment.get.asInstanceOf[ParamSettingIntAttachment].toUJson.obj
+              val inclLower = paramSetAttJson("inclusiveLower")
+              val inclUpper = paramSetAttJson("inclusiveUpper")
+              if (!inclLower.isNull) oneVar("inclusiveLower") = paramSetAttJson("inclusiveLower").bool
+              if (!inclUpper.isNull) oneVar("inclusiveUpper") = paramSetAttJson("inclusiveUpper").bool
+            }
+            paramSetObjs.append(addSharedFields(m, oneVar))
+          }
+          obj("paramSettingsInterval") = paramSetObjs
         }
         case _ =>
       }
