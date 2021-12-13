@@ -1,5 +1,6 @@
 package org.clulab.aske.automates
 
+
 import com.typesafe.scalalogging.LazyLogging
 import edu.stanford.nlp.dcoref.Dictionaries.MentionType
 import org.clulab.aske.automates.actions.ExpansionHandler
@@ -11,14 +12,17 @@ import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
 import org.clulab.aske.automates.attachments.{ContextAttachment, DiscontinuousCharOffsetAttachment, FunctionAttachment, ParamSetAttachment, ParamSettingIntAttachment, UnitAttachment}
 import org.clulab.aske.automates.mentions.CrossSentenceEventMention
+import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
+import org.clulab.utils.MentionUtils.distinctByText
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 import scala.util.Try
 import scala.util.matching.Regex
+import scala.util.control.Breaks._
 
 
 
@@ -210,7 +214,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   // solution from https://stackoverflow.com/questions/9542126/how-to-find-if-a-scala-string-is-parseable-as-a-double-or-not
-  def parseDouble(s: String): Option[Double] = Try { s.toDouble }.toOption
+  def parseDouble(s: String): Option[Double] = Try {
+    s.toDouble
+  }.toOption
 
   def processParamSettingInt(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val newMentions = new ArrayBuffer[Mention]()
@@ -274,7 +280,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         // we have remapped the args to new names already; now will need to update the paths map to have correct new names and the correct synpaths for switched out min/max values
         for (arg <- newArgs) {
           // for each arg type, get the synpath for its new mention (for now, assume one arg of each type)
-          newPaths +=(arg._1 -> Map(arg._2.head -> synPaths(newArgs(arg._1).head)))
+          newPaths += (arg._1 -> Map(arg._2.head -> synPaths(newArgs(arg._1).head)))
         }
       }
 
@@ -429,34 +435,40 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val foundBy = m.foundBy
       val att = new FunctionAttachment("FunctionAtt", trigger, foundBy)
       newMentions.append(m.withAttachment(att))
-      }
-      newMentions
     }
+    newMentions
+  }
 
-    def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-      val newMentions = new ArrayBuffer[Mention]()
-      for (m <- mentions) {
+  def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val firstTokenOfValue = m.arguments("value").head.tokenInterval.start
+      // if value is first token in a sentence, that is probably just the section number in a paper
+      if (firstTokenOfValue != 0) {
         // assume there's only one arg of each type
         val tokenIntervals = m.arguments.map(_._2.head).map(_.tokenInterval).toSeq
-        // takes care of accidental arg overlap
-        if (tokenIntervals.distinct.length == tokenIntervals.length) {
-          val newArgs = mutable.Map[String, Seq[Mention]]()
-          val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) {
+        val labelsOfTextBoundMentions = m.arguments.map(_._2.head.label).toSeq
+        // make sure mention labels are no identical (basically, checking if both are Values---they should not be)
+        if (labelsOfTextBoundMentions.distinct.length == labelsOfTextBoundMentions.length) {
+          // takes care of accidental arg overlap
+          if (tokenIntervals.distinct.length == tokenIntervals.length) {
+            val newArgs = mutable.Map[String, Seq[Mention]]()
+            val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) {
 
-            newArgs += ("variable" -> Seq(copyWithLabel(m.arguments("variable").head, "Identifier")), "value" -> m.arguments("value"))
-            "variable"
-          } else {
-            newArgs += ("variable" -> m.arguments("variable"), "value" -> m.arguments("value"))
-            "concept"
+              newArgs += ("variable" -> Seq(copyWithLabel(m.arguments("variable").head, "Identifier")), "value" -> m.arguments("value"))
+              "variable"
+            } else {
+              newArgs += ("variable" -> m.arguments("variable"), "value" -> m.arguments("value"))
+              "concept"
+            }
+            val att = new ParamSetAttachment(attachedTo, "ParamSetAtt")
+            newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
           }
-
-          val att = new ParamSetAttachment(attachedTo, "ParamSetAtt")
-          newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
         }
-
       }
-      newMentions
     }
+    newMentions
+  }
 
   def processRuleBasedContextEvent(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val contextAttachedMens = new ArrayBuffer[Mention]
@@ -509,18 +521,139 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def keepLongestIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-      // used to avoid identifiers like R ( t ) being found as separate R, t, R(t, and so on
-      val maxInGroup = new ArrayBuffer[Mention]()
-      val groupedBySent = mentions.groupBy(_.sentence)
-      for (gbs <- groupedBySent) {
-        val groupedByIntervalOverlap = groupByTokenOverlap(gbs._2)
-        for (item <- groupedByIntervalOverlap) {
-          val longest = item._2.maxBy(_.tokenInterval.length)
-          maxInGroup.append(longest)
+    // used to avoid identifiers like R ( t ) being found as separate R, t, R(t, and so on
+    val maxInGroup = new ArrayBuffer[Mention]()
+    val groupedBySent = mentions.groupBy(_.sentence)
+    for (gbs <- groupedBySent) {
+      val groupedByIntervalOverlap = groupByTokenOverlap(gbs._2)
+      for (item <- groupedByIntervalOverlap) {
+        val longest = item._2.maxBy(_.tokenInterval.length)
+        maxInGroup.append(longest)
+      }
+    }
+    maxInGroup.distinct
+  }
+
+
+  // sentence for debugging Bearing in mind , we set our default setting to the refugee move speed is equal to 200 km per day and the awareness of surrounding is 1 link .
+  // todo: somehow link resulting events to definitions, maybe in previous three sent window
+  def assembleVarsWithParamsAndUnits(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val (withVar, noVar) = mentions.partition(_.arguments.keys.toList.contains("variable"))
+    val groupedBySent = withVar.groupBy(_.sentence)
+    val toReturn = new ArrayBuffer[Mention]()
+    for (g <- groupedBySent) {
+      val groupedByVar = g._2.groupBy(_.arguments("variable"))
+      // event mentions grouped by var (so, checking which ones have an overlapping variable mention)
+      for (gv <- groupedByVar) {
+        // if there are more than two in a group that are distinct by text, that means we can assemble them into an event
+        val mentionsInGroup = gv._2
+        if (distinctByText(mentionsInGroup).length > 1) {
+          // do not exclude component events (param settings and units) from output
+          for (v <- mentionsInGroup) toReturn.append(v)
+          val newArgs = mutable.Map[String, Seq[Mention]]()
+          for (m <- mentionsInGroup) {
+            // it's fine if the var mention is overwritten because they are the same; the other args that matter are not gonna get overwritten
+            for (arg <- m.arguments) {
+              newArgs(arg._1) = arg._2
+            }
+          }
+          val assembledMention = copyWithLabel(copyWithArgs(gv._2.head, newArgs.toMap), "ParamAndUnit")
+          toReturn.append(assembledMention)
+
+        } else {
+          // since the mentions in the group are not distinct by text, keep all of them
+            for (m <- mentionsInGroup) toReturn.append(m)
         }
       }
-      maxInGroup.distinct
     }
+    toReturn.distinct ++ noVar
+  }
+
+  def processCommands(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val groupBySent = mentions.groupBy(_.sentence)
+    val toReturn = new ArrayBuffer[Mention]()
+    for (g <- groupBySent) {
+      val (commands, other) = g._2.partition(_.label == "CommandSequence")
+      for (o <- other) toReturn.append(o)
+      val otherGroupedByLabel = other.groupBy(_.label)
+      val commandStartSameAsSentStart = commands.filter(m => m.tokenInterval.start == 0)
+      for (c <- commandStartSameAsSentStart) {
+        val curArgs = c.arguments
+        val newArgs = mutable.Map[String, Seq[Mention]]()
+        // for every other mention group
+        for (og <- otherGroupedByLabel.filter(m => (m._1 == "Filename" || m._1 == "Repository" || m._1 == "CommandLineParamValuePair" || m._1 == "CommLineParameter"))) {
+          // there could be multiple mentions that we will want to become command args
+          val newMentionArgValues = new ArrayBuffer[Mention]()
+          for (o <- og._2) {
+            // if the other mention is completely subsumed by command mention, add the other mention to command args
+            if (o.tokenInterval.intersect(c.tokenInterval).length == o.tokenInterval.length) {
+              newMentionArgValues.append(o)
+            }
+          }
+
+          def firstCharLower(string: String): String = {
+            string.head.toLower + string.tail
+          }
+          if (newMentionArgValues.nonEmpty) {
+            newArgs(firstCharLower(og._1)) = newMentionArgValues.distinct
+          }
+
+        }
+
+        val (newTrigger, args) = (curArgs ++ newArgs.toMap).partition(_._1 == "command")
+        val trigger = newTrigger.values.flatten.head.asInstanceOf[TextBoundMention]
+        toReturn.append(copyWithArgs(c, args).asInstanceOf[RelationMention].toEventMention(trigger))
+      }
+    }
+    toReturn
+  }
+
+  def locationsAreNotVariablesOrModels(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // makes sure there are no mentions where variables are actually most likely locations
+    // currently not used because NER labels identifiers as LOCATION
+    val (locations, nonLocations) = mentions.partition(_.label == "Location")
+    // everything that is not a location needs to be checked for potential location-likeness
+    // we only want to check mentions that are contentful---not just Phrases, which are basically building blocks for other mentions
+    val (phrases, nonPhrases) = nonLocations.partition(_.label == "Phrase")
+    val noLocations = new ArrayBuffer[Mention]()
+    def isInLocations(sent: Int, tokInt: Interval, locations: Seq[Mention]): Boolean = {
+      locations.exists(loc => loc.sentence == sent & loc.tokenInterval == tokInt)
+    }
+
+    for (m <- nonPhrases) {
+      val args = m.arguments.values.flatten
+      m match {
+        case m: TextBoundMention => {
+          // keep standalone identifiers that look like locations, but add info to the foundBy
+          val sent = m.sentence
+          val tokInt = m.tokenInterval
+          if (isInLocations(sent, tokInt, locations)) {
+            noLocations.append(m.asInstanceOf[TextBoundMention].copy(foundBy = m.foundBy + "++possibleLocation"))
+          } else noLocations.append(m)
+
+        }
+        case _ => {
+          var noLoc = true
+          for (arg <- args) {
+            breakable {
+              val sent = arg.sentence
+              val tokInt = arg.tokenInterval
+              if (noLoc) {
+                if (isInLocations(sent, tokInt, locations)) {
+                  noLoc = false
+                }
+              } else break
+            }
+          }
+          if (noLoc) {
+            noLocations.append(m)
+          }
+        }
+      }
+    }
+    val toReturn = (noLocations ++ locations ++ phrases).distinct
+    toReturn
+  }
 
   /** Keeps the longest mention for each group of overlapping mentions * */
   // note: edited to allow functions to have overlapping inputs/outputs
@@ -1441,14 +1574,14 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       if (tag == "POS") return false
       return (
         word.toLowerCase != word // mixed case or all UPPER
-        |
-        v.entities.exists(ent => ent.contains("B-GreekLetter")) //or is a greek letter
-        |
-        word.length == 1 && (tag.startsWith("NN") | tag == "FW") //or the word is one character long and is a noun or a foreign word (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
-        |
-        word.length < 3 && word.exists(_.isDigit) && !word.contains("-") && word.replaceAll("\\d|\\s", "").length > 0 //this is too specific; trying to get to single-letter identifiers with a subscript (e.g., u2) without getting units like m-2
-        |
-        (word.length < 6 && tag != "CD") //here, we allow words for under 6 char bc we already checked above that they are not among the freq words
+          |
+          v.entities.exists(ent => ent.contains("B-GreekLetter")) //or is a greek letter
+          |
+          word.length == 1 && (tag.startsWith("NN") | tag == "FW") //or the word is one character long and is a noun or a foreign word (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
+          |
+          word.length < 3 && word.exists(_.isDigit) && !word.contains("-") && word.replaceAll("\\d|\\s", "").length > 0 //this is too specific; trying to get to single-letter identifiers with a subscript (e.g., u2) without getting units like m-2
+          |
+          (word.length < 6 && tag != "CD") //here, we allow words for under 6 char bc we already checked above that they are not among the freq words
         )
     }
 
@@ -1496,15 +1629,18 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
 
       variableMention = m.arguments.getOrElse("variable", Seq.empty)
       descrMention = m.arguments.getOrElse("description", Seq.empty)
+      if descrMention.nonEmpty //there has to be a description
+      descrMen = descrMention.head
       if (
-        descrMention.nonEmpty && //there has to be a description
         looksLikeADescr(descrMention, state).nonEmpty && //make sure the descr looks like a descr
-        descrMention.head.text.length > 4 && //the descr can't be the length of a var
-        !descrMention.head.text.contains("=") &&
-        looksLikeAnIdentifier(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be an identifier)
-        &&
-        descrMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
-        ) || (descrMention.nonEmpty && freqWords.contains(descrMention.head.text)) //the description can be one short, frequent word
+          descrMen.text.length > 4 && //the descr can't be the length of a var
+          !descrMention.head.text.contains("=") &&
+          looksLikeAnIdentifier(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be an identifier)
+          &&
+          descrMen.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
+        ) || (descrMention.nonEmpty && freqWords.contains(descrMen.text)) //the description can be one short, frequent word: fixme: should be looking at lemmas, not head text bc frequent words are (for the most part) not plural
+      // make sure there's at least one noun or participle/gerund; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
+      if descrMen.tags.get.exists(t => (t.startsWith("N") || t == "VBN") || descrMen.words.exists(w => capitalized(w)))
     } yield m
   }
 
@@ -1573,20 +1709,17 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   def looksLikeADescr(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
     val singleCapitalWord = """^[A-Z]+$""".r
-
     for {
       m <- mentions
       descrText = m match {
-        case tb: TextBoundMention => m
-        case rm: RelationMention => m.arguments.getOrElse("description", Seq.empty).head
-        case em: EventMention => m.arguments.getOrElse("description", Seq.empty).head
+        case tb: TextBoundMention => tb
+        case rm: RelationMention => rm.arguments.getOrElse("description", Seq()).head
+        case em: EventMention => em.arguments.getOrElse("description", Seq()).head
         case _ => ???
       }
 
       if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.75
       if (descrText.words.exists(_.length > 1))
-      // make sure there's at least one noun or participle/gerund; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
-      if (descrText.tags.get.exists(t => t.startsWith("N") || t == "VBN") || descrText.words.exists(w => capitalized(w)))
       if singleCapitalWord.findFirstIn(descrText.text).isEmpty
       if !descrText.text.startsWith(")")
 
@@ -1605,6 +1738,13 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     }
   }
 
+  def relabelLocation(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val (locationMentions, other) = mentions.partition(_.label matches "Location")
+    val onlyNewLocation = locationMentions.map(m => copyWithLabel(m.arguments("loc").head, "Location").asInstanceOf[TextBoundMention].copy(foundBy = m.foundBy + "++relabelLocation"))
+    onlyNewLocation ++ other
+  }
+
+
   def paramSettingVarToModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val paramSettingMens = mentions.filter(m => m.labels.contains("ParameterSetting"))
     val modelParams = new ArrayBuffer[Mention]
@@ -1612,8 +1752,8 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       val paramSettingVars = p.arguments.filter(m => m._1 == "variable")
       for (vars <- paramSettingVars.values) {
         val variable = vars.head
-        val newArgs = Map("modelParameter" -> Seq(variable))
-        val newLabels = List("ModelParameter", "Phrase", "Entity").toSeq
+        val newLabels = List("Parameter", "Model", "Phrase", "Entity").toSeq
+
         val modelParam = new TextBoundMention(
           newLabels,
           variable.tokenInterval,
@@ -1633,7 +1773,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val modelParams = new ArrayBuffer[Mention]
     for (f <- functionMens) {
       for (args <- f.arguments.values) {
-        val newLabels = List("ModelParameter", "Phrase", "Entity").toSeq
+        val newLabels = List("Parameter", "Model", "Phrase", "Entity").toSeq
         for (arg <- args) {
           val modelParam = new TextBoundMention(
             newLabels,
@@ -1658,6 +1798,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     // more filters can be added here
     filter4
   }
+
 }
 
 

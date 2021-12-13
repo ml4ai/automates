@@ -1,0 +1,23 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+  - name: entity-location
+    label: Location
+    priority: ${priority1}
+    type: token
+    example: "These crises include the 2015 - 2016 civil war in Burundi and the 2013 - 2016 conflict in the Central African Republic ( CAR )"
+    pattern: |
+      [entity = "LOCATION"]+
+
+
+  - name: entity-location-appos
+    label: Location
+    priority: ${priority2}
+    type: dependency
+    action: relabelLocation
+    example: "These crises include the 2015 - 2016 civil war in Burundi and the 2013 - 2016 conflict in the Central African Republic ( CAR )"
+    pattern: |
+      trigger: Location
+      loc: Phrase = appos [!tag = "CD" & !word = /.*\d+.*/]
+

@@ -14,6 +14,7 @@ import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
+import org.clulab.utils.MentionUtils.{getMentionsWithLocations, getMentionsWithoutLocations}
 import org.json4s.jackson.JsonMethods._
 
 import scala.collection.mutable.ArrayBuffer
@@ -38,8 +39,8 @@ object ExtractAndExport extends App {
   val config = ConfigFactory.load()
 
   val numOfWikiGroundings: Int = config[Int]("apps.numOfWikiGroundings")
-  val inputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/input_files"
-  val outputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/output_files"
+  val inputDir: String = config[String]("apps.inputDirectory")
+  val outputDir: String = config[String]("apps.outputDirectory")
   val inputType: String = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
   //  val dataLoader = new ScienceParsedDataLoader
@@ -52,39 +53,6 @@ object ExtractAndExport extends App {
   //  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
   //  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
   // For each file in the input directory:
-
-  def getMentionsWithoutLocations(texts: Seq[String], file: File): Seq[Mention] = {
-    // this is for science parse
-    texts.flatMap(t => reader.extractFromText(t, filename = Some(file.getName)))
-  }
-
-  def getMentionsWithLocations(texts: Seq[String], file: File): Seq[Mention] = {
-    // this is for cosmos jsons
-    val textsAndFilenames = texts.map(_.split("<::>").slice(0,2).mkString("<::>"))
-    val locations = texts.map(_.split("<::>").takeRight(2).mkString("<::>")) //location = pageNum::blockIdx
-    val mentions = for (tf <- textsAndFilenames) yield {
-      val Array(text, filename) = tf.split("<::>")
-      reader.extractFromText(text, keepText = true, Some(filename))
-    }
-    // store location information from cosmos as an attachment for each mention
-    val menWInd = mentions.zipWithIndex
-    val mentionsWithLocations = new ArrayBuffer[Mention]()
-    for (tuple <- menWInd) {
-      // get page and block index for each block; cosmos location information will be the same for all the mentions within one block
-      val menInTextBlocks = tuple._1
-      val id = tuple._2
-      val location = locations(id).split("<::>").map(loc => loc.split(",").map(_.toInt)) //(_.toDouble.toInt)
-      val pageNum = location.head
-      val blockIdx = location.last
-
-      for (m <- menInTextBlocks) {
-        val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "MentionLocation"))
-        mentionsWithLocations.append(newMen)
-      }
-    }
-    mentionsWithLocations
-  }
-
   files.par.foreach { file =>
     // 1. Open corresponding output file and make all desired exporters
     println(s"Extracting from ${file.getName}")
@@ -95,10 +63,10 @@ object ExtractAndExport extends App {
     // 3. Extract causal mentions from the texts
     val mentions = if (file.getName.contains("COSMOS")) {
       // cosmos json
-      getMentionsWithLocations(texts, file)
+      getMentionsWithLocations(texts, file, reader)
     } else {
       // other file types---those don't have locations
-      getMentionsWithoutLocations(texts, file)
+      getMentionsWithoutLocations(texts, file, reader)
     }
     //The version of mention that includes routing between text vs. comment
     //    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
@@ -226,18 +194,19 @@ case class AutomatesExporter(filename: String) extends Exporter {
 case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString()))
-    pw.write("filename\tsentence\tmention type\trule found this mention\tmention text\tlocation in the pdf\targs in all next columns\n")
-    val contentMentions = mentions.filter(m => m.label.contains("Model"))
-//    val nonCrossSentences = contentMentions.filter(m => !m.isInstanceOf[CrossSentenceEventMention])
+    pw.write("filename\tsentence\tmention type\tfound by\tmention text\tlocation in the pdf\targs in all next columns\n")
+    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation") || (m.label matches "Command") || (m.label matches "Date") || (m.label matches "Location") || m.label.contains("Model")) //|| (m.label matches "Context"))
+
     for (m <- contentMentions) {
       val locationMention = returnAttachmentOfAGivenTypeOption(m.attachments, "MentionLocation").get.toUJson.obj
       pw.write(contentMentions.head.document.id.getOrElse("unk_file") + "\t")
-      pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.foundBy + "\t" + m.text.trim() + "\t" + "page:" + locationMention("pageNum").arr.mkString(",") + " block:" +  locationMention("blockIdx").arr.mkString(",") )
-     for (arg <- m.arguments) {
-       if (arg._2.nonEmpty) {
-         pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
-       }
-     }
+      pw.write(m.sentenceObj.words.mkString(" ").replace("\t", "").replace("\n","") + "\t" + 
+        m.label + "\t" + m.foundBy + "\t" + m.text.trim().replace("\t", "").replace("\n","") + "\t" + "page:" + locationMention("pageNum").arr.mkString(",") + " block:" +  locationMention("blockIdx").arr.mkString(","))
+      for (arg <- m.arguments) {
+        if (arg._2.nonEmpty) {
+          pw.write("\t" + arg._1 + ": " + arg._2.map(_.text.trim().replace("\t", "").replace("\n","")).mkString("::"))
+        }
+      }
       pw.write("\n")
     }
     pw.close()
