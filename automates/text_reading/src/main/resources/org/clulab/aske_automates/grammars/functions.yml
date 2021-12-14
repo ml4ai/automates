@@ -367,8 +367,8 @@ rules:
     example: "the mean α obtained from the 26 available days was 1.25 ± 0.03."
     pattern: |
       trigger = [word = /mean|average/]
-      input:Phrase+ = <compound | <amod
-      output:Phrase = <nsubj | <amod nsubj
+      input:Identifier+ = <compound | <amod
+      output:Phrase = <compound <nsubj | <amod nsubj
 
   - name: result_in
     label: Function

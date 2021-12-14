@@ -494,6 +494,7 @@ object ExpansionHandler {
     "^cc$".r,
     "ccomp".r,
     "cop".r,
+    "^conj".r,
     "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
     "nmod_at".r,
     "nmod_through".r,
