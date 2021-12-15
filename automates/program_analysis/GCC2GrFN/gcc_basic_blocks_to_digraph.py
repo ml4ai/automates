@@ -1,8 +1,7 @@
-import sys
 import json
-import html
+import argparse
 from typing import Dict, List
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 from enum import IntFlag
 
 import networkx as nx
@@ -100,8 +99,10 @@ def make_bbnode(bb: Dict):
 
 
 def digraph_to_pdf(digraph: DiGraph, filename: str):
-    """Convert the digraph to a PyGraphviz AGraph, and then
-    save it to a pdf with filename `filename`"""
+    """
+    Convert the digraph to a PyGraphviz AGraph, and then
+    save it to a pdf with filename `filename`
+    """
 
     agraph = nx.nx_agraph.to_agraph(digraph)
     agraph.graph_attr.update(
@@ -113,6 +114,10 @@ def digraph_to_pdf(digraph: DiGraph, filename: str):
 
 
 def json_ast_to_bb_graphs(gcc_ast: Dict):
+    """
+    Given a gcc AST json, create the networkx basic block digraphs for each function in it.
+    Generates the digraphs pdfs, and also prints the edge data out to the console
+    """
     input_file = gcc_ast["mainInputFilename"]
     input_file_stripped = input_file.split("/")[-1]
     functions = gcc_ast["functions"]
@@ -128,7 +133,15 @@ def json_ast_to_bb_graphs(gcc_ast: Dict):
         
 
 def main():
-    json_file = sys.argv[1]
+    parser = argparse.ArgumentParser(description=("Creates networkx digraphs for the "
+            "basic blocks in each function from the provided gcc ast json file.  "
+            "The edge data for each digraph is printed to the console, and a "
+            "pdf of the graph is generated in the cwd."))
+    parser.add_argument("json_file", nargs=1, 
+            help="the gcc ast json file to be read")
+
+    json_file = parser.parse_args().json_file[0]
+
     print(f"Loaded json_file: {json_file}")
     ast_json = json.load(open(json_file))
 
