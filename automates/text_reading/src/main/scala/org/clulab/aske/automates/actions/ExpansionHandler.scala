@@ -458,6 +458,7 @@ object ExpansionHandler {
     "^nmod_given".r,
     "^nmod_since".r,
     "^nmod_without$".r,
+    "^nmod_over".r,
     "nmod_in".r,
     "^nsubj".r,
     "^punct".r,
