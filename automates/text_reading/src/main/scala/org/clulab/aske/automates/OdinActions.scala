@@ -1,5 +1,6 @@
 package org.clulab.aske.automates
 
+
 import com.typesafe.scalalogging.LazyLogging
 import edu.stanford.nlp.dcoref.Dictionaries.MentionType
 import org.clulab.aske.automates.actions.ExpansionHandler
@@ -11,14 +12,17 @@ import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
 import org.clulab.aske.automates.attachments.{ContextAttachment, DiscontinuousCharOffsetAttachment, FunctionAttachment, ParamSetAttachment, ParamSettingIntAttachment, UnitAttachment}
 import org.clulab.aske.automates.mentions.CrossSentenceEventMention
+import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
+import org.clulab.utils.MentionUtils.distinctByText
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 import scala.util.Try
 import scala.util.matching.Regex
+import scala.util.control.Breaks._
 
 
 
@@ -40,7 +44,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val expandedIdentifiers = keepLongestIdentifier(identifiers)
       val (descriptions, other) = (expandedIdentifiers ++ non_identifiers).partition(m => m.label.contains("Description"))
       val (functions, nonFunc) = other.partition(m => m.label.contains("Function"))
-      val (modelDescrs, nonModelDescrs) = nonFunc.partition(m => m.label == "ModelDescr")
+      val (modelDescrs, nonModelDescrs) = nonFunc.partition(m => m.labels.contains("ModelDescr"))
 
       // only expand concepts in param settings and units, not the identifier-looking variables (e.g., expand `temperature` in `temparature is set to 0`, but not `T` in `T is set to 0`)
       val (paramSettingsAndUnitsNoIdfr, nonExpandable) = nonModelDescrs.partition(m => (m.label.contains("ParameterSetting") || m.label.contains("UnitRelation")) && !m.arguments("variable").head.labels.contains("Identifier"))
@@ -210,7 +214,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   // solution from https://stackoverflow.com/questions/9542126/how-to-find-if-a-scala-string-is-parseable-as-a-double-or-not
-  def parseDouble(s: String): Option[Double] = Try { s.toDouble }.toOption
+  def parseDouble(s: String): Option[Double] = Try {
+    s.toDouble
+  }.toOption
 
   def processParamSettingInt(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val newMentions = new ArrayBuffer[Mention]()
@@ -274,7 +280,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         // we have remapped the args to new names already; now will need to update the paths map to have correct new names and the correct synpaths for switched out min/max values
         for (arg <- newArgs) {
           // for each arg type, get the synpath for its new mention (for now, assume one arg of each type)
-          newPaths +=(arg._1 -> Map(arg._2.head -> synPaths(newArgs(arg._1).head)))
+          newPaths += (arg._1 -> Map(arg._2.head -> synPaths(newArgs(arg._1).head)))
         }
       }
 
@@ -364,81 +370,119 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     resolved ++ woIt
   }
 
+  // resolve anaphors with the closest model name that is found within the same block & within 10 sentences
+  // the resolved mentions are cross sentence event mention type (associated with two sentences)
   def resolveModelCoref(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (models, nonModels) = mentions.partition(m => m.label == "ModelDescr")
     val (theModel, modelNames) = models.partition(m => m.arguments.contains("modelName") && m.arguments("modelName").head.foundBy == "the/this_model" || m.arguments.contains("modelName") && m.arguments("modelName").head.foundBy == "model_pronouns")
-    val resolved: Seq[Mention] = theModel.map(m => replaceTheModel(mentions, m))
+    val resolved: Seq[Mention] = theModel.map(m => replaceTheModel(mentions, m).get)
     (resolved ++ modelNames ++ nonModels).distinct
   }
 
-  def replaceTheModel(mentions: Seq[Mention], origModel: Mention): Mention = {
+  def replaceTheModel(mentions: Seq[Mention], origModel: Mention): Option[Mention] = {
     val previousModel = returnPreviousModel(mentions, origModel)
     val newArgs = mutable.Map[String, Seq[Mention]]()
     for (arg <- origModel.arguments) {
       if (arg._1 == "modelName") {
-        if (previousModel.nonEmpty) {
+        if (previousModel.nonEmpty) { // if there is a previous model name to be resolved with, that model name is attached to newArgs
           newArgs += (arg._1 -> Seq(previousModel.get))
         }
-      } else {
+      } else { // if not, original model name is attached to newArgs
         newArgs += (arg._1 -> origModel.arguments(arg._1))
       }
     }
-    copyWithArgs(origModel, newArgs.toMap)
+    val finalMen = if (previousModel.nonEmpty) { // create a new cross sentence event mention with the newArgs & sentences
+      val sentences = new ArrayBuffer[Int]
+      sentences.append(previousModel.get.sentence)
+      sentences.append(origModel.sentence)
+      val resolvedMen = new CrossSentenceEventMention(
+        origModel.labels,
+        origModel.tokenInterval,
+        origModel.asInstanceOf[EventMention].trigger,
+        newArgs.toMap,
+        origModel.paths,
+        origModel.sentence,
+        sentences,
+        origModel.document,
+        origModel.keep,
+        origModel.foundBy ++ "++ resolveModelCoref",
+        origModel.attachments
+      )
+      Some(resolvedMen)
+    } else Some(copyWithArgs(origModel, newArgs.toMap))
+    finalMen
   }
 
+  // find the closest model name with which an anaphor (i.e., the/this model, pronouns) will be resolved. If there's none, return none.
   def returnPreviousModel(mentions: Seq[Mention], origModel: Mention): Option[Mention] = {
     val (models, nonModels) = mentions.partition(m => m.label == "Model")
     val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model" || m.foundBy == "model_pronouns")
+    // previousModels is for cases where model name is given within the same sentence with the anaphor
+    // previousModels2 is for cases where model name is given in the previous sentences
     val previousModels = modelNames.filter(_.sentence <= origModel.sentence)
     val previousModels2 = modelNames.filter(_.sentence < origModel.sentence)
     if (previousModels.nonEmpty) {
       val selectedModel = previousModels.maxBy(_.sentence)
       val finalModel = if (selectedModel.sentence == origModel.sentence) {
+        // when the model name is given within the same sentence with the anaphor, see if the selected model name comes before the anaphor
         if (selectedModel.startOffset < origModel.startOffset) {
-          Some(selectedModel)
+          Some(selectedModel) // if yes, return that
+          // if not, return the next closest model name. If there's no such model name, return none.
         } else if (previousModels2.nonEmpty) Some(previousModels2.maxBy(_.sentence)) else None
-      } else Some(selectedModel)
-      if (origModel.sentence - finalModel.get.sentence < 10) finalModel else None
-    } else None
+      } else Some(selectedModel) // if the model name is given in the previous sentence, just return that
+      if (finalModel.nonEmpty && origModel.sentence - finalModel.get.sentence < 10) finalModel else None // if the closest model name is located within 10 sentences, return final model. If not, return none.
+    } else None // if there's no previous model name, return none.
   }
 
-  def processFunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+  def processFunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = { // action for function attachments
     val newMentions = new ArrayBuffer[Mention]()
     for (m <- mentions) {
       val newArgs = mutable.Map[String, Seq[Mention]]()
-      val trigger = if (m.isInstanceOf[EventMention]) m.asInstanceOf[EventMention].trigger.text else "no Trigger"
+      val trigger = if (m.isInstanceOf[EventMention]) {
+        m.asInstanceOf[EventMention].trigger.text
+      }
+      else if (m.isInstanceOf[CrossSentenceEventMention]) {
+        m.asInstanceOf[CrossSentenceEventMention].trigger.text
+      } else "no Trigger"
       val foundBy = m.foundBy
       val att = new FunctionAttachment("FunctionAtt", trigger, foundBy)
       newMentions.append(m.withAttachment(att))
-      }
-      newMentions
     }
+    newMentions
+  }
 
-    def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-      val newMentions = new ArrayBuffer[Mention]()
-      for (m <- mentions) {
+  def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val firstTokenOfValue = m.arguments("value").head.tokenInterval.start
+      // if value is first token in a sentence, that is probably just the section number in a paper
+      if (firstTokenOfValue != 0) {
         // assume there's only one arg of each type
         val tokenIntervals = m.arguments.map(_._2.head).map(_.tokenInterval).toSeq
-        // takes care of accidental arg overlap
-        if (tokenIntervals.distinct.length == tokenIntervals.length) {
-          val newArgs = mutable.Map[String, Seq[Mention]]()
-          val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) {
+        val labelsOfTextBoundMentions = m.arguments.map(_._2.head.label).toSeq
+        // make sure mention labels are no identical (basically, checking if both are Values---they should not be)
+        if (labelsOfTextBoundMentions.distinct.length == labelsOfTextBoundMentions.length) {
+          // takes care of accidental arg overlap
+          if (tokenIntervals.distinct.length == tokenIntervals.length) {
+            val newArgs = mutable.Map[String, Seq[Mention]]()
+            val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) {
 
-            newArgs += ("variable" -> Seq(copyWithLabel(m.arguments("variable").head, "Identifier")), "value" -> m.arguments("value"))
-            "variable"
-          } else {
-            newArgs += ("variable" -> m.arguments("variable"), "value" -> m.arguments("value"))
-            "concept"
+              newArgs += ("variable" -> Seq(copyWithLabel(m.arguments("variable").head, "Identifier")), "value" -> m.arguments("value"))
+              "variable"
+            } else {
+              newArgs += ("variable" -> m.arguments("variable"), "value" -> m.arguments("value"))
+              "concept"
+            }
+            val att = new ParamSetAttachment(attachedTo, "ParamSetAtt")
+            newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
           }
-
-          val att = new ParamSetAttachment(attachedTo, "ParamSetAtt")
-          newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
         }
-
       }
-      newMentions
     }
+    newMentions
+  }
 
+  // make contextualized event mentions into attachments.
   def processRuleBasedContextEvent(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val contextAttachedMens = new ArrayBuffer[Mention]
     for (m <- mentions) {
@@ -455,7 +499,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def contextToAttachment(menToAttach: Mention, contexts: Seq[Mention], foundBy: String, state: State = new State()): Mention = {
-    val newArgs = mutable.Map[String, Seq[Mention]]()
     val att = new ContextAttachment("ContextAtt", context = contextsToStrings(contexts, state), foundBy)
     menToAttach.withAttachment(att)
   }
@@ -490,23 +533,147 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def keepLongestIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-      // used to avoid identifiers like R ( t ) being found as separate R, t, R(t, and so on
-      val maxInGroup = new ArrayBuffer[Mention]()
-      val groupedBySent = mentions.groupBy(_.sentence)
-      for (gbs <- groupedBySent) {
-        val groupedByIntervalOverlap = groupByTokenOverlap(gbs._2)
-        for (item <- groupedByIntervalOverlap) {
-          val longest = item._2.maxBy(_.tokenInterval.length)
-          maxInGroup.append(longest)
+    // used to avoid identifiers like R ( t ) being found as separate R, t, R(t, and so on
+    val maxInGroup = new ArrayBuffer[Mention]()
+    val groupedBySent = mentions.groupBy(_.sentence)
+    for (gbs <- groupedBySent) {
+      val groupedByIntervalOverlap = groupByTokenOverlap(gbs._2)
+      for (item <- groupedByIntervalOverlap) {
+        val longest = item._2.maxBy(_.tokenInterval.length)
+        maxInGroup.append(longest)
+      }
+    }
+    maxInGroup.distinct
+  }
+
+
+  // sentence for debugging Bearing in mind , we set our default setting to the refugee move speed is equal to 200 km per day and the awareness of surrounding is 1 link .
+  // todo: somehow link resulting events to definitions, maybe in previous three sent window
+  def assembleVarsWithParamsAndUnits(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val (withVar, noVar) = mentions.partition(_.arguments.keys.toList.contains("variable"))
+    val groupedBySent = withVar.groupBy(_.sentence)
+    val toReturn = new ArrayBuffer[Mention]()
+    for (g <- groupedBySent) {
+      val groupedByVar = g._2.groupBy(_.arguments("variable"))
+      // event mentions grouped by var (so, checking which ones have an overlapping variable mention)
+      for (gv <- groupedByVar) {
+        // if there are more than two in a group that are distinct by text, that means we can assemble them into an event
+        val mentionsInGroup = gv._2
+        if (distinctByText(mentionsInGroup).length > 1) {
+          // do not exclude component events (param settings and units) from output
+          for (v <- mentionsInGroup) toReturn.append(v)
+          val newArgs = mutable.Map[String, Seq[Mention]]()
+          for (m <- mentionsInGroup) {
+            // it's fine if the var mention is overwritten because they are the same; the other args that matter are not gonna get overwritten
+            for (arg <- m.arguments) {
+              newArgs(arg._1) = arg._2
+            }
+          }
+          val assembledMention = copyWithLabel(copyWithArgs(gv._2.head, newArgs.toMap), "ParamAndUnit")
+          toReturn.append(assembledMention)
+
+        } else {
+          // since the mentions in the group are not distinct by text, keep all of them
+            for (m <- mentionsInGroup) toReturn.append(m)
         }
       }
-      maxInGroup.distinct
     }
+    toReturn.distinct ++ noVar
+  }
+
+  def processCommands(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val groupBySent = mentions.groupBy(_.sentence)
+    val toReturn = new ArrayBuffer[Mention]()
+    for (g <- groupBySent) {
+      val (commands, other) = g._2.partition(_.label == "CommandSequence")
+      for (o <- other) toReturn.append(o)
+      val otherGroupedByLabel = other.groupBy(_.label)
+      val commandStartSameAsSentStart = commands.filter(m => m.tokenInterval.start == 0)
+      for (c <- commandStartSameAsSentStart) {
+        val curArgs = c.arguments
+        val newArgs = mutable.Map[String, Seq[Mention]]()
+        // for every other mention group
+        for (og <- otherGroupedByLabel.filter(m => (m._1 == "Filename" || m._1 == "Repository" || m._1 == "CommandLineParamValuePair" || m._1 == "CommLineParameter"))) {
+          // there could be multiple mentions that we will want to become command args
+          val newMentionArgValues = new ArrayBuffer[Mention]()
+          for (o <- og._2) {
+            // if the other mention is completely subsumed by command mention, add the other mention to command args
+            if (o.tokenInterval.intersect(c.tokenInterval).length == o.tokenInterval.length) {
+              newMentionArgValues.append(o)
+            }
+          }
+
+          def firstCharLower(string: String): String = {
+            string.head.toLower + string.tail
+          }
+          if (newMentionArgValues.nonEmpty) {
+            newArgs(firstCharLower(og._1)) = newMentionArgValues.distinct
+          }
+
+        }
+
+        val (newTrigger, args) = (curArgs ++ newArgs.toMap).partition(_._1 == "command")
+        val trigger = newTrigger.values.flatten.head.asInstanceOf[TextBoundMention]
+        toReturn.append(copyWithArgs(c, args).asInstanceOf[RelationMention].toEventMention(trigger))
+      }
+    }
+    toReturn
+  }
+
+  def locationsAreNotVariablesOrModels(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // makes sure there are no mentions where variables are actually most likely locations
+    // currently not used because NER labels identifiers as LOCATION
+    val (locations, nonLocations) = mentions.partition(_.label == "Location")
+    // everything that is not a location needs to be checked for potential location-likeness
+    // we only want to check mentions that are contentful---not just Phrases, which are basically building blocks for other mentions
+    val (phrases, nonPhrases) = nonLocations.partition(_.label == "Phrase")
+    val noLocations = new ArrayBuffer[Mention]()
+    def isInLocations(sent: Int, tokInt: Interval, locations: Seq[Mention]): Boolean = {
+      locations.exists(loc => loc.sentence == sent & loc.tokenInterval == tokInt)
+    }
+
+    for (m <- nonPhrases) {
+      val args = m.arguments.values.flatten
+      m match {
+        case m: TextBoundMention => {
+          // keep standalone identifiers that look like locations, but add info to the foundBy
+          val sent = m.sentence
+          val tokInt = m.tokenInterval
+          if (isInLocations(sent, tokInt, locations)) {
+            noLocations.append(m.asInstanceOf[TextBoundMention].copy(foundBy = m.foundBy + "++possibleLocation"))
+          } else noLocations.append(m)
+
+        }
+        case _ => {
+          var noLoc = true
+          for (arg <- args) {
+            breakable {
+              val sent = arg.sentence
+              val tokInt = arg.tokenInterval
+              if (noLoc) {
+                if (isInLocations(sent, tokInt, locations)) {
+                  noLoc = false
+                }
+              } else break
+            }
+          }
+          if (noLoc) {
+            noLocations.append(m)
+          }
+        }
+      }
+    }
+    val toReturn = (noLocations ++ locations ++ phrases).distinct
+    toReturn
+  }
 
   /** Keeps the longest mention for each group of overlapping mentions * */
   // note: edited to allow functions to have overlapping inputs/outputs
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val (functions, other) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
+    val (functions, nonFunctions) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
+    val (modelDescrs, other) = nonFunctions.partition(m => m.label == "ModelDescr")
+    // distinguish between EventMention and CrossSentenceMention in modelDescr mentions
+    val (modelDescrCm, modelDescrEm) = modelDescrs.partition(_.isInstanceOf[CrossSentenceEventMention])
     // distinguish between EventMention and RelationMention in functionMentions
     val (functionEm, functionRm) = functions.partition(_.isInstanceOf[EventMention])
     val mns: Iterable[Mention] = for {
@@ -522,8 +689,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       m <- b
       longest = b.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
+    val mcs: Iterable[Mention] = for {
+      (k, v) <- modelDescrCm.groupBy(m => (m.sentence, m.asInstanceOf[CrossSentenceEventMention].trigger.tokenInterval))
+      m <- v
+      longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
+    } yield longest
+    val mes: Iterable[Mention] = for {
+      (k, v) <- modelDescrEm.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval))
+      m <- v
+      longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
+    } yield longest
 
-    mns.toVector.distinct ++ ems.toVector.distinct ++ functionRm
+    mns.toVector.distinct ++ ems.toVector.distinct ++ mcs.toVector.distinct ++ mes.toVector.distinct ++ functionRm
   }
 
 
@@ -1028,6 +1205,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   }
 
   def filterFunction(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    // this filter is for filtering out function args with the same token interval (within a single mention)
     val toReturn = new ArrayBuffer[Mention]()
     val (functions, other) = mentions.partition(_.label == "Function")
     for (f <- functions) {
@@ -1035,7 +1213,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       val newOutputs = new ArrayBuffer[Mention]()
       val newTrigger = new ArrayBuffer[Mention]()
       for (argType <- f.arguments) {
-        val sameInterval = argType._2.groupBy(_.tokenInterval) // group by token intervals
+        val sameInterval = argType._2.groupBy(_.tokenInterval) // group function args by token intervals
         for (s <- sameInterval) {
           val numOfArgs = s._2.toList.length
           if (argType._1 == "input") {
@@ -1082,33 +1260,35 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   }
 
   def combineFunction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // this function is to combine function fragments with the closest function mention.
     val (functions, other) = mentions.partition(_.label == "Function")
+    // distinguish mentions that are complete (have both input and output) vs. function fragments (have either input or output)
     val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq.empty).nonEmpty && m.arguments.getOrElse("output", Seq.empty).nonEmpty)
     val toReturn = new ArrayBuffer[Mention]()
     for (f <- fragment) {
       val newInputs = new ArrayBuffer[Mention]()
       val newOutputs = new ArrayBuffer[Mention]()
-      val prevSentences = functions.filter(_.sentence < f.sentence)
+      val prevSentences = complete.filter(_.sentence < f.sentence)
       if (prevSentences.nonEmpty) {
-        val menToAttach = prevSentences.maxBy(_.sentence)
-        if (f.arguments.contains("input")) {
+        val menToAttach = prevSentences.maxBy(_.sentence) // find the closest function mention that are complete
+        if (f.arguments.contains("input")) { // if function fragment contains input arg, combine it with the input args of the mention to attach
           newInputs ++= menToAttach.arguments.getOrElse("input", Seq.empty) ++ f.arguments.getOrElse("input", Seq.empty)
-        }
-        if (f.arguments.contains("output")) {
+        } else newInputs ++= menToAttach.arguments.getOrElse("input", Seq.empty) // if not, just append original input args to newInputs
+        if (f.arguments.contains("output")) { // if function fragment contains output arg, combine it with the output args of the mention to attach
           newOutputs ++= menToAttach.arguments.getOrElse("output", Seq.empty) ++ f.arguments.getOrElse("output", Seq.empty)
-        }
-        val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
+        } else newOutputs ++= menToAttach.arguments.getOrElse("output", Seq.empty) // if not, just append original output args to newInputs
+        val newArgs = Map("input" -> newInputs, "output" -> newOutputs) // make new args with the combined inputs and outputs
         val sentences = new ArrayBuffer[Int]
         sentences.append(f.sentence)
         sentences.append(menToAttach.sentence)
-        val newFunctions = new CrossSentenceEventMention(
+        val newFunctions = new CrossSentenceEventMention( // make new cross sentence event mention with the new args and sentences
           menToAttach.labels,
           menToAttach.tokenInterval, // tokenInterval is only for the first sentence
           menToAttach.asInstanceOf[EventMention].trigger,
           newArgs,
           menToAttach.paths, // path is off
           menToAttach.sentence,
-          sentences,
+          sentences, // contains two sentences (menToAttach's sentence & function fragment's sentence)
           menToAttach.document,
           menToAttach.keep,
           menToAttach.foundBy,
@@ -1121,11 +1301,13 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   }
 
   def filterFunctionArgs(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    // this filter is for filtering out function mentions with illegal arguments (i.e., units, reflexive pronouns, or verbs are not likely to be legal arguments)
     val toReturn = new ArrayBuffer[Mention]()
     val (functions, other) = mentions.partition(_.label == "Function")
     val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq.empty).nonEmpty && m.arguments.getOrElse("output", Seq.empty).nonEmpty)
     for (c <- complete) {
-      val newInputs = c.arguments("input").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && m.tags.get.head != "VB" && m.tags.get.head != "VBN")
+      // if a mention contains both input and output, both of them need to be filtered
+      val newInputs = c.arguments("input").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && m.tags.get.head != "VB")
       val newOutputs = c.arguments("output").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && m.tags.get.head != "VB" && m.tags.get.head != "VBN")
       if (newInputs.nonEmpty && newOutputs.nonEmpty) {
         val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
@@ -1134,6 +1316,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       }
     }
     for (f <- fragment) {
+      // if a mention contains either input or output only, whichever the mention has needs to be filtered out
       if (f.arguments.contains("input")) {
         val inputFilter = f.arguments("input").filter(!_.label.contains("Unit") && f.arguments.values.head.head.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
         if (inputFilter.nonEmpty) {
@@ -1155,6 +1338,8 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   }
 
   def filterInputOverlaps(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    // this is for filtering out overlapping input arguments (identifier vs. phrase) within a single function mention
+    // todo: see if this action and filterOutputOverlaps can replace filterFunction in all cases. If they do, get rid of filterFunction action.
     val toReturn = new ArrayBuffer[Mention]()
     for (m <- mentions) {
       val identifierInputs = new ArrayBuffer[Mention]()
@@ -1202,54 +1387,89 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   }
 
   def filterOutputOverlaps(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val phraseTokInt = new ArrayBuffer[Interval]
+    // this is for filtering out function mentions with overlapping output arguments (identifier output vs. phrase output)
     val newMentions = new ArrayBuffer[Mention]
+    // group function mentions by sentence, trigger, foundBy
     val groupMens = mentions.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval, m.foundBy))
     for (group <- groupMens) {
       if (group._2.head.arguments("output").nonEmpty) {
+        // distinguish identifier output vs. phrase output
         val (identOutputMen, phraseOutputMen) = group._2.partition(_.arguments("output").head.label.contains("Identifier"))
         if (identOutputMen.nonEmpty) {
           for (i <- identOutputMen) {
             val outputNumCheck = new ArrayBuffer[Mention]
             if (phraseOutputMen.nonEmpty) {
               for (p <- phraseOutputMen) {
+                // see if identifier output overlaps with phrase output(s)
                 val overlappingInterval = i.arguments("output").head.tokenInterval.overlaps(p.arguments("output").head.tokenInterval)
-                if (!overlappingInterval) {
+                if (!overlappingInterval) { // if there's no overlap, append the mention to outputNumCheck
                   outputNumCheck.append(i)
                 }
                 else Seq.empty
               }
+              // if the length of outputNumCheck and the length of phraseOutputMen are the same,
+              // it means that the identifier output don't overlap with any phrase output. So append the mention with identifier output to newMentions
+              // if the length is different, that means there have been at least one overlap between identifier output and phrase output.
               if (outputNumCheck.length == phraseOutputMen.length) newMentions.append(i) else Seq.empty
             }
           }
         }
-        newMentions ++= phraseOutputMen
-      } else newMentions ++= group._2
+        newMentions ++= phraseOutputMen // if there is no identifier output, just append all the mentions with phrase outputs
+      } else newMentions ++= group._2 // if there is no output, just append all the mentions to the newMentions
     }
     newMentions
   }
 
-  def filterModelDescrs(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val newMentions = new ArrayBuffer[Mention]
-    val groupByModelInt = mentions.groupBy(_.arguments("modelName").head.tokenInterval)
-    for (m <- groupByModelInt) {
-      val groupByDescrInt = m._2.groupBy(_.arguments("modelDescr").head.tokenInterval)
-      for (d <- groupByDescrInt) {
-        val groupByTrigInt = d._2.groupBy(_.asInstanceOf[EventMention].trigger.tokenInterval)
-        for (t <- groupByTrigInt) {
-          newMentions.append(t._2.head)
+  def filterModelDescrs(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // this is for filtering out modelDescr mentions with same sentence, same trigger, and same args (modelName, modelDescr)
+    val newModelDescr = new ArrayBuffer[Mention]
+    val groupBySentence = mentions.groupBy(_.sentence) // group by sentence
+    for (s <- groupBySentence) {
+      val groupByModelInt = s._2.groupBy(_.arguments("modelName").head.tokenInterval) // group again by model name token interval
+      for (m <- groupByModelInt) {
+        val groupByTrigInt = m._2.groupBy(_.asInstanceOf[EventMention].trigger.tokenInterval) // group again by trigger token interval
+        for (d <- groupByTrigInt) {
+         val groupByModelDescr = d._2.groupBy(_.arguments("modelDescr").head.tokenInterval)
+          for (g <- groupByModelDescr) {
+            newModelDescr.append(g._2.head)
+            }
+          }
         }
       }
-    }
-    newMentions
+    newModelDescr
   }
 
   def filterModelNames(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val filterModelNames = mentions.filterNot(m => m.foundBy == "model_pronouns" || m.foundBy == "the/this_model")
-    filterModelNames
+    // this is to filter out unwanted model names. (i.e., anaphors that were not associated with any modelDescrs or "flee" as general verb "flee", not model "Flee"
+    // this method has to be applied after all modelDescr extractions are done
+    val filter1 = mentions.filterNot(m => m.foundBy == "model_pronouns" || m.foundBy == "the/this_model" || m.foundBy == "our_model")
+    val filter2 = filter1.filterNot(m => m.text == "flee") // couldn't get rid of verb "flee" by using VB tag, because real model name "Flee" also got VB tag.
+    filter2
+  }
+
+  def compoundModelCompletion(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // this method is for completing model names that were extracted by "model_compound" rule.
+    // without this method, the word "model", which is a trigger of the "model_compound" rule, is not captured as a part of the model name.
+    // And it sometimes makes the model name look weird (i.e., "standard" can be extracted as a model name, without the word "model")
+    val newMentions = new ArrayBuffer[Mention]
+    for (m <- mentions) {
+      val completion = new TextBoundMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        "compoundModelCompletion",
+        m.attachments
+      )
+      newMentions.append(completion)
+    }
+    newMentions
   }
 
   def makeNewMensWithContexts(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // this method is used to attach contexts to function mentions and parameter setting mentions
+    // If the token interval of a context overlaps with the token interval of a mention, attach the context to the mention
     val contextTokInt = new ArrayBuffer[Interval]
     val mensSelected = new ArrayBuffer[Mention]
     val contextSelected = new ArrayBuffer[Mention]
@@ -1259,24 +1479,24 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val contextMens = mentions.filter(_.label == "Context")
     if (mensToAttach.nonEmpty) {
       for (m <- mensToAttach) {
-        val contextSameSntnce = contextMens.filter(c => c.sentence == m.sentence)
-        if (contextSameSntnce.nonEmpty) {
+        val contextSameSntnce = contextMens.filter(c => c.sentence == m.sentence) // find any contexts that are within the same sentence with the mention
+        if (contextSameSntnce.nonEmpty) { // if there are, attach their token intervals to contextTokInt
           for (c <- contextSameSntnce) contextTokInt += c.tokenInterval
-          if (findOverlappingInterval(m.tokenInterval, contextTokInt.toList) != None) {
+          if (findOverlappingInterval(m.tokenInterval, contextTokInt.toList) != None) { // if there is an overlap between the context and the mention, attach mention to mensSelected
             mensSelected.append(m)
-          } else toReturn.append(m)
+          } else toReturn.append(m) // if not, append the mention to toReturn
           if (mensSelected.nonEmpty) {
             for (m <- mensSelected) {
               for (c <- contextSameSntnce) {
                 if (m.sentence == c.sentence && m.tokenInterval.overlaps(c.tokenInterval)) {
-                  contextSelected.append(c)
+                  contextSelected.append(c) // for each mentions in mensSelected, find contexts to append (within same sentence, token interval overlaps)
                 }
               }
-              val filteredContext = filterContextSelected(contextSelected, m)
+              val filteredContext = filterContextSelected(contextSelected, m) // filter unwanted contexts before attaching to the mention
               if (filteredContext.nonEmpty) {
-                val newMen = contextToAttachment(m, filteredContext, foundBy = "tokenInterval overlap", state)
+                val newMen = contextToAttachment(m, filteredContext, foundBy = "tokenInterval overlap", state) // attach the context(s) to the mention
                 toReturn.append(newMen)
-              } else toReturn.append(m)
+              } else toReturn.append(m) // if all contexts were filtered, just append the original mention to toReturn
             }
           }
         } else toReturn.append(m)
@@ -1286,6 +1506,8 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   }
 
   def filterContextSelected(contexts: Seq[Mention], mention: Mention): Seq[Mention] = {
+    // filter contexts that overlaps with the mentions' arguments or triggers
+    // also filter out contexts of which token interval is the same with the mention's token interval
     val filteredContext = new ArrayBuffer[Mention]
     val contextNumCheck = new ArrayBuffer[Mention]
     val completeFilterContext = new ArrayBuffer[Mention]
@@ -1388,14 +1610,14 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       if (tag == "POS") return false
       return (
         word.toLowerCase != word // mixed case or all UPPER
-        |
-        v.entities.exists(ent => ent.contains("B-GreekLetter")) //or is a greek letter
-        |
-        word.length == 1 && (tag.startsWith("NN") | tag == "FW") //or the word is one character long and is a noun or a foreign word (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
-        |
-        word.length < 3 && word.exists(_.isDigit) && !word.contains("-") && word.replaceAll("\\d|\\s", "").length > 0 //this is too specific; trying to get to single-letter identifiers with a subscript (e.g., u2) without getting units like m-2
-        |
-        (word.length < 6 && tag != "CD") //here, we allow words for under 6 char bc we already checked above that they are not among the freq words
+          |
+          v.entities.exists(ent => ent.contains("B-GreekLetter")) //or is a greek letter
+          |
+          word.length == 1 && (tag.startsWith("NN") | tag == "FW") //or the word is one character long and is a noun or a foreign word (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
+          |
+          word.length < 3 && word.exists(_.isDigit) && !word.contains("-") && word.replaceAll("\\d|\\s", "").length > 0 //this is too specific; trying to get to single-letter identifiers with a subscript (e.g., u2) without getting units like m-2
+          |
+          (word.length < 6 && tag != "CD") //here, we allow words for under 6 char bc we already checked above that they are not among the freq words
         )
     }
 
@@ -1443,15 +1665,18 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
 
       variableMention = m.arguments.getOrElse("variable", Seq.empty)
       descrMention = m.arguments.getOrElse("description", Seq.empty)
+      if descrMention.nonEmpty //there has to be a description
+      descrMen = descrMention.head
       if (
-        descrMention.nonEmpty && //there has to be a description
         looksLikeADescr(descrMention, state).nonEmpty && //make sure the descr looks like a descr
-        descrMention.head.text.length > 4 && //the descr can't be the length of a var
-        !descrMention.head.text.contains("=") &&
-        looksLikeAnIdentifier(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be an identifier)
-        &&
-        descrMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
-        ) || (descrMention.nonEmpty && freqWords.contains(descrMention.head.text)) //the description can be one short, frequent word
+          descrMen.text.length > 4 && //the descr can't be the length of a var
+          !descrMention.head.text.contains("=") &&
+          looksLikeAnIdentifier(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be an identifier)
+          &&
+          descrMen.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
+        ) || (descrMention.nonEmpty && freqWords.contains(descrMen.text)) //the description can be one short, frequent word: fixme: should be looking at lemmas, not head text bc frequent words are (for the most part) not plural
+      // make sure there's at least one noun or participle/gerund; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
+      if descrMen.tags.get.exists(t => (t.startsWith("N") || t == "VBN") || descrMen.words.exists(w => capitalized(w)))
     } yield m
   }
 
@@ -1520,20 +1745,17 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   def looksLikeADescr(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
     val singleCapitalWord = """^[A-Z]+$""".r
-
     for {
       m <- mentions
       descrText = m match {
-        case tb: TextBoundMention => m
-        case rm: RelationMention => m.arguments.getOrElse("description", Seq.empty).head
-        case em: EventMention => m.arguments.getOrElse("description", Seq.empty).head
+        case tb: TextBoundMention => tb
+        case rm: RelationMention => rm.arguments.getOrElse("description", Seq()).head
+        case em: EventMention => em.arguments.getOrElse("description", Seq()).head
         case _ => ???
       }
 
       if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.75
       if (descrText.words.exists(_.length > 1))
-      // make sure there's at least one noun or participle/gerund; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
-      if (descrText.tags.get.exists(t => t.startsWith("N") || t == "VBN") || descrText.words.exists(w => capitalized(w)))
       if singleCapitalWord.findFirstIn(descrText.text).isEmpty
       if !descrText.text.startsWith(")")
 
@@ -1551,7 +1773,73 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       case em: EventMention => em.copy(labels = taxonomy.hypernymsFor(label))
     }
   }
+
+  def relabelLocation(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val (locationMentions, other) = mentions.partition(_.label matches "Location")
+    val onlyNewLocation = locationMentions.map(m => copyWithLabel(m.arguments("loc").head, "Location").asInstanceOf[TextBoundMention].copy(foundBy = m.foundBy + "++relabelLocation"))
+    onlyNewLocation ++ other
+  }
+
+
+  def paramSettingVarToModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // this is for creating Parameter mentions from variable args in paramSetting mentions
+    val paramSettingMens = mentions.filter(m => m.labels.contains("ParameterSetting"))
+    val modelParams = new ArrayBuffer[Mention]
+    for (p <- paramSettingMens) {
+      val paramSettingVars = p.arguments.filter(m => m._1 == "variable")
+      for (vars <- paramSettingVars.values) {
+        val variable = vars.head
+        val newLabels = List("Parameter", "Model", "Phrase", "Entity").toSeq
+
+        val modelParam = new TextBoundMention(
+          newLabels,
+          variable.tokenInterval,
+          variable.sentence,
+          variable.document,
+          variable.keep,
+          "paramSettingVarToModelParam",
+          variable.attachments)
+        modelParams.append(modelParam)
+      }
+    }
+    modelParams
+  }
+
+  def functionArgsToModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // this is for creating Parameter mentions from Function arguments (inputs, outputs)
+    val functionMens = mentions.filter(_.label == "Function")
+    val modelParams = new ArrayBuffer[Mention]
+    for (f <- functionMens) {
+      for (args <- f.arguments.values) {
+        val newLabels = List("Parameter", "Model", "Phrase", "Entity").toSeq
+        for (arg <- args) {
+          val modelParam = new TextBoundMention(
+            newLabels,
+            arg.tokenInterval,
+            arg.sentence,
+            arg.document,
+            arg.keep,
+            "functionArgsToModelParam",
+            arg.attachments)
+          modelParams.append(modelParam)
+        }
+      }
+    }
+    modelParams
+  }
+
+  def filterModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // this method is for filtering out illegal parameters
+    val filter1 = mentions.filterNot(m => m.text.length > 40 && !m.text.contains("_")) // Note: Too long args are unlikely to be a model parameter. length can be adjusted later.
+    val filter2 = filter1.filterNot(m => m.tags.head.contains("CD") || m.tags.head.contains("PRP")) // Note: arg with a numeric value is unlikely to be a model parameter.
+    val filter3 = filter2.filterNot(m => m.entities.head.contains("LOCATION")) // Note: arg with LOCATION entity is unlikely to be a model parameter.
+    val filter4 = filter3.filterNot(m => m.text.contains("data"))
+    // more filters can be added here
+    filter4
+  }
+
 }
+
 
 object OdinActions {
 

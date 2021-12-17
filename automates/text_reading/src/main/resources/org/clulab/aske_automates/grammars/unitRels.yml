@@ -12,7 +12,7 @@ rules:
     example: "T = daily mean air temperature [°C]"
     action: ${action}
     pattern: |
-      @variable:Identifier [word=/.*/ & !word = /,|\]|\./]+? [word="["] (?<unit> [word = /.*/ & !tag="CD"]+) (?=[word="]"])
+      @variable:Identifier [word=/.*/ & !word = /,|\]|\./ & !word="|"]+? [word="["] (?<unit> [word = /.*/ & !tag="CD"]+) (?=[word="]"])
 
   - name: concept_paren_unit
     label: UnitRelation
@@ -113,6 +113,17 @@ rules:
       trigger = [lemma='equal']
       variable:Identifier = nsubj
       unit:Unit = nmod_to
+
+
+  - name: var-word-equals_value_unit-token
+    label: UnitRelation
+    priority: ${priority}
+    type: token
+    example: "Bearing in mind , we set our default setting to the refugee move speed is equal to 200 km per day and the awareness of surrounding is 1 link ."
+    action: ${action}
+    pattern: |
+      @variable: Phrase [lemma = "be"] [lemma='equal'] "to" [tag = "CD"] @unit: Unit
+
 
   - name: var-be-value-unit
     label: UnitRelation

@@ -29,7 +29,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("grfn_file", help="filepath to a GrFN JSON file")
     parser.add_argument("comm_file", help="filepath to a comments JSON file")
-    parser.add_argument("doc_file", help="filepath to a source text pdf file")
+    parser.add_argument("doc_file", help="filepath to a source paper file (COSMOS or Science Parse)")
     parser.add_argument("eqn_file", help="filepath to an equations txt file")
     parser.add_argument("--wikidata_file", help="filepath to a wikidata grounding json file", type=str, default="None")
     parser.add_argument(

@@ -8,7 +8,7 @@ rules:
     type: token
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     pattern: |
-      [entity = /NUMBER|PERCENT|DURATION/ & tag = /CD/] (?! "/" @variable:Identifier)
+      [entity = /NUMBER|PERCENT|DURATION/ & tag = /CD/] (?! "/" @variable:Identifier)  (?! "of")
 
   - name: mult_value
     label: Value

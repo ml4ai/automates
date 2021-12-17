@@ -58,6 +58,7 @@ class OdinEngine(
   }
 
   var loadableAttributes = LoadableAttributes()
+  val actions = loadableAttributes.actions
 
   // These public variables are accessed directly by clients which
   // don't know they are loadable and which had better not keep copies.
@@ -80,26 +81,30 @@ class OdinEngine(
     // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
     // Run the main extraction engine, pre-populated with the initial state
-    val events =  engine.extractFrom(doc, initialState).toVector
-    val modelCorefResolve = loadableAttributes.actions.resolveModelCoref(events)
+    val events = actions.processCommands(actions.assembleVarsWithParamsAndUnits(  engine.extractFrom(doc, initialState)).toVector)
+    val newModelParams1 = actions.paramSettingVarToModelParam(events)
+    val modelCorefResolve = actions.resolveModelCoref(events)
 
     // process context attachments to the initially extracted mentions
-    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(modelCorefResolve)
+    val newEventsWithContexts = actions.makeNewMensWithContexts(modelCorefResolve)
     val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
-    val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
+    val mensWithContextAttachment = actions.processRuleBasedContextEvent(contextEvents)
 
     // post-process the mentions with untangleConj and combineFunction
     val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
 
     val (functionMentions, nonFunctions) = nonDescrMens.partition(_.label.contains("Function"))
-    val (modelDescrs, nonModelDescrs) = nonFunctions.partition(_.label == "ModelDescr")
+    val (modelDescrs, nonModelDescrs) = nonFunctions.partition(_.labels.contains("ModelDescr"))
     val (modelNames, other) = nonModelDescrs.partition(_.label == "Model")
-    val modelFilter = loadableAttributes.actions.filterModelNames(modelNames)
-    val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
-    val combining = loadableAttributes.actions.combineFunction(functionMentions)
-    val finalModelDescrs = modelDescrs.filter(m => m.arguments.contains("modelName"))
+    val modelFilter = actions.filterModelNames(modelNames)
+    val untangled = actions.untangleConj(descriptionMentions)
+    val combining = actions.combineFunction(functionMentions)
+    val newModelParams2 = actions.functionArgsToModelParam(combining)
+    val finalModelDescrs = modelDescrs.filter(_.arguments.contains("modelName"))
+    val finalModelParam = actions.filterModelParam(newModelParams1 ++ newModelParams2)
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ modelFilter) ++ finalModelDescrs ++ untangled)).toVector
+    actions.replaceWithLongerIdentifier(actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam  ++ finalModelDescrs) ++ untangled).toVector.distinct
+
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
@@ -107,8 +112,6 @@ class OdinEngine(
     val odinMentions = extractFrom(doc)  // CTM: runs the Odin grammar
     odinMentions  // CTM: collection of mentions ; to be converted to some form (json)
   }
-
-
 
   // Supports web service, when existing entities are already known but from outside the project
   def extractFromDocWithGazetteer(doc: Document, gazetteer: Seq[String]): Seq[Mention] = {

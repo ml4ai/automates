@@ -10,7 +10,7 @@ import org.clulab.aske.automates.apps.ExtractAndAlign.{GLOBAL_VAR_TO_UNIT_VIA_CO
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
-import org.clulab.utils.TextUtils
+import org.clulab.utils.MentionUtils
 import org.json4s.jackson.JsonMethods._
 import play.libs.F.Tuple
 import ujson.Value
@@ -163,8 +163,8 @@ object TestUtils {
     def testBinaryEventStrings(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2Strings: Seq[String]) = {
       val identifierDescriptionPairs = for {
         m <- ms
-        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(TextUtils.getMentionText(_))
-        a2 <- m.arguments.getOrElse(arg2Role, Seq()).map(TextUtils.getMentionText(_))
+        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(MentionUtils.getMentionText(_))
+        a2 <- m.arguments.getOrElse(arg2Role, Seq()).map(MentionUtils.getMentionText(_))
       } yield (a1, a2)
 
       arg2Strings.foreach(arg2String => identifierDescriptionPairs should contain ((arg1String, arg2String)))
@@ -185,7 +185,7 @@ object TestUtils {
     def testUnaryEventStrings(ms: Seq[Mention], arg1Role: String, eventType: String, arg1Strings: Seq[String]) = {
       val functionFragment = for {
         m <- ms
-        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(TextUtils.getMentionText(_))
+        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(MentionUtils.getMentionText(_))
       } yield a1
       arg1Strings.foreach(arg1String => functionFragment should contain (arg1String))
     }

@@ -48,6 +48,22 @@ class CrossSentenceEventMention(
             attachments: Set[Attachment] = this.attachments
           ): CrossSentenceEventMention = new CrossSentenceEventMention(labels, tokenInterval, trigger, arguments, paths, sentence, sentences, document, keep, foundBy, attachments)
 
+  def newWithAttachment(mod: Attachment): CrossSentenceEventMention = {
+    copy(attachments = this.attachments + mod)
+  }
+
+  def newWithoutAttachment(mod: Attachment): CrossSentenceEventMention = {
+    copy(attachments = this.attachments - mod)
+  }
+
+  override def withAttachment(mod: Attachment): Mention = this match {
+    case m: CrossSentenceEventMention => m.newWithAttachment(mod)
+  }
+
+  override def withoutAttachment(mod: Attachment): Mention = this match {
+    case m: CrossSentenceEventMention => m.newWithoutAttachment(mod)
+  }
+
   override def text: String = {
     val sentenceAndMentionsSeq = (arguments
       .values
