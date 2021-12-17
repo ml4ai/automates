@@ -11,7 +11,7 @@ rules:
     example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
     pattern: |
       [word = /.*\.[a-zA-Z]{2,}/ & !word=/^http/] | [word = /Dockerfile/]
-    
+
   - name: parameter-rule
     label: CommLineParameter
     priority: 1
@@ -35,7 +35,7 @@ rules:
     example: "./run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
       @parameter:CommLineParameter (?<=[tag = /" | POS/])? (?<value>[word = /[a-zA-Z0-9'"]+/]+)
-      
+
 # @argument:CommandLineArg*
   - name: repo-rule
     label: Repository
@@ -52,7 +52,7 @@ rules:
     example: "<extracts: run_TWIST.py> --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
       [word = /.*\.py|\b(fabsim|fab|mpirun|bash|git|mkdir|cd|python|docker|python3)\b/] (?! [word = /\)|\]/])
-  #fabsim|fab|
+
   - name: command-from-starter-rule
     label: CommandSequence
     priority: 2
@@ -68,7 +68,7 @@ rules:
     example: "'RUS,UKR'"
     pattern: |
       [word = /'/] [word = /[a-zA-Z,]+/ & !tag = 'CC']+ [word = /'/]
-  
+
   - name: value-rule
     label: Value
     priority: 2
@@ -85,9 +85,8 @@ rules:
     pattern: |
       trigger = [word = ":"]
       parameter:Phrase = <punct
-      value:String+ = <punct dep 
-    # 
-  
+      value:String+ = <punct dep
+
   - name: list-rule2
     label: MD_Context
     priority: 3
@@ -96,8 +95,8 @@ rules:
     pattern: |
       trigger = [word = ":"]
       parameter:Phrase = <punct
-      value:Phrase+ = <punct dep 
-  
+      value:Phrase+ = <punct dep
+
 # write rules for parsing blocks
 
 # Masha's rules
@@ -108,7 +107,7 @@ rules:
     example: "- --crop: Wheat, Rice or Corn"
     pattern: |
       @param:Phrase [word = ":"] @value:String+
-  
+
   - name: list-rule4
     label: MD_Context
     priority: 3
@@ -116,4 +115,3 @@ rules:
     example: "- --crop: Wheat, Rice or Corn"
     pattern: |
       @param:Phrase [word = ":"] @value:Phrase+
-
