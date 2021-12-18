@@ -81,7 +81,7 @@ class OdinEngine(
     // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
     // Run the main extraction engine, pre-populated with the initial state
-    val events = actions.processCommands(actions.assembleVarsWithParamsAndUnits(  engine.extractFrom(doc, initialState)).toVector)
+    val events = actions.processCommands(  engine.extractFrom(doc, initialState).toVector)
     val (paramSettings, nonParamSettings) = events.partition(_.label.contains("ParameterSetting")) // `paramSettings` includes interval param setting
     val noOverlapParamSettings = actions.intervalParamSettTakesPrecedence(paramSettings)
     val paramSettingsAndOthers = noOverlapParamSettings ++ nonParamSettings
@@ -106,7 +106,7 @@ class OdinEngine(
     val finalModelDescrs = modelDescrs.filter(_.arguments.contains("modelName"))
     val finalModelParam = actions.filterModelParam(newModelParams1 ++ newModelParams2)
 
-    actions.replaceWithLongerIdentifier(actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam  ++ finalModelDescrs) ++ untangled).toVector.distinct
+    actions.assembleVarsWithParamsAndUnits(actions.replaceWithLongerIdentifier(actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam  ++ finalModelDescrs) ++ untangled)).toVector.distinct
 
   }
 

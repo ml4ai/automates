@@ -578,7 +578,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         }
       }
     }
-    toReturn.distinct ++ noVar
+    toReturn.filter(_.arguments("variable").length == 1).distinct ++ noVar
   }
 
   def processCommands(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
