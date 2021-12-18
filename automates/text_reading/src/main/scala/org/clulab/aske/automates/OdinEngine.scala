@@ -82,8 +82,11 @@ class OdinEngine(
 
     // Run the main extraction engine, pre-populated with the initial state
     val events = actions.processCommands(actions.assembleVarsWithParamsAndUnits(  engine.extractFrom(doc, initialState)).toVector)
-    val newModelParams1 = actions.paramSettingVarToModelParam(events)
-    val modelCorefResolve = actions.resolveModelCoref(events)
+    val (paramSettings, nonParamSettings) = events.partition(_.label.contains("ParameterSetting")) // `paramSettings` includes interval param setting
+    val noOverlapParamSettings = actions.intervalParamSettTakesPrecedence(paramSettings)
+    val paramSettingsAndOthers = noOverlapParamSettings ++ nonParamSettings
+    val newModelParams1 = actions.paramSettingVarToModelParam(paramSettingsAndOthers)
+    val modelCorefResolve = actions.resolveModelCoref(paramSettingsAndOthers)
 
     // process context attachments to the initially extracted mentions
     val newEventsWithContexts = actions.makeNewMensWithContexts(modelCorefResolve)

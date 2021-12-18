@@ -10,8 +10,7 @@
       - Parameter
       - CommLineParameter
       - Measurement:
-        - Value:
-          - ValueAndUnit
+        - Value
         - Unit:
           - UnitRelation
       - Filename

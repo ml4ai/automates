@@ -569,7 +569,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
               newArgs(arg._1) = arg._2
             }
           }
-          val assembledMention = copyWithLabel(copyWithArgs(gv._2.head, newArgs.toMap), "ParamAndUnit")
+          val assembledMention = copyWithFoundBy(copyWithLabel(copyWithArgs(gv._2.head, newArgs.toMap), "ParamAndUnit"), gv._2.head.foundBy + "++assembleVarsWithParamsAndUnits")
           toReturn.append(assembledMention)
 
         } else {
@@ -616,6 +616,19 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         val trigger = newTrigger.values.flatten.head.asInstanceOf[TextBoundMention]
         toReturn.append(copyWithArgs(c, args).asInstanceOf[RelationMention].toEventMention(trigger))
       }
+    }
+    toReturn
+  }
+
+  def intervalParamSettTakesPrecedence(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val toReturn = new ArrayBuffer[Mention]()
+    val groupedBySent = mentions.groupBy(_.sentence)
+    for (sg <- groupedBySent) {
+      val (intParamSet, paramSet) = sg._2.partition(_.label == "IntervalParameterSetting")
+      for (ps <- paramSet) {
+        if (!intParamSet.exists(ips => ips.arguments("variable").head.tokenInterval == ps.arguments("variable").head.tokenInterval)) toReturn.append(ps)
+      }
+      toReturn.appendAll(intParamSet)
     }
     toReturn
   }
@@ -1144,6 +1157,15 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       case tb: TextBoundMention => ???
       case rm: RelationMention => rm.copy(arguments = newArgs)
       case em: EventMention => em.copy(arguments = newArgs)
+      case _ => ???
+    }
+  }
+
+  def copyWithFoundBy(mention: Mention, newFoundBy: String): Mention = {
+    mention match {
+      case tb: TextBoundMention => tb.copy(foundBy = newFoundBy)
+      case rm: RelationMention => rm.copy(foundBy = newFoundBy)
+      case em: EventMention => em.copy(foundBy = newFoundBy)
       case _ => ???
     }
   }
