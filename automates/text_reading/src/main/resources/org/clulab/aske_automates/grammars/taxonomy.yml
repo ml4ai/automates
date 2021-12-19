@@ -11,8 +11,7 @@
       - CommLineParameter
       - Measurement:
         - Value
-        - Unit:
-          - UnitRelation
+        - Unit
       - Filename
       - Language
       - Repository
@@ -37,3 +36,4 @@
   - Context
   - CommandSequence
   - MD_Context
+  - UnitRelation
