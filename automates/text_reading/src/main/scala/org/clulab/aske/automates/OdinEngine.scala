@@ -81,9 +81,12 @@ class OdinEngine(
     // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
     // Run the main extraction engine, pre-populated with the initial state
-    val events = actions.processCommands(actions.assembleVarsWithParamsAndUnits(  engine.extractFrom(doc, initialState)).toVector)
-    val newModelParams1 = actions.paramSettingVarToModelParam(events)
-    val modelCorefResolve = actions.resolveModelCoref(events)
+    val events = actions.processCommands(engine.extractFrom(doc, initialState).toVector)
+    val (paramSettings, nonParamSettings) = events.partition(_.label.contains("ParameterSetting")) // `paramSettings` includes interval param setting
+    val noOverlapParamSettings = actions.intervalParamSettTakesPrecedence(paramSettings)
+    val paramSettingsAndOthers = noOverlapParamSettings ++ nonParamSettings
+    val newModelParams1 = actions.paramSettingVarToModelParam(paramSettingsAndOthers)
+    val modelCorefResolve = actions.resolveModelCoref(paramSettingsAndOthers)
 
     // process context attachments to the initially extracted mentions
     val newEventsWithContexts = actions.makeNewMensWithContexts(modelCorefResolve)
@@ -103,7 +106,7 @@ class OdinEngine(
     val finalModelDescrs = modelDescrs.filter(_.arguments.contains("modelName"))
     val finalModelParam = actions.filterModelParam(newModelParams1 ++ newModelParams2)
 
-    actions.replaceWithLongerIdentifier(actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam  ++ finalModelDescrs) ++ untangled).toVector.distinct
+    actions.assembleVarsWithParamsAndUnits(actions.replaceWithLongerIdentifier(actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam  ++ finalModelDescrs) ++ untangled)).toVector.distinct
 
   }
 

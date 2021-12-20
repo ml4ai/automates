@@ -257,7 +257,7 @@ class TestParameterSetting  extends ExtractionTest {
   val u5a = "For the purposes of model parameterisation the value of shoot_lag has been assumed to be around 40 o Cd."
   passingTest should s"extract the parameter setting(s) from u5a: ${u5a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "shoot_lag" -> Seq("40")
+      "value of shoot_lag" -> Seq("40")
     )
     val mentions = extractMentions(u5a)
     testParameterSettingEvent(mentions, desired)
