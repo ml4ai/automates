@@ -117,7 +117,7 @@ rules:
     priority: ${priority}
     type: dependency
     action: ${action}
-    example: "QSWAT can also show the total, daily, monthly orannual means, maxima and minima for reach and subbasin out-puts."
+    example: "QSWAT can also show the total, daily, monthly or annual means, maxima and minima for reach and subbasin out-puts."
     pattern: |
       trigger = [lemma = "can"]
       modelName:Model = <aux nsubj
@@ -221,14 +221,14 @@ rules:
       modelName:Model = dobj
       modelDescr:Phrase = advcl_in_order
 
-  - name: optimised_for
+  - name: optimised/used_for
     label: ModelDescr
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "FLEE is optimised for simplicity and flexibility and provides a range of scripts to handle and convert refugee data from the UNHCR database."
     pattern: |
-      trigger = [word = "optimised"]
+      trigger = [word=/optimised|used/]
       modelName:Model = nsubjpass
       modelDescr:Phrase = nmod_for
 

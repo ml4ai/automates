@@ -4,66 +4,38 @@ rules:
 
 ####COMMANDS####
 
-#   - name: sample-command
-#     label: Command
-#     priority: ${priority}
-#     type: token
-#     example: "git clone https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
-# #    action: insert a post-processing action (defined in OdinActions)
-#     pattern: |
-#       (?<language>[word=/bash|python|git/]) (?<command> [word = /.*\w+.*/ & !tag="-LRB-"]+)
-
   - name: filename-rule
     label: Filename
     priority: 1
     type: token
     example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
     pattern: |
-      (?<filename>[word = /.*\.[a-zA-Z]{2,}/])
-  
-# NOT WORKING: matches mostly garbage
-# - name: var-rule
-#   label: CommandLineArg
-#   priority: 1
-#   type: token
-#   example: "include_prodDecline"
-#   pattern: |
-#     (?<variable>[word = /[a-zA-Z0-9_]+/])
-    
+      [word = /.*\.[a-zA-Z]{2,}/ & !word=/^http/] | [word = /Dockerfile/]
+
   - name: parameter-rule
-    label: CommandLineArg
+    label: CommLineParameter
     priority: 1
     type: token
     example: "--crop"
     pattern: |
-      (?<=[word="-"]{2}) (?<parameter>[word = /[a-zA-Z_]+/])
+      (?<=[word="-"]{2}) [word = /[a-zA-Z_]/]
 
-# NOT WORKING: needs update
-  # - name: command-rule
-  #   label: Command
-  #   priority: 1
-  #   type: token
-  #   example: "```./run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'```"
-  #   pattern: |
-  #     (?<=[word="`"]) [word = /.*/]+ (?=[word="``"])
+  - name: parameter-rule1
+    label: CommLineParameter
+    priority: 1
+    type: token
+    example: "-N"
+    pattern: |
+      (?<=[word="-"]) [word = /[a-zA-Z]{1}/] # excl dash in flags
 
   - name: arg-rule
-    label: CommandLineArg
+    label: CommandLineParamValuePair
     priority: 2
     type: token
     example: "./run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      (?<keywordArg>@parameter:CommandLineArg (?<=[tag = /" | POS/])? (?<argument>[word = /[a-zA-Z0-9'"]+/]+))
+      @parameter:CommLineParameter (?<=[tag = /" | POS/])? (?<value>[word = /[a-zA-Z0-9'"]+/]+)
 
-
-  # - name: language
-  #   label: Language
-  #   priority: 2
-  #   type: token
-  #   example: "```git clone https://gitlab.pik-potsdam.de/twist/twist-global-model.git```"
-  #   pattern: |
-# (?<=[tag = /``/ | word = /\. | \//]+) (?<command>[word = /[a-zA-Z]+/]) (?<argument>[word = /[a-zA-Z]+/]+)? @filename:Filename 
-      
 # @argument:CommandLineArg*
   - name: repo-rule
     label: Repository
@@ -71,32 +43,23 @@ rules:
     type: token
     example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
     pattern: |
-      (?<repo>[word = /(https:\/\/)?(gitlab|github|bitbucket)[\w\d\/-_.]+\w/])
+      [word = /(https:\/\/)?(gitlab|github|bitbucket)[\w\d\/-_.]+\w/]
 
   - name: command-starter-rule
-    label: CommandStarter
+    label: Command
     priority: 1
     type: token
     example: "<extracts: run_TWIST.py> --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      [word = /.*\.py|\b(bash|git|mkdir|cd|python|docker|python3)\b/]
-  
+      [word = /.*\.py|\b(fabsim|fab|mpirun|bash|git|mkdir|cd|python|docker|python3)\b/] (?! [word = /\)|\]/])
+
   - name: command-from-starter-rule
-    label: Command
+    label: CommandSequence
     priority: 2
     type: token
     example: "run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      @commandstarter:CommandStarter (?<argument>[word = /.*/]+)
-  
-  # - name: command-filename-rule
-  #   label: Command
-  #   priority: 3
-  #   type: token
-  #   example: "python run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
-  #   pattern: |
-  #     [word = /\b(bash|git|mkdir|cd|python|docker)\b/]
-  #   # [word = /.*/]* @filename:Filename* @repo:Repository* @keywordArg:CommandLineArg* [word = /.*/]*
+      @command:Command (?<commandArgs>[word = /.*/ & !word = ","]+)
 
   - name: string-rule
     label: String
@@ -105,23 +68,14 @@ rules:
     example: "'RUS,UKR'"
     pattern: |
       [word = /'/] [word = /[a-zA-Z,]+/ & !tag = 'CC']+ [word = /'/]
-  
+
   - name: value-rule
     label: Value
     priority: 2
     type: token
     example: "0"
     pattern: |
-      [tag = 'CD'] 
-
-# NOT WORKING: for some reason is matching strings starting with capital letters? And also just generally non-camelCased strings
-  # - name: camelCase-rule
-  #   label: MD_Context
-  #   priority: 1
-  #   type: token
-  #   example: "camelCase"
-  #   pattern: |
-  #     (?<variable>[word = /[a-z]+((0-9)|([A-Z0-9]+[a-z0-9]+))*([A-Z])?/])
+      [tag = 'CD' & !word="|"]
 
   - name: list-rule1
     label: MD_Context
@@ -131,9 +85,8 @@ rules:
     pattern: |
       trigger = [word = ":"]
       parameter:Phrase = <punct
-      value:String+ = <punct dep 
-    # 
-  
+      value:String+ = <punct dep
+
   - name: list-rule2
     label: MD_Context
     priority: 3
@@ -142,11 +95,11 @@ rules:
     pattern: |
       trigger = [word = ":"]
       parameter:Phrase = <punct
-      value:Phrase+ = <punct dep 
-  
+      value:Phrase+ = <punct dep
+
 # write rules for parsing blocks
 
-##### Masha's rules
+# Masha's rules
   - name: list-rule3
     label: MD_Context
     priority: 3
@@ -154,7 +107,7 @@ rules:
     example: "- --crop: Wheat, Rice or Corn"
     pattern: |
       @param:Phrase [word = ":"] @value:String+
-  
+
   - name: list-rule4
     label: MD_Context
     priority: 3
@@ -162,16 +115,3 @@ rules:
     example: "- --crop: Wheat, Rice or Corn"
     pattern: |
       @param:Phrase [word = ":"] @value:Phrase+
-
-#####
-
-  - name: list-rule5
-    label: MD_Context
-    priority: 3
-    type: dependency
-    example: "- --crop: Wheat, Rice or Corn"
-    pattern: |
-      trigger = CommandLineArgument
-      value:Phrase+ = dep 
-
-

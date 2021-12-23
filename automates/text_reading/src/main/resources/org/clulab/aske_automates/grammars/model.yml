@@ -79,7 +79,7 @@ rules:
     type: token
     example: ""
     pattern: |
-      [word = /^[Ii]t$|^[Tt]hey$|^[Tt]hat$/]
+      [word = /^[Ii]t$|^[Tt]hey$|^[Tt]hat$|^[Tt]his$/]
 
   - name: model_compound_token
     label: Model

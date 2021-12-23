@@ -3,23 +3,23 @@
       - Identifier:
         - VariableGazetteer
       - Location
-      - Date
-      - Year
+      - Date:
+        - Year
       - Model
       - ModelComponent
       - Parameter
-      - ModelParameter
+      - CommLineParameter
       - Measurement:
-        - Value:
-          - ValueAndUnit
-        - Unit:
-          - UnitRelation
+        - Value
+        - Unit
       - Filename
       - Language
-  - String
-  - CommandStarter
-  - VerbPhrase
+      - Repository
+      - String
+      - Command
+      - VerbPhrase
 - Event:
+  - CommandLineParamValuePair
   - ContextEvent
   - Conj
   - Causal
@@ -34,7 +34,13 @@
   - IntervalParameterSetting
   - Function
   - Context
+<<<<<<< HEAD
   - Command
   - CommandLineArg
   - MD_Context
   - Repository
+=======
+  - CommandSequence
+  - MD_Context
+  - UnitRelation
+>>>>>>> master
