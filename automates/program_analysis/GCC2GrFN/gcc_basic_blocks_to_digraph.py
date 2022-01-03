@@ -112,6 +112,11 @@ def digraph_to_pdf(digraph: DiGraph, filename: str):
 
     agraph.draw(f"{filename}--basic_blocks.pdf", prog="dot")
 
+def find_lca(digraph: DiGraph, bb1: dict, bb2: dict):
+    # Finds the least common ancestor of node1 and node2 in digraph
+
+    pass
+
 
 def json_ast_to_bb_graphs(gcc_ast: Dict):
     """
