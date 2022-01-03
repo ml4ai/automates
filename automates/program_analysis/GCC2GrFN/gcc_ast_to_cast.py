@@ -1,3 +1,5 @@
+import networkx as nx
+
 from pprint import pprint
 from typing import cast
 
@@ -48,6 +50,10 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast_utils import (
     default_cast_val_for_gcc_types,
     default_cast_val,
 )
+from automates.program_analysis.GCC2GrFN.gcc_basic_blocks_to_digraph import (
+    basic_blocks_to_digraph,
+    make_bbnode,
+)
 
 
 class GCC2CAST:
@@ -63,7 +69,10 @@ class GCC2CAST:
         self.basic_blocks = []
         self.parsed_basic_blocks = []
         self.current_basic_block = None
+        self.basic_block_stack = []
         self.type_ids_to_defined_types = {}
+        self.curr_func_digraph = None
+        self.func_digraphs = {}
 
     def to_cast(self):
         modules = []
@@ -492,6 +501,7 @@ class GCC2CAST:
             temp = self.current_basic_block
             loop_body = self.parse_body(false_edge, true_edge)
             self.current_basic_block = temp
+            self.basic_block_stack.append(temp)
             # GCC inverts loop expressions to check if the EXIT condition
             # i.e., given "while (count < 100)", gcc converts that to "if (count > 99) leave loop;"
             # So, to revert to the original loop condition, add a boolean NOT
@@ -502,22 +512,60 @@ class GCC2CAST:
             )
             return [Loop(expr=condition_expr, body=loop_body)]
         else:
-            temp = self.current_basic_block
-            true_res = self.parse_basic_block(true_block)
-
-            true_exit_target = true_block["edges"][0]["target"]
-            false_exit_target = false_block["edges"][0]["target"]
-
-            false_res = []
             # If the exit targets for the conditions are the same, then we have
             # an else/elif condition because they both point to the block after
             # this second condition. Otherwise, we only have one condition and
             # the "false block" is the normal block of code following the if,
             # so do not evaluate it here.
-            if true_exit_target == false_exit_target:
-                false_res = self.parse_basic_block(false_block)
+            #if true_exit_target == false_exit_target:
+             #   false_res = self.parse_basic_block(false_block)
+            #elif false_block["statements"][0]["type"] == "conditional":
+             #   false_res = self.parse_basic_block(false_block)
+            #else:
+             #   f 
+            #true_exit_target = true_block["edges"][0]["target"]
+            #false_exit_target = false_block["edges"][0]["target"]
+            curr_block_index = self.current_basic_block['index']
+            print(curr_block_index)
 
-            self.current_basic_block = temp
+            temp = self.current_basic_block
+            true_res = self.parse_basic_block(true_block)
+        
+            #print(list(nx.topological_sort(self.curr_func_digraph)))
+
+            # Retrieve the current node in the digraph
+            # self.curr_func_digraph.
+
+            false_res = []
+            # NOTE: After parsing the true basic block, I believe
+            # there should only be one outgoing edge, but I am not 100% sure
+            true_block_target = self.current_basic_block["edges"][0]["target"]
+            #print(f"{false_block['index']}:{nx.ancestors(self.curr_func_digraph, make_bbnode(false_block))}")
+            #print(f"{false_block['index']}:{self.curr_func_digraph.in_edges(make_bbnode(false_block))}")
+
+            # If the false block has one incoming edge, then we know it either belongs 
+            # as the orelse of this current node (in the case of else/else if)
+            if len(self.curr_func_digraph.in_edges(make_bbnode(false_block))) == 1:
+                false_res = self.parse_basic_block(false_block)
+            elif len(self.curr_func_digraph.in_edges(make_bbnode(false_block))) > 1:
+                edges = self.curr_func_digraph.in_edges(make_bbnode(false_block))
+                par1 = edges[0]
+                par2 = edges[1]
+                
+                print(edges)
+
+                false_res = []
+            else:
+                false_res = []
+
+            # if after parsing the true block, the edge leads to the false_block,
+            # then there is no else or else if
+            # so, if this is not the case, then we need to parse the false (else) block
+            # if true_block_target != false_block["index"]:
+            #    false_res = self.parse_basic_block(false_block)
+
+            # TODO: Do we need to reset self.current_basic_block?
+
             return [ModelIf(expr=condition_expr, body=true_res, orelse=false_res)]
 
     def parse_body(self, start_block, end_block):
@@ -559,6 +607,8 @@ class GCC2CAST:
         self.parsed_basic_blocks.append(bb["index"])
 
         self.current_basic_block = bb
+        self.basic_block_stack.append(bb)
+
         statements = bb["statements"]
         cast_statements = []
         for stmt in statements:
@@ -567,6 +617,7 @@ class GCC2CAST:
 
         result_statements = cast_statements
 
+        self.basic_block_stack.pop()
         return result_statements
 
     def check_fortran_arg_updates(self, arguments, body):
@@ -594,6 +645,13 @@ class GCC2CAST:
         var_declarations = (
             f["variableDeclarations"] if "variableDeclarations" in f else []
         )
+
+
+        # Generate network X function digraph and store it as necessary
+        func_digraph = basic_blocks_to_digraph(f["basicBlocks"])
+ 
+        self.curr_func_digraph = func_digraph
+        self.func_digraphs[f["name"]] = func_digraph
 
         body = []
         for v in var_declarations:
