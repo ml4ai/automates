@@ -1,4 +1,5 @@
 import networkx as nx
+from networkx.algorithms.dag import topological_sort
 
 from pprint import pprint
 from typing import cast
@@ -53,6 +54,7 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast_utils import (
 from automates.program_analysis.GCC2GrFN.gcc_basic_blocks_to_digraph import (
     basic_blocks_to_digraph,
     make_bbnode,
+    find_lca_of_parents
 )
 
 
@@ -67,12 +69,33 @@ class GCC2CAST:
         self.variables_ids_to_expression = {}
         self.ssa_ids_to_expression = {}
         self.basic_blocks = []
-        self.parsed_basic_blocks = []
+        # dict mapping BB index to BB
+        self.basic_block_map = {}
+        self.basic_block_parse_queue = set()
+        self.parsed_basic_blocks = set()
+        # dict mapping BB index to the CAST body it is in
+        self.bb_index_to_cast_body = {}
         self.current_basic_block = None
         self.basic_block_stack = []
         self.type_ids_to_defined_types = {}
         self.curr_func_digraph = None
+        self.curr_func_body = []
         self.func_digraphs = {}
+
+
+    def clear_function_dependent_vars(self):
+        self.variables_ids_to_expression = {}
+        self.ssa_ids_to_expression = {}
+        self.basic_blocks = []
+        self.basic_block_map = {}
+        self.basic_block_parse_queue = set()
+        self.parsed_basic_blocks = set()
+        self.bb_index_to_cast_body = {}
+        self.current_basic_block = None
+        self.basic_block_stack = []
+        self.curr_func_digraph = None
+        self.curr_func_body = []
+
 
     def to_cast(self):
         modules = []
@@ -526,9 +549,10 @@ class GCC2CAST:
             #true_exit_target = true_block["edges"][0]["target"]
             #false_exit_target = false_block["edges"][0]["target"]
             curr_block_index = self.current_basic_block['index']
-            print(curr_block_index)
+            # print(curr_block_index)
 
             temp = self.current_basic_block
+            print(f"Parsing BB{true_block['index']} as an if body")
             true_res = self.parse_basic_block(true_block)
         
             #print(list(nx.topological_sort(self.curr_func_digraph)))
@@ -539,22 +563,23 @@ class GCC2CAST:
             false_res = []
             # NOTE: After parsing the true basic block, I believe
             # there should only be one outgoing edge, but I am not 100% sure
-            true_block_target = self.current_basic_block["edges"][0]["target"]
+            # true_block_target = self.current_basic_block["edges"][0]["target"]
             #print(f"{false_block['index']}:{nx.ancestors(self.curr_func_digraph, make_bbnode(false_block))}")
             #print(f"{false_block['index']}:{self.curr_func_digraph.in_edges(make_bbnode(false_block))}")
 
             # If the false block has one incoming edge, then we know it either belongs 
             # as the orelse of this current node (in the case of else/else if)
             if len(self.curr_func_digraph.in_edges(make_bbnode(false_block))) == 1:
+                print(f"Parsing BB{false_block['index']} as an elif")
                 false_res = self.parse_basic_block(false_block)
-            elif len(self.curr_func_digraph.in_edges(make_bbnode(false_block))) > 1:
-                edges = self.curr_func_digraph.in_edges(make_bbnode(false_block))
-                par1 = edges[0]
-                par2 = edges[1]
-                
-                print(edges)
-
-                false_res = []
+#             elif len(self.curr_func_digraph.in_edges(make_bbnode(false_block))) > 1:
+#                 edges = self.curr_func_digraph.in_edges(make_bbnode(false_block))
+#                 par1 = edges[0]
+#                 par2 = edges[1]
+#                 
+#                 print(edges)
+# 
+#                 false_res = []
             else:
                 false_res = []
 
@@ -566,7 +591,17 @@ class GCC2CAST:
 
             # TODO: Do we need to reset self.current_basic_block?
 
-            return [ModelIf(expr=condition_expr, body=true_res, orelse=false_res)]
+            # build a ModelIf CAST node, and add the true_block/false_blocks indices
+            # to bb_index_to_cast_body to keep track of where they were attached
+            model_if = ModelIf(expr=condition_expr, body=true_res, orelse=false_res)
+            assert(true_block["index"] not in self.bb_index_to_cast_body)
+            self.bb_index_to_cast_body[true_block["index"]] = model_if.body
+            print(f"** BB{true_block['index']} is the if body of BB{curr_block_index}**")
+            if false_res != []:
+                print(f"** BB{false_block['index']} is the else if body of BB{curr_block_index}**")
+                self.bb_index_to_cast_body[false_block["index"]] = model_if.body
+
+            return [model_if]
 
     def parse_body(self, start_block, end_block):
         blocks = [
@@ -602,9 +637,22 @@ class GCC2CAST:
         return result
 
     def parse_basic_block(self, bb):
+        # check that all parents (in the digraph) of this basic block have already been parsed
+        index = bb["index"]
+        for par in self.curr_func_digraph.predecessors(make_bbnode(bb)):
+            if par.index not in self.parsed_basic_blocks:
+                print((f"WARNING: Trying to parse BB{index}, but its parent BB{par.index} has" 
+                        " note been parsed yet"))
+                self.basic_block_parse_queue.add(bb)
+                return []
+
+        # we know all parents have been parsed, so if this basic block has been parsed, then
+        # we can skip it
         if bb["index"] in self.parsed_basic_blocks:
             return []
-        self.parsed_basic_blocks.append(bb["index"])
+
+        # otherwise, we parse the basic block
+        self.parsed_basic_blocks.add(bb["index"])
 
         self.current_basic_block = bb
         self.basic_block_stack.append(bb)
@@ -638,9 +686,69 @@ class GCC2CAST:
 
         return args_updated_in_body
 
+    def attach_parsed_bb_result(self, res, digraph_node):
+        """
+        Finds the CAST node body that this parsed basic block result should be added to,
+        and extends the body with `res`.
+        If the in degree of the associated digraph node is one, then we add the parsed result
+        to its parent.  If the in degree of the associated digraph node is greater than one,
+        than we find the lowest common ancestor of all its parents, call this the lca. The parsed result
+        should be a "sibling" of the lca, so we attach it to lca's parent.
+
+        Parameters:
+            res: the result from parse_basic_block()
+            digraph_node: the associated BBNode for this basic block in the functions digraph
+        """
+
+        # BB0 is always the start of a function, so we should add this res 
+        # to curr_func_body
+        if digraph_node.index == 0:
+            body = self.curr_func_body
+            body.extend(res)
+            self.bb_index_to_cast_body[digraph_node.index] = body
+            print(f"** BB{digraph_node.index} is placed in the function body **")
+            return
+
+        parents = list(self.curr_func_digraph.predecessors(digraph_node))
+        # if a node has a unique parent, then it should be sibling to that parent
+        if len(parents) == 1:
+            parent = parents[0]
+            if parent.index in self.bb_index_to_cast_body:
+                body = self.bb_index_to_cast_body[parent.index]
+                body.extend(res)
+                self.bb_index_to_cast_body[digraph_node.index] = body
+                print(f"** BB{digraph_node.index} is going to be sibling to {parent.index} **")
+            else:
+                print((f"ERROR: Cannot attach {str(digraph_node)}, its parent {str(parent)}"
+                       " is not in bb_index_to_cast_body"))
+
+        # if there is more than one parent (i.e. the in degree is greater than one) than
+        # we should attach the result to be a sibling of the parents lowest common ancestor
+        else:
+            lca = find_lca_of_parents(self.curr_func_digraph, digraph_node)
+            if lca.index in self.bb_index_to_cast_body:
+                body = self.bb_index_to_cast_body[lca.index]
+                body.extend(res)
+                self.bb_index_to_cast_body[digraph_node.index] = body
+                print(f"** BB{digraph_node.index} is going to be sibling to {lca.index} **")
+            else:
+                print((f"ERROR: Cannot attach {str(digraph_node)}, its parent {str(lca)}"
+                       " is not in bb_index_to_cast_body"))
+            
+
+
+
+
     def parse_function(self, f):
+        # Clear data from function parsing
+        self.clear_function_dependent_vars()
+
         name = f["name"]
         self.basic_blocks = f["basicBlocks"]
+        # build basic block map
+        for bb in self.basic_blocks:
+            self.basic_block_map[bb["index"]] = bb
+
         parameters = f["parameters"] if "parameters" in f else []
         var_declarations = (
             f["variableDeclarations"] if "variableDeclarations" in f else []
@@ -651,26 +759,50 @@ class GCC2CAST:
         func_digraph = basic_blocks_to_digraph(f["basicBlocks"])
  
         self.curr_func_digraph = func_digraph
-        self.func_digraphs[f["name"]] = func_digraph
+        # self.func_digraphs[f["name"]] = func_digraph
 
-        body = []
         for v in var_declarations:
             res = self.parse_variable_definition(v)
             if res is not None:
-                body.append(res)
+                self.curr_func_body.append(res)
 
         arguments = []
         for p in parameters:
             arguments.append(self.parse_variable(p))
 
-        for bb in self.basic_blocks:
-            res = self.parse_basic_block(bb)
-            body.extend(res)
+        # parse basic blocks along a topological sort of the basic block digraph
+        for bb_node in topological_sort(self.curr_func_digraph):
+            # before continuing the parsing in the topological sort,
+            # try to parse any basic blocks in the parse queue
+            if len(self.basic_block_parse_queue) > 0:
+                for bb in list(self.basic_block_parse_queue):
+                    res = self.parse_basic_block(bb)
+                    if res != []:
+                        print(f"Parsed BB{bb['index']} from the queue")
+                        self.basic_block_parse_queue.remove(bb)
+                        self.attach_parsed_bb_result(res, make_bbnode(bb))
 
-        # Clear data from function parsing
-        self.parsed_basic_blocks = []
-        self.ssa_ids_to_expression = {}
-        self.variables_ids_to_expression = {}
+            index = bb_node.index
+
+            if index in self.parsed_basic_blocks:
+                assert index in self.bb_index_to_cast_body
+                continue
+
+            print(f"Parsing BB{index} from topo sort")
+            res = self.parse_basic_block(self.basic_block_map[index])
+            self.attach_parsed_bb_result(res, bb_node)
+            # change to attach_parsed_bb_result
+            # body.extend(res)
+            
+        # for bb in self.basic_blocks:
+        #     res = self.parse_basic_block(bb)
+        #     body.extend(res)
+
+        # self.parsed_basic_blocks = set()
+        # self.basic_block_map = {}
+        # self.basic_block_parse_queue = set()
+        # self.ssa_ids_to_expression = {}
+        # self.variables_ids_to_expression = {}
 
         line_start = f["line_start"]
         line_end = f["line_end"]
@@ -686,11 +818,11 @@ class GCC2CAST:
         )
 
         if self.source_language == "fortran":
-            args_updated = self.check_fortran_arg_updates(arguments, body)
+            args_updated = self.check_fortran_arg_updates(arguments, self.curr_func_body)
             # TODO this will break with multiple returns within a function
             if len(args_updated) > 0:
                 existing_return = [
-                    (idx, b) for idx, b in enumerate(body) if isinstance(b, ModelReturn)
+                    (idx, b) for idx, b in enumerate(self.curr_func_body) if isinstance(b, ModelReturn)
                 ]
                 new_return = None
                 if len(existing_return) == 0:
@@ -700,18 +832,18 @@ class GCC2CAST:
                 else:
                     existing_return = existing_return[0][1]
                     existing_return_idx = existing_return[0][0]
-                    del body[existing_return_idx]
+                    del self.curr_func_body[existing_return_idx]
                     new_return = ModelReturn(
                         value=Tuple(
                             values=[existing_return.value]
                             + [Name(n) for n in args_updated]
                         )
                     )
-                body.append(new_return)
+                self.curr_func_body.append(new_return)
 
         return FunctionDef(
             name=name,
             func_args=arguments,
-            body=body,
+            body=self.curr_func_body,
             source_refs=[body_source_ref, decl_source_ref],
         )
