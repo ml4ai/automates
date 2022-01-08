@@ -33,11 +33,16 @@ References:
 """
 
 
+# EXAMPLE_INSTRUCTIONS_FILE = \
+#     'examples_ghidra_instructions/gcc/' \
+#     'types_without_long_double__Linux-5.11.0-38-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
+# # 'types__Linux-5.11.0-38-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
+# # 'expr_00__Linux-5.11.0-38-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
+
+
 EXAMPLE_INSTRUCTIONS_FILE = \
-    'examples_ghidra_instructions/gcc/' \
-    'types_without_long_double__Linux-5.11.0-38-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
-# 'types__Linux-5.11.0-38-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
-# 'expr_00__Linux-5.11.0-38-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
+    'expr_v2_perfect/expr_v2_0236641/' \
+    'expr_v2_0236641__Linux-5.4.0-81-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
 
 
 class BiMap:
@@ -604,7 +609,11 @@ def batch_process(execute_p: bool,
         if not os.path.isfile(src_filepath):
             raise Exception(f'ERROR: File not found: {src_filepath}')
 
-        extract_tokens_from_instr_file(src_filepath, get_dst_filepath(src_filepath))
+        dst_filepath = get_dst_filepath(src_filepath)
+        # print('src_filepath:', src_filepath)
+        # print('dst_filepath:', dst_filepath)
+
+        extract_tokens_from_instr_file(token_set, src_filepath, dst_filepath)
 
     else:
         i = 0
