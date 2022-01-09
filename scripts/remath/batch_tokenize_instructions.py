@@ -7,7 +7,6 @@ import sys
 import argparse
 import uuid
 
-
 # TODO: create batch processing mode
 
 """
@@ -32,7 +31,6 @@ References:
     https://www.felixcloutier.com/x86/cvtsi2sd
 """
 
-
 # EXAMPLE_INSTRUCTIONS_FILE = \
 #     'examples_ghidra_instructions/gcc/' \
 #     'types_without_long_double__Linux-5.11.0-38-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
@@ -41,7 +39,7 @@ References:
 
 
 EXAMPLE_INSTRUCTIONS_FILE = \
-    'expr_v2_perfect/expr_v2_0236641/' \
+    'expr_v2_perfect/expr_v2_0236641-small/' \
     'expr_v2_0236641__Linux-5.4.0-81-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
 
 
@@ -96,10 +94,10 @@ def parse_unicode_string_list(ustr):
     in_str = False
     str_start = None
     for i in range(1, len(ustr)):
-        if ustr[i-1] == 'u' and ustr[i] == '\'' and not in_str:
+        if ustr[i - 1] == 'u' and ustr[i] == '\'' and not in_str:
             in_str = True
             str_start = i + 1
-        elif ustr[i-1] != '\\' and ustr[i] == '\'' and in_str:
+        elif ustr[i - 1] != '\\' and ustr[i] == '\'' and in_str:
             in_str = False
             chunks.append(ustr[str_start: i])
     return chunks
@@ -148,11 +146,44 @@ def parse_hex_float_value(hex, size):
 
 
 def parse_hex_value(value, size=None):
-    return ':interpreted_hex', value, int(value, 16), size
+    # original code -- replaced in favor of 2's complement
+    # return ':interpreted_hex', value, int(value, 16), size
     # if size:
     #     return ':interpreted_hex', value, int(value, 16), size
     # else:
     #     return ':raw_hex', value, int(value, 16), 'unknown'
+
+    # new code that translate hex value -> binary (2's complement) -> decimal
+    # need a dictionary that maps every float number into 4 bit binary number
+    hex_to_bin = {"0": "0000", "1": "0001", "2": "0010", "3": "0011", "4": "0100",
+                  "5": "0101", "6": "0110", "7": "0111", "8": "1000", "9": "1001",
+                  "a": "1010", "b": "1011", "c": "1100", "d": "1101", "e": "1110",
+                  "f": "1111"}
+    result = ""
+    # remove the initial 0x if it exists
+    if value.startswith("-0x"):
+        value = value[3:]
+        result = -(int(value, 16))
+        return ':interpreted_hex', value, result, size
+    elif value.startswith("0x"):
+        value = value[2:]
+    # convert to lower case
+    value = value.lower()
+    # for each digit convert it to binary
+    for item in value:
+        result += hex_to_bin[item]
+    # if the initial value is zero: it's a positive number
+    if result[0] == "0":
+        # convert it to integer
+        result = int(result, 2)
+    # else the number is negative, convert it differently
+    else:
+        # flip the bits
+        temp = ''.join(['1' if i == '0' else '0' for i in result])
+        # add 1 and convert to decimal => convert to decimal and add 1
+        result = -(int(temp, 2) + 1)
+
+    return ':interpreted_hex', value, result, size
 
 
 def parse_metadata(metadata: str):
@@ -226,7 +257,6 @@ def parse_compound_instructions(instr_str: str):
 
 
 def mytest_parse_compound_instructions(verbose_p=False):
-
     # another hot mess...
     def equal_list(lst1, lst2):
         if not isinstance(lst1, list) or not isinstance(lst2, list):
@@ -341,7 +371,7 @@ class Function:
             elements, metadata = self.address_blocks[addr]
             if metadata:
                 metadata = parse_metadata(metadata)
-            ptr_size = None   # if this gets set, then use any values in place of ptr in tokens
+            ptr_size = None  # if this gets set, then use any values in place of ptr in tokens
             called_fn = None  # store whether a CALL with address/value has been interpreted
             for elm in elements:
                 # Values
@@ -571,7 +601,6 @@ class TokenSet:
 
 def extract_tokens_from_instr_file(token_set, _src_filepath, _dst_filepath, num=0,
                                    execute_p=True, verbose_p=False):
-
     if not execute_p:
         print(f'{num} [TEST] tokenize {_src_filepath} -> {_dst_filepath}')
     else:
@@ -597,7 +626,6 @@ def batch_process(execute_p: bool,
                   dst_dir: str,
                   instructions_root_dir: str,
                   instructions_file: str = ''):
-
     token_set = TokenSet()
 
     def get_dst_filepath(_src_filepath):
@@ -679,7 +707,6 @@ if __name__ == '__main__':
     # test_get_fn_name_from_parsed_metadata()
     main()
 
-
 # Tests -- TODO: ceate actual unit tests...
 
 """
@@ -724,7 +751,6 @@ def unpack():
     # -88.3 : qword = double
     print(struct.unpack('!d', bytes.fromhex('C056133333333333')))
 """
-
 
 # Kinda cool, but didn't end up using:
 # class bidict(dict):
