@@ -182,7 +182,6 @@ def parse_hex_value(value, size=None):
         temp = ''.join(['1' if i == '0' else '0' for i in result])
         # add 1 and convert to decimal => convert to decimal and add 1
         result = -(int(temp, 2) + 1)
-
     return ':interpreted_hex', value, result, size
 
 
