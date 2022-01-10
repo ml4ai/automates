@@ -7,6 +7,7 @@ from enum import IntFlag
 import networkx as nx
 from networkx import DiGraph
 from networkx.algorithms.lowest_common_ancestors import lowest_common_ancestor
+from networkx.algorithms.dag import is_directed_acyclic_graph
 
 # BBNode is used for the nodes in the networkx digraph
 BBNode = namedtuple("BBNode", ["index"])
@@ -144,15 +145,17 @@ def json_ast_to_bb_graphs(gcc_ast: Dict):
         for u, v, ed in digraph.edges(data="edge_data"):
             print(f"{5*' '}{str(u):20}{str(v):20}{str(ed):30}")
 
-        print(f"\nLCAs of parents for nodes with indegree > 1")
-        print(f"{40*'-'}")
-        print(f"{5*' '}{'Node':20}{10*' '}{'LCA of parents':20}")
-        print(f"{5*' '}{20*'-'}{10*' '}{20*'-'}")
-        for node, deg in digraph.in_degree():
-            if deg <= 1:
-                continue
-            lca = find_lca_of_parents(digraph, node)
-            print(f"{5*' '}{str(node):20}{10*' '}{str(lca):20}")
+        # Print the LCA of parents info if the graph is acylic
+        if is_directed_acyclic_graph(digraph):
+            print(f"\nLCAs of parents for nodes with indegree > 1")
+            print(f"{40*'-'}")
+            print(f"{5*' '}{'Node':20}{10*' '}{'LCA of parents':20}")
+            print(f"{5*' '}{20*'-'}{10*' '}{20*'-'}")
+            for node, deg in digraph.in_degree():
+                if deg <= 1:
+                    continue
+                lca = find_lca_of_parents(digraph, node)
+                print(f"{5*' '}{str(node):20}{10*' '}{str(lca):20}")
 
         filename = f"{input_file_stripped}.{f['name']}"
         digraph_to_pdf(digraph, filename)
