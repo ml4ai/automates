@@ -1,0 +1,904 @@
+{
+  "mainInputFilename": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+  "functions": [
+    {
+      "id": 4294965005,
+      "name": "func1",
+      "mangledName": "_Z5func1i",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 1,
+      "decl_col_start": 5,
+      "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+      "line_start": 1,
+      "line_end": 13,
+      "parameters": [
+        {
+          "name": "x",
+          "id": 4294965006,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 1,
+          "col_start": 15,
+          "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "name": "j",
+          "id": 4294965002,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "i",
+          "id": 4294965003,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964988,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 2,
+              "col_start": 13,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965003,
+                "name": "i",
+                "line_start": 2,
+                "col_start": 13,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "statements": [
+            {
+              "type": "conditional",
+              "line_start": 2,
+              "col_start": 22,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "gt_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965003,
+                  "name": "i",
+                  "line_start": 2,
+                  "col_start": 13,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 4
+                }
+              ],
+              "trueLabel": 10,
+              "falseLabel": 4
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 3,
+              "target": 10
+            },
+            {
+              "flags": 512,
+              "source": 3,
+              "target": 4
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 4,
+              "col_start": 17,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965002,
+                "name": "j",
+                "line_start": 4,
+                "col_start": 17,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 4,
+              "target": 5
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "statements": [
+            {
+              "type": "conditional",
+              "line_start": 4,
+              "col_start": 26,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "gt_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965002,
+                  "name": "j",
+                  "line_start": 4,
+                  "col_start": 17,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 4
+                }
+              ],
+              "trueLabel": 9,
+              "falseLabel": 6
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 5,
+              "target": 9
+            },
+            {
+              "flags": 512,
+              "source": 5,
+              "target": 6
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 6,
+              "col_start": 20,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "ssa_id": 1,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965003,
+                  "name": "i",
+                  "line_start": 2,
+                  "col_start": 13,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965002,
+                  "name": "j",
+                  "line_start": 4,
+                  "col_start": 17,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 6,
+              "col_start": 24,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "ssa_id": 2,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965006,
+                  "name": "x",
+                  "line_start": 1,
+                  "col_start": 15,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+                },
+                {
+                  "ssa_id": 1,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 6,
+              "col_start": 29,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "trunc_mod_expr",
+              "lhs": {
+                "ssa_id": 3,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "operands": [
+                {
+                  "ssa_id": 2,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ]
+            },
+            {
+              "type": "conditional",
+              "line_start": 6,
+              "col_start": 13,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "eq_expr",
+              "operands": [
+                {
+                  "ssa_id": 3,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ],
+              "trueLabel": 7,
+              "falseLabel": 8
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 6,
+              "target": 7
+            },
+            {
+              "flags": 512,
+              "source": 6,
+              "target": 8
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 8,
+              "col_start": 25,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964988,
+                "line_start": 8,
+                "col_start": 25,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": -1
+                }
+              ]
+            },
+            {
+              "type": "predict",
+              "line_start": 8,
+              "col_start": 25,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "hassub": 0,
+              "name": "early return (on trees)"
+            },
+            {
+              "type": "goto",
+              "target": 11
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 7,
+              "target": 11
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 4,
+              "col_start": 9,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965002,
+                "name": "j",
+                "line_start": 4,
+                "col_start": 17,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965002,
+                  "name": "j",
+                  "line_start": 4,
+                  "col_start": 17,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 5
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 8,
+              "target": 5
+            }
+          ]
+        },
+        {
+          "index": 9,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 2,
+              "col_start": 5,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965003,
+                "name": "i",
+                "line_start": 2,
+                "col_start": 13,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965003,
+                  "name": "i",
+                  "line_start": 2,
+                  "col_start": 13,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 3
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 9,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 10,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 12,
+              "col_start": 12,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964988,
+                "line_start": 8,
+                "col_start": 25,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 10,
+              "target": 11
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 0,
+              "col_start": 0,
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964988,
+                "line_start": 8,
+                "col_start": 25,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 11,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    },
+    {
+      "id": 4294964997,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 15,
+      "decl_col_start": 5,
+      "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+      "line_start": 16,
+      "line_end": 18,
+      "variableDeclarations": [
+        {
+          "name": "x",
+          "id": 4294964995,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964986,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "statements": [
+            {
+              "type": "call",
+              "line_start": 17,
+              "col_start": 18,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964995,
+                "name": "x",
+                "line_start": 17,
+                "col_start": 9,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294965005,
+                  "mangledName": "_Z5func1i",
+                  "name": "func1",
+                  "line_start": 1,
+                  "col_start": 5,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 10
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 18,
+              "col_start": 1,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964986,
+                "line_start": 18,
+                "col_start": 1,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 18,
+              "col_start": 1,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964986,
+                "line_start": 18,
+                "col_start": 1,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/early_return_4.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+  ],
+  "recordTypes": [
+  ]
+}

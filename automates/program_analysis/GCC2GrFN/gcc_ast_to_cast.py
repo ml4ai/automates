@@ -31,6 +31,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     UnaryOperator,
     VarType,
     Var,
+    loop,
     source_ref,
     subscript,
 )
@@ -64,6 +65,7 @@ class GCC2CAST:
         self.parsed_basic_blocks = []
         self.current_basic_block = None
         self.type_ids_to_defined_types = {}
+        self.loop_exits = {}
 
     def to_cast(self):
         modules = []
@@ -489,6 +491,10 @@ class GCC2CAST:
         condition_expr = self.parse_conditional_expr(stmt)
 
         if is_loop:
+
+            src_index = self.current_basic_block["index"]
+            self.loop_exits[src_index] = (src_index,stmt["trueLabel"])
+
             temp = self.current_basic_block
             loop_body = self.parse_body(false_edge, true_edge)
             self.current_basic_block = temp
@@ -514,11 +520,61 @@ class GCC2CAST:
             # this second condition. Otherwise, we only have one condition and
             # the "false block" is the normal block of code following the if,
             # so do not evaluate it here.
+            # In the case that a block has a break in it, the first check won't work
+            # because the break changes the exit target of the block it's in, so we check
+            # to see if the current block will break out the loop by seeing if the target is further 
+            # down
             if true_exit_target == false_exit_target:
                 false_res = self.parse_basic_block(false_block)
+            elif true_exit_target > true_block["edges"][0]["source"]:
+                false_res = self.parse_basic_block(false_block)
+            
 
             self.current_basic_block = temp
             return [ModelIf(expr=condition_expr, body=true_res, orelse=false_res)]
+
+    def parse_predict_stmt(self, stmt):
+        if stmt["name"] == "continue":
+            return [ModelContinue()]
+        if "early return" in stmt["name"]:
+            curr_b = self.current_basic_block
+
+            # Fetch all the statements in this node except
+            # for the early return predict and the goto that follows it
+            all_stmts = curr_b["statements"][0:-2]
+
+            # Use the line number information to get only the 
+            # statements involved in the return computation
+            return_pieces = [curr for curr in all_stmts if curr["line_start"] == stmt["line_start"]]
+
+            # Parse all the SSA statements involved in the return expression (could be 1 or more than 1)
+            for piece in return_pieces:
+                self.parse_statement(piece,return_pieces)
+            
+            # The last thing in piece contains the full return expression
+            val = self.variables_ids_to_expression[piece["lhs"]["id"]]
+            
+            return [ModelReturn(value=val)]
+        else:
+            return []
+
+    def parse_goto_stmt(self, stmt):
+        
+        # Attempt to find which block this goto statement is from
+        if len(self.loop_exits) > 0:
+            loop_indices = list(self.loop_exits.keys())
+            curr = self.loop_exits[loop_indices[0]]
+            target = stmt["target"]
+
+            for loop_index, loop_block in self.loop_exits.items():
+                if target >= loop_block[0] and target <= loop_block[1]:
+                    if loop_block[0] > curr[0] and loop_block[0] < curr[1]:
+                        curr = loop_block
+                        if target == curr[1]:
+                            return [ModelBreak()]
+
+        return []
+
 
     def parse_body(self, start_block, end_block):
         blocks = [
@@ -541,12 +597,14 @@ class GCC2CAST:
             result = self.parse_call_statement(stmt)
         elif stmt_type == "conditional":
             result = self.parse_conditional_statement(stmt, statements)
+        elif stmt_type == "predict":
+            result = self.parse_predict_stmt(stmt)
         elif (
             # Already handled in the conditional stmt type, just skip
             stmt_type == "goto"
             or stmt_type == "resx"  # Doesnt concern us
         ):
-            return []
+            result = self.parse_goto_stmt(stmt)
         else:
             # TODO custom exception
             raise Exception(f"Error: Unknown statement type {stmt_type}")

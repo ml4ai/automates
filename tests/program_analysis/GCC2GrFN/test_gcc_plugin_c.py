@@ -15,7 +15,7 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
 GCC_PLUGIN_IMAGE = "automates/program_analysis/gcc_plugin/plugin/ast_dump.so"
 GCC_TEST_DATA_DIRECTORY = "tests/data/program_analysis/GCC2GrFN"
-
+GCC_CAST_TEST_DATA = "tests/data/program_analysis/language_tests/c/"
 
 def cleanup():
     for item in os.listdir("./"):
@@ -461,6 +461,327 @@ def test_function_call_nested():
     expected_result = {"onesixtyeight": np.array([168])}
     evaluate_execution_results(expected_result, result)
 
+def test_complex_break_1():
+    test_name = "complex_break_1"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_complex_break_2():
+    test_name = "complex_break_2"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_complex_continue_1():
+    test_name = "complex_continue_1"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_cond_continue():
+    test_name = "cond_continue"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_early_return_1():
+    test_name = "early_return_1"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_early_return_2():
+    test_name = "early_return_2"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_early_return_3():
+    test_name = "early_return_3"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_early_return_4():
+    test_name = "early_return_4"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_mixed_break_continue_1():
+    test_name = "mixed_break_continue_1"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_nested_break_2():
+    test_name = "nested_break_2"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_nested_break():
+    test_name = "nested_break"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_nested_continue():
+    test_name = "nested_continue"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_simple_break():
+    test_name = "simple_break"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
+
+def test_simple_continue():
+    test_name = "simple_continue"
+
+    # Generate gcc ast 
+    run_gcc_plugin_with_c_file(f"{GCC_CAST_TEST_DATA}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    # Generate the test CAST using the GCC AST json 
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+
+    # Load the expected_cast from json
+    assert os.path.exists(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json")
+    expected_cast_json = json.load(open(f"{GCC_CAST_TEST_DATA}/{test_name}_gcc_ast_expected--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    
+    # Check the cast works
+    assert expected_cast == cast
+
+    # TODO: Go to GrFN (Later)
+
 
 @pytest.mark.skip(reason="GrFN may be incorrect")
 def test_if_statement():
@@ -674,3 +995,5 @@ def test_GE_simple_PI_controller():
 @pytest.mark.skip(reason="Developing still")
 def test_simple_controller_bhpm():
     pass
+
+
