@@ -1,16 +1,16 @@
 import json
 import argparse
-from typing import Dict, List
+from typing import Dict, List, Set
 from collections import namedtuple
 from enum import IntFlag
 
 import networkx as nx
 from networkx import DiGraph
-from networkx.algorithms.lowest_common_ancestors import lowest_common_ancestor
+# from networkx.algorithms.lowest_common_ancestors import lowest_common_ancestor
 from networkx.algorithms.dag import is_directed_acyclic_graph
 
 # BBNode is used for the nodes in the networkx digraph
-BBNode = namedtuple("BBNode", ["index"])
+BBNode = namedtuple("BBNode", ["index", "is_latch"])
 # EdgeData is used to store edge metadata in the networkx digraph
 EdgeData = namedtuple("EdgeData", ["flags", "type"])
 
@@ -38,7 +38,7 @@ def edge_flags_to_str(flags: int):
     return to_return[:-1]
 
 
-def basic_blocks_to_digraph(basic_blocks: List):
+def basic_blocks_to_digraph(basic_blocks: List, latches: Set):
     """ 
     Parameters:
         `basic_blocks` should be a list of basic_blocks obtained from
@@ -59,7 +59,8 @@ def basic_blocks_to_digraph(basic_blocks: List):
     # on the first pass, we add the BBNodes, and cache them within a dict
     bb_cache = {}
     for bb in basic_blocks:
-        bb_node = make_bbnode(bb)
+        is_latch = bb["index"] in latches
+        bb_node = make_bbnode(bb, is_latch)
         bb_cache[bb["index"]] = bb_node
         digraph.add_node(bb_node)
 
@@ -75,7 +76,7 @@ def basic_blocks_to_digraph(basic_blocks: List):
     return digraph
 
 
-def make_bbnode(bb: Dict):
+def make_bbnode(bb: Dict, is_latch: bool):
     """
     Parameters:
         bb: the dict storing the basic block data from the json output of gcc plugin
@@ -83,7 +84,7 @@ def make_bbnode(bb: Dict):
     Returns:
         returns a BBNode encompassing the data stored in `bb`
     """
-    return BBNode(index=bb["index"])
+    return BBNode(index=bb["index"], is_latch=is_latch)
 
 
 def digraph_to_pdf(digraph: DiGraph, filename: str):
@@ -122,6 +123,14 @@ def find_lca_of_parents(digraph: DiGraph, node):
             print(f"ERROR: LCA of parents for node {node} is None")
 
     return current_lca
+
+def lowest_common_ancestor(digraph: Digraph, bb1 : BBNode, bb2 : BBNode):
+    """
+    Find the lowest common ancestor of `bb1` and `bb2` without exploring any
+    ancestors which are latches
+    """
+    pass
+
 
 
 
