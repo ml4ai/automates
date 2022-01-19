@@ -57,6 +57,13 @@ from automates.program_analysis.GCC2GrFN.gcc_basic_blocks_to_digraph import (
     find_lca_of_parents
 )
 
+class LoopInfo:
+    num
+    header_bb
+    latch_bb
+    loop_body
+    ...
+
 
 class GCC2CAST:
     """
@@ -81,6 +88,8 @@ class GCC2CAST:
         self.curr_func_digraph = None
         self.curr_func_body = []
         self.func_digraphs = {}
+
+        self.bb_headers_to_loop = {} 
 
 
     def clear_function_dependent_vars(self):
@@ -507,33 +516,47 @@ class GCC2CAST:
         true_block = [bb for bb in self.basic_blocks if bb["index"] == true_edge][0]
         false_block = [bb for bb in self.basic_blocks if bb["index"] == false_edge][0]
 
-        potential_block_with_goto = [
-            bb for bb in self.basic_blocks if bb["index"] == true_edge - 1
-        ][0]
-        is_loop = False
-        for false_bb_stmt in potential_block_with_goto["statements"]:
-            if (
-                false_bb_stmt["type"] == "goto"
-                and false_bb_stmt["target"] == self.current_basic_block["index"]
-            ):
-                is_loop = True
+        is_loop = self.current_basic_block["index"] in self.bb_headers_to_loop
 
-        condition_expr = self.parse_conditional_expr(stmt)
+#         potential_block_with_goto = [
+#             bb for bb in self.basic_blocks if bb["index"] == true_edge - 1
+#         ][0]
+#         is_loop = False
+#         for false_bb_stmt in potential_block_with_goto["statements"]:
+#             if (
+#                 false_bb_stmt["type"] == "goto"
+#                 and false_bb_stmt["target"] == self.current_basic_block["index"]
+#             ):
+#                 is_loop = True
+# 
+#         condition_expr = self.parse_conditional_expr(stmt)
 
         if is_loop:
             temp = self.current_basic_block
-            loop_body = self.parse_body(false_edge, true_edge)
-            self.current_basic_block = temp
-            self.basic_block_stack.append(temp)
+            # mark loop header as parse
             # GCC inverts loop expressions to check if the EXIT condition
             # i.e., given "while (count < 100)", gcc converts that to "if (count > 99) leave loop;"
             # So, to revert to the original loop condition, add a boolean NOT
+            condition_expr = self.parse_conditional_expr(stmt)
             condition_expr = UnaryOp(
                 op=UnaryOperator.NOT,
                 value=condition_expr,
                 source_refs=condition_expr.source_refs,
             )
-            return [Loop(expr=condition_expr, body=loop_body)]
+            loop_cast_body = []
+            loop_cast = Loop(expr=condition_expr, body=loop_cast_body)
+            self.bb_index_to_cast_body[temp["index"]] = loop_cast_body
+            self.parsed_basic_blocks.add(temp["index"])
+
+            loop = self.bb_headers_to_loop[temp["index"]]
+            loop_body = self.parse_body(loop.loop_body)
+            # remove bb_header since we are already processing it
+            # make sure this is right subset
+            loop_body = loop_body[1:]
+            self.current_basic_block = temp
+            self.basic_block_stack.append(temp)
+
+            return [loop_cast]
         else:
             # If the exit targets for the conditions are the same, then we have
             # an else/elif condition because they both point to the block after
@@ -599,16 +622,23 @@ class GCC2CAST:
             print(f"** BB{true_block['index']} is the if body of BB{curr_block_index}**")
             if false_res != []:
                 print(f"** BB{false_block['index']} is the else if body of BB{curr_block_index}**")
-                self.bb_index_to_cast_body[false_block["index"]] = model_if.body
+                self.bb_index_to_cast_body[false_block["index"]] = model_if.orelse
 
             return [model_if]
 
-    def parse_body(self, start_block, end_block):
-        blocks = [
-            bb
-            for bb in self.basic_blocks
-            if bb["index"] >= start_block and bb["index"] < end_block
-        ]
+    def parse_body(self, loop_body):
+        # blocks = [
+        #     bb
+        #     for bb in self.basic_blocks
+        #     if bb["index"] >= start_block and bb["index"] < end_block
+        # ]
+
+        for bb_index in loop_body:
+            bb = self.basic_block_map[bb_index]
+            res = self.parse_basic_block(bb)
+            digraph_node = make_bbnode(bb["index"])
+            self.attach_parsed_bb_result(res, digraph_node)
+
 
         return [node for b in blocks for node in self.parse_basic_block(b)]
 
@@ -639,6 +669,7 @@ class GCC2CAST:
     def parse_basic_block(self, bb):
         # check that all parents (in the digraph) of this basic block have already been parsed
         index = bb["index"]
+        # UPDATE do not worry about predecessors which are latches
         for par in self.curr_func_digraph.predecessors(make_bbnode(bb)):
             if par.index not in self.parsed_basic_blocks:
                 print((f"WARNING: Trying to parse BB{index}, but its parent BB{par.index} has" 
@@ -769,6 +800,11 @@ class GCC2CAST:
         arguments = []
         for p in parameters:
             arguments.append(self.parse_variable(p))
+
+        # process loops field of json and add info to self.bb_headers_to_loop
+
+
+        # parse basic_blocks in order of loop num 0
 
         # parse basic blocks along a topological sort of the basic block digraph
         for bb_node in topological_sort(self.curr_func_digraph):
