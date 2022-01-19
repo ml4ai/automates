@@ -549,12 +549,13 @@ class GCC2CAST:
             self.parsed_basic_blocks.add(temp["index"])
 
             loop = self.bb_headers_to_loop[temp["index"]]
-            loop_body = self.parse_body(loop.loop_body)
+            loop_body = loop.loop_body
             # remove bb_header since we are already processing it
             # make sure this is right subset
             loop_body = loop_body[1:]
-            self.current_basic_block = temp
             self.basic_block_stack.append(temp)
+            self.parse_body(loop_body)
+            self.current_basic_block = temp
 
             return [loop_cast]
         else:
@@ -739,7 +740,8 @@ class GCC2CAST:
             self.bb_index_to_cast_body[digraph_node.index] = body
             print(f"** BB{digraph_node.index} is placed in the function body **")
             return
-
+        
+        # MAYBE: don't get latch predecessors
         parents = list(self.curr_func_digraph.predecessors(digraph_node))
         # if a node has a unique parent, then it should be sibling to that parent
         if len(parents) == 1:
@@ -756,6 +758,7 @@ class GCC2CAST:
         # if there is more than one parent (i.e. the in degree is greater than one) than
         # we should attach the result to be a sibling of the parents lowest common ancestor
         else:
+            # UPDATE: lca function
             lca = find_lca_of_parents(self.curr_func_digraph, digraph_node)
             if lca.index in self.bb_index_to_cast_body:
                 body = self.bb_index_to_cast_body[lca.index]
