@@ -7,6 +7,8 @@ var variableColor = '#ef9f6e';
 var descriptionColor = "#78d6d6";
 var parameterSettingColor = '#99daef';
 var valueColor = '#b0a0e5';
+var commandColor = "#58D3F7";
+var commandPairValueColor = "#F781BE";
 
 
 head.js(
@@ -114,7 +116,25 @@ var collData = {
                         {"type": "variable", "labels": ["variable"], "borderColor": "darken", "bgColor":"violet"},
                         {"type": "description", "labels": ["description"], "borderColor": "darken", "bgColor":"violet"}
                     ]
-                  }
+                  },
+         {
+               "type": "Command",
+               "labels": ["COMMAND"],
+               "bgColor": commandColor,
+               "borderColor": "darken",
+                "arcs": [
+                    {"type": "commandLineParamValuePair", "labels": ["ParamValuePair"], "borderColor": "darken", "bgColor":"violet"}
+                             ]
+                           },
+       {
+              "type": "CommandLineParamValuePair",
+              "labels": ["PARAM_VALUE_PAIR"],
+              "bgColor": commandPairValueColor,
+              "borderColor": "darken",
+              "arcs": [
+                    {"type": "commandLineParamValuePair", "labels": ["ParamValuePair"], "borderColor": "darken", "bgColor":"violet"}
+                             ]
+                           }
     ]
 };
 

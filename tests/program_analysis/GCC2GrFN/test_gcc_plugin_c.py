@@ -18,11 +18,8 @@ GCC_TEST_DATA_DIRECTORY = "tests/data/program_analysis/GCC2GrFN"
 
 
 def cleanup():
-    if os.path.exists("./ast.json"):
-        os.remove("ast.json")
-
     for item in os.listdir("./"):
-        if item.endswith(".o"):
+        if item.endswith(".o") or item.endswith("gcc_ast.json"):
             os.remove("./" + item)
 
 
@@ -66,7 +63,9 @@ def run_around_tests():
 
 
 def run_gcc_plugin_with_c_file(c_file):
-    gpp_command = GCC_10_BIN_DIRECTORY + "g++-10.1"
+    gpp_command = os.getenv("CUSTOM_GCC_10_PATH")
+    if gpp_command is None:
+        gpp_command = GCC_10_BIN_DIRECTORY + "g++-10.1"
     plugin_option = f"-fplugin={GCC_PLUGIN_IMAGE}"
     # Runs g++ with the given c file. This should create the file ast.json
     # with the programs ast inside of it.
@@ -463,19 +462,85 @@ def test_function_call_nested():
     evaluate_execution_results(expected_result, result)
 
 
-@pytest.mark.skip(reason="Developing still")
+@pytest.mark.skip(reason="GrFN may be incorrect")
 def test_if_statement():
-    pass
+    test_name = "if_statement"
+    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
+    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+
+    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    assert expected_cast == cast
+
+    expected_grfn = GroundedFunctionNetwork.from_json(
+        f"{test_dir}/{test_name}--GrFN.json"
+    )
+    grfn = cast.to_GrFN()
+
+    assert expected_grfn == grfn
+
+    inputs = {}
+    result = grfn(inputs)
+    expected_result = {"x": np.array([10]), "a": np.array([3]), "b": np.array([5])}
+    evaluate_execution_results(expected_result, result)
 
 
-@pytest.mark.skip(reason="Developing still")
+@pytest.mark.skip(reason="GrFN may be incorrect")
 def test_if_else_statement():
-    pass
+    test_name = "if_else_statement"
+    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
+    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+
+    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    assert expected_cast == cast
+
+    expected_grfn = GroundedFunctionNetwork.from_json(
+        f"{test_dir}/{test_name}--GrFN.json"
+    )
+    grfn = cast.to_GrFN()
+
+    assert expected_grfn == grfn
+
+    inputs = {}
+    result = grfn(inputs)
+    expected_result = {"x": np.array([5]), "a": np.array([10]), "b": np.array([5])}
+    evaluate_execution_results(expected_result, result)
 
 
-@pytest.mark.skip(reason="Developing still")
+@pytest.mark.skip(reason="CAST is incorrect (and so is GrFN)")
 def test_if_elif_statement():
-    pass
+    test_name = "if_elif_statement"
+    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
+    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+
+    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    assert expected_cast == cast
+
+    expected_grfn = GroundedFunctionNetwork.from_json(
+        f"{test_dir}/{test_name}--GrFN.json"
+    )
+    grfn = cast.to_GrFN()
+
+    assert expected_grfn == grfn
+
+    inputs = {}
+    result = grfn(inputs)
+    expected_result = {"x": np.array([5]), "a": np.array([10]), "b": np.array([7])}
+    evaluate_execution_results(expected_result, result)
 
 
 @pytest.mark.skip(reason="Developing still")

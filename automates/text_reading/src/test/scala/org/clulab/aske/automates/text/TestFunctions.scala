@@ -103,7 +103,7 @@ class TestFunctions extends ExtractionTest {
   passingTest should s"find functions from t1d: ${t1d}" taggedAs(Somebody) in {
     val desired = Seq(
       "ET" -> Seq("equilibrium evaporation", "PT coefficient"),
-      "ETeq" -> Seq("meteorological data")
+//      "ETeq" -> Seq("meteorological data") # note: the rule "obtained_with" was disabled because it was producing too many false positives, and thus this part is disabled too.
     )
     val mentions = extractMentions(t1d)
     testFunctionEvent(mentions, desired)
