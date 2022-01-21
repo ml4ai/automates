@@ -1233,24 +1233,20 @@ static void dump_loop(struct loop* loop) {
   json_int_field("headerBB", loop->header->index);
   json_int_field("depth", loop_depth(loop));
 
-  if (loop->latch) {
-    TRACE("dump_loop: loop %d has a single latch\n", loop->num);
-    json_int_field("numLatches", 1);
-    json_int_field("latchBB", loop->latch->index);
+  // dump latch BBs
+  vec<edge> latches;
+  edge e;
+  int i;
+  latches = get_loop_latch_edges(loop);
+  if (latches.length() > 1) {
+    TRACE("dump_loop: WARNING loop %d has multiple latches\n", loop->num);
   }
-  else /* multiple latches */ {
-    vec<edge> latches;
-    edge e;
-    int i;
-    TRACE("dump_loop: loop %d has multiple latches\n", loop->num);
-    latches = get_loop_latch_edges(loop);
-    json_int_field("numLatches", latches.length());
-    json_array_field("latchesBBs");
-    FOR_EACH_VEC_ELT (latches, i, e)
-        json_int(e->src->index);
-    latches.release ();
-    json_end_array();
-  }
+  json_int_field("numLatches", latches.length());
+  json_array_field("latchBBs");
+  FOR_EACH_VEC_ELT (latches, i, e)
+      json_int(e->src->index);
+  latches.release ();
+  json_end_array();
 
   json_int_field("numNodes", loop->num_nodes);
   json_array_field("loopBody");
