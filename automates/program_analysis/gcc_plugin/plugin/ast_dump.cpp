@@ -1168,13 +1168,12 @@ static void dump_basic_block(basic_block bb)
   }
   json_end_array();
 
-  // find the nearest common dominator for this bb's parents
+  // find the nearest common dominator for this BB's parents
   bitmap parents_bitmap = BITMAP_ALLOC(NULL);
   TRACE("Building parents bitmap for bb %d\n", bb->index);
   edge e;
   edge_iterator ei;
   FOR_EACH_EDGE(e, ei, bb->preds) {
-      TRACE("Setting bit %d \n", e->src->index);
       bitmap_set_bit(parents_bitmap, e->src->index);
   };
   // if the BB has no parents, skip adding the field
