@@ -42,6 +42,7 @@
 #include "cgraph.h"
 #include "options.h"
 #include "context.h"
+#include "dominance.h"
 
 #include "langhooks.h"
 
@@ -1147,7 +1148,6 @@ static void dump_local_decls(struct function *fun)
 
 static void dump_basic_block(basic_block bb)
 {
-
   json_start_object();
   json_int_field("index", bb->index);
   struct loop* loop_father = bb->loop_father;
@@ -1157,6 +1157,33 @@ static void dump_basic_block(basic_block bb)
   if (immediate_dom) {
       json_int_field("immediateDominatorIndex", immediate_dom->index);
   }
+  // dump all dominators of this basic block
+  json_array_field("dominators");
+  basic_block other_bb;
+  FOR_ALL_BB_FN(other_bb, cfun)
+  {
+      if (dominated_by_p(CDI_DOMINATORS, bb, other_bb)) {
+          json_int(other_bb->index);
+      }
+  }
+  json_end_array();
+
+  // find the nearest common dominator for this bb's parents
+  bitmap parents_bitmap = BITMAP_ALLOC(NULL);
+  TRACE("Building parents bitmap for bb %d\n", bb->index);
+  edge e;
+  edge_iterator ei;
+  FOR_EACH_EDGE(e, ei, bb->preds) {
+      TRACE("Setting bit %d \n", e->src->index);
+      bitmap_set_bit(parents_bitmap, e->src->index);
+  };
+  // if the BB has no parents, skip adding the field
+  if (bitmap_count_bits(parents_bitmap) != 0) {
+      basic_block nearest_common_dom = nearest_common_dominator_for_set(CDI_DOMINATORS, parents_bitmap);
+      json_int_field("parentsNearestCommonDom", nearest_common_dom->index);
+  }
+  BITMAP_FREE(parents_bitmap);
+
   // json_int_field("line_start", LOCATION_LINE(bb->locus));
   json_array_field("statements");
 
@@ -1166,8 +1193,6 @@ static void dump_basic_block(basic_block bb)
   {
     dump_statement(bb, gsi_stmt(gsi));
   }
-  edge e;
-  edge_iterator ei;
   FOR_EACH_EDGE(e, ei, bb->succs)
   {
 
