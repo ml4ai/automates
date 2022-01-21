@@ -1277,13 +1277,13 @@ static void dump_loop(struct loop* loop) {
   json_end_array();
 
   // dump children loops
+  json_array_field("children");
   struct loop* child = loop->inner;
   if (child) {
-    json_array_field("children");
     json_int(child->num);
     dump_loop_siblings_indices(child);
-    json_end_array();
   }
+  json_end_array();
   json_end_object();
 }
 
