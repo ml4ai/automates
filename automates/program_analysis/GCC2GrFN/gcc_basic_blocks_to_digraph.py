@@ -1,14 +1,16 @@
 import json
 import argparse
-from typing import Dict, List
+from typing import Dict, List, Set
 from collections import namedtuple
 from enum import IntFlag
 
 import networkx as nx
 from networkx import DiGraph
+# from networkx.algorithms.lowest_common_ancestors import lowest_common_ancestor
+from networkx.algorithms.dag import is_directed_acyclic_graph
 
 # BBNode is used for the nodes in the networkx digraph
-BBNode = namedtuple("BBNode", ["index"])
+BBNode = namedtuple("BBNode", ["index", "is_latch"])
 # EdgeData is used to store edge metadata in the networkx digraph
 EdgeData = namedtuple("EdgeData", ["flags", "type"])
 
@@ -36,7 +38,7 @@ def edge_flags_to_str(flags: int):
     return to_return[:-1]
 
 
-def basic_blocks_to_digraph(basic_blocks: List, return_edges_data = False):
+def basic_blocks_to_digraph(basic_blocks: List, latches: Set):
     """ 
     Parameters:
         `basic_blocks` should be a list of basic_blocks obtained from
@@ -49,45 +51,32 @@ def basic_blocks_to_digraph(basic_blocks: List, return_edges_data = False):
     Returns:
         returns a networkx digraph where the nodes are `BBNode`s and the edge relationship
         is defined by the `edges` field in the `basic_blocks` list.  The returned graph also
-        stores `EdgeData` instances at each edge using edge objects.
-
-        Optionally returns a string of the digraphs collective edge data if
-        `return_edges_data` is True.
+        stores `EdgeData` instances at each edge using the edge data dict with field `edge_data`.
     """
     digraph = nx.DiGraph()
-    collective_edges_data = ""
 
     # we complete two passes to make the digraph
     # on the first pass, we add the BBNodes, and cache them within a dict
     bb_cache = {}
     for bb in basic_blocks:
-        bb_node = make_bbnode(bb)
+        is_latch = bb["index"] in latches
+        bb_node = make_bbnode(bb, is_latch)
         bb_cache[bb["index"]] = bb_node
         digraph.add_node(bb_node)
 
     # on the second pass, we add in the edges
     for bb in basic_blocks:
-        index = bb["index"]
-        collective_edges_data += f"\nEdges for BB{index}"
         for e in bb["edges"]:
             src = bb_cache[e["source"]]
             tgt = bb_cache[e["target"]]
             flags = e["flags"]
             edge_data = EdgeData(flags=flags, type=edge_flags_to_str(flags))
-            digraph.add_edge(src, tgt, object=edge_data)
-            collective_edges_data += f"\n\t{src} --> {tgt} with data: {edge_data}"
+            digraph.add_edge(src, tgt, edge_data=edge_data)
 
-    # prune of first '\n' of collective_edges_data
-    collective_edges_data = collective_edges_data[1:]
-    
-    if return_edges_data:
-        return digraph, collective_edges_data
-
-    # otherwise
     return digraph
 
 
-def make_bbnode(bb: Dict):
+def make_bbnode(bb: Dict, is_latch: bool):
     """
     Parameters:
         bb: the dict storing the basic block data from the json output of gcc plugin
@@ -95,7 +84,7 @@ def make_bbnode(bb: Dict):
     Returns:
         returns a BBNode encompassing the data stored in `bb`
     """
-    return BBNode(index=bb["index"])
+    return BBNode(index=bb["index"], is_latch=is_latch)
 
 
 def digraph_to_pdf(digraph: DiGraph, filename: str):
@@ -112,11 +101,43 @@ def digraph_to_pdf(digraph: DiGraph, filename: str):
 
     agraph.draw(f"{filename}--basic_blocks.pdf", prog="dot")
 
+def find_lca_of_parents(digraph: DiGraph, node):
+    """
+    Finds the lowest common ancestor (in `digraph`) of the set of all parents of `node` 
+    Precondition: the indegree of node is greater than 1
+    """
+    parents = set(digraph.predecessors(node))
+
+    # the LCA of parents does not make sense if the node only has one parent
+    assert(len(parents) > 1)    
+
+
+    current_lca = parents.pop()
+
+    while len(parents) > 0:
+        parent = parents.pop()
+
+        current_lca = lowest_common_ancestor(digraph, current_lca, parent)
+
+        if current_lca == None:
+            print(f"ERROR: LCA of parents for node {node} is None")
+
+    return current_lca
+
+def lowest_common_ancestor(digraph: Digraph, bb1 : BBNode, bb2 : BBNode):
+    """
+    Find the lowest common ancestor of `bb1` and `bb2` without exploring any
+    ancestors which are latches
+    """
+    pass
+
+
+
 
 def json_ast_to_bb_graphs(gcc_ast: Dict):
     """
     Given a gcc AST json, create the networkx basic block digraphs for each function in it.
-    Generates the digraphs pdfs, and also prints the edge data out to the console
+    Generates the digraphs pdfs, and also prints the edge data and LCA of parents to the console
     """
     input_file = gcc_ast["mainInputFilename"]
     input_file_stripped = input_file.split("/")[-1]
@@ -124,10 +145,27 @@ def json_ast_to_bb_graphs(gcc_ast: Dict):
 
     for f in functions:
         basic_blocks = f["basicBlocks"]
-        digraph, output = basic_blocks_to_digraph(basic_blocks, return_edges_data=True)
+        digraph = basic_blocks_to_digraph(basic_blocks)
         print(f"\nCollective Edge Data for function {f['name']}")
-        print(f"{30*'-'}")
-        print(output)
+        print(f"{40*'-'}")
+        print(f"{5*' '}{'Src':20}{'Tgt':20}{'Edge Data':30}")
+        print(f"{5*' '}{10*'-':20}{10*'-':20}{20*'-':30}")
+
+        for u, v, ed in digraph.edges(data="edge_data"):
+            print(f"{5*' '}{str(u):20}{str(v):20}{str(ed):30}")
+
+        # Print the LCA of parents info if the graph is acylic
+        if is_directed_acyclic_graph(digraph):
+            print(f"\nLCAs of parents for nodes with indegree > 1")
+            print(f"{40*'-'}")
+            print(f"{5*' '}{'Node':20}{10*' '}{'LCA of parents':20}")
+            print(f"{5*' '}{20*'-'}{10*' '}{20*'-'}")
+            for node, deg in digraph.in_degree():
+                if deg <= 1:
+                    continue
+                lca = find_lca_of_parents(digraph, node)
+                print(f"{5*' '}{str(node):20}{10*' '}{str(lca):20}")
+
         filename = f"{input_file_stripped}.{f['name']}"
         digraph_to_pdf(digraph, filename)
         
