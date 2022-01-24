@@ -1,8 +1,5 @@
-import networkx as nx
-from networkx.algorithms.dag import topological_sort
-
 from pprint import pprint
-from typing import cast, List, Optional
+from typing import List, Optional
 from dataclasses import dataclass
 
 from automates.program_analysis.CAST2GrFN.cast import CAST
@@ -97,20 +94,16 @@ class GCC2CAST:
         self.gcc_asts = gcc_asts
         self.variables_ids_to_expression = {}
         self.ssa_ids_to_expression = {}
+        self.type_ids_to_defined_types = {}
         self.basic_blocks = []
-        # dict mapping BB index to BB
         self.bb_index_to_bb = {}
         self.basic_block_parse_queue = set()
         self.parsed_basic_blocks = set()
         # dict mapping BB index to the CAST body it is in
         self.bb_index_to_cast_body = {}
         self.current_basic_block = None
-        self.basic_block_stack = []
-        self.type_ids_to_defined_types = {}
-        # Don't need digraph anymore? 
-        # self.curr_func_digraph = None
-        # self.func_digraphs = {}
         
+        # loop data
         self.top_level_pseudo_loop_body = []
         self.loop_num_to_loop_info = {}
         self.bb_headers_to_loop_info = {} 
@@ -125,11 +118,8 @@ class GCC2CAST:
         self.parsed_basic_blocks = set()
         self.bb_index_to_cast_body = {}
         self.current_basic_block = None
-        self.basic_block_stack = []
 
-        # self.curr_func_digraph = None
-        # self.curr_func_body = []
-
+        # loop data
         self.top_level_pseudo_loop_body = []
         self.loop_num_to_loop_info = {}
         self.bb_headers_to_loop_info = {} 
@@ -572,9 +562,6 @@ class GCC2CAST:
             loop_body = loop_body[1:]
             self.parse_body(loop_body)
 
-            self.current_basic_block = cur_bb
-            self.basic_block_stack.append(cur_bb)
-
             return [parsed_loop]
         # otherwise parse as an if statement
         else:
@@ -588,9 +575,6 @@ class GCC2CAST:
             if len(false_block["parents"]) == 1:
                 print(f"Parsing BB{false_block['index']} as an elif")
                 false_res = self.parse_basic_block(false_block)
-
-            # VERIFY: Is it necessary to reset self.current_basic_block
-            self.current_basic_block = cur_bb
 
             # build a ModelIf CAST node, and add the true_block/false_blocks indices
             # to bb_index_to_cast_body to keep track of where they were attached
@@ -656,9 +640,7 @@ class GCC2CAST:
 
         # otherwise, we parse the basic block
         self.parsed_basic_blocks.add(bb_index)
-
         self.current_basic_block = bb
-        self.basic_block_stack.append(bb)
 
         statements = bb["statements"]
         cast_statements = []
@@ -668,7 +650,6 @@ class GCC2CAST:
 
         result_statements = cast_statements
 
-        self.basic_block_stack.pop()
         return result_statements
 
     def check_fortran_arg_updates(self, arguments, body):
@@ -739,13 +720,6 @@ class GCC2CAST:
         var_declarations = (
             f["variableDeclarations"] if "variableDeclarations" in f else []
         )
-
-
-        # Generate network X function digraph and store it as necessary
-        # func_digraph = basic_blocks_to_digraph(f["basicBlocks"])
- 
-        # self.curr_func_digraph = func_digraph
-        # self.func_digraphs[f["name"]] = func_digraph
 
         for v in var_declarations:
             res = self.parse_variable_definition(v)
