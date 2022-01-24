@@ -52,11 +52,6 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast_utils import (
     default_cast_val_for_gcc_types,
     default_cast_val,
 )
-from automates.program_analysis.GCC2GrFN.gcc_basic_blocks_to_digraph import (
-    basic_blocks_to_digraph,
-    make_bbnode,
-    find_lca_of_parents
-)
 
 @dataclass
 class LoopInfo:
@@ -64,12 +59,12 @@ class LoopInfo:
     header_bb: int
     depth: int
     num_latches: int
-    latch_bbs: List[int]
+    latch_bbs: List
     num_nodes: int
-    loop_body: List[int]
+    loop_body: List
     immediate_superloop: Optional[int]
-    superloops: List[int]
-    children: List[int]
+    superloops: List
+    children: List
 
 def loop_json_to_loop_info(loop_json: Dict): 
     """
@@ -589,13 +584,13 @@ class GCC2CAST:
             # If the false block has one incoming edge, then we know it belongs 
             # as the orelse of this current node (in the case of else/else if)
             false_res = []
-            # TODO
-            # check if their is only one predecessors of false block
-            if len(self.curr_func_digraph.in_edges(make_bbnode(false_block))) == 1:
+            # check if their is only one parent of false block, if so parse it as `orelse`
+            if len(false_block["parents"]) == 1:
                 print(f"Parsing BB{false_block['index']} as an elif")
                 false_res = self.parse_basic_block(false_block)
 
-            # TODO: Do we need to reset self.current_basic_block?
+            # VERIFY: Is it necessary to reset self.current_basic_block
+            self.current_basic_block = cur_bb
 
             # build a ModelIf CAST node, and add the true_block/false_blocks indices
             # to bb_index_to_cast_body to keep track of where they were attached
@@ -613,9 +608,7 @@ class GCC2CAST:
         for bb_index in loop_body:
             bb = self.bb_index_to_bb[bb_index]
             res = self.parse_basic_block(bb)
-            # TODO: Change call
-            digraph_node = make_bbnode(bb["index"])
-            self.attach_parsed_bb_result(res, digraph_node)
+            self.attach_parsed_bb_result(bb, res)
 
 
     def parse_statement(self, stmt, statements):
@@ -630,6 +623,10 @@ class GCC2CAST:
             result = self.parse_call_statement(stmt)
         elif stmt_type == "conditional":
             result = self.parse_conditional_statement(stmt, statements)
+        # TODO from Ryan: we actually need to parse gotos, for example they can appear
+        # because of break statements
+        # we also need to start parsing predict statements which can occur from continue's
+        # or labeled goto's
         elif (
             # Already handled in the conditional stmt type, just skip
             stmt_type == "goto"
@@ -693,40 +690,39 @@ class GCC2CAST:
         return args_updated_in_body
 
     def attach_parsed_bb_result(self, bb, res):
-        #TODO: Update doc string
         """
         Finds the CAST node body that this parsed basic block result should be added to,
         and extends the body with `res`.
-        If the in degree of the associated digraph node is one, then we add the parsed result
-        to its parent.  If the in degree of the associated digraph node is greater than one,
-        than we find the lowest common ancestor of all its parents, call this the lca. The parsed result
-        should be a "sibling" of the lca, so we attach it to lca's parent.
+        The body we attach `res` to is found by checking the "parentsNearestCommonDom" field
+        of `bb`, except when `bb` has index 0 or 1, since these are
+        the entry and exit points of a function, respectively.  If `bb` 
+        has index 0 or 1, we attach `res` to `self.top_level_pseudo_loop_body`.  
 
         Parameters:
             res: the result from parse_basic_block()
-            digraph_node: the associated BBNode for this basic block in the functions digraph
+            bb: the associated basic block json in dict form 
         """
-
-        # BB0 is always the start of a function, so we should add this res 
-        # to curr_func_body
-        if digraph_node.index == 0:
+        # BB0 is always the start of a function, and BB1 is the exist of a function
+        # so we should add this res top_level_pseudo_loop_body
+        if bb["index"] in [0, 1]:
             body = self.top_level_pseudo_loop_body
             body.extend(res)
-            self.bb_index_to_cast_body[digraph_node.index] = body
-            print(f"** BB{digraph_node.index} is placed in the function body **")
+            self.bb_index_to_cast_body[bb["index"]] = body
+            print(f"** BB{bb['index']} is placed in the function body **")
             return
 
         # otherwise we should attach the result to be a sibling of its parents nearest 
         # common dominator
-        nearest_common_dom = bb["nearestCommonDom"]
-        if nearest_common_dom in self.bb_index_to_cast_body:
+        nearest_common_dom = bb["parentsNearestCommonDom"]
+        try:
             body = self.bb_index_to_cast_body[nearest_common_dom]
             body.extend(res)
             self.bb_index_to_cast_body[bb["index"]] = body
             print(f"** BB{bb['index']} is going to be sibling to {nearest_common_dom} **")
-        else:
+        except IndexError as e:
             print((f"ERROR: Cannot attach BB{bb['index']} because its nearest common dom {nearest_common_dom}"
                    " is not in bb_index_to_cast_body"))
+            print(e)
 
 
     def parse_function(self, f):
@@ -778,16 +774,16 @@ class GCC2CAST:
                     if res != []:
                         print(f"Parsed BB{bb['index']} from the queue")
                         self.basic_block_parse_queue.remove(bb)
-                        self.attach_parsed_bb_result(res, make_bbnode(bb))
+                        self.attach_parsed_bb_result(bb, res)
 
             if bb_index in self.parsed_basic_blocks:
                 assert(bb_index in self.bb_index_to_cast_body)
                 continue
 
-            print(f"Parsing BB{index} from loop zero loop_body")
-            res = self.parse_basic_block(self.bb_index_to_bb[bb_index])
-            # TODO: change call
-            self.attach_parsed_bb_result(res, bb_node)
+            print(f"Parsing BB{bb_index} from loop zero loop_body")
+            bb = self.bb_index_to_bb[bb_index]
+            res = self.parse_basic_block(bb)
+            self.attach_parsed_bb_result(bb, res)
 
         line_start = f["line_start"]
         line_end = f["line_end"]
