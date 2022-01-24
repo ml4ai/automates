@@ -1168,14 +1168,18 @@ static void dump_basic_block(basic_block bb)
   }
   json_end_array();
 
-  // find the nearest common dominator for this BB's parents
+  // find the parents of this BB, and also
+  // the nearest common dominator for those parents
+  json_array_field("parents");
   bitmap parents_bitmap = BITMAP_ALLOC(NULL);
   TRACE("Building parents bitmap for bb %d\n", bb->index);
   edge e;
   edge_iterator ei;
   FOR_EACH_EDGE(e, ei, bb->preds) {
+      json_int(e->src->index);
       bitmap_set_bit(parents_bitmap, e->src->index);
   };
+  json_end_array();
   // if the BB has no parents, skip adding the field
   if (bitmap_count_bits(parents_bitmap) != 0) {
       basic_block nearest_common_dom = nearest_common_dominator_for_set(CDI_DOMINATORS, parents_bitmap);
