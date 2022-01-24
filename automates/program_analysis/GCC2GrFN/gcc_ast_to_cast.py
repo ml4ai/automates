@@ -706,36 +706,18 @@ class GCC2CAST:
             print(e)
 
 
-    def parse_function(self, f):
-        # Clear data from function parsing
-        self.clear_function_dependent_vars()
-
-        name = f["name"]
-        self.basic_blocks = f["basicBlocks"]
-        # build basic block map
-        for bb in self.basic_blocks:
-            self.bb_index_to_bb[bb["index"]] = bb
-
-        parameters = f["parameters"] if "parameters" in f else []
-        var_declarations = (
-            f["variableDeclarations"] if "variableDeclarations" in f else []
-        )
-
-        for v in var_declarations:
-            res = self.parse_variable_definition(v)
-            if res is not None:
-                self.top_level_pseudo_loop_body.append(res)
-
-        arguments = []
-        for p in parameters:
-            arguments.append(self.parse_variable(p))
-
-        # iterate over "loops" field of function json, and create LoopInfo's
-        assert(len(f["loops"]) == f["numberOfLoops"])
-        for loop in f["loops"]:
+    def parse_loops_field(self, loops_json):
+        for loop in loops_json:
             loop_info = loop_json_to_loop_info(loop)
             self.bb_headers_to_loop_info[loop_info.header_bb] = loop_info
             self.loop_num_to_loop_info[loop_info.num] = loop_info
+
+
+    def parse_basic_blocks(self, function):
+        self.basic_blocks = function["basicBlocks"]
+        # build basic block map
+        for bb in self.basic_blocks:
+            self.bb_index_to_bb[bb["index"]] = bb
 
         # parse basic_blocks in order of loop num 0
         loop_zero = self.loop_num_to_loop_info[0]
@@ -759,11 +741,13 @@ class GCC2CAST:
             res = self.parse_basic_block(bb)
             self.attach_parsed_bb_result(bb, res)
 
-        line_start = f["line_start"]
-        line_end = f["line_end"]
-        decl_line = f["decl_line_start"]
-        decl_col = f["decl_col_start"]
-        file = f["file"]
+
+    def get_func_source_refs(self, function):
+        line_start = function["line_start"]
+        line_end = function["line_end"]
+        decl_line = function["decl_line_start"]
+        decl_col = function["decl_col_start"]
+        file = function["file"]
 
         body_source_ref = SourceRef(
             source_file_name=file, row_start=line_start, row_end=line_end
@@ -771,6 +755,37 @@ class GCC2CAST:
         decl_source_ref = SourceRef(
             source_file_name=file, row_start=decl_line, col_start=decl_col
         )
+
+        return body_source_ref, decl_source_ref
+
+
+    def parse_function(self, function):
+        # clear functions variables to prepare for parsing
+        self.clear_function_dependent_vars()
+        name = function["name"]
+
+        parameters = function["parameters"] if "parameters" in function else []
+        var_declarations = (
+            function["variableDeclarations"] if "variableDeclarations" in function else []
+        )
+
+        for v in var_declarations:
+            res = self.parse_variable_definition(v)
+            if res is not None:
+                self.top_level_pseudo_loop_body.append(res)
+
+        arguments = []
+        for p in parameters:
+            arguments.append(self.parse_variable(p))
+
+        # iterate over "loops" field of function json, and create LoopInfo's
+        assert(len(function["loops"]) == function["numberOfLoops"])
+        self.parse_loops_field(function["loops"])
+
+        # parse basic blocks
+        self.parse_basic_blocks(function)
+
+        body_source_ref, decl_source_ref = self.get_func_source_refs(function)
 
         if self.source_language == "fortran":
             args_updated = self.check_fortran_arg_updates(arguments, self.top_level_pseudo_loop_body)
