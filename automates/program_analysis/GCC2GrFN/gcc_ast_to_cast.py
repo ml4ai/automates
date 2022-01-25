@@ -1,5 +1,6 @@
 from pprint import pprint
-from typing import cast
+from typing import List, Optional
+from dataclasses import dataclass
 
 from automates.program_analysis.CAST2GrFN.cast import CAST
 from automates.program_analysis.CAST2GrFN.model.cast import (
@@ -49,6 +50,39 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast_utils import (
     default_cast_val,
 )
 
+@dataclass
+class LoopInfo:
+    num: int
+    header_bb: int
+    depth: int
+    num_latches: int
+    latch_bbs: List
+    num_nodes: int
+    loop_body: List
+    immediate_superloop: Optional[int]
+    superloops: List
+    children: List
+
+def loop_json_to_loop_info(loop_json: Dict): 
+    """
+    Converts the loop json object obtained from the gcc plugin to a LoopInfo object
+    and returns it
+    """
+    num = loop_json["num"]
+    header_bb = loop_json["headerBB"]
+    depth = loop_json["depth"]
+    num_latches = loop_json["numLatches"]
+    latch_bbs = loop_json["latchBBs"]
+    num_nodes = loop_json["numNodes"]
+    loop_body = loop_json["loopBody"]
+    immediate_superloop = loop_json["immediateSuperloop"] if "immediateSuperloop" in loop_json else None
+    superloops = loop_json["superloops"]
+    children = loop_json["children"]
+
+    return LoopInfo(num=num, header_bb=header_bb, depth=depth, num_latches=num_latches,
+                    latch_bbs=latch_bbs, num_nodes=num_nodes, loop_body=loop_body,
+                    immediate_superloop=immediate_superloop, superloops=superloops, children=children)
+
 
 class GCC2CAST:
     """
@@ -60,10 +94,36 @@ class GCC2CAST:
         self.gcc_asts = gcc_asts
         self.variables_ids_to_expression = {}
         self.ssa_ids_to_expression = {}
-        self.basic_blocks = []
-        self.parsed_basic_blocks = []
-        self.current_basic_block = None
         self.type_ids_to_defined_types = {}
+        self.basic_blocks = []
+        self.bb_index_to_bb = {}
+        self.basic_block_parse_queue = set()
+        self.parsed_basic_blocks = set()
+        # dict mapping BB index to the CAST body it is in
+        self.bb_index_to_cast_body = {}
+        self.current_basic_block = None
+        
+        # loop data
+        self.top_level_pseudo_loop_body = []
+        self.loop_num_to_loop_info = {}
+        self.bb_headers_to_loop_info = {} 
+
+
+    def clear_function_dependent_vars(self):
+        self.variables_ids_to_expression = {}
+        self.ssa_ids_to_expression = {}
+        self.basic_blocks = []
+        self.bb_index_to_bb = {}
+        self.basic_block_parse_queue = set()
+        self.parsed_basic_blocks = set()
+        self.bb_index_to_cast_body = {}
+        self.current_basic_block = None
+
+        # loop data
+        self.top_level_pseudo_loop_body = []
+        self.loop_num_to_loop_info = {}
+        self.bb_headers_to_loop_info = {} 
+
 
     def to_cast(self):
         modules = []
@@ -474,24 +534,13 @@ class GCC2CAST:
 
         true_block = [bb for bb in self.basic_blocks if bb["index"] == true_edge][0]
         false_block = [bb for bb in self.basic_blocks if bb["index"] == false_edge][0]
+        cur_bb = self.current_basic_block
+        cur_bb_index = cur_bb["index"]
 
-        potential_block_with_goto = [
-            bb for bb in self.basic_blocks if bb["index"] == true_edge - 1
-        ][0]
-        is_loop = False
-        for false_bb_stmt in potential_block_with_goto["statements"]:
-            if (
-                false_bb_stmt["type"] == "goto"
-                and false_bb_stmt["target"] == self.current_basic_block["index"]
-            ):
-                is_loop = True
-
+        is_loop = cur_bb_index in self.bb_headers_to_loop_info
         condition_expr = self.parse_conditional_expr(stmt)
 
         if is_loop:
-            temp = self.current_basic_block
-            loop_body = self.parse_body(false_edge, true_edge)
-            self.current_basic_block = temp
             # GCC inverts loop expressions to check if the EXIT condition
             # i.e., given "while (count < 100)", gcc converts that to "if (count > 99) leave loop;"
             # So, to revert to the original loop condition, add a boolean NOT
@@ -500,34 +549,51 @@ class GCC2CAST:
                 value=condition_expr,
                 source_refs=condition_expr.source_refs,
             )
-            return [Loop(expr=condition_expr, body=loop_body)]
+            # create Loop CAST node with header and empty body, we will attach parsed body later
+            parsed_loop_body = []
+            parsed_loop = Loop(expr=condition_expr, body=parsed_loop_body)
+            self.bb_index_to_cast_body[cur_bb_index] = parsed_loop_body
+            self.parsed_basic_blocks.add(cur_bb_index)
+
+            loop = self.bb_headers_to_loop_info[cur_bb_index]
+            loop_body = loop.loop_body
+            # remove bb_header since we are already processing it
+            assert(loop_body[0] == cur_bb_index)
+            loop_body = loop_body[1:]
+            self.parse_body(loop_body)
+
+            return [parsed_loop]
+        # otherwise parse as an if statement
         else:
-            temp = self.current_basic_block
+            print(f"Parsing BB{true_block['index']} as an if body")
             true_res = self.parse_basic_block(true_block)
-
-            true_exit_target = true_block["edges"][0]["target"]
-            false_exit_target = false_block["edges"][0]["target"]
-
+        
+            # If the false block has one incoming edge, then we know it belongs 
+            # as the orelse of this current node (in the case of else/else if)
             false_res = []
-            # If the exit targets for the conditions are the same, then we have
-            # an else/elif condition because they both point to the block after
-            # this second condition. Otherwise, we only have one condition and
-            # the "false block" is the normal block of code following the if,
-            # so do not evaluate it here.
-            if true_exit_target == false_exit_target:
+            # check if their is only one parent of false block, if so parse it as `orelse`
+            if len(false_block["parents"]) == 1:
+                print(f"Parsing BB{false_block['index']} as an elif")
                 false_res = self.parse_basic_block(false_block)
 
-            self.current_basic_block = temp
-            return [ModelIf(expr=condition_expr, body=true_res, orelse=false_res)]
+            # build a ModelIf CAST node, and add the true_block/false_blocks indices
+            # to bb_index_to_cast_body to keep track of where they were attached
+            model_if = ModelIf(expr=condition_expr, body=true_res, orelse=false_res)
+            assert(true_block["index"] not in self.bb_index_to_cast_body)
+            self.bb_index_to_cast_body[true_block["index"]] = model_if.body
+            print(f"** BB{true_block['index']} is the if body of BB{cur_bb_index}**")
+            if false_res != []:
+                print(f"** BB{false_block['index']} is the else if body of BB{cur_bb_index}**")
+                self.bb_index_to_cast_body[false_block["index"]] = model_if.orelse
 
-    def parse_body(self, start_block, end_block):
-        blocks = [
-            bb
-            for bb in self.basic_blocks
-            if bb["index"] >= start_block and bb["index"] < end_block
-        ]
+            return [model_if]
 
-        return [node for b in blocks for node in self.parse_basic_block(b)]
+    def parse_body(self, loop_body):
+        for bb_index in loop_body:
+            bb = self.bb_index_to_bb[bb_index]
+            res = self.parse_basic_block(bb)
+            self.attach_parsed_bb_result(bb, res)
+
 
     def parse_statement(self, stmt, statements):
         stmt_type = stmt["type"]
@@ -541,6 +607,10 @@ class GCC2CAST:
             result = self.parse_call_statement(stmt)
         elif stmt_type == "conditional":
             result = self.parse_conditional_statement(stmt, statements)
+        # TODO from Ryan: we actually need to parse gotos, for example they can appear
+        # because of break statements
+        # we also need to start parsing predict statements which can occur from continue's
+        # or labeled goto's
         elif (
             # Already handled in the conditional stmt type, just skip
             stmt_type == "goto"
@@ -554,11 +624,24 @@ class GCC2CAST:
         return result
 
     def parse_basic_block(self, bb):
-        if bb["index"] in self.parsed_basic_blocks:
-            return []
-        self.parsed_basic_blocks.append(bb["index"])
+        bb_index = bb["index"]
+        # make sure all dominators of the current BB have already been parsed
+        for dom in bb["dominators"]:
+            if dom != bb_index and dom not in self.parsed_basic_blocks:
+                print((f"WARNING: Trying to parse BB{bb_index}, but its parent BB{dom} has" 
+                        " note been parsed yet"))
+                self.basic_block_parse_queue.add(bb)
+                return []
 
+        # we know all dominators have been parsed, so if this basic block has been parsed, then
+        # we can skip it
+        if bb_index in self.parsed_basic_blocks:
+            return []
+
+        # otherwise, we parse the basic block
+        self.parsed_basic_blocks.add(bb_index)
         self.current_basic_block = bb
+
         statements = bb["statements"]
         cast_statements = []
         for stmt in statements:
@@ -587,38 +670,84 @@ class GCC2CAST:
 
         return args_updated_in_body
 
-    def parse_function(self, f):
-        name = f["name"]
-        self.basic_blocks = f["basicBlocks"]
-        parameters = f["parameters"] if "parameters" in f else []
-        var_declarations = (
-            f["variableDeclarations"] if "variableDeclarations" in f else []
-        )
+    def attach_parsed_bb_result(self, bb, res):
+        """
+        Finds the CAST node body that this parsed basic block result should be added to,
+        and extends the body with `res`.
+        The body we attach `res` to is found by checking the "parentsNearestCommonDom" field
+        of `bb`, except when `bb` has index 0 or 1, since these are
+        the entry and exit points of a function, respectively.  If `bb` 
+        has index 0 or 1, we attach `res` to `self.top_level_pseudo_loop_body`.  
 
-        body = []
-        for v in var_declarations:
-            res = self.parse_variable_definition(v)
-            if res is not None:
-                body.append(res)
-
-        arguments = []
-        for p in parameters:
-            arguments.append(self.parse_variable(p))
-
-        for bb in self.basic_blocks:
-            res = self.parse_basic_block(bb)
+        Parameters:
+            res: the result from parse_basic_block()
+            bb: the associated basic block json in dict form 
+        """
+        # BB0 is always the start of a function, and BB1 is the exist of a function
+        # so we should add this res top_level_pseudo_loop_body
+        if bb["index"] in [0, 1]:
+            body = self.top_level_pseudo_loop_body
             body.extend(res)
+            self.bb_index_to_cast_body[bb["index"]] = body
+            print(f"** BB{bb['index']} is placed in the function body **")
+            return
 
-        # Clear data from function parsing
-        self.parsed_basic_blocks = []
-        self.ssa_ids_to_expression = {}
-        self.variables_ids_to_expression = {}
+        # otherwise we should attach the result to be a sibling of its parents nearest 
+        # common dominator
+        nearest_common_dom = bb["parentsNearestCommonDom"]
+        try:
+            body = self.bb_index_to_cast_body[nearest_common_dom]
+            body.extend(res)
+            self.bb_index_to_cast_body[bb["index"]] = body
+            print(f"** BB{bb['index']} is going to be sibling to {nearest_common_dom} **")
+        except IndexError as e:
+            print((f"ERROR: Cannot attach BB{bb['index']} because its nearest common dom {nearest_common_dom}"
+                   " is not in bb_index_to_cast_body"))
+            print(e)
 
-        line_start = f["line_start"]
-        line_end = f["line_end"]
-        decl_line = f["decl_line_start"]
-        decl_col = f["decl_col_start"]
-        file = f["file"]
+
+    def parse_loops_field(self, loops_json):
+        for loop in loops_json:
+            loop_info = loop_json_to_loop_info(loop)
+            self.bb_headers_to_loop_info[loop_info.header_bb] = loop_info
+            self.loop_num_to_loop_info[loop_info.num] = loop_info
+
+
+    def parse_basic_blocks(self, function):
+        self.basic_blocks = function["basicBlocks"]
+        # build basic block map
+        for bb in self.basic_blocks:
+            self.bb_index_to_bb[bb["index"]] = bb
+
+        # parse basic_blocks in order of loop num 0
+        loop_zero = self.loop_num_to_loop_info[0]
+        for bb_index in loop_zero.loop_body:
+            # before continuing to parse
+            # try to parse any basic blocks in the parse queue
+            if len(self.basic_block_parse_queue) > 0:
+                for bb in list(self.basic_block_parse_queue):
+                    res = self.parse_basic_block(bb)
+                    if res != []:
+                        print(f"Parsed BB{bb['index']} from the queue")
+                        self.basic_block_parse_queue.remove(bb)
+                        self.attach_parsed_bb_result(bb, res)
+
+            if bb_index in self.parsed_basic_blocks:
+                assert(bb_index in self.bb_index_to_cast_body)
+                continue
+
+            print(f"Parsing BB{bb_index} from loop zero loop_body")
+            bb = self.bb_index_to_bb[bb_index]
+            res = self.parse_basic_block(bb)
+            self.attach_parsed_bb_result(bb, res)
+
+
+    def get_func_source_refs(self, function):
+        line_start = function["line_start"]
+        line_end = function["line_end"]
+        decl_line = function["decl_line_start"]
+        decl_col = function["decl_col_start"]
+        file = function["file"]
 
         body_source_ref = SourceRef(
             source_file_name=file, row_start=line_start, row_end=line_end
@@ -627,12 +756,43 @@ class GCC2CAST:
             source_file_name=file, row_start=decl_line, col_start=decl_col
         )
 
+        return body_source_ref, decl_source_ref
+
+
+    def parse_function(self, function):
+        # clear functions variables to prepare for parsing
+        self.clear_function_dependent_vars()
+        name = function["name"]
+
+        parameters = function["parameters"] if "parameters" in function else []
+        var_declarations = (
+            function["variableDeclarations"] if "variableDeclarations" in function else []
+        )
+
+        for v in var_declarations:
+            res = self.parse_variable_definition(v)
+            if res is not None:
+                self.top_level_pseudo_loop_body.append(res)
+
+        arguments = []
+        for p in parameters:
+            arguments.append(self.parse_variable(p))
+
+        # iterate over "loops" field of function json, and create LoopInfo's
+        assert(len(function["loops"]) == function["numberOfLoops"])
+        self.parse_loops_field(function["loops"])
+
+        # parse basic blocks
+        self.parse_basic_blocks(function)
+
+        body_source_ref, decl_source_ref = self.get_func_source_refs(function)
+
         if self.source_language == "fortran":
-            args_updated = self.check_fortran_arg_updates(arguments, body)
+            args_updated = self.check_fortran_arg_updates(arguments, self.top_level_pseudo_loop_body)
             # TODO this will break with multiple returns within a function
             if len(args_updated) > 0:
                 existing_return = [
-                    (idx, b) for idx, b in enumerate(body) if isinstance(b, ModelReturn)
+                    (idx, b) for idx, b in enumerate(self.top_level_pseudo_loop_body) if isinstance(b, ModelReturn)
                 ]
                 new_return = None
                 if len(existing_return) == 0:
@@ -642,18 +802,18 @@ class GCC2CAST:
                 else:
                     existing_return = existing_return[0][1]
                     existing_return_idx = existing_return[0][0]
-                    del body[existing_return_idx]
+                    del self.top_level_pseudo_loop_body[existing_return_idx]
                     new_return = ModelReturn(
                         value=Tuple(
                             values=[existing_return.value]
                             + [Name(n) for n in args_updated]
                         )
                     )
-                body.append(new_return)
+                self.top_level_pseudo_loop_body.append(new_return)
 
         return FunctionDef(
             name=name,
             func_args=arguments,
-            body=body,
+            body=self.top_level_pseudo_loop_body,
             source_refs=[body_source_ref, decl_source_ref],
         )

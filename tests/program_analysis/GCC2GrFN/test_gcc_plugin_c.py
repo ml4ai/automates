@@ -97,15 +97,31 @@ def evaluate_execution_results(expected_result, result):
 
 
 def test_c_simple_function_and_assignments():
-    run_gcc_plugin_with_c_file(
-        f"{GCC_TEST_DATA_DIRECTORY}/simple_function_and_assignments/simple_function_and_assignments.c"
-    )
+    test_name = "simple_function_and_assignments"
+    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
+    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
 
-    gcc_ast_obj = json.load(open("./simple_function_and_assignments_gcc_ast.json"))
+    assert os.path.exists(f"./{test_name}_gcc_ast.json")
+
+    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
+
+    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json, cast_source_language="c")
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
-    # # json.dump(cast.to_json_object(), open(f"{test_dir}/{test_name}--CAST.json", "w"))
 
-    assert os.path.exists("./simple_function_and_assignments_gcc_ast.json")
+    assert expected_cast == cast
+
+    expected_grfn = GroundedFunctionNetwork.from_json(
+        f"{test_dir}/{test_name}--GrFN.json"
+    )
+    grfn = cast.to_GrFN()
+
+    assert expected_grfn == grfn
+
+    inputs = {}
+    result = grfn(inputs)
+    expected_result = {"y": np.array([465])}
+    evaluate_execution_results(expected_result, result)
 
 
 def test_all_binary_ops():
