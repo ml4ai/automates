@@ -39,11 +39,13 @@ object ExtractAndAssembleMentionEvents extends App {
     val reader = fileExt match {
       case "json" => OdinEngine.fromConfig(config[Config]("TextEngine"))
       case "md" => OdinEngine.fromConfig(config[Config]("MarkdownEngine"))
+      case "txt" => OdinEngine.fromConfig(config[Config]("TextEngine"))
       case _ => ???
     }
     val dataLoader = fileExt match {
       case "json" => DataLoader.selectLoader("json")
       case "md" => DataLoader.selectLoader("md")
+      case "txt" => DataLoader.selectLoader("txt")
       case _ => ???
     }
     // 1. Open corresponding output file and make all desired exporters
@@ -61,6 +63,7 @@ object ExtractAndAssembleMentionEvents extends App {
     fileExt match {
       case "json" => textMentions.appendAll(mentions)
       case "md" => mdMentions.appendAll(mentions)
+      case "txt" => textMentions.appendAll(mentions)
       case _ => ???
     }
   }
