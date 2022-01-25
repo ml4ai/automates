@@ -36,10 +36,11 @@ def call_groundMentionsToSVO(mentions_name, out_name):
     json.dump(json_dict, open(f"{out_name}.json", "w"))
 
 # given a file of serialized mentions, produces a file with associated wikidata grounding
-def call_groundMentionsToWikidata(mentions_name, out_name):
+# before running, set toggle.groundToWiki in automates/automates/model_assembly/interfaces.py to True or groundToWiki in application.conf to true
+def call_groundMentionsToWikidata(mentions_path, out_name):
 
     if not os.path.isfile(mentions_path):
-        raise RuntimeError(f"Mentions file not found: {mentions_name}")
+        raise RuntimeError(f"Mentions file not found: {mentions_path}")
 
     res = requests.post(
         f"{webservice}/groundMentionsToWikidata",
@@ -47,7 +48,7 @@ def call_groundMentionsToWikidata(mentions_name, out_name):
         json={"mentions": mentions_path},
     )
 
-    print(f"HTTP {res} for /groundMentionsToWikidata on {mentions_name}")
+    print(f"HTTP {res} for /groundMentionsToWikidata on {mentions_path}")
     json_dict = res.json()
     json.dump(json_dict, open(f"{out_name}", "w"))
 
