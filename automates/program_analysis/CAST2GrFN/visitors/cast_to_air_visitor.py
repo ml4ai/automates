@@ -143,6 +143,8 @@ class CASTToAIRVisitor(CASTVisitor):
             assigned_var = left_res[-1].input_variables[0]
             assigned_var_name = assigned_var.get_name()
             new_ver = self.state.find_next_var_version(assigned_var_name)
+            # RYAN: why are we creating a new IdentifierInformation? We have already created
+            # one in left_res
             new_var = C2AVariable(
                 C2AIdentifierInformation(
                     assigned_var_name,
@@ -159,6 +161,7 @@ class CASTToAIRVisitor(CASTVisitor):
             output_variables.append(new_var)
             self.state.add_variable(new_var)
 
+            # This just filters the list based on the predicate ()
             lambda_inputs = build_unique_list_with_order(
                 right_res[-1].input_variables, lambda v: v
             )
@@ -491,6 +494,8 @@ class CASTToAIRVisitor(CASTVisitor):
             self.state.add_variable(var_obj)
             container = self.state.find_container(var_obj.identifier_information.scope)
             container.add_arguments([var_obj])
+            # RYAN: Why do we add var_obj which is from the current scope to
+            # list of previous scope variables?
             container.add_var_used_from_previous_scope(var_obj)
 
         return var_obj
@@ -977,6 +982,7 @@ class CASTToAIRVisitor(CASTVisitor):
         cond_source_ref = C2ASourceRef("", None, None, None, None)
         source_file_name = cond_source_ref.file
 
+        # RYAN: maybe this should be moved inside the if?
         container_identifier = C2AIdentifierInformation(
             node_name,
             self.state.get_scope_stack(),
@@ -1012,6 +1018,8 @@ class CASTToAIRVisitor(CASTVisitor):
                 )
             self.state.add_container(cond_con)
 
+        # RYAN: We push the new container scope early, can this be a problem?
+        # e.g. we will look for variables inside this scope, when evaluating if conditions
         self.state.push_scope(node_name)
 
         cond_expr_var_name = f"COND_{condition_num}_{current_cond_block}"
@@ -1041,6 +1049,7 @@ class CASTToAIRVisitor(CASTVisitor):
 
         line_low = -1
         line_high = -1
+        # RYAN: Trying to find start and end line of the body
         for b in body_result:
             if b.source_ref.line_begin is not None:
                 if b.source_ref.line_begin > -1 and (
@@ -1075,12 +1084,16 @@ class CASTToAIRVisitor(CASTVisitor):
                 )
                 self.state.push_scope(cur_scope)
             else:
+                cur_scope = self.state.pop_scope()
+                print(f"handle_control_node(): Processing else block")
                 else_block_res = self.visit(next_block)
                 # TODO only capture final output vals here
                 cond_con.add_condition_outputs(
                     -1, [v for s in else_block_res for v in s.output_variables]
                 )
                 cond_con.add_body_lambdas(else_block_res)
+                print(f"handle_control_node(): Finished processing else block")
+                self.state.push_scope(cur_scope)
         elif isinstance(cond_con, C2AIfContainer) and not orelse:
             # Initialize an else condition with no outputs if this else block
             # has no outputs
@@ -1579,6 +1592,8 @@ class CASTToAIRVisitor(CASTVisitor):
             n for n in non_var_global_nodes if n.name not in visit_order_name_to_pos
         ]
         self.visit_node_list_and_flatten(visit_order)
+    
+        # RYAN: Check this logic for handling global variable linking
 
         # If we had global variables, create the global scope that calls out to
         # all root level functions
@@ -1641,6 +1656,9 @@ class CASTToAIRVisitor(CASTVisitor):
             if var_obj is None:
                 raise C2AValueError(f"Error: Unable to find variable with name: {name}")
 
+            # RYAN: The first line of check_and_add_container_var calls 
+            # find_highert_version_var... 
+            # Why not just pass in var_obj?
             var_obj = self.check_and_add_container_var(
                 var_obj.identifier_information.name,
                 var_obj.type_name,
@@ -1870,6 +1888,10 @@ class CASTToAIRVisitor(CASTVisitor):
         TODO
         """
         name = node.val.name
+        # RYAN: Do we want to find the version in current scope?
+        # For an if container, if we assign to a variable which appeared
+        # in the above scope, doesn't it make
+        # sense to create a new version of it?
         var_obj = self.state.find_highest_version_var_in_current_scope(name)
         source_ref = (
             self.retrieve_source_ref(node.source_refs[0])

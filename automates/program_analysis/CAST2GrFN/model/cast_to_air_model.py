@@ -717,6 +717,15 @@ class C2AState(object):
             if v.identifier_information.name == var_name
             and share_scope(scope, v.identifier_information.scope)
         ]
+        # RYAN: computing the max will return the wrong version for an if/else block
+        # accessing the same variable from the previous scope.
+        # EX:
+        # if x == 1:
+        #   x = x + 1
+        # else:
+        #   y = x - 1
+        # The assignment of x in the if block creates a new version, which will be
+        # returned by this max
         return max(instances, key=lambda v: v.version, default=None)
 
     def find_highest_version_var_in_previous_scopes(self, var_name):
@@ -757,7 +766,7 @@ class C2AState(object):
             for c in self.containers
             if c.identifier_information.scope + [c.identifier_information.name] == scope
         ]
-
+        # RYAN: What if multiple containers match?
         return matching[0] if matching else None
 
     def find_root_level_containers(self):
