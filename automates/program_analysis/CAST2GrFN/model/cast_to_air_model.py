@@ -654,6 +654,8 @@ class C2AState(object):
     current_conditional: int
     attribute_access_state: C2AAttributeAccessState
     current_context: C2AVariableContext
+    # HACK:
+    in_else_block_of_container: bool
 
     def __init__(self):
         self.containers = list()
@@ -665,6 +667,8 @@ class C2AState(object):
         self.current_conditional = 0
         self.current_context = C2AVariableContext.UNKNOWN
         self.attribute_access_state = C2AAttributeAccessState()
+        # HACK:
+        self.in_else_block_of_container = False
 
     def add_container(self, con: C2AContainerDef):
         self.containers.append(con)
@@ -701,6 +705,50 @@ class C2AState(object):
                 return True
         return False
 
+    def find_correct_var_version_in_scope(self, var_name, scope):
+        """
+        Given a variable name, finds the highest version defined
+        for that variable given a scope
+        """
+        # if we are in the else block, and a copy of the variable exists the current containers
+        # `vars_from_previous_scope` field, then we use that version
+        if self.in_else_block_of_container:
+            current_container = self.containers[-1]
+            prev_scope_vars = [ v for v in current_container.vars_from_previous_scope 
+                                if v.identifier_information.name == var_name
+                              ]
+                
+            print(f"find_highest_var_in_scope(): Found prev_scope_vars")
+            for v in prev_scope_vars:
+                print(f"{v.identifier_information}")
+
+            assert(len(prev_scope_vars) > 0)
+
+            return prev_scope_vars[-1]
+            
+        # Check that the global/function_name are the same
+        # TODO define what needs to be checked here better
+        def share_scope(scope1, scope2):
+            return scope1 == scope2
+
+        instances = [
+            v
+            for v in self.variables
+            if v.identifier_information.name == var_name
+            and share_scope(scope, v.identifier_information.scope)
+        ]
+
+        # RYAN: computing the max will return the wrong version for an if/else block
+        # accessing the same variable from the previous scope.
+        # EX:
+        # if x == 1:
+        #   x = x + 1
+        # else:
+        #   y = x - 1
+        # The assignment of x in the if block creates a new version, which will be
+        # returned by this max
+        return max(instances, key=lambda v: v.version, default=None)
+
     def find_highest_version_var_in_scope(self, var_name, scope):
         """
         Given a variable name, finds the highest version defined
@@ -717,6 +765,7 @@ class C2AState(object):
             if v.identifier_information.name == var_name
             and share_scope(scope, v.identifier_information.scope)
         ]
+
         # RYAN: computing the max will return the wrong version for an if/else block
         # accessing the same variable from the previous scope.
         # EX:

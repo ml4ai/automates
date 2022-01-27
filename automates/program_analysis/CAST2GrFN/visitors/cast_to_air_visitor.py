@@ -1071,6 +1071,8 @@ class CASTToAIRVisitor(CASTVisitor):
         )
 
         if len(orelse) > 0:
+            print(f"handle_control_node(): Processing else block, changing state to in else block")
+            # self.state.in_else_block_of_container = True
             next_block = orelse[0]
             if isinstance(next_block, ModelIf):
                 cur_scope = self.state.pop_scope()
@@ -1080,20 +1082,23 @@ class CASTToAIRVisitor(CASTVisitor):
                     next_block.orelse,
                     condition_type,
                     condition_num,
+                    # We no longer pop scope, so don't increment cond_block
+                    # current_cond_block, 
                     current_cond_block + 1,
                 )
                 self.state.push_scope(cur_scope)
             else:
-                cur_scope = self.state.pop_scope()
-                print(f"handle_control_node(): Processing else block")
+                self.state.in_else_block_of_container = True
                 else_block_res = self.visit(next_block)
                 # TODO only capture final output vals here
                 cond_con.add_condition_outputs(
                     -1, [v for s in else_block_res for v in s.output_variables]
                 )
                 cond_con.add_body_lambdas(else_block_res)
-                print(f"handle_control_node(): Finished processing else block")
-                self.state.push_scope(cur_scope)
+                print(f"handle_control_node(): Finished processing else block, unsetting in else block")
+                self.state.in_else_block_of_container = False
+            # print(f"handle_control_node(): Finished processing else block, unsetting in else block")
+            # self.state.in_else_block_of_container = False
         elif isinstance(cond_con, C2AIfContainer) and not orelse:
             # Initialize an else condition with no outputs if this else block
             # has no outputs
@@ -1631,7 +1636,11 @@ class CASTToAIRVisitor(CASTVisitor):
         TODO
         """
         name = node.name
-        var_obj = self.state.find_highest_version_var_in_current_scope(name)
+        # RYAN: for Name nodes, we just want to retrieve a value in the variable, so
+        # we don't necessarily want to find the highest version, since the correct version
+        # to retrieve is scope dependent
+        # var_obj = self.state.find_highest_version_var_in_current_scope(name)
+        var_obj = self.state.find_correct_var_version_in_scope(name, self.state.scope_stack[-1])
 
         additional_lambas = []
         # In this case we are loading a var of type object but not accessing an attribute.
@@ -1887,6 +1896,8 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
+        # RYAN: If each time we parse a Var node we create a new version, we should just
+        # increase the version in here instead of in Assignment visit
         name = node.val.name
         # RYAN: Do we want to find the version in current scope?
         # For an if container, if we assign to a variable which appeared
