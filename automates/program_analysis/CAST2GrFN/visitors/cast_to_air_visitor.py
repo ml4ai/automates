@@ -605,6 +605,8 @@ class CASTToAIRVisitor(CASTVisitor):
         container_args_list = (
             called_func.vars_from_previous_scope if called_func is not None else []
         )
+        print((f"Processing Call node called_func_name = {called_func_name}, " +
+                f"container_args_list = {container_args_list}"))
         for v in container_args_list:
             input_var = self.check_and_add_container_var(
                 v.identifier_information.name, v.type_name, v.source_ref
@@ -825,6 +827,28 @@ class CASTToAIRVisitor(CASTVisitor):
             )
             con.output_variables.append(newest_var)
 
+    def add_global_vars_to_current_function(self):
+        """
+        Import all the global variables to the current functions AIR scope
+        """
+        for var in self.state.global_container.output_variables:
+            identifier = var.identifier_information
+            name = identifier.name
+            # currently, variables are "imported" into the current AIR scope
+            # by making a copy of them
+            imported_var_obj = C2AVariable(
+                C2AIdentifierInformation(
+                    name,
+                    self.state.get_scope_stack(),
+                    self.state.current_module,
+                    C2AIdentifierType.VARIABLE,
+                ),
+                -1,
+                var.type_name,
+                var.source_ref,
+            )
+            self.state.current_function.add_arguments([imported_var_obj])
+        
     @visit.register
     def _(self, node: FunctionDef):
         """
@@ -867,7 +891,15 @@ class CASTToAIRVisitor(CASTVisitor):
         )
         self.state.add_container(self.state.current_function)
 
+        print(f"Created FunctionDefContainer with name {node.name}")
+
+
         self.state.push_scope(node.name)
+        # HACK: try importing the global variables to the current function AIR scope
+        # as well as adding any global variables which are assigned in this function
+        # to the `output_variables` field of this container
+        if self.state.global_container:
+            self.add_global_vars_to_current_function()
         args_result = self.visit_node_list_and_flatten(node.func_args)
         argument_vars = []
         for arg in args_result:
@@ -878,6 +910,10 @@ class CASTToAIRVisitor(CASTVisitor):
 
         body_result = self.visit_node_list_and_flatten(node.body)
         self.state.current_function.add_body_lambdas(body_result)
+        # HACK: add any global variables which are assigned in this function
+        # to the `output_variables` field of this container
+        if self.state.global_container:
+            self.add_global_var_assignment_to_output_variables(self.state.current_function)
 
         self.handle_packs_exiting_container(self.state.current_function)
         self.handle_previous_scope_variable_outputs(self.state.current_function)
@@ -1552,45 +1588,80 @@ class CASTToAIRVisitor(CASTVisitor):
         self.state.current_function.add_outputs(result_air_var)
         return assign_res
 
+    def visit_functions_according_to_visit_order(self, node: Module):
+        """
+        Visit the functions defined in Module `node` according to their
+        call order as determined by `call_order.get_function_visit_order()`
+        """
+        visit_order = call_order.get_function_visit_order(node)
+        visit_order_name_to_pos = {name: pos for pos, name in enumerate(visit_order)}
+        print(f"Found visit_order_name_to_pos {visit_order_name_to_pos}")
+        non_var_global_nodes = [
+            n for n in node.body if not isinstance(n, (Assignment, Var))
+        ]
+        # we want to visit FunctionDef's first
+        function_defs = list(visit_order_name_to_pos.keys())
+        function_defs.sort(key=lambda name: visit_order_name_to_pos[name])
+        # [
+        #     (visit_order_name_to_pos[n.name], n)
+        #     for n in non_var_global_nodes
+        #     if n.name in visit_order_name_to_pos
+        # ]
+        # function_defs.sort(key=lambda p: p[0])
+        function_def_nodes =  filter(lambda node: node.name in function_defs, non_var_global_nodes)
+        non_function_def_nodes =  filter(lambda node: node.name not in function_defs, non_var_global_nodes)
+        visit_order = list(function_def_nodes) + list(non_function_def_nodes)
+        # visit_order = [p[1] for p in pairs] + [
+        #     n for n in non_var_global_nodes if n.name not in visit_order_name_to_pos
+        # ]
+        self.visit_node_list_and_flatten(visit_order)
+
+    def add_global_var_assignment_to_output_variables(self, container):
+        """ 
+        Look over processed Assignment nodes stored in container.body, and if 
+        any of the assigned to variables are globals, add them 
+        to the `output_variables` of `container`
+        """
+        # FIX: this cannot alway be correct
+        global_con_outputs = [var.identifier_information.name for var in self.state.global_container.output_variables]
+        # iterate over the body of the container, looking for 
+        # elements with container_type: C2ALambdaType.ASSIGN
+        for element in container.body:
+            if element.container_type == C2ALambdaType.ASSIGN:
+                output_vars = element.output_variables
+                output_vars = filter(lambda var: var.identifier_information.name in global_con_outputs, output_vars)
+                output_vars = list(output_vars)
+                container.add_outputs(output_vars)
+
+    def add_var_assignment_to_output_variables(self, container):
+        """ 
+        Add any processed Assignment nodes stored in container.body 
+        to the `outputs_variables` of `container`
+        """
+        # iterate over the body of the container, looking for 
+        # elements with container_type: C2ALambdaType.ASSIGN
+        for element in container.body:
+            if element.container_type == C2ALambdaType.ASSIGN:
+                # add any outputs of this lambda to the global container outputs
+                container.add_outputs(element.output_variables)
+
     @visit.register
     def _(self, node: Module):
         """
         TODO
         """
+        print(f"\n{'*'*5}In visit Module{'*'*5}")
         self.state.current_module = node.name
         self.state.push_scope(node.name)
 
         global_var_nodes = [n for n in node.body if isinstance(n, (Assignment, Var))]
-        non_var_global_nodes = [
-            n for n in node.body if not isinstance(n, (Assignment, Var))
-        ]
 
         global_var_results = self.visit_node_list_and_flatten(global_var_nodes)
-
-        visit_order = call_order.get_function_visit_order(node)
-        visit_order_name_to_pos = {name: pos for pos, name in enumerate(visit_order)}
-        pairs = [
-            (visit_order_name_to_pos[n.name], n)
-            for n in non_var_global_nodes
-            if n.name in visit_order_name_to_pos
-        ]
-        pairs.sort(key=lambda p: p[0])
-        visit_order = [p[1] for p in pairs] + [
-            n for n in non_var_global_nodes if n.name not in visit_order_name_to_pos
-        ]
-        self.visit_node_list_and_flatten(visit_order)
-
-        # If we had global variables, create the global scope that calls out to
-        # all root level functions
+        print(f"Found global_var_nodes {global_var_nodes}")
+        
+        # If we had global variables, create the global container 
+        # which holds those globals 
         if len(global_var_nodes) > 0:
-            roots = self.state.find_root_level_containers()
-
-            global_body = []
-            for r in roots:
-                root_container_call = Call(func=r, arguments=[], source_refs=[])
-                root_result = self.visit(root_container_call)
-                global_body.extend(root_result)
-
             global_container = C2AFunctionDefContainer(
                 C2AIdentifierInformation(
                     "global",
@@ -1601,14 +1672,37 @@ class CASTToAIRVisitor(CASTVisitor):
                 list(),
                 list(),
                 list(),
-                global_var_results + global_body,
+                global_var_results,
                 C2ASourceRef("", None, None, None, None),  # TODO source ref
                 [],
                 "",
             )
             self.state.add_container(global_container)
+            self.state.global_container = global_container
+            # AIR assignment and variable nodes as output variables of the global
+            # container
+            self.add_var_assignment_to_output_variables(global_container)
+
+        self.visit_functions_according_to_visit_order(node)
+
+        # if we have a global container, we add a Call from the global
+        # container to the root level functions (e.g. main())
+        # and then extend the body of the global container
+        if self.state.global_container:
+            roots = self.state.find_root_level_containers()
+
+            global_body = []
+            for r in roots:
+                root_container_call = Call(func=r, arguments=[], source_refs=[])
+                root_result = self.visit(root_container_call)
+                global_body.extend(root_result)
+
+            gc = self.state.global_container
+            gc.add_body_lambdas(global_body)
+
 
         self.state.pop_scope()
+        print(f"{'*'*5}Finished visit Module{'*'*5}\n")
 
     @visit.register
     def _(self, node: Name):
@@ -1876,6 +1970,10 @@ class CASTToAIRVisitor(CASTVisitor):
             if node.source_refs is not None and len(node.source_refs) > 0
             else C2ASourceRef("", None, None, None, None)
         )
+        # RYAN: Handling variables stored in global container?
+        # check to see if there is a variable with this name in the global container
+        # if var_obj is None:
+        #     self.state.find_var_in_global_container(name)
         if var_obj is None:
             var_obj = C2AVariable(
                 C2AIdentifierInformation(

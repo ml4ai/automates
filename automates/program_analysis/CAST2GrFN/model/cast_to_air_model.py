@@ -377,6 +377,10 @@ class C2AContainerDef(object):
         self.body_source_ref = body_source_ref
 
     def add_var_used_from_previous_scope(self, var):
+        name = self.identifier_information.name
+        scope = "::".join(self.identifier_information.scope)
+        var_name = var.identifier_information.name
+        print(f"For identifier {scope+name}, appending var {var_name} to prev scope")
         self.vars_from_previous_scope.append(var)
 
 
@@ -654,6 +658,9 @@ class C2AState(object):
     current_conditional: int
     attribute_access_state: C2AAttributeAccessState
     current_context: C2AVariableContext
+    # ADDED: keep track of global container which holds global variables
+    global_container: C2AFunctionDefContainer
+    processing_global_container: bool
 
     def __init__(self):
         self.containers = list()
@@ -665,6 +672,7 @@ class C2AState(object):
         self.current_conditional = 0
         self.current_context = C2AVariableContext.UNKNOWN
         self.attribute_access_state = C2AAttributeAccessState()
+        self.processing_global_container = False
 
     def add_container(self, con: C2AContainerDef):
         self.containers.append(con)
