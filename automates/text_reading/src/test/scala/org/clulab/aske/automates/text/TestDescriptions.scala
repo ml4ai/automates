@@ -459,7 +459,7 @@ class TestDescriptions extends ExtractionTest {
   }
 
   val t9f = "This is the initial S (Susceptible) input in the SIR model."
-  failingTest should s"find descriptions from t9f: ${t9f}" taggedAs(Somebody) in {
+  passingTest should s"find descriptions from t9f: ${t9f}" taggedAs(Somebody) in {
     val desired = Seq(
       "S" -> Seq("Susceptible") // fixme: can't get rid of initial as descr without disallowing adj-only descriptions
     )
@@ -520,11 +520,9 @@ class TestDescriptions extends ExtractionTest {
     testDescriptionEvent(mentions, desired)
   }
 
-    val t3g = "This new model will be called SEIRP model (E stands for the Exposed class while P stands for protection)" +
-    " which can be considered as a variant of the standard SIR."
+    val t3g = "This new model will be called SEIRP model (E stands for the Exposed class while P stands for protection)."
   passingTest should s"find descriptions from t3g: ${t3g}" taggedAs(Somebody) in {
     val desired =  Seq(
-//      "SEIRP" -> Seq("variant of the standard SIR"), // todo: check if this is the one that should be extracted here. ask Paul.
       "E" -> Seq("Exposed class"),
       "P" -> Seq("protection")
     )
@@ -643,9 +641,10 @@ class TestDescriptions extends ExtractionTest {
     testDescriptionEvent(mentions, desired)
   }
 
+  // sacrificing this for the greater good (too many adjectives are extracted as definitions---for now disallow definitions without nouns or participles/gerunds)
   val t1iToy = "Susceptible (S) individuals may become exposed (E) to the virus, then infected (I) at varying " +
     "levels of disease severity."
-  passingTest should s"find descriptions from t1iToy: ${t1iToy}" taggedAs(Somebody) in {
+  failingTest should s"find descriptions from t1iToy: ${t1iToy}" taggedAs(Somebody) in {
     val desired =  Seq(
       "S" -> Seq("Susceptible"),
       "E" -> Seq("exposed"), 
@@ -795,6 +794,15 @@ class TestDescriptions extends ExtractionTest {
   }
 
 
+  // SuperMaaS tests
+
+  val u1a = "the daily herbage harvest (grazed) is 400 kg DM/ha."
+  failingTest should s"find NO descriptions from u1a: ${u1a}" taggedAs(Somebody) in {
+    val desired = Seq.empty[(String, Seq[String])]
+    val mentions = extractMentions(u1a)
+    testDescriptionEvent(mentions, desired)
+  }
+
   // this is a test based on a real, not well-processed document, so some symbols don't make sense; the point of the test, though, is to prevent incorrect copy-with-arg-ing or grouping of mentions---each descr mention in this document should be contained within one sentence
   val multiSent1 = "The exponent b controls the shape of the demand curve, and can be interpreted as a short-term price elasticity of world market demand. We investigate two different versions of the model: One (called FixCons, for ﬁxed consumption) in which is prescribed to match ﬁnal consumption Qout observed annual consumption; and one (called FlexCons, for ﬂexible consumption) in which annual deviations from the observed long-term consumption trend are determined within the model based on simulated prices, according to ð Þed ð7Þ QoutðtÞ ¼ Qout;refðtÞ⋅ PðtÞ / PaveðtÞ."
   // alpha is not reached with any rule because of lambda/c
@@ -802,4 +810,5 @@ class TestDescriptions extends ExtractionTest {
     val descrMentions = extractMentions(multiSent1).filter(_.label contains "Description")
     withinOneSentenceTest(descrMentions)
   }
+
 }

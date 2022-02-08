@@ -6,10 +6,11 @@ import org.clulab.odin.Mention
 import org.scalatest._
 import org.clulab.aske.automates.OdinEngine._
 import org.clulab.aske.automates.apps.{AlignmentBaseline, ExtractAndAlign}
-import org.clulab.aske.automates.apps.ExtractAndAlign.{allLinkTypes, whereIsGlobalVar, whereIsNotGlobalVar}
+import org.clulab.aske.automates.apps.ExtractAndAlign.{GLOBAL_VAR_TO_UNIT_VIA_CONCEPT, allLinkTypes, whereIsGlobalVar, whereIsNotGlobalVar}
+import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
-import org.clulab.utils.TextUtils
+import org.clulab.utils.MentionUtils
 import org.json4s.jackson.JsonMethods._
 import play.libs.F.Tuple
 import ujson.Value
@@ -77,6 +78,14 @@ object TestUtils {
       testBinaryEvent(mentions, FUNCTION_LABEL, FUNCTION_OUTPUT_ARG, FUNCTION_INPUT_ARG, desired)
     }
 
+    def testModelDescrsEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
+      testBinaryEvent(mentions, MODEL_DESCRIPTION_LABEL, MODEL_NAME_ARG, MODEL_DESCRIPTION_ARG, desired)
+    }
+
+    def testModelLimitEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
+      testBinaryEvent(mentions, MODEL_LIMITATION_LABEL, MODEL_NAME_ARG, MODEL_DESCRIPTION_ARG, desired)
+    }
+
     def testUnitEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
       testBinaryEvent(mentions, UNIT_LABEL, VARIABLE_ARG, UNIT_ARG, desired)
     }
@@ -123,10 +132,11 @@ object TestUtils {
 
     //used for parameter setting tests where the setting is an interval
     def testThreeArgEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, arg3Role: String, desired: Seq[(String, Seq[String])]): Unit = {
+
       val found = mentions.filter(_ matches eventType)
       found.length should be(desired.size)
-      //todo add func to check args and not only the size
 
+      // note: assumes there's only one of each variable
       val grouped = found.groupBy(_.arguments(arg1Role).head.text)
       // we assume only one variable (arg1) arg!
       for {
@@ -153,8 +163,8 @@ object TestUtils {
     def testBinaryEventStrings(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2Strings: Seq[String]) = {
       val identifierDescriptionPairs = for {
         m <- ms
-        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(TextUtils.getMentionText(_))
-        a2 <- m.arguments.getOrElse(arg2Role, Seq()).map(TextUtils.getMentionText(_))
+        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(MentionUtils.getMentionText(_))
+        a2 <- m.arguments.getOrElse(arg2Role, Seq()).map(MentionUtils.getMentionText(_))
       } yield (a1, a2)
 
       arg2Strings.foreach(arg2String => identifierDescriptionPairs should contain ((arg1String, arg2String)))
@@ -175,18 +185,20 @@ object TestUtils {
     def testUnaryEventStrings(ms: Seq[Mention], arg1Role: String, eventType: String, arg1Strings: Seq[String]) = {
       val functionFragment = for {
         m <- ms
-        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(TextUtils.getMentionText(_))
+        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(MentionUtils.getMentionText(_))
       } yield a1
       arg1Strings.foreach(arg1String => functionFragment should contain (arg1String))
     }
 
     //used for parameter setting tests where the setting is an interval
     def testThreeArgEventString(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2String: String, arg3Role: String, arg3String: String): Unit = {
-      val varMinMaxSettings = for {
+
+      // assumes there is one of each arg
+      val varMinMaxSettings =  for {
         m <- ms
-        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(_.text)
-        a2 <- m.arguments.getOrElse(arg2Role, Seq()).map(_.text)
-        a3 <- m.arguments.getOrElse(arg3Role, Seq()).map(_.text)
+        a1 = if (m.arguments.contains(arg1Role)) m.arguments.get(arg1Role).head.map(_.text).head else ""
+        a2 = if (m.arguments.contains(arg2Role)) m.arguments.get(arg2Role).head.map(_.text).head else ""
+        a3 = if (m.arguments.contains(arg3Role)) m.arguments.get(arg3Role).head.map(_.text).head else ""
       } yield (a1, a2, a3)
 
       varMinMaxSettings should contain ((arg1String, arg2String, arg3String))
@@ -200,6 +212,18 @@ object TestUtils {
       // Check that each of the arg values is found
       val argStrings = selectedArgs.map(_.text)
       argValues.foreach(argStrings should contain (_))
+    }
+
+
+    def getAttachmentJsonsFromArgs(mentions: Seq[Mention]): Seq[ujson.Value] = {
+      val allAttachmentsInEvent = for {
+        m <- mentions
+        arg <- m.arguments
+        a <- arg._2
+        if a.attachments.nonEmpty
+        att <- a.attachments
+      } yield att.asInstanceOf[AutomatesAttachment].toUJson
+      allAttachmentsInEvent
     }
 
   }
@@ -298,15 +322,17 @@ object TestUtils {
     }
     def topDirectLinkTest(idf: String, desired: String, directLinks: Map[String, Seq[Value]],
                           linkType: String, status: String): Unit = {
+
       val threshold = allLinkTypes("direct").obj(linkType).num
       if (status == "passing") {
         it should f"have a correct $linkType link for global var ${idf}" in {
           val topScoredLink = directLinks(linkType).sortBy(_.obj("score").num).reverse.head
           // which element in this link type we want to check
           val whichLink = whereIsNotGlobalVar(linkType)
+
           // element 1 of this link (eq gl var) should be E
           desired.split("::") should contain (topScoredLink(whichLink).str.split("::").last)
-          topScoredLink("score").num > threshold shouldBe true
+          topScoredLink("score").num >= threshold shouldBe true
         }
       } else {
         val failingMessage = if (status=="failingNegative") {

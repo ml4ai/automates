@@ -1,117 +1,96 @@
+import argparse
 import requests
 import json
 import os
 
 webservice = "http://localhost:9000"
 
-cur_dir = os.getcwd()
-automates_data = os.environ["AUTOMATES_DATA"]
-mini_spam = f"{automates_data}/Mini-SPAM"
-pet_grfns = f"{mini_spam}/grfns"
-pet_docs = f"{mini_spam}/docs/SPAM/PET"
-pet_eqns = f"{mini_spam}/eqns/SPAM/PET"
+### The script is used to call various endpoints defined in /automates/automates/text_reading/webapp/app/controllers/HomeController.scala on individual files
 
-
+# this endpoint requires science parse jar running
 def call_pdf_to_mentions(doc_name, out_name):
-    doc_file = f"{pet_docs}/{doc_name}"
-    if not os.path.isfile(doc_file):
+    if not os.path.isfile(doc_name):
         raise RuntimeError(f"Document not found: {doc_name}")
 
     res = requests.post(
         f"{webservice}/pdf_to_mentions",
         headers={"Content-type": "application/json"},
-        json={"pdf": doc_file, "outfile": f"{cur_dir}/{out_name}.json"},
+        json={"pdf": doc_name, "outfile": f"{out_name}"},
     )
     print(f"HTTP {res} for /pdf_to_mentions on {doc_name}")
 
 
-def call_align(mentions_name, eqn_path, eqn_name, grfn_name, out_name):
-    mentions_path = f"{cur_dir}/{mentions_name}.json"
-    if not os.path.isfile(mentions_path):
-        raise RuntimeError(f"Mentions not found: {mentions_name}")
-
-    eqns_path = f"{pet_eqns}/{eqn_path}/{eqn_name}.txt"
-    if not os.path.isfile(eqns_path):
-        raise RuntimeError(f"Equations not found: {eqn_name}")
-
-    grfn_path = f"{pet_grfns}/{grfn_name}.json"
-    if not os.path.isfile(grfn_path):
-        raise RuntimeError(f"GrFN not found: {grfn_name}")
-
-    res = requests.post(
-        f"{webservice}/align",
-        headers={"Content-type": "application/json"},
-        json={
-            "mentions": mentions_path,
-            "equations": eqns_path,
-            "grfn": grfn_path,
-        },
-    )
-    print(f"HTTP {res} for /align on ({mentions_name}, {grfn_name})")
-    json_dict = res.json()
-    json.dump(json_dict, open(f"{out_name}.json", "w"))
-
-
+# SVO API has been disabled, so this cannot be currently used
 def call_groundMentionsToSVO(mentions_name, out_name):
-    mentions_path = f"{cur_dir}/{mentions_name}.json"
-    if not os.path.isfile(mentions_path):
+    if not os.path.isfile(mentions_name):
         raise RuntimeError(f"Mentions file not found: {mentions_name}")
 
     res = requests.post(
         f"{webservice}/groundMentionsToSVO",
         headers={"Content-type": "application/json"},
-        json={"mentions": mentions_path},
+        json={"mentions": mentions_name},
     )
 
     print(f"HTTP {res} for /groundMentionsToSVO on {mentions_name}")
     json_dict = res.json()
     json.dump(json_dict, open(f"{out_name}.json", "w"))
 
+# given a file of serialized mentions, produces a file with associated wikidata grounding
+# before running, set toggle.groundToWiki in automates/automates/model_assembly/interfaces.py to True or groundToWiki in application.conf to true
+def call_groundMentionsToWikidata(mentions_path, out_name):
+
+    if not os.path.isfile(mentions_path):
+        raise RuntimeError(f"Mentions file not found: {mentions_path}")
+
+    res = requests.post(
+        f"{webservice}/groundMentionsToWikidata",
+        headers={"Content-type": "application/json"},
+        json={"mentions": mentions_path},
+    )
+
+    print(f"HTTP {res} for /groundMentionsToWikidata on {mentions_path}")
+    json_dict = res.json()
+    json.dump(json_dict, open(f"{out_name}", "w"))
+
+
+# replace sample text in this method ("text" in the post request) to return a file with serialized mentions for the text
+def call_process_text(out_name):
+
+    res = requests.post(
+        f"{webservice}/process_text",
+        headers={"Content-type": "application/json"},
+        json={"text": "LAI is leaf area index."},
+    )
+
+    print(f"HTTP {res} for /process_text")
+    json_dict = res.json()
+    json.dump(json_dict, open(f"{out_name}", "w"))
+
+# output serizlized mentions for the Science Parse json input
+def call_json_doc_to_mentions(doc_name, out_name):
+
+    res = requests.post(
+        f"{webservice}/json_doc_to_mentions",
+        headers={"Content-type": "application/json"},
+        json={"json": doc_name, "outfile": f"{out_name}"},
+    )
+    print(f"HTTP {res} for /json_doc_to_mentions on {doc_name}")
+
+# output serizlized mentions for the COSMOS json input
+def call_cosmos_json_doc_to_mentions(doc_name, out_name):
+
+    res = requests.post(
+        f"{webservice}/cosmos_json_to_mentions",
+        headers={"Content-type": "application/json"},
+        json={"pathToCosmosJson": doc_name, "outfile": f"{out_name}"},
+    )
+    print(f"HTTP {res} for /cosmos_json_to_mentions on {doc_name}")
+
 
 if __name__ == "__main__":
-    call_pdf_to_mentions(
-        "ASCE-2005-The ASCE Standardized Reference-TechReport-petasce.pdf",
-        "ASCE-mentions",
-    )
-    call_pdf_to_mentions("petpt_2012", "PT-mentions")
-    call_pdf_to_mentions("petpno_Penman", "PNO-mentions")
-    call_pdf_to_mentions("petpen_PM", "PEN-mentions")
-    call_pdf_to_mentions("petdyn_modern", "DYN-mentions")
-
-    call_align(
-        "ASCE-mentions",
-        "PETASCE",
-        "PETASCE_equations",
-        "PETASCE_AIR",
-        "ASCE-alignment",
-    )
-    call_align(
-        "PT-mentions", "PETPT", "PETPT_equations", "PETPT_AIR", "PT-alignment"
-    )
-    call_align(
-        "PNO-mentions",
-        "PETPNO",
-        "PETPNO_equations",
-        "PETPNO_AIR",
-        "PNO-alignment",
-    )
-    call_align(
-        "PEN-mentions",
-        "PETPEN",
-        "PETPEN_equations",
-        "PETPEN_AIR",
-        "PEN-alignment",
-    )
-    call_align(
-        "DYN-mentions",
-        "PETDYN",
-        "PETDYN_equations",
-        "PETDYN_AIR",
-        "DYN-alignment",
-    )
-
-    # call_groundMentionsToSVO("ASCE-mentions", "ASCE-svo_grounding")
-    # call_groundMentionsToSVO("PT-mentions", "PT-svo_grounding")
-    # call_groundMentionsToSVO("PNO-mentions", "PNO-svo_grounding")
-    # call_groundMentionsToSVO("PEN-mentions", "PEN-svo_grounding")
-    # call_groundMentionsToSVO("DYN-mentions", "DYN-svo_grounding")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input_file", help="input file path")
+    parser.add_argument("output_file", help="output file path")
+    args = parser.parse_args()
+    # replace the method below with any other method here to run different endpoints
+    call_pdf_to_mentions(args.input_file, args.output_file)

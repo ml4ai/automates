@@ -9,6 +9,7 @@ GET     /parseSentence              controllers.HomeController.parseSentence(sen
 GET     /getMentions                controllers.HomeController.getMentions(text: String)
 POST     /groundStringToSVO         controllers.HomeController.groundStringToSVO
 POST     /groundMentionsToSVO       controllers.HomeController.groundMentionsToSVO
+POST     /groundMentionsToWikidata  controllers.HomeController.groundMentionsToWikidata
 POST    /process_text               controllers.HomeController.process_text
 POST    /pdf_to_mentions            controllers.HomeController.pdf_to_mentions
 POST    /align                      controllers.HomeController.align

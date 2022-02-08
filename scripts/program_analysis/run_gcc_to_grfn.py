@@ -22,6 +22,9 @@ import json
 import argparse
 
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
+from automates.program_analysis.CAST2GrFN.visitors.cast_to_agraph_visitor import (
+    CASTToAGraphVisitor,
+)
 from automates.utils import misc
 
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
@@ -39,6 +42,10 @@ def get_args(args=sys.argv[1:]):
     parser.add_argument(
         "-v", "--verbose", help="Verbose mode, dump output of gcc plugin."
     )
+    parser.add_argument("-c", "--compiler", help="Custom path to gcc-10 compiler")
+    parser.add_argument("-p", "--plugin", help="Custom path to gcc plugin")
+    parser.add_argument("-Cg", "--CASTgraph", help="Create CAST graphviz pdf",
+            action='store_true')
     options = parser.parse_args(args)
     return options
 
@@ -68,13 +75,23 @@ def run_gcc_pipeline():
             "-o",
             "/dev/null",
         ]
+    
+    # use default path to compiler if one is not provided as cmd line arg
+    path_to_compiler = args.compiler
+    if path_to_compiler is None:
+        path_to_compiler = f"{GCC_10_BIN_DIRECTORY}/{compiler}"
+
+    # use default path to plugin if one is not provided as cmd line arg
+    path_to_plugin = args.plugin
+    if path_to_plugin is None:
+        path_to_plugin = f"{GCC_PLUGIN_IMAGE_DIR}{plugin_name}"
 
     assert os.path.exists(
-        GCC_10_BIN_DIRECTORY
+        path_to_compiler
     ), f"Error: GCC binaries not installed at expected location: {GCC_10_BIN_DIRECTORY}"
 
     assert os.path.exists(
-        GCC_PLUGIN_IMAGE_DIR + plugin_name
+        path_to_plugin
     ), f"Error: GCC AST dump plugin does not exist at expected location: {GCC_PLUGIN_IMAGE_DIR + plugin_name}"
 
     print("Dumping GCC AST...")
@@ -83,8 +100,8 @@ def run_gcc_pipeline():
     # with the programs ast inside of it.
     results = subprocess.run(
         [
-            f"{GCC_10_BIN_DIRECTORY}/{compiler}",
-            f"-fplugin={GCC_PLUGIN_IMAGE_DIR + plugin_name}",
+            path_to_compiler,
+            f"-fplugin={path_to_plugin}",
             "-O0",
             # Need to use -c if only one file in order to make a .o file
             "-c" if len(input_files) == 1 else "",
@@ -119,6 +136,10 @@ def run_gcc_pipeline():
     print("Turning GCC AST into CAST...")
     cast = GCC2CAST(ast_jsons).to_cast()
     json.dump(cast.to_json_object(), open(f"{program_name}--CAST.json", "w+"))
+
+    if args.CASTgraph:
+        V = CASTToAGraphVisitor(cast)
+        V.to_pdf(program_name + "--CAST.pdf")
 
     print("Transforming CAST into GrFN...")
     # Set random seed to 0 for UUID generation for consistent results in

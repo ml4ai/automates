@@ -8,10 +8,11 @@ case class CosmosDocument(
 
 case class CosmosObject(
                        pdfName: Option[String],
-                       pageNum: Option[Int],
-                       blockIdx: Option[Int],
+                       pageNum: Option[Seq[Int]],
+                       blockIdx: Option[Seq[Int]],
                        content: Option[String],
                        cls: Option[String], //postprocess_cls (class)
+                       detectCls: Option[String],
                        postprocessScore: Option[Double]
                        )
 case class Author(

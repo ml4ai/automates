@@ -50,6 +50,7 @@ class TextReadingInterface:
         eqns_path: str,
         grfn_path: str,
         comments_path: str,
+        wikidata_path: str
     ) -> dict:
         if not os.path.isfile(mentions_path):
             raise RuntimeError(f"Mentions not found: {mentions_path}")
@@ -98,8 +99,9 @@ class TextReadingInterface:
                 "variables": variables,
                 "comments": json.load(open(comments_path, "r")),
             },
-            "toggles": {"groundToSVO": False, "appendToGrFN": False},
+            "toggles": {"groundToSVO": False, "groundToWiki": False, "saveWikiGroundings": False, "appendToGrFN": False},
             "arguments": {"maxSVOgroundingsPerVar": 5},
+            "wikidata": wikidata_path
         }
         payload_path = f"{os.getcwd()}/align_payload.json"
         json.dump(payload, open(payload_path, "w"))

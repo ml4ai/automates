@@ -28,9 +28,11 @@ object DataLoader {
   def selectLoader(s: String): DataLoader = {
     s match {
       case "txt" => new PlainTextDataLoader
-      case "json" => new ScienceParsedDataLoader
+      case "json" => new CosmosJsonDataLoader
       case "pdf" => new PDFDataLoader
       case "tokenized_latex" => new TokenizedLatexDataLoader
+      case "md" => new MarkdownTextDataLoader
+
     }
   }
 }
@@ -59,16 +61,24 @@ class ScienceParsedDataLoader extends DataLoader {
 class CosmosJsonDataLoader extends DataLoader {
   /**
     * Loader for documents which have been converted by UW Cosmos from pdf to parquet file and by ... to json. Each file contains a json representation of pdf blocks (sorted in increasing order of page and order of block on the page).
-    * Here we will return a sequence of strings; each string includes the content of the block, the page num, and index/order of the block on the page, "::"-separated.
+    * Here we will return a sequence of strings; each string includes the content of the block, the page num, and index/order of the block on the page, "<::>"-separated.
     *
     * @param f the File being loaded
     * @return string content of each section in the parsed pdf paper (as determined by science parse)
     */
   def loadFile(f: File): Seq[String] = {
     val cosmosDoc = CosmosJsonProcessor.mkDocument(f)
-    cosmosDoc.cosmosOjects.filter(_.cls.getOrElse("") == "Body Text").map(co => co.content.get + "::" + co.pageNum.get + "::" + co.blockIdx.get)
+    cosmosDoc.cosmosOjects.filter(section => (section.cls.getOrElse("") != "Figure" && section.cls.getOrElse("") != "Table" ) && section.cls.getOrElse("") != "Reference text"  && section.cls.getOrElse("") != "Page Footer" && section.detectCls.getOrElse("") != "Equation"  && section.detectCls.getOrElse("") != "Section Header").map(co => co.content.get + "<::>" + co.pdfName.getOrElse("unknown_doc") + "<::>" + co.pageNum.get.mkString(",") + "<::>" + co.blockIdx.get.mkString(",")).map(string => remapSpecialSymbols(string)) // for some papers, also  && section.cls.getOrElse("") != "Equation" and && section.cls.getOrElse("") != "Section Header"
   }
   override val extension: String = "json"
+  val specialCharMap: Map[String, String] = Map("(cid:27)" -> "ff", "(cid:28)" -> "ft", "cid:0" -> " ")
+  def remapSpecialSymbols(string: String): String = {
+    var newString = string
+    for ((key, value) <- specialCharMap) {
+      newString = newString.replace(key, value)
+    }
+    newString
+  }
 }
 
 class PDFDataLoader extends DataLoader {
@@ -113,6 +123,17 @@ class PlainTextDataLoader extends DataLoader {
   override val extension: String = "txt"
 }
 
+class MarkdownTextDataLoader extends DataLoader {
+  /**
+    * Loader for markdown files.  Here we will return the content of the file as a Seq[String] (with length 1).
+    * For now not very different than text files (only split on new lines), but probably should be modified more
+    *
+    * @param f the File being loaded
+    * @return string content of file (wrapped in sequence)
+    */
+  def loadFile(f: File): Seq[String] = getTextFromFile(f).split("\n").filter(_.nonEmpty).map(t=>t.replace("`", ""))
+  override val extension: String = "md"
+}
 
 class TokenizedLatexDataLoader extends DataLoader {
   /**

@@ -23,6 +23,14 @@ rules:
     pattern: |
       [word = /[A-Za-z]/ ] [word = "-"] [tag = "CD"]
 
+  - name: unit_power
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "to a value of 200 mm 2 per plant"
+    pattern: |
+      [entity = "B-unit"] [tag = "CD"]
+
   - name: number_unit
     label: Unit
     priority: ${priority}
@@ -30,7 +38,7 @@ rules:
     action: looksLikeAUnit
     example: "a hypothetical crop with an assumed height of 0.12 m, with a surface resistance of 70 s m-1 and an albedo of 0.23"
     pattern: |
-      (?<= [entity = "NUMBER"]) [chunk = "I-NP" & !tag = /CD|CC/ & !word = /\(|\)|-LRB-|-RRB-|to|and|\]/]+
+      (?<= [entity = "NUMBER"]) [chunk = "I-NP" & !tag = /CD|CC|-LRB-|-RRB-|,/ & !word = /,\{\}\(|\)|-LRB-|-RRB-|to|and|\]/]+
       |
       (?<= [entity = "NUMBER"]) [entity="DURATION"]
       #required for non-standard units, e.g., s m-1
@@ -41,7 +49,7 @@ rules:
     type: token
     example: "It's been 7-10 days."
     pattern: |
-      (?<= [tag = "CD"]) [entity="DURATION"]
+      (?<= [tag = "CD"]) [entity="DURATION" & !chunk = "O"]
 
   - name: person
     label: Unit
@@ -60,6 +68,14 @@ rules:
       [lemma="$"]
       #note: more monetary units can be added under this rule.
 
+  - name: percent
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "Global change (%)"
+    pattern: |
+      [lemma="%"]
+
   - name: unit_from_fragments
     label: Unit
     priority: ${priority}
@@ -70,7 +86,7 @@ rules:
       [entity = /(?i)unit/]+ [word = "-"] [tag = "CD"] #| [entity = /(?i)unit/]+ [word = /.*/] [entity = /(?i)unit/]? [word = "-"] [tag = "CD"] | [entity = /(?i)unit/]+
       #the condition that has the [word = /.*/] between two groups of units is precarious; it's there to account for `kg s m−4`, where 's' is not found as a unit
 
-  - name: unit_from_fragments2
+  - name: unit_from_fragments2_1
     label: Unit
     priority: ${priority}
     type: token
@@ -82,6 +98,15 @@ rules:
       #the !tag="CD" part helps ensure the value is not included in the unit
       #note: excluded the tag "CC" from the first phrase of words.
 
+  - name: unit_from_fragments2_2
+    label: Unit
+    priority: ${priority}
+    type: token
+    action: looksLikeAUnit
+    example: "Our simulations are clearly sensitive to the maximum refugee move speed parameter, and in particular move speeds below 100km/day result in significantly higher validation errors."
+    pattern: |
+      [entity = /(?i)unit/] [word = "/"] [chunk = /B-NP|I-NP/ & entity = "DURATION"]
+      #todo: how to incorporate this rule into the rule above?
 
   - name: unit_from_fragments3
     label: Unit

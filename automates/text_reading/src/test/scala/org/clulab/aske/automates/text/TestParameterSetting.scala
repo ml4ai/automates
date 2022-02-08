@@ -4,22 +4,18 @@ import org.clulab.aske.automates.TestUtils._
 
 class TestParameterSetting  extends ExtractionTest {
 
-//  passingTest should "set parameters 1" in {
-//    val text = "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop " +
-//      "coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
-//
-//    val desired = Seq(
-//      "LAI" -> Seq("0")
-//    )
-//    val mentions = extractMentions(text)
-//    testParameterSettingEvent(mentions, desired)
-//  }
+  val text1 = "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop " +
+    "coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
+  passingTest should s"extract the parameter setting(s) from text 1: ${text1}" in {
+    val desired = Seq(
+      "LAI" -> Seq("0")
+    )
+    val mentions = extractMentions(text1)
+    testParameterSettingEvent(mentions, desired)
+  }
 
 
   // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
-
-  //todo: decide if we want to explicitly state in the name of the test what we are extracting
-  //can be done after we have confirmed that the tests look correct
 
   val t1a = "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
   passingTest should s"extract the parameter setting(s) from t1a: ${t1a}" taggedAs(Somebody) in {
@@ -45,10 +41,11 @@ class TestParameterSetting  extends ExtractionTest {
     "prior calibration efforts."
   failingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "SKc" -> Seq("0.4", "0.9") // todo: need a more fine-grained test with modifiers, e.g., SKc -> 0.5, maize; potential trigger - "level"
+      "SKc" -> Seq("0.5"),
+      "Skc" -> Seq("0.6") // todo: need a more fine-grained test with modifiers, e.g., SKc -> 0.5, maize; potential trigger - "level"
     )
 
-    //fixme: change the test --- part should be in param setting interval + need a better rule to capture 0.5 and 0.6
+    //fixme: need a better rule to capture 0.5 and 0.6
     val mentions = extractMentions(t3a)
     testParameterSettingEvent(mentions, desired)
   }
@@ -142,11 +139,8 @@ class TestParameterSetting  extends ExtractionTest {
 
 
   val t13a = "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended."
-  //passingTest should s"extract the parameter setting(s) from t13a and NOT extract the figure number from t13a: ${t13a}" taggedAs(Somebody, Interval) in {
-  passingTest should s"NOT extract the figure number: ${t13a}" taggedAs(Somebody, Interval) in {
-    val desired = Seq(
-      //"SKc" -> Seq("0.5", "0.7") //todo: how do we extract intervals like this? Masha: made a separate test set for interval parameter settings
-    )
+    passingTest should s"NOT extract the figure number: ${t13a}" taggedAs(Somebody) in {
+    val desired = Seq.empty
     val mentions = extractMentions(t13a)
     testParameterSettingEvent(mentions, desired)
   }
@@ -195,9 +189,9 @@ class TestParameterSetting  extends ExtractionTest {
   }
 
   val t4b = " The inverse ratio of λ ρw times energy flux in MJ m-2 d-1 equals 1.0 mm d-1."
-  failingTest should s"extract the parameter setting(s) from t4b: ${t4b}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t4b: ${t4b}" taggedAs(Somebody) in {
     val desired = Seq(
-      "The inverse ratio of λ ρw times energy flux" -> Seq("1.0")
+      "inverse ratio of λ ρw times energy flux" -> Seq("1.0")
     )
     val mentions = extractMentions(t4b)
     testParameterSettingEvent(mentions, desired)
@@ -206,12 +200,160 @@ class TestParameterSetting  extends ExtractionTest {
   val t1c = "We therefore assume that S(0) = 6.8 – 0.5 = 6.3 million."
   failingTest should s"extract the parameter setting(s) from t1c: ${t1c}" taggedAs(Somebody) in {
     val desired = Seq(
-      "S(0)" -> Seq("6.3") // fixme: is million a param setting or unit?
+      "S(0)" -> Seq("6.3 million")
     )
     val mentions = extractMentions(t1c)
     testParameterSettingEvent(mentions, desired)
   }
 
+  // SuperMaaS tests
+
+  val u1a = "Default nitrogen removal is 15 % for sheep & beef, and 25 % for dairy grazed pastures but it remains the user's choice to set a sensible value for their system ."
+  failingTest should s"extract the parameter setting(s) from u1a: ${u1a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "nitrogen removal" -> Seq("15"), //fixme: handle percentages
+      "nitrogen removal" -> Seq("25")
+    )
+    val mentions = extractMentions(u1a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u2a = "It shows that the pasture is not harvested before 1/07/1995 , the harvest frequency is once every 21 days and the harvest residual is 1250 kg / ha ."
+  failingTest should s"extract the parameter setting(s) from u2a: ${u2a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "harvest residual" -> Seq("1250")
+    )
+    val mentions = extractMentions(u2a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u3a = "85 % of grazed / harvested nitrogen returns to soil , of which 60 % is in urine and returned to soil profile to a depth of 300 mm ."
+  failingTest should s"extract the parameter setting(s) from u3a: ${u3a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "soil profile to a depth" -> Seq("300") //fixme: should actually be soil profile depth but this is good enough
+    )
+    val mentions = extractMentions(u3a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u4a = "where sowing depth was known and it is set to 1.5 o Cd per mm ."
+  passingTest should s"extract the parameter setting(s) from u4a: ${u4a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "sowing depth" -> Seq("1.5")
+    )
+    val mentions = extractMentions(u4a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u4atoy = " where St is sowing depth  and it is set to 1.5 o Cd per mm ."
+  passingTest should s"extract the parameter setting(s) from u4atoy: ${u4atoy}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "St" -> Seq("1.5")
+    )
+    val mentions = extractMentions(u4atoy)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u5a = "For the purposes of model parameterisation the value of shoot_lag has been assumed to be around 40 o Cd."
+  passingTest should s"extract the parameter setting(s) from u5a: ${u5a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "value of shoot_lag" -> Seq("40")
+    )
+    val mentions = extractMentions(u5a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u6a = "This means that at a sowing depth of 4 cm emergence occurs..."
+  failingTest should s"extract the parameter setting(s) from u6a: ${u6a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "sowing depth" -> Seq("4")
+    )
+    val mentions = extractMentions(u6a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u7a = "Phenology APSIM-Barley uses 11 crop stages and ten phases ( time between stages ) ."
+  failingTest should s"extract the parameter setting(s) from u7a: ${u7a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "crop stages" -> Seq("11"),
+      "phases" -> Seq("ten") // when have started handling word param settings, switch to `10`
+    )
+    val mentions = extractMentions(u7a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u9a = "Photoperiod is calculated from day of year and latitude using standard astronomical equations accounting for civil twilight using the parameter twilight, which is assumed to be -6 o."
+  failingTest should s"extract the parameter setting(s) from u9a: ${u9a}" taggedAs(Somebody, Interval) in {
+    val desired = Seq(
+      "parameter twilight" -> Seq("-6")
+    )
+    val mentions = extractMentions(u9a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u10a = "The barley module allows a total retranslocation of no more than 20 % of stem biomass present at the start of grainfilling. Grain yield on a commercial moisture basis is calculated using the parameter grn_water_cont = 0.125 ."
+  failingTest should s"extract the parameter setting(s) from u10a: ${u10a}" taggedAs(Somebody, Interval) in {
+    val desired = Seq(
+      "grn_water_cont" -> Seq("0.125")
+    )
+    val mentions = extractMentions(u10a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u11a = "Leaf initiation / appearance and tillering leaves appear at a fixed phyllochron of thermal time, currently set to 95 o Cd in the barley."
+  failingTest should s"extract the parameter setting(s) from u11a: ${u11a}" taggedAs(Somebody, Interval) in {
+    val desired = Seq(
+      "phyllochron of thermal time" -> Seq("95") // this is likely not solveable
+    )
+    val mentions = extractMentions(u11a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u12a = "On the day of emergence, leaf area per plant is initialised to a value of 200 mm 2 per plant ."
+  failingTest should s"extract the parameter setting(s) from u12a: ${u12a}" taggedAs(Somebody, Interval) in {
+    val desired = Seq(
+      "leaf area per plant" -> Seq("200")
+    )
+    val mentions = extractMentions(u12a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u13a = "Root biomass is converted to root length using the parameter specific_root_length ( currently assumed as 60000 mm / g for all species ) ."
+  failingTest should s"extract the parameter setting(s) from u13a: ${u13a}" taggedAs(Somebody, Interval) in {
+    val desired = Seq(
+      "specific_root_length" -> Seq("60000")
+    )
+    val mentions = extractMentions(u13a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u14a = "The parameter root_depth_rate varies with growth stage and is typically zero after the start of grain filling ."
+  failingTest should s"extract the parameter setting(s) from u14a: ${u14a}" taggedAs(Somebody, Interval) in {
+    val desired = Seq(
+      "root_depth_rate" -> Seq("zero")
+    )
+    val mentions = extractMentions(u14a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u15a = "It is assumed that leaf expansion growth is reduced when the supply / demand ratio for water is below 1.1 and stops when supply / demand ratio reaches 0.1 ."
+  passingTest should s"extract the parameter setting(s) from u15a: ${u15a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "supply / demand ratio" -> Seq("0.1")
+    )
+    val mentions = extractMentions(u15a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  // source unknown
+  val t1d = "If the parameters above are used to simulate the future spread of epidemic we obtain the value of R∞ to be 350."
+  passingTest should s"extract the parameter setting(s) from t1d: ${t1d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "R∞" -> Seq("350")
+    )
+    val mentions = extractMentions(t1d)
+    testParameterSettingEvent(mentions, desired)
+  }
 
 
 //  val t4b = "The value of RHmax generally exceeds 90% and approaches 100%."

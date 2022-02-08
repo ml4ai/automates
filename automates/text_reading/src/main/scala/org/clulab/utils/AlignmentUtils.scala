@@ -8,13 +8,16 @@ import org.clulab.aske.automates.apps.{AlignmentArguments, AlignmentBaseline, Au
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
-import org.clulab.grounding.sparqlResult
+import org.clulab.grounding.{sparqlResult, sparqlWikiResult}
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.processors.Document
 import ujson.{Obj, Value}
 import ujson.json4s._
+import upickle.default.macroRW
+import upickle.default.{ReadWriter, macroRW}
 
 import java.util.UUID.randomUUID
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 
@@ -22,14 +25,41 @@ object AlignmentJsonUtils {
   /**stores methods that are specific to processing json with alignment components;
     * other related methods are in GrFNParser*/
 
-  case class GlobalVariable(id: String, identifier: String, textVarObjStrings: Seq[String], textFromAllDescrs: Seq[String])
+  case class GlobalVariable(id: String, identifier: String, textVarObjStrings: Seq[String], textFromAllDescrs: Seq[String], groundings: Option[Seq[sparqlWikiResult]])
+
+  object GlobalVariable {
+    implicit val rw: ReadWriter[GlobalVariable] = macroRW
+  }
+
+  case class SeqOfGlobalVariables(globalVars: Seq[GlobalVariable])
+
+  object SeqOfGlobalVariables {
+    implicit val rw: ReadWriter[SeqOfGlobalVariables] = macroRW
+  }
 
   case class GlobalEquationVariable(id: String, identifier: String, eqVarObjStrings: Seq[String])
 
   case class GlobalSrcVariable(id: String, identifier: String, srcVarObjStrings: Seq[String])
 
   /**get arguments for the aligner depending on what data are provided**/
-  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): AlignmentArguments = {
+  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, groundToWiki: Boolean, serializerName: String): AlignmentArguments = {
+
+    val wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]] = if (groundToWiki) {
+      val pathToWikiGroundings = json("wikidata").str
+
+      // load if exist; none otherwise
+      if (pathToWikiGroundings != "None") {
+        val groundingsAsUjson = ujson.read(new File(pathToWikiGroundings))
+        val groundingMap = mutable.Map[String, Seq[sparqlWikiResult]]()
+        for (item <- groundingsAsUjson("wikiGroundings").arr) {
+          val identString = item.obj("variable").str
+          val groundings = item.obj("groundings").arr.map(gr => new sparqlWikiResult(gr("searchTerm").str, gr("conceptID").str, gr("conceptLabel").str, Some(gr("conceptDescription").arr.map(_.str).mkString(" ")), Some(gr("alternativeLabel").arr.map(_.str).mkString(" ")), Some(gr("subClassOf").arr.map(_.str).mkString(" ")), Some(gr("score").arr.head.num), gr("source").str)).toSeq
+          groundingMap(identString) = groundings
+        }
+        Some(groundingMap.toMap)
+      } else None
+
+    } else None
 
     val jsonObj = json.obj
     // load text mentions
@@ -50,14 +80,12 @@ object AlignmentJsonUtils {
       Some(textMentions)
     } else None
 
-
     val descriptionMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
         .filter(m => m.label.contains("Description"))
         .filter(m => hasRequiredArgs(m, "description")))
     } else None
-
 
     val parameterSettingMentions = if (allMentions.nonEmpty) {
       Some(allMentions
@@ -145,7 +173,7 @@ object AlignmentJsonUtils {
 
 
 
-    AlignmentArguments(json, identifierNames, identifierShortNames, commentDescriptionMentions, descriptionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
+    AlignmentArguments(json, identifierNames, identifierShortNames, commentDescriptionMentions, descriptionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings, wikigroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")
@@ -211,13 +239,59 @@ object AlignmentJsonUtils {
     ).toString()
 
   }
+  //searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata"
+  def groundingToJson(grounding: sparqlWikiResult): ujson.Obj = {
+    val descriptions = if (grounding.conceptDescription.nonEmpty) grounding.conceptDescription.get else ujson.Null
+    val score = if (grounding.score.nonEmpty) grounding.score.get else ujson.Null
+    val toReturn = ujson.Obj(
+      "search_term" -> grounding.searchTerm,
+      "concept_ID" -> grounding.conceptID,
+      "concept_label" -> grounding.conceptLabel,
+      "source" -> grounding.source
+    )
+
+    if (grounding.conceptDescription.isDefined) {
+      toReturn("concept_description") = grounding.conceptDescription.get
+    } else {
+      toReturn("concept_description") = ujson.Null
+    }
+
+    if (grounding.alternativeLabel.isDefined) {
+      toReturn("alternative_labels") = grounding.alternativeLabel.get
+    } else {
+      toReturn("alternative_labels") = ujson.Null
+    }
+
+    if (grounding.subClassOf.isDefined) {
+      toReturn("subClassOf") = grounding.subClassOf.get
+    } else {
+      toReturn("subClassOf") = ujson.Null
+    }
+
+    if (grounding.score.isDefined) {
+      toReturn("score") = grounding.score.get
+    } else {
+      toReturn("score") = ujson.Null
+    }
+
+    toReturn
+
+  }
 
   def mkGlobalVarLinkElement(glv: GlobalVariable): String = {
-    ujson.Obj(
+    val toReturn = ujson.Obj(
       "uid" -> glv.id,
       "content" -> glv.identifier,
       "identifier_objects" -> glv.textVarObjStrings.map(obj => ujson.read(obj).obj("uid").str)
-    ).toString()
+    )
+
+    if (glv.groundings.isDefined) {
+      toReturn("groundings") = glv.groundings.get.map(o => groundingToJson(o))
+    } else {
+      toReturn("groundings") = ujson.Null
+    }
+
+    toReturn.toString()
   }
 
   def getGlobalSrcVars(srcVars: Seq[Value]): Seq[GlobalSrcVariable] = {
@@ -239,8 +313,8 @@ object AlignmentJsonUtils {
       ujson.Obj(
         "uid" -> randomUUID.toString,
         "source" -> varName,
-        "content" -> split(2),
-        "model" -> split(0)
+        "content" -> split.takeRight(2).head,
+        "model" -> split.takeRight(3).head
       )
     }
   }

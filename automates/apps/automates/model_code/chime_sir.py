@@ -111,8 +111,47 @@ def execute(
 
 
 def drive(start, end, step, parameters):
+    """
+    Allowed parameters:
+    # i_day                 : UidJunction("J:main.i_day")
+    UidVariable("V:i_day"),
+    # n_days                : UidJunction("J:main.n_days")
+    UidVariable("V:n_days"),
+    # N_p                   : UidJunction("J:main.N_p")
+    UidVariable("V:N_p"),
+    # infections_days       : UidJunction("J:main.infections_days")
+    UidVariable("V:infections_days"),
+    # relative_contact_rate : UidJunction("J:main.relative_contact_rate")
+    UidVariable("V:relative_contact_rate"),
+    # s_n                   : UidJunction("J:main.s_n")
+    UidVariable("V:s_n"),
+    # i_n                   : UidJunction("J:main.i_n")
+    UidVariable("V:i_n"),
+    # r_n                   : UidJunction("J:main.r_n")
+    UidVariable("V:r_n"),
 
-    param_names_to_vals = {k.split("::")[-2]: v for k, v in parameters.items()}
+    Technically, these are initial conditions, but do have a default val:
+    # s_n                   : UidJunction("J:main.s_n")
+    UidVariable("V:s_n"),
+    # i_n                   : UidJunction("J:main.i_n")
+    UidVariable("V:i_n"),
+    # r_n                   : UidJunction("J:main.r_n")
+    UidVariable("V:r_n"),
+
+    Allowed measure selections:
+    # out S                 : UidPort("P:main.out.S")
+    UidVariable("V:S"),
+    # out I                 : UidPort("P:main.out.I")
+    UidVariable("V:I"),
+    # out R                 : UidPort("P:main.out.R")
+    UidVariable("V:R"),
+    # out E                 : UidPort("P:main.out.E")
+    UidVariable("V:E"),
+    Returns:
+        [type]: [description]
+    """
+
+    param_names_to_vals = {k.split(".")[-1]: v for k, v in parameters.items()}
     (S, E, I, R) = execute(**param_names_to_vals, n_days=end)
 
     def process_time_step_results(result_arr):
@@ -122,11 +161,9 @@ def drive(start, end, step, parameters):
         return stepped_results
 
     return {
-        "CHIME_SIR::CHIME_SIR::main::0::--::s_a::1": process_time_step_results(S),
-        "CHIME_SIR::CHIME_SIR::main::0::--::e_a::1": process_time_step_results(E),
-        "CHIME_SIR::CHIME_SIR::main::0::--::i_a::1": process_time_step_results(I),
-        "CHIME_SIR::CHIME_SIR::main::0::--::r_a::1": process_time_step_results(R),
-        "CHIME_SIR::CHIME_SIR::main::0::--::n_days::0": process_time_step_results(
-            range(end + 1)
-        ),
+        "P:main.out.S": process_time_step_results(S),
+        "P:main.out.E": process_time_step_results(E),
+        "P:main.out.I": process_time_step_results(I),
+        "P:main.out.R": process_time_step_results(R),
+        "J:main.n_days": process_time_step_results(range(end + 1)),
     }

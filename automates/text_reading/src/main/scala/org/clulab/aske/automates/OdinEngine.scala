@@ -58,6 +58,7 @@ class OdinEngine(
   }
 
   var loadableAttributes = LoadableAttributes()
+  val actions = loadableAttributes.actions
 
   // These public variables are accessed directly by clients which
   // don't know they are loadable and which had better not keep copies.
@@ -80,21 +81,33 @@ class OdinEngine(
     // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
     // Run the main extraction engine, pre-populated with the initial state
-    val events =  engine.extractFrom(doc, initialState).toVector
+    val events = actions.processCommands(engine.extractFrom(doc, initialState).toVector)
+    val (paramSettings, nonParamSettings) = events.partition(_.label.contains("ParameterSetting")) // `paramSettings` includes interval param setting
+    val noOverlapParamSettings = actions.intervalParamSettTakesPrecedence(paramSettings)
+    val paramSettingsAndOthers = noOverlapParamSettings ++ nonParamSettings
+    val newModelParams1 = actions.paramSettingVarToModelParam(paramSettingsAndOthers)
+    val modelCorefResolve = actions.resolveModelCoref(paramSettingsAndOthers)
 
     // process context attachments to the initially extracted mentions
-    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(events)
+    val newEventsWithContexts = actions.makeNewMensWithContexts(modelCorefResolve)
     val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
-    val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
+    val mensWithContextAttachment = actions.processRuleBasedContextEvent(contextEvents)
 
     // post-process the mentions with untangleConj and combineFunction
     val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
 
-    val (functionMentions, other) = nonDescrMens.partition(_.label.contains("Function"))
-    val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
-    val combining = loadableAttributes.actions.combineFunction(functionMentions)
+    val (functionMentions, nonFunctions) = nonDescrMens.partition(_.label.contains("Function"))
+    val (modelDescrs, nonModelDescrs) = nonFunctions.partition(_.labels.contains("ModelDescr"))
+    val (modelNames, other) = nonModelDescrs.partition(_.label == "Model")
+    val modelFilter = actions.filterModelNames(modelNames)
+    val untangled = actions.untangleConj(descriptionMentions)
+    val combining = actions.combineFunction(functionMentions)
+    val newModelParams2 = actions.functionArgsToModelParam(combining)
+    val finalModelDescrs = modelDescrs.filter(_.arguments.contains("modelName"))
+    val finalModelParam = actions.filterModelParam(newModelParams1 ++ newModelParams2)
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining) ++ untangled)).toVector
+    actions.assembleVarsWithParamsAndUnits(actions.replaceWithLongerIdentifier(actions.keepLongest(other ++ combining ++ modelFilter ++ finalModelParam  ++ finalModelDescrs) ++ untangled)).toVector.distinct
+
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
@@ -102,8 +115,6 @@ class OdinEngine(
     val odinMentions = extractFrom(doc)  // CTM: runs the Odin grammar
     odinMentions  // CTM: collection of mentions ; to be converted to some form (json)
   }
-
-
 
   // Supports web service, when existing entities are already known but from outside the project
   def extractFromDocWithGazetteer(doc: Document, gazetteer: Seq[String]): Seq[Mention] = {
@@ -138,6 +149,8 @@ object OdinEngine {
 
   // Mention labels
   val DESCRIPTION_LABEL: String = "Description"
+  val MODEL_DESCRIPTION_LABEL: String = "ModelDescr"
+  val MODEL_LIMITATION_LABEL: String = "ModelLimitation"
   val CONJ_DESCRIPTION_LABEL: String = "ConjDescription"
   val CONJ_DESCRIPTION_TYPE2_LABEL: String = "ConjDescriptionType2"
   val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"
@@ -159,6 +172,8 @@ object OdinEngine {
   val UNIT_ARG: String = "unit"
   val FUNCTION_INPUT_ARG: String = "input"
   val FUNCTION_OUTPUT_ARG: String = "output"
+  val MODEL_NAME_ARG: String = "modelName"
+  val MODEL_DESCRIPTION_ARG: String = "modelDescr"
   val CONTEXT_ARG: String = "context"
   val CONTEXT_EVENT_ARG: String = "event"
 

@@ -8,12 +8,14 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.alignment.{Aligner, AlignmentHandler}
+import org.clulab.aske.automates.apps.ExtractAndAlign.config
 import org.clulab.aske.automates.apps.{AutomatesExporter, ExtractAndAlign}
 import org.clulab.aske.automates.attachments.MentionLocationAttachment
 import org.clulab.aske.automates.data.CosmosJsonDataLoader
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
-import org.clulab.grounding.SVOGrounder
+import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
+import org.clulab.grounding.{SVOGrounder, WikidataGrounder, sparqlWikiResult}
 import org.clulab.odin.serialization.json.JSONSerializer
 import upickle.default._
 
@@ -21,6 +23,7 @@ import scala.collection.mutable.ArrayBuffer
 import ujson.json4s.Json4sJson
 import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.utils.AlignmentJsonUtils.SeqOfGlobalVariables
 import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import org.json4s
@@ -37,7 +40,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   // -------------------------------------------------
   logger.info("Initializing the OdinEngine ...")
-  val defaultConfig: Config = ConfigFactory.load()[Config]("TextEngine")
+  val generalConfig: Config = ConfigFactory.load()
+  val readerType: String = generalConfig[String]("ReaderType")
+  val defaultConfig: Config = generalConfig[Config](readerType)
   val config: Config = defaultConfig.withValue("preprocessorType", ConfigValueFactory.fromAnyRef("PassThrough"))
   val ieSystem = OdinEngine.fromConfig(config)
   var proc = ieSystem.proc
@@ -55,6 +60,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val appendToGrFNDefault = true
   private val defaultSerializerName = "AutomatesJSONSerializer" // other - "JSONSerializer"
   private val debugDefault = true
+  private val groundToWikiDefault: Boolean = generalConfig[Boolean]("apps.groundToWiki")
+  private val saveWikiGroundingsDefault: Boolean = generalConfig[Boolean]("apps.saveWikiGroundingsDefault")
 
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
@@ -76,6 +83,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   //      API entry points for SVOGrounder
   // -------------------------------------------
 
+  // the API has been disabled by the hosting organization
   def groundMentionsToSVO: Action[AnyContent] = Action { request =>
     val k = 10 //todo: set as param in curl
 
@@ -92,9 +100,31 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     //    val grfnFile = new File(grfnPath)
     //    val grfn = ujson.read(grfnFile.readString())
     //    val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath)
-    val result = SVOGrounder.mentionsToGroundingsJson(defMentions,k)   //slice for debugging to avoid overloading the server: defMentions.slice(0,10), k)
+    val result = SVOGrounder.mentionsToGroundingsJson(defMentions,k)
     Ok(result).as(JSON)
   }
+
+  // -------------------------------------------
+  //      API entry points for WikidataGrounder
+  // -------------------------------------------
+
+  def groundMentionsToWikidata: Action[AnyContent] = Action { request =>
+    // writes a json file with groundings associated with identifier strings
+    println("Started grounding")
+    val data = request.body.asJson.get.toString()
+    val json = ujson.read(data)
+
+    val mentionsPath = json("mentions").str
+    val mentionsFile = new File(mentionsPath)
+
+    val ujsonOfMenFile = ujson.read(mentionsFile)
+    val defMentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile).filter(m => m.label contains "Description")
+    val glVars = WikidataGrounder.mentionsToGlobalVarsWithWikidataGroundings(defMentions)
+
+    Ok(glVars).as(JSON)
+
+  }
+
 
   def groundStringToSVO: Action[AnyContent] = Action { request =>
     val string = request.body.asText.get
@@ -146,7 +176,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   /**
-    * Extract mentions from a pdf. Expected fields in the json obj passed in:
+    * Extract mentions from a pdf. Requires Science-Parse running. Expected fields in the json obj passed in:
     *  'pdf' : path to the pdf file
     * @return Seq[Mention] (json serialized)
     */
@@ -197,11 +227,15 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // for each block, we load the text (content) and the location of the text (page_num and block order/index on the page)
     val loader = new CosmosJsonDataLoader
     val textsAndLocations = loader.loadFile(jsonPath)
-    val texts = textsAndLocations.map(_.split("::").head)
-    val locations = textsAndLocations.map(_.split("::").tail.mkString("::")) //location = pageNum::blockIdx
+    val textsAndFilenames = textsAndLocations.map(_.split("<::>").slice(0,2).mkString("<::>"))
+    val locations = textsAndLocations.map(_.split("<::>").takeRight(2).mkString("<::>")) //location = pageNum::blockIdx
 
+    println("started extracting")
     // extract mentions form each text block
-    val mentions = texts.map(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
+    val mentions = for (tf <- textsAndFilenames) yield {
+      val Array(text, filename) = tf.split("<::>")
+      ieSystem.extractFromText(text, keepText = true, Some(filename))
+    }
 
     // store location information from cosmos as an attachment for each mention
     val menWInd = mentions.zipWithIndex
@@ -210,15 +244,17 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       // get page and block index for each block; cosmos location information will be the same for all the mentions within one block
       val menInTextBlocks = tuple._1
       val id = tuple._2
-      val location = locations(id).split("::").map(_.replace(":","").toDouble.toInt)
+      val location = locations(id).split("<::>").map(loc => loc.split(",").map(_.toInt)) //(_.toDouble.toInt)
       val pageNum = location.head
       val blockIdx = location.last
 
       for (m <- menInTextBlocks) {
-        val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "MentionLocation"))
+        val filename = m.document.id.getOrElse("unknown_file")
+        val newMen = m.withAttachment(new MentionLocationAttachment(filename, pageNum, blockIdx, "MentionLocation"))
         mentionsWithLocations.append(newMen)
       }
     }
+
 
     val outFile = pathJson("outfile").str
     AutomatesExporter(outFile).export(mentionsWithLocations)
@@ -250,6 +286,14 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       json("toggles").obj("groundToSVO").bool
     } else groundToSVODefault
 
+    val groundToWiki = if (jsonObj.contains("toggles")) {
+      json("toggles").obj("groundToWiki").bool
+    } else groundToWikiDefault
+
+    val saveWikiGroundings = if (jsonObj.contains("toggles")) {
+      json("toggles").obj("saveWikiGroundings").bool
+    } else saveWikiGroundingsDefault
+
     val appendToGrFN = if (jsonObj.contains("toggles")) {
       json("toggles").obj("appendToGrFN").bool
     } else appendToGrFNDefault
@@ -268,7 +312,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables/identifiers and comments). The json can also contain svo groundings with the key "SVOgroundings".
     if (jsonObj.contains("mentions") || (jsonObj.contains("equations") || jsonObj.contains("source_code"))) {
-      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO, serializerName)
+      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO, groundToWiki, serializerName)
 
       // ground!
       val groundings = ExtractAndAlign.groundMentions(
@@ -282,7 +326,10 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         argsForGrounding.commentDescriptionMentions,
         argsForGrounding.equationChunksAndSource,
         argsForGrounding.svoGroundings, //Some(Seq.empty)
+        argsForGrounding.wikigroundings,
         groundToSVO,
+        groundToWiki,
+        saveWikiGroundings,
         maxSVOgroundingsPerVar,
         alignmentHandler,
         Some(numAlignments),
@@ -632,7 +679,11 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val head = relationArgNames.head
     val last = relationArgNames.last
 
-    assert(relationArgNames.length < 3, "More than three args, webapp will need to be updated to handle!")
+    // fixme: this is a temp solution to avoid error caused by the assertion below, but the visualization does not look right
+    if (relationArgNames.length > 2) {
+      logger.warn("More than three args, webapp will need to be updated to handle!")
+    }
+//    assert(relationArgNames.length < 3, "More than three args, webapp will need to be updated to handle!")
     Json.arr(
       s"R$i",
       r.label,

@@ -18,18 +18,20 @@ def main(args):
     else:
         print(f"Mentions have been previously extracted and are stored in {MENTIONS_PATH}")
 
+
     hypothesis_data = caller.get_link_hypotheses(
-        MENTIONS_PATH, args.eqn_file, args.grfn_file, args.comm_file
+        MENTIONS_PATH, args.eqn_file, args.grfn_file, args.comm_file, args.wikidata_file,
     )
-    json.dump({"grounding": hypothesis_data}, open(ALIGNMENT_PATH, "w"))
+    json.dump({"grounding": hypothesis_data}, open(ALIGNMENT_PATH, "w", encoding='utf8'), ensure_ascii=False)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("grfn_file", help="filepath to a GrFN JSON file")
     parser.add_argument("comm_file", help="filepath to a comments JSON file")
-    parser.add_argument("doc_file", help="filepath to a source text pdf file")
+    parser.add_argument("doc_file", help="filepath to a source paper file (COSMOS or Science Parse)")
     parser.add_argument("eqn_file", help="filepath to an equations txt file")
+    parser.add_argument("--wikidata_file", help="filepath to a wikidata grounding json file", type=str, default="None")
     parser.add_argument(
         "-a",
         "--address",

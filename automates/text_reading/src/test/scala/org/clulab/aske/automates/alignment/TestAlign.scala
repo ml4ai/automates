@@ -33,6 +33,7 @@ class TestAlign extends TestAlignment {
   val numAlignmentsSrcToComment: Int = config[Int]("apps.numAlignmentsSrcToComment")
   val scoreThreshold: Int = config[Int]("apps.scoreThreshold")
   val groundToSVO: Boolean = config[Boolean]("apps.groundToSVO")
+  val groundToWiki: Boolean = false //config[Boolean]("apps.groundToWiki")
   val maxSVOgroundingsPerVar: Int = config[Int]("apps.maxSVOgroundingsPerVar")
   val appendToGrFN: Boolean = config[Boolean]("apps.appendToGrFN")
 
@@ -46,8 +47,7 @@ class TestAlign extends TestAlignment {
   val payloadJson: ujson.Value = ujson.read(payloadFile.readString())
   val jsonObj: ujson.Value = payloadJson.obj
 
-  val argsForGrounding: AlignmentArguments = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, groundToSVO, serializerName)
-
+  val argsForGrounding: AlignmentArguments = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, groundToSVO, groundToWiki, serializerName)
 
   val groundings: ujson.Value = ExtractAndAlign.groundMentions(
     payloadJson,
@@ -60,7 +60,10 @@ class TestAlign extends TestAlignment {
     argsForGrounding.commentDescriptionMentions,
     argsForGrounding.equationChunksAndSource,
     argsForGrounding.svoGroundings,
+    argsForGrounding.wikigroundings,
     groundToSVO,
+    groundToWiki,
+    saveWikiGroundings = false,
     maxSVOgroundingsPerVar,
     alignmentHandler,
     Some(numAlignments),
@@ -86,7 +89,7 @@ class TestAlign extends TestAlignment {
     behavior of idfr
 
     val directDesired = Map(
-      GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> ("microbes per year", passingTest),
+      GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> ("microbes per year::mm", passingTest),
       GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("m2/year", passingTest),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("2.71", passingTest),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("100", passingTest),
@@ -221,11 +224,11 @@ class TestAlign extends TestAlignment {
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER ->("negative", failingTest), // need processing for word param settings
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT ->("0.2||5.6", passingTest),
       EQN_TO_GLOBAL_VAR -> ("r", passingTest),
-      COMMENT_TO_GLOBAL_VAR -> ("inc_inf", passingTest)
+      COMMENT_TO_GLOBAL_VAR -> ("inc_inf", failingTest) // got misaligned to 'removal rate of infectives'
     )
 
     val indirectDesired = Map(
-      SRC_TO_COMMENT -> ("inc_inf",passingTest)
+      SRC_TO_COMMENT -> ("inc_inf",failingTest)
     )
 
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)

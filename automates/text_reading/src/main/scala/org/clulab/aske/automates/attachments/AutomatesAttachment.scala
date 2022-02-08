@@ -13,9 +13,10 @@ abstract class AutomatesAttachment extends Attachment with Serializable {
 
 }
 
-class MentionLocationAttachment(pageNum: Int, blockIdx: Int, attType: String) extends AutomatesAttachment {
+class MentionLocationAttachment(filename: String, pageNum: Seq[Int], blockIdx: Seq[Int], attType: String) extends AutomatesAttachment {
 
   override def toJson: JsValue =  Json.obj(
+    "filename" -> filename,
     "pageNum" -> pageNum,
     "blockIdx" -> blockIdx,
     "attType" -> attType)
@@ -23,6 +24,7 @@ class MentionLocationAttachment(pageNum: Int, blockIdx: Int, attType: String) ex
   // use 'asInstanceOf' + this method to retrieve the information from the attachment
 
   def toUJson: ujson.Value = ujson.Obj(
+    "filename" -> filename,
     "pageNum" -> pageNum,
     "blockIdx" -> blockIdx,
     "attType" -> attType) //"MentionLocation"

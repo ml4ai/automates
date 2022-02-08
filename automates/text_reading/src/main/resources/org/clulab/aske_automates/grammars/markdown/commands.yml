@@ -1,0 +1,117 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+####COMMANDS####
+
+  - name: filename-rule
+    label: Filename
+    priority: 1
+    type: token
+    example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
+    pattern: |
+      [word = /.*\.[a-zA-Z]{2,}/ & !word=/^http/] | [word = /Dockerfile/]
+
+  - name: parameter-rule
+    label: CommLineParameter
+    priority: 1
+    type: token
+    example: "--crop"
+    pattern: |
+      (?<=[word="-"]{2}) [word = /[a-zA-Z_]/]
+
+  - name: parameter-rule1
+    label: CommLineParameter
+    priority: 1
+    type: token
+    example: "-N"
+    pattern: |
+      (?<=[word="-"]) [word = /[a-zA-Z]{1}/] # excl dash in flags
+
+  - name: arg-rule
+    label: CommandLineParamValuePair
+    priority: 2
+    type: token
+    example: "./run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
+    pattern: |
+      @parameter:CommLineParameter (?<=[tag = /" | POS/])? (?<value>[word = /[a-zA-Z0-9'"]+/]+)
+
+# @argument:CommandLineArg*
+  - name: repo-rule
+    label: Repository
+    priority: 2
+    type: token
+    example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
+    pattern: |
+      [word = /(https:\/\/)?(gitlab|github|bitbucket)[\w\d\/-_.]+\w/]
+
+  - name: command-starter-rule
+    label: Command
+    priority: 1
+    type: token
+    example: "<extracts: run_TWIST.py> --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
+    pattern: |
+      [word = /.*\.py|\b(fabsim|fab|mpirun|bash|git|mkdir|cd|python|docker|python3)\b/] (?! [word = /\)|\]/])
+
+  - name: command-from-starter-rule
+    label: CommandSequence
+    priority: 2
+    type: token
+    example: "run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
+    pattern: |
+      @command:Command (?<commandArgs>[word = /.*/ & !word = ","]+)
+
+  - name: string-rule
+    label: String
+    priority: 2
+    type: token
+    example: "'RUS,UKR'"
+    pattern: |
+      [word = /'/] [word = /[a-zA-Z,]+/ & !tag = 'CC']+ [word = /'/]
+
+  - name: value-rule
+    label: Value
+    priority: 2
+    type: token
+    example: "0"
+    pattern: |
+      [tag = 'CD' & !word="|"]
+
+  - name: list-rule1
+    label: MD_Context
+    priority: 3
+    type: dependency
+    example: "- Wheat: 'RUS', 'UKR', 'KAZ', 'RUS,UKR' or 'RUS,UKR,KAZ'"
+    pattern: |
+      trigger = [word = ":"]
+      parameter:Phrase = <punct
+      value:String+ = <punct dep
+
+  - name: list-rule2
+    label: MD_Context
+    priority: 3
+    type: dependency
+    example: "- --crop: Wheat, Rice or Corn"
+    pattern: |
+      trigger = [word = ":"]
+      parameter:Phrase = <punct
+      value:Phrase+ = <punct dep
+
+# write rules for parsing blocks
+
+# Masha's rules
+  - name: list-rule3
+    label: MD_Context
+    priority: 3
+    type: token
+    example: "- --crop: Wheat, Rice or Corn"
+    pattern: |
+      @param:Phrase [word = ":"] @value:String+
+
+  - name: list-rule4
+    label: MD_Context
+    priority: 3
+    type: token
+    example: "- --crop: Wheat, Rice or Corn"
+    pattern: |
+      @param:Phrase [word = ":"] @value:Phrase+
