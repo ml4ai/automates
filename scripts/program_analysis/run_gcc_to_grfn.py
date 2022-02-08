@@ -148,9 +148,9 @@ def run_gcc_pipeline():
     # GrFN generation for tests
     misc.rd.seed(0)
     if args.source:
-        grfn = cast.to_GrFN(source_ref=False)
+        grfn = cast.to_GrFN(omit_source_ref=True)
     else:
-        grfn = cast.to_GrFN(source_ref=True)
+        grfn = cast.to_GrFN(omit_source_ref=False)
     grfn.to_json_file(f"{program_name}--GrFN.json")
 
     print("Transforming GrFN into AGraph...")
