@@ -297,7 +297,10 @@ class CodeSpan(BaseMetadata):
 
     @classmethod
     def from_data(cls, data: dict) -> CodeSpan:
-        return cls(**data)
+        if data == {} or data is None:
+            return None
+        else:
+            return cls(**data)
 
     def to_dict(self):
         return {
