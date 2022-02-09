@@ -40,9 +40,11 @@ class Name(AstNode):
     if hasattr(AstNode, "attribute_map"):
         attribute_map.update(AstNode.attribute_map)
 
-    def __init__(self, name=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, name=None, is_global=False, *args, **kwargs):  # noqa: E501
         """Name - a model defined in Swagger"""  # noqa: E501
         self._name = None
+        self.is_global = is_global
+        self.version = None
         self.discriminator = None
         if name is not None:
             self.name = name

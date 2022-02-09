@@ -49,6 +49,34 @@ class Loop(AstNode):
             self.expr = expr
         if body is not None:
             self.body = body
+
+        # Approach: there are 4 sets of versions for variables touched in the loop
+        # `input_variables` (version 1) are the versions coming from `input_variables` of the Loop node
+        # `loop_body_variables` (version 2) are the versions modified/updated inside the loop body
+        # `entry_variables` (version 3) are the versions input into the loop body and test expression.  
+        # The values for these
+        # are determined by a decision between version 1 and version 2 variables
+        # In the GrFN, we will add a decision node at the top of the loop which takes
+        # as input version 1 and version 2 variables.  If the version 2 variables exist
+        # they should be chosen as version 3
+        # `updated_variables` (version 4) are the versions for `output_variables` of the Loop node.
+        # These are computed through a decision taking version 3, and updated_variables
+        # of the test expression (in case it modifies any of them)
+
+        # Dicts mapping variable name strings to Names
+        self.loop_body_variables = {}
+        self.entry_variables = {}
+
+        # Entry and Exit condition variables
+        # entry_condition_var: used at top decision to determine `entry_variables`
+        self.entry_condition_var = None
+        # exit_condition_var: used at bottom decision to determine `updated_variables`
+        # it will check if test expression updates variables, and use those instead of `entry_variables` 
+        # (version 3) variables
+        # NOTE: depending on how Decision nodes are handled in GrFN, maybe this condition variable is not necessary
+        self.exit_condition_var = None
+
+
         AstNode.__init__(self, *args, **kwargs)
 
     @property

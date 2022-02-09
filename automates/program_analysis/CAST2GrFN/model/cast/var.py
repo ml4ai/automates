@@ -40,7 +40,7 @@ class Var(AstNode):
     if hasattr(AstNode, "attribute_map"):
         attribute_map.update(AstNode.attribute_map)
 
-    def __init__(self, val=None, type=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, val=None, type=None,  *args, **kwargs):  # noqa: E501
         """Var - a model defined in Swagger"""  # noqa: E501
         self._val = None
         self._type = None

@@ -38,6 +38,9 @@ class AstNode(object):
         self.discriminator = None
         if source_refs is not None:
             self.source_refs = source_refs
+        # Dicts mapping variable name as string to a Name node
+        self._input_variables = {}
+        self._updated_variables = {}
 
     @property
     def source_refs(self):
