@@ -59,25 +59,26 @@ class ModelIf(AstNode):
         if orelse is not None:
             self.orelse = orelse
         AstNode.__init__(self, *args, **kwargs)
-        # create this Var/Name node after evaluating self._expr 
-        # it will be used as an input to the GrFN decision node
-        self._condition_var = None
+        self.condition_var = None
         # Dicts mapping var string name to Name nodes
-        self._updated_vars_if_branch = {}
-        self._updated_vars_else_branch = {}
+        self.updated_vars_if_branch = {}
+        self.updated_vars_else_branch = {}
         # NOTE: we will probably need to add updated_vars from the evaulation
         # of the `expr`, because this evaluation could have side effects
         # Moreover, these side effects could change the input_var_versions to
         # the if/else bodies
         # when this occurs, we will need to recalcualte updated_vars inherited
         # from AstNode
-        self._updated_vars_expr = {}
+        self.updated_vars_expr = {}
         # Process If Body and Else Body nodes, and calculated their
         # updated_vars fields.  From these, copy up to `updated_vars_if_branch` 
         # and `updated_vars_else_branch`.  
         # For each variable occuring in these dicts, we create a new version,
         # (that will be an output of the GrFN decision node), and store this
-        # version in updated_vars field inherited from AstNode
+        # version in updated_variables field inherited from AstNode
+        # We will create the conditional variable for this decision node
+        # based on `expr` sometime later, but its outputs will be the
+        # `updated_variables` stored at this node
 
     @property
     def expr(self):

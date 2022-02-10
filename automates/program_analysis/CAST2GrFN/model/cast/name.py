@@ -98,6 +98,7 @@ class Name(AstNode):
             for key, value in self.items():
                 result[key] = value
 
+        result["version"] = self.version
         return result
 
     def to_str(self):
