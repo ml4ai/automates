@@ -55,8 +55,8 @@ def merge_variables(input_vars: Dict, updated_vars: Dict) -> Dict:
     compare_versions = lambda n1, n2: n1 if n1.version > n2.version else n2
 
 
-    # if you do the call to update on the same line, it can result in NoneType if 
-    # there are no keys
+    # the update method mutates and returns None, so we call them
+    # on seperate lines
     keys = set(input_vars.keys())
     keys.update(updated_vars.keys())
 
@@ -79,6 +79,7 @@ class CastToAnnotatedCast:
         # we will start variable versions at -1 for now
         self.highest_variable_version: Dict = defaultdict(lambda: -2)
         self.cast = cast
+        self.module_functions = {}
         # start processing nodes
         input_vars = {}
         for node in cast.nodes:
@@ -88,8 +89,50 @@ class CastToAnnotatedCast:
         return self.highest_variable_version[name]
 
     def print_then_visit(self, node: AstNode, input_variables: Dict) -> Dict:
-        print(f"Processing node type {type(node)}")
+        # type(node) is a string which looks like
+        # "class '<path.to.class.ClassName>'"
+        class_name = str(type(node))
+        last_dot = class_name.rfind(".")
+        class_name = class_name[last_dot+1:-2]
+        print(f"\nProcessing node type {class_name}")
+        input_versions = dict([(k, input_variables[k].version) for k in input_variables.keys()])
+        print(f"with input_variables = {input_versions}")
         return self.visit(node, input_variables)
+
+    def collect_function_defs(self, node: Module) -> Dict:
+        """
+        Returns a dict mapping each string function name to
+        the FunctionDef node for the functions defined in this 
+        Module
+        """
+        nodes_to_consider = [n for n in node.body if isinstance(n, FunctionDef)]
+        make_function = lambda func_def: (func_def.name, func_def)
+
+        return dict(map(make_function, nodes_to_consider))
+
+    def determine_global_variables(self, node: Module) -> Dict:
+        """
+        Set the `is_global` flag for each Name node appearing at the top level
+        of this Module.  Returns a dict mapping the string var name to Name node
+        for the found global variables
+        """
+        nodes_to_consider = [n for n in node.body if isinstance(n, (Assignment, Var))]
+
+        def make_global(n):
+            var_node = None
+            if isinstance(n, Assignment):
+                var_node = n.left
+            else:
+                assert(isinstance(n, Var))
+                var_node = n
+            
+            # grab the Name from the Var node
+            name = var_node.val
+            name.is_global = True
+
+            return (name.name, name)
+
+        return dict(map(make_global, nodes_to_consider))
 
 
     @singledispatchmethod
@@ -106,9 +149,29 @@ class CastToAnnotatedCast:
         # is_global field of Name nodes
         # if not, iterate over Var/Assignment nodes like in cast_to_air_visitor.py
         node._input_variables = input_variables
+
+        # TESTING: Determine global variables here.  Later we are going to remove this 
+        # and do it in the Python/GCC to CAST translations.  This will require
+        # updating the CAST spec
+        global_vars = self.determine_global_variables(node)
+        input_variables = merge_variables(input_variables, global_vars)
+
+        # TODO: we need to implement the global recognizing functionality
+        # in CAST translations to make sure each global is correctly identified
+        # at each of its uses
+
+        # cache the FunctionDef's defined in this module
+        self.module_functions = self.collect_function_defs(node)
+
+        # CLEAN UP: we need to visit global variable assignments, but we only
+        # want to visit the main function
+        updated_variables = {}
         for n in node.body:
-            updated_variables = self.print_then_visit(n, input_variables)
+            if isinstance(n, FunctionDef) and n.name != "main":
+                continue
+            updated_variables_new = self.print_then_visit(n, input_variables)
             input_variables = merge_variables(input_variables, updated_variables)
+            updated_variables = merge_variables(updated_variables_new, updated_variables)
         
         updated_variables = merge_variables(input_variables, updated_variables)
         node.updated_variables = updated_variables
@@ -136,6 +199,24 @@ class CastToAnnotatedCast:
         node.updated_variables = updated_variables
         print(f"After processing function {node.name} :updated_variables = {updated_variables}")
         return updated_variables
+
+    @visit.register
+    def visit_call(self, node: Call, input_variables: Dict) -> Dict:
+        node._input_variables = input_variables
+        assert(isinstance(node.func, Name))
+        # we make a copy of the FunctionDef, and will visit it
+        # with inputs_variables being all globals
+        # TODO: once globals are correctly identified, remove next line
+        # and use the commented one instead
+        input_vars_to_func = input_variables
+        # input_vars_to_func = dict(filter(lambda pair: pair[1].is_global, input_variables.items()))
+        func_name = node.func.name
+        node.copied_definition = copy.deepcopy(self.module_functions[func_name])
+        updated_variables = self.print_then_visit(node.copied_definition, input_vars_to_func)
+
+        node._updated_variables = updated_variables
+        return updated_variables
+
 
     @visit.register
     def visit_model_if(self, node: ModelIf, input_variables: Dict) -> Dict:
@@ -173,8 +254,8 @@ class CastToAnnotatedCast:
         # That version will be an output of a GrFN decision node and store this
         # version in updated_vars field inherited from AstNode
 
-        # if you do the call to update on the same line, it can result in NoneType if 
-        # there are no keys
+        # the update method mutates and returns None, so we call them
+        # on seperate lines
         new_var_keys = set(node.updated_vars_if_branch.keys())
         new_var_keys.update(node.updated_vars_else_branch.keys())
         updated_vars = {}

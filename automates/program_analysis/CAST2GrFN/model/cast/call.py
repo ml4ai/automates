@@ -50,6 +50,7 @@ class Call(AstNode):
         if arguments is not None:
             self.arguments = arguments
         AstNode.__init__(self, *args, **kwargs)
+        self.copied_definition: FunctionDef = None
 
     @property
     def func(self):
