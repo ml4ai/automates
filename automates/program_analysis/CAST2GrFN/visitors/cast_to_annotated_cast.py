@@ -224,6 +224,21 @@ class CastToAnnotatedCast:
         return updated_variables
 
     @visit.register
+    def visit_binary_op(self, node: BinaryOp, input_variables: Dict) -> Dict:
+        node._input_variables = input_variables
+
+        # visit LHS first
+        updated_variables = self.print_then_visit(node.right, input_variables)
+        updated_variables = combine_input_and_updated_vars(input_variables, updated_variables)
+
+        # visit RHS second
+        updated_variables = self.print_then_visit(node.right, input_variables)
+        updated_variables = combine_input_and_updated_vars(input_variables, updated_variables)
+        
+        node._updated_variables = updated_variables
+        return updated_variables
+
+    @visit.register
     def visit_return(self, node: ModelReturn, input_variables: Dict):
         node._input_variables = input_variables
         child = node.value
