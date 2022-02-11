@@ -41,7 +41,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
-def combine_input_and_updated_vars(input_vars: Dict, updated_vars: Dict) -> Dict:
+def merge_variables(input_vars: Dict, updated_vars: Dict) -> Dict:
     """
     Given the `input_vars` to a CAST node, and the `updated_vars` from its descendants,
     calculate the updated variables to be stored at this CAST node.
@@ -83,7 +83,9 @@ class CastToAnnotatedCast:
         input_vars = {}
         for node in cast.nodes:
             updated_vars = self.print_then_visit(node, input_vars)
-
+    def incr_highest_variable_version(self, name: str):
+        self.highest_variable_version[name] += 1
+        return self.highest_variable_version[name]
 
     def print_then_visit(self, node: AstNode, input_variables: Dict) -> Dict:
         print(f"Processing node type {type(node)}")
@@ -104,12 +106,11 @@ class CastToAnnotatedCast:
         # is_global field of Name nodes
         # if not, iterate over Var/Assignment nodes like in cast_to_air_visitor.py
         node._input_variables = input_variables
-
         for n in node.body:
             updated_variables = self.print_then_visit(n, input_variables)
-            input_variables = combine_input_and_updated_vars(input_variables, updated_variables)
+            input_variables = merge_variables(input_variables, updated_variables)
         
-        updated_variables = combine_input_and_updated_vars(input_variables, updated_variables)
+        updated_variables = merge_variables(input_variables, updated_variables)
         node.updated_variables = updated_variables
         return updated_variables
 
@@ -124,15 +125,16 @@ class CastToAnnotatedCast:
             input_variables[name.name] = name
         
         node._input_variables = input_variables
-
+        updated_variables = {}
         for n in node.body:
-            updated_variables = self.print_then_visit(n, input_variables)
-            input_variables = combine_input_and_updated_vars(input_variables, updated_variables)
+            updated_variables_new = self.print_then_visit(n, input_variables)
+            input_variables = merge_variables(input_variables, updated_variables_new)
+            updated_variables = merge_variables(updated_variables_new, updated_variables)
             
         
-        updated_variables = combine_input_and_updated_vars(input_variables, updated_variables)
+        updated_variables = merge_variables(input_variables, updated_variables)
         node.updated_variables = updated_variables
-        print(f"After processing function {node.name} updated_variables = {updated_variables}")
+        print(f"After processing function {node.name} :updated_variables = {updated_variables}")
         return updated_variables
 
     @visit.register
@@ -144,7 +146,7 @@ class CastToAnnotatedCast:
         # NOTE: The `expr` stored at node is just an `AstNode`, and we do not
         # process enough to visit it.  For now, we will skip it
         # node.updated_vars_expr = self.print_then_visit(node.expr, input_variables)
-        # input_variables = combine_input_and_updated_vars(input_variables, node.updated_vars_expr)
+        # input_variables = merge_variables(input_variables, node.updated_vars_expr)
         
         # vist nodes in if branch, make a copy of input_variables, since it
         # needs the same input variables need to go in both if and else branches
@@ -152,16 +154,18 @@ class CastToAnnotatedCast:
         if_branch_input = input_variables.copy()
         if_updated_vars = {}
         for n in node.body:
-            if_updated_vars = self.print_then_visit(n, if_branch_input)
-            if_branch_input = combine_input_and_updated_vars(if_branch_input, if_updated_vars)
+            if_updated_vars_new = self.print_then_visit(n, if_branch_input)
+            if_branch_input = merge_variables(if_branch_input, if_updated_vars_new)
+            if_updated_vars = merge_variables(if_updated_vars_new, if_updated_vars)
         node.updated_vars_if_branch = if_updated_vars
         # get the updated vars on the else branch if it exists, the input variables
         # should be those obtained from visiting expr
         else_branch_input = input_variables.copy()
         else_updated_vars = {}
         for n in node.orelse:
-            else_updated_vars = self.print_then_visit(n, else_branch_input)
-            else_branch_input = combine_input_and_updated_vars(else_branch_input, else_updated_vars)
+            else_updated_vars_new = self.print_then_visit(n, else_branch_input)
+            else_branch_input = merge_variables(else_branch_input, else_updated_vars_new)
+            else_updated_vars = merge_variables(else_updated_vars_new, else_updated_vars)
         node.updated_vars_else_branch = else_updated_vars
 
         # For each variable occuring in updated_vars_if_branch or updated_vars_else_branch
@@ -181,7 +185,7 @@ class CastToAnnotatedCast:
             else:
                 name = node.updated_vars_else_branch[k]
             new_name = copy.copy(name)
-            new_name.version = self.highest_variable_version[k] + 1
+            new_name.version = self.incr_highest_variable_version(name.name)
             updated_vars[k] = new_name
 
         node._updated_variables = updated_vars
@@ -206,19 +210,16 @@ class CastToAnnotatedCast:
 
         # visit RHS first, because we may create a new version
         updated_variables = self.print_then_visit(node.right, input_variables)
-        updated_variables = combine_input_and_updated_vars(input_variables, updated_variables)
         
-
         lhs = node.left
         assert(isinstance(lhs, Var))
 
         var_name = lhs.val
-        new_version = self.highest_variable_version[var_name.name] + 1
+        new_version = self.incr_highest_variable_version(var_name.name)
         print(f"\tNew version of variable {var_name} is {new_version}")
-        self.highest_variable_version[var_name.name] = new_version
         var_name.version = new_version
 
-        updated_variables = combine_input_and_updated_vars(updated_variables, {var_name.name: var_name})
+        updated_variables = merge_variables(updated_variables, {var_name.name: var_name})
         node._updated_variables = updated_variables
         
         return updated_variables
@@ -228,12 +229,12 @@ class CastToAnnotatedCast:
         node._input_variables = input_variables
 
         # visit LHS first
-        updated_variables = self.print_then_visit(node.right, input_variables)
-        updated_variables = combine_input_and_updated_vars(input_variables, updated_variables)
+        updated_variables_left = self.print_then_visit(node.left, input_variables)
+        input_variables = merge_variables(input_variables, updated_variables_left)
 
         # visit RHS second
-        updated_variables = self.print_then_visit(node.right, input_variables)
-        updated_variables = combine_input_and_updated_vars(input_variables, updated_variables)
+        updated_variables_right = self.print_then_visit(node.right, input_variables)
+        updated_variables = merge_variables(updated_variables_left, updated_variables_right)
         
         node._updated_variables = updated_variables
         return updated_variables
