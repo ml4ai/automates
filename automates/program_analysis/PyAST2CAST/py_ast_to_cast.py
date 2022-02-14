@@ -836,7 +836,6 @@ class PyASTToCAST(ast.NodeVisitor):
                                 funcs.append(n)
                                 break
 
-                    #funcs = [self.visit(f) for f in funcs]
                     visited_funcs = []
                     for f in funcs:
                         visited_funcs.extend(self.visit(f))
