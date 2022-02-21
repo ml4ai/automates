@@ -2,6 +2,9 @@ import pytest
 import json
 import os
 import subprocess
+from types import SimpleNamespace
+
+
 
 # For test data, we use the following pattern:
 # All test data is stored in `TEST_DATA_DIR`
@@ -19,6 +22,9 @@ import subprocess
 #   1. Add the test name to `TEST_NAMES` list
 #   2. Add the C source file and expected gcc AST json to `TEST_DATA_DIR` using the 
 #      the naming pattern described above
+
+# TODO: Maybe try SimpleNamespace to deserialize json dict object?
+# See https://stackoverflow.com/questions/6578986/how-to-convert-json-data-into-a-python-object
 
 TEST_NAMES = ["global_simple_2"]
 
@@ -45,12 +51,18 @@ def build_gcc_ast_json_from_source(test_name: str) -> Dict:
     return load_gcc_ast_json(path_to_json)
 
 
-def load_gcc_ast_json(path_to_json: str) -> CAST:
-    return json.load(open(path_to_json, "r"))
+def load_gcc_ast_json(path_to_json: str) -> CT:
+# Parse JSON into an object with attributes corresponding to dict keys.
+    return json.load(open(path_to_json, "r"), 
+                     object_hook=lambda d: SimpleNamespace(**d))
 
 
 # TODO: Do we need to check equality in a different way
-def check_json_equality(json1, json2) -> bool:
+def check_ast_json_equality(json1, json2) -> bool:
+    """
+    We only check specific fields in the json
+    """
+
     return json1 == json2
 
 
