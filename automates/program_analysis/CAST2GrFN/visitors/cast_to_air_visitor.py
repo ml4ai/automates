@@ -1640,7 +1640,7 @@ class CASTToAIRVisitor(CASTVisitor):
         # we don't necessarily want to find the highest version, since the correct version
         # to retrieve is scope dependent
         # var_obj = self.state.find_highest_version_var_in_current_scope(name)
-        var_obj = self.state.find_correct_var_version_in_scope(name, self.state.scope_stack[-1])
+        var_obj = self.state.find_correct_var_version_in_scope(name, self.state.scope_stack)
 
         additional_lambas = []
         # In this case we are loading a var of type object but not accessing an attribute.

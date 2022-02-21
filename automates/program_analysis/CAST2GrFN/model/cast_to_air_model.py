@@ -712,6 +712,7 @@ class C2AState(object):
         """
         # if we are in the else block, and a copy of the variable exists the current containers
         # `vars_from_previous_scope` field, then we use that version
+        # RYAN: This is only correct the first time we read from a variable in the else block
         if self.in_else_block_of_container:
             current_container = self.containers[-1]
             prev_scope_vars = [ v for v in current_container.vars_from_previous_scope 
@@ -722,9 +723,10 @@ class C2AState(object):
             for v in prev_scope_vars:
                 print(f"{v.identifier_information}")
 
-            assert(len(prev_scope_vars) > 0)
-
-            return prev_scope_vars[-1]
+            #assert(len(prev_scope_vars) > 0)
+            if (len(prev_scope_vars) > 0):
+                return prev_scope_vars[-1]
+            return None
             
         # Check that the global/function_name are the same
         # TODO define what needs to be checked here better
@@ -741,10 +743,11 @@ class C2AState(object):
         # RYAN: computing the max will return the wrong version for an if/else block
         # accessing the same variable from the previous scope.
         # EX:
-        # if x == 1:
-        #   x = x + 1
+        # x = 0  main::x::-1
+        # if x == 1: --> var_from_prev_scope: main::if::x::-1
+        #   x = x + 1   --> main::if::x::0 (LHS)
         # else:
-        #   y = x - 1
+        #   y = x - 1 --> originally RHS was main::if::x::0
         # The assignment of x in the if block creates a new version, which will be
         # returned by this max
         return max(instances, key=lambda v: v.version, default=None)
