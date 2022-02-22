@@ -214,13 +214,14 @@ class GCC2CAST:
         name = name.replace(".", "_")
         cast_type = gcc_type_to_var_type(var_type, self.type_ids_to_defined_types)
 
+        id = variable["id"] if "id" in variable else None
         line = variable["line_start"] if "line_start" in variable else None
         col = variable["col_start"] if "col_start" in variable else None
         file = variable["file"] if "file" in variable else None
         source_ref = SourceRef(source_file_name=file, col_start=col, row_start=line)
 
         var_node = Var(
-            val=Name(name=name),
+            val=Name(name=name, id=id),
             type=cast_type,
             source_refs=[source_ref],
         )
@@ -257,7 +258,8 @@ class GCC2CAST:
         else:
             name = value["name"]
             name = name.replace(".", "_")
-            return Name(name=name)
+            id = value["id"]
+            return Name(name=name, id=id)
 
     def parse_operand(self, operand):
         code = operand["code"]
@@ -272,7 +274,8 @@ class GCC2CAST:
             if "name" in operand:
                 name = operand["name"]
                 name = name.replace(".", "_")
-                return Name(name=name)
+                id = operand["id"]
+                return Name(name=name, id=id)
             elif "id" in operand:
                 return self.variables_ids_to_expression[operand["id"]]
         elif code == "addr_expr":
@@ -376,7 +379,8 @@ class GCC2CAST:
             if "name" in lhs:
                 name = lhs["name"]
                 name = name.replace(".", "_")
-                assign_var = Var(val=Name(name=name), type=cast_type)
+                id = lhs["id"]
+                assign_var = Var(val=Name(name=name,id=id), type=cast_type)
             elif "id" in lhs:
                 assign_var = self.variables_ids_to_expression[lhs["id"]]
 
@@ -434,7 +438,10 @@ class GCC2CAST:
                 if "name" in operands[0]:
                     name = operands[0]["name"].replace(".", "_")
                     name = name.replace(".", "_")
-                    assign_value = Name(name=name)
+                    id = operands[0]["id"]
+                    assign_value = Name(name=name,id=id)
+                # When do we have an id but no name
+                # Do we need to track the numerical id in this situation?
                 elif "id" in operands[0]:
                     assign_value = self.variables_ids_to_expression[operands[0]["id"]]
                 else:
@@ -499,6 +506,7 @@ class GCC2CAST:
         arguments = stmt["arguments"] if "arguments" in stmt else []
         src_ref = self.get_source_refs(stmt)
         func_name = function["value"]["name"]
+        func_id = function["value"]["id"]
         # TODO not sure if this is a permenant solution, but ignore these
         # unexpected builtin calls for now
         if "__builtin_" in func_name and not is_allowed_gcc_builtin_func(func_name):
@@ -509,7 +517,7 @@ class GCC2CAST:
             cast_args.append(self.parse_operand(arg))
 
         cast_call = Call(
-            func=Name(name=func_name), arguments=cast_args, source_refs=src_ref
+            func=Name(name=func_name, id=func_id), arguments=cast_args, source_refs=src_ref
         )
         if "lhs" in stmt and stmt["lhs"] is not None:
             return self.parse_lhs(stmt, stmt["lhs"], cast_call)
