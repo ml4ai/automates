@@ -6,7 +6,6 @@ import json
 import numpy as np
 from sys import platform
 
-# import automates.model_assembly.networks as networks
 import automates.utils.misc as misc
 from automates.program_analysis.CAST2GrFN.cast import CAST
 from automates.model_assembly.networks import GroundedFunctionNetwork
@@ -14,12 +13,12 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
 GCC_PLUGIN_IMAGE = "automates/program_analysis/gcc_plugin/plugin/ast_dump.so"
-GCC_TEST_DATA_DIRECTORY = "tests/data/program_analysis/GCC2GrFN"
+TEST_DATA_DIR = "tests/data/program_analysis/GCC2GrFN/gcc_plugin_to_grfn_c"
 
 
 def cleanup():
     for item in os.listdir("./"):
-        if item.endswith(".o") or item.endswith("gcc_ast.json"):
+        if item.endswith(".o") or item.endswith("_gcc_ast.json"):
             os.remove("./" + item)
 
 
@@ -98,21 +97,20 @@ def evaluate_execution_results(expected_result, result):
 
 def test_c_simple_function_and_assignments():
     test_name = "simple_function_and_assignments"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
 
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json, cast_source_language="c")
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -126,21 +124,20 @@ def test_c_simple_function_and_assignments():
 
 def test_all_binary_ops():
     test_name = "all_binary_ops"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
 
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json, cast_source_language="c")
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -172,21 +169,20 @@ def test_all_binary_ops():
 
 def test_all_unary_ops():
     test_name = "all_unary_ops"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
 
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -204,20 +200,19 @@ def test_all_unary_ops():
 
 def test_function_call():
     test_name = "function_call"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -233,20 +228,19 @@ def test_function_call():
 
 def test_function_call_one_variable_for_multiple_args():
     test_name = "function_call_one_variable_for_multiple_args"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -263,20 +257,19 @@ def test_function_call_one_variable_for_multiple_args():
 @pytest.mark.skip(reason="Need to fix trimming hanging lambdas in cast_to_air_model")
 def test_function_call_no_args():
     test_name = "function_call_no_args"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -293,20 +286,19 @@ def test_function_call_no_args():
 
 def test_function_call_with_literal_return():
     test_name = "function_call_with_literal_return"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -322,20 +314,19 @@ def test_function_call_with_literal_return():
 
 def test_function_same_func_multiple_times():
     test_name = "function_same_func_multiple_times"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -353,20 +344,19 @@ def test_function_same_func_multiple_times():
 
 def test_function_call_literal_args():
     test_name = "function_call_literal_args"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -384,20 +374,19 @@ def test_function_call_literal_args():
 
 def test_function_call_expression_args():
     test_name = "function_call_expression_args"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -421,20 +410,19 @@ def test_function_call_with_mixed_args():
 
 def test_function_call_with_complex_return():
     test_name = "function_call_with_complex_return"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -453,20 +441,19 @@ def test_function_no_args_void_return():
 
 def test_function_call_nested():
     test_name = "function_call_nested"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
 
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -481,19 +468,18 @@ def test_function_call_nested():
 @pytest.mark.skip(reason="GrFN may be incorrect")
 def test_if_statement():
     test_name = "if_statement"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -508,19 +494,18 @@ def test_if_statement():
 @pytest.mark.skip(reason="GrFN may be incorrect")
 def test_if_else_statement():
     test_name = "if_else_statement"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
@@ -535,19 +520,18 @@ def test_if_else_statement():
 @pytest.mark.skip(reason="CAST is incorrect (and so is GrFN)")
 def test_if_elif_statement():
     test_name = "if_elif_statement"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+    run_gcc_plugin_with_c_file(f"{TEST_DATA_DIR}/{test_name}.c")
 
     assert os.path.exists(f"./{test_name}_gcc_ast.json")
     gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
 
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
     cast = GCC2CAST([gcc_ast_obj]).to_cast()
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
+        f"{TEST_DATA_DIR}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
 
