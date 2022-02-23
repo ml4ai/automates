@@ -593,7 +593,7 @@
         "baseType": {
           "type": "record_type",
           "size": 1728,
-          "id": "0x7f82d432c498"
+          "id": "0x7f85d48d9498"
         }
       },
       "const": false,
@@ -612,7 +612,7 @@
         "baseType": {
           "type": "record_type",
           "size": 1728,
-          "id": "0x7f82d432c498"
+          "id": "0x7f85d48d9498"
         }
       },
       "const": false,
@@ -631,7 +631,7 @@
         "baseType": {
           "type": "record_type",
           "size": 1728,
-          "id": "0x7f82d432c498"
+          "id": "0x7f85d48d9498"
         }
       },
       "const": false,
@@ -642,7 +642,7 @@
   ],
   "recordTypes": [
     {
-      "id": "0x7f82d432c498",
+      "id": "0x7f85d48d9498",
       "union": false,
       "name": "_IO_FILE",
       "size": 1728,
@@ -869,7 +869,7 @@
             "size": 64,
             "baseType": {
               "type": "record_type",
-              "id": "0x7f82d432c690"
+              "id": "0x7f85d48d9690"
             }
           },
           "line_start": 68,
@@ -887,7 +887,7 @@
             "baseType": {
               "type": "record_type",
               "size": 1728,
-              "id": "0x7f82d432c498"
+              "id": "0x7f85d48d9498"
             }
           },
           "line_start": 70,
@@ -1024,7 +1024,7 @@
             "size": 64,
             "baseType": {
               "type": "record_type",
-              "id": "0x7f82d432c738"
+              "id": "0x7f85d48d9738"
             }
           },
           "line_start": 91,
@@ -1041,7 +1041,7 @@
             "size": 64,
             "baseType": {
               "type": "record_type",
-              "id": "0x7f82d432c7e0"
+              "id": "0x7f85d48d97e0"
             }
           },
           "line_start": 92,
@@ -1059,7 +1059,7 @@
             "baseType": {
               "type": "record_type",
               "size": 1728,
-              "id": "0x7f82d432c498"
+              "id": "0x7f85d48d9498"
             }
           },
           "line_start": 93,
@@ -1133,21 +1133,21 @@
       ]
     },
     {
-      "id": "0x7f82d432c690",
+      "id": "0x7f85d48d9690",
       "union": false,
       "name": "_IO_marker",
       "fields": [
       ]
     },
     {
-      "id": "0x7f82d432c738",
+      "id": "0x7f85d48d9738",
       "union": false,
       "name": "_IO_codecvt",
       "fields": [
       ]
     },
     {
-      "id": "0x7f82d432c7e0",
+      "id": "0x7f85d48d97e0",
       "union": false,
       "name": "_IO_wide_data",
       "fields": [
