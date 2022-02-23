@@ -80,6 +80,7 @@ CAST_NODES_TYPES_LIST = [
     Var,
 ]
 
+
 def compare_name_nodes(name1: Name, name2: Name) -> bool:
     """
     Checks if two Name nodes are equal, by only looking at
@@ -140,14 +141,6 @@ class CAST(object):
                 return False
 
         return True
-        
-            
-    # and all(
-    #         [
-    #             self_node == other_node
-    #             for self_node, other_node in zip(self.nodes, other.nodes)
-    #         ]
-        # )
 
     def to_AGraph(self):
         G = nx.DiGraph()
@@ -218,7 +211,9 @@ class CAST(object):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
-        return AutoMATES_IR(GenericIdentifier.from_str(air["entrypoint"]), C, V, T, [], [], [])
+        return AutoMATES_IR(
+            GenericIdentifier.from_str(air["entrypoint"]), C, V, T, [], [], []
+        )
 
     def to_GrFN(self):
         air = self.to_AIR()
