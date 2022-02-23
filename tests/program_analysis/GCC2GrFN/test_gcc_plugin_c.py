@@ -69,7 +69,6 @@ class FunctionData:
         - the names of variable declaration inside the function
         - the number of loops inside the function
     """
-
     name: str
     parameters: List[str]
     variable_declarations: List[str]
@@ -89,6 +88,14 @@ class FunctionData:
         self.number_of_loops = function.numberOfLoops
 
     def __eq__(self, other):
+        
+        print(f"{50*'*'}")
+        print(f"DEBUGGING: in EQ check on function")
+        print(f"{5*' '}self.name = {self.name}, other.name = {other.name}")
+        print(f"{5*' '}self.var_decls = {self.variable_declarations}, other.var_decls = {other.variable_declarations}")
+        print(f"{5*' '}self.params = {self.parameters}, other.params = {other.parameters}")
+        print(f"{5*' '}self.num_loops = {self.number_of_loops}, other.num_loops = {other.number_of_loops}")
+        print(f"{50*'*'}")
         return (
             self.name == other.name
             and self.variable_declarations == other.variable_declarations
@@ -133,6 +140,10 @@ def compare_global_variables(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bo
     """
     ast1_global_names = [gv.name for gv in ast1.globalVariables]
     ast2_global_names = [gv.name for gv in ast2.globalVariables]
+    print(f"{50*'*'}")
+    print(f"DEBUGGING: in compare_global_variables")
+    print(f"{5*' '}ast1_g_names = {ast1_global_names} and ast2_g_names = {ast2_global_names}")
+    print(f"{50*'*'}")
 
     return set(ast1_global_names) == set(ast2_global_names)
 
@@ -156,6 +167,10 @@ def compare_ast_functions(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
         ast2_functions[func.name] = FunctionData(func)
 
     if len(ast1_functions) != len(ast2_functions):
+        print(f"{50*'*'}")
+        print(f"DEBUGGING: length of functions do not match")
+        print(f"{5*' '}ast1_functions = {ast1_functions} and ast2_functions = {ast2_functions}")
+        print(f"{50*'*'}")
         return False
 
     # check functions are the same
