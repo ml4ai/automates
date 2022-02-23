@@ -5,12 +5,8 @@ import subprocess
 from pathlib import Path
 from sys import platform
 from types import SimpleNamespace
-from dataclasses import dataclass
-from typing import List, Dict
+from typing import List
 
-
-
-# For test data, we use the following pattern:
 # All test data is stored in `TEST_DATA_DIR`
 # Each test uses two files for test data
 #     1. the C source file
@@ -23,7 +19,7 @@ from typing import List, Dict
 #    - The source file should be named: "name_of_test.c"
 #    - The gcc_AST_json file should be named: "name_of_test_gcc_ast.json"
 # When adding new tests, you must do the following two things:
-#    - Add the C source file and expected gcc AST json to `TEST_DATA_DIR` using the 
+#    - Add the C source file and expected gcc AST json to `TEST_DATA_DIR` using the
 #      the naming pattern described above
 
 # Below, we use `SimpleNamespace` to automatically convert the gcc AST json to
@@ -31,11 +27,10 @@ from typing import List, Dict
 # I.e. we can write `json.field1.field2` instead of `json["field1"]["field2"]`
 
 TEST_DATA_DIR = "tests/data/program_analysis/GCC2GrFN/gcc_plugin_c"
-
-
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin"
 GCC_PLUGIN_IMAGE = "automates/program_analysis/gcc_plugin/plugin/ast_dump.so"
 GCC_TEST_DATA_DIRECTORY = "tests/data/program_analysis/GCC2GrFN/gcc_plugin"
+
 
 def make_gcc_ast_json_file_path(test_name: str) -> str:
     return f"{TEST_DATA_DIR}/{test_name}_gcc_ast.json"
@@ -44,10 +39,11 @@ def make_gcc_ast_json_file_path(test_name: str) -> str:
 def make_source_file_path(test_name: str) -> str:
     return f"{TEST_DATA_DIR}/{test_name}.c"
 
+
 # We find the test names to run, by using a glob over the TEST_DATA_DIR directory
 def collect_test_names():
-    """"
-    Finds all test names in `TEST_DATA_DIR` which have are valid, i.e. 
+    """ "
+    Finds all test names in `TEST_DATA_DIR` which have are valid, i.e.
     which have both a C file and associated gcc AST json
     """
     test_data_dir_path = Path(TEST_DATA_DIR)
@@ -66,24 +62,26 @@ class FunctionData:
     This class grabs certain fields of a function from a
     gcc AST json, and is used to check equality between two function.
     This class can be extended with more fields as desired.
-    
+
     Currently we track:
         - the name of the function
         - the names of parameters to the function
         - the names of variable declaration inside the function
         - the number of loops inside the function
     """
+
     name: str
     parameters: List[str]
     variable_declarations: List[str]
     number_of_loops: int
-    
+
     def __init__(self, function: SimpleNamespace):
         self.name = function.name
         # due to single static assignments, some variable declarations
         # in a function do not have a name (only an id)
-        named_var_declarations = filter(lambda var: hasattr(var, "name"), 
-                                        function.variableDeclarations)
+        named_var_declarations = filter(
+            lambda var: hasattr(var, "name"), function.variableDeclarations
+        )
         self.variable_declarations = [var.name for var in named_var_declarations]
         self.parameters = []
         if hasattr(function, "parameters"):
@@ -91,12 +89,12 @@ class FunctionData:
         self.number_of_loops = function.numberOfLoops
 
     def __eq__(self, other):
-        return ( 
-                self.name == other.name  and
-                self.variable_declarations == other.variable_declarations and
-                self.parameters == other.parameters and
-                self.number_of_loops == other.number_of_loops
-                )
+        return (
+            self.name == other.name
+            and self.variable_declarations == other.variable_declarations
+            and self.parameters == other.parameters
+            and self.number_of_loops == other.number_of_loops
+        )
 
 
 def build_gcc_ast_json_from_source(test_name: str) -> SimpleNamespace:
@@ -108,9 +106,11 @@ def build_gcc_ast_json_from_source(test_name: str) -> SimpleNamespace:
 
 
 def load_gcc_ast_json(path_to_json: str) -> SimpleNamespace:
-# Parse JSON into an object with attributes corresponding to dict keys
-    return json.load(open(path_to_json, "r"), 
-                     object_hook=lambda d: SimpleNamespace(**d))
+    # Parse JSON into an object with attributes corresponding to dict keys
+    return json.load(
+        open(path_to_json, "r"), object_hook=lambda d: SimpleNamespace(**d)
+    )
+
 
 def compare_asts(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
     """
@@ -123,6 +123,7 @@ def compare_asts(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
     same_globals = compare_global_variables(ast1, ast2)
     same_functions = compare_ast_functions(ast1, ast2)
     return same_globals and same_functions
+
 
 def compare_global_variables(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
     """
@@ -139,7 +140,7 @@ def compare_global_variables(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bo
 def compare_ast_functions(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
     """
     Checks that the "functions" list of `ast1` matches the functions list of `ast2`
-    For individual functions from the list, we only check equality of fields 
+    For individual functions from the list, we only check equality of fields
     defined in `FunctionData`.
 
     Returns True is the functions lists match and False otherwise
@@ -171,11 +172,11 @@ def compare_ast_functions(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_files():
     """
-    Pytest fixture which runs after all test to 
+    Pytest fixture which runs after all test to
     remove object files and gcc AST jsons created during test run time
     """
     # don't do anything to start the session
-    yield # run the session
+    yield  # run the session
     # clean up after session
     for item in os.listdir("./"):
         if item.endswith(".o") or item.endswith("_gcc_ast.json"):
@@ -183,6 +184,8 @@ def cleanup_files():
 
 
 TEST_NAMES = collect_test_names()
+
+
 @pytest.mark.parametrize("test_name", TEST_NAMES)
 def test_expected_ast(test_name):
     expected_ast_file_path = make_gcc_ast_json_file_path(test_name)
@@ -190,7 +193,7 @@ def test_expected_ast(test_name):
     created_ast = build_gcc_ast_json_from_source(test_name)
     expected_ast = load_gcc_ast_json(expected_ast_file_path)
 
-    assert(compare_asts(created_ast, expected_ast))
+    assert compare_asts(created_ast, expected_ast)
 
 
 @pytest.fixture(scope="module", autouse=True)
