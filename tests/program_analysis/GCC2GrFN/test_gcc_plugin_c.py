@@ -31,6 +31,13 @@ GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin"
 GCC_PLUGIN_IMAGE = "automates/program_analysis/gcc_plugin/plugin/ast_dump.so"
 GCC_TEST_DATA_DIRECTORY = "tests/data/program_analysis/GCC2GrFN/gcc_plugin"
 
+# global identifiers such as `stdin`, `stdout`, `stderr`
+# can be added to the AST by including system header files
+# However, the CI that is run on Github actions includes additional 
+# global names which should be skipped.  
+# It sounds like these global names are added from errno.h
+GLOBAL_NAMES_TO_SKIP = ['_sys_errlist', '_sys_nerr', 'sys_errlist', 'sys_nerr']
+
 
 def make_gcc_ast_json_file_path(test_name: str) -> str:
     return f"{TEST_DATA_DIR}/{test_name}_gcc_ast.json"
@@ -89,13 +96,15 @@ class FunctionData:
 
     def __eq__(self, other):
         
+        # this will be printed if the test fails
         print(f"{50*'*'}")
-        print(f"DEBUGGING: in EQ check on function")
+        print(f"DEBUGGING: in __eq__ for FunctionData")
         print(f"{5*' '}self.name = {self.name}, other.name = {other.name}")
         print(f"{5*' '}self.var_decls = {self.variable_declarations}, other.var_decls = {other.variable_declarations}")
         print(f"{5*' '}self.params = {self.parameters}, other.params = {other.parameters}")
         print(f"{5*' '}self.num_loops = {self.number_of_loops}, other.num_loops = {other.number_of_loops}")
         print(f"{50*'*'}")
+
         return (
             self.name == other.name
             and self.variable_declarations == other.variable_declarations
@@ -134,12 +143,17 @@ def compare_asts(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
 
 def compare_global_variables(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
     """
-    Check that global variables of the same name appear in each AST
+    Check that global variables of the same name appear in each AST.  We remove the global
+    variables names that appear in `GLOBAL_NAMES_TO_SKIP`.  The names from that list
+    appear on Github Actions CI, but not locally.
 
     Returns True if global variable names match and False otherwise
     """
     ast1_global_names = [gv.name for gv in ast1.globalVariables]
+    ast1_global_names = set(ast1_global_names).difference(GLOBAL_NAMES_TO_SKIP)
     ast2_global_names = [gv.name for gv in ast2.globalVariables]
+    ast2_global_names = set(ast2_global_names).difference(GLOBAL_NAMES_TO_SKIP)
+
     print(f"{50*'*'}")
     print(f"DEBUGGING: in compare_global_variables")
     print(f"{5*' '}ast1_g_names = {ast1_global_names} and ast2_g_names = {ast2_global_names}")
@@ -167,10 +181,6 @@ def compare_ast_functions(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
         ast2_functions[func.name] = FunctionData(func)
 
     if len(ast1_functions) != len(ast2_functions):
-        print(f"{50*'*'}")
-        print(f"DEBUGGING: length of functions do not match")
-        print(f"{5*' '}ast1_functions = {ast1_functions} and ast2_functions = {ast2_functions}")
-        print(f"{50*'*'}")
         return False
 
     # check functions are the same
