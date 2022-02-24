@@ -46,6 +46,8 @@ def get_args(args=sys.argv[1:]):
     parser.add_argument("-p", "--plugin", help="Custom path to gcc plugin")
     parser.add_argument("-Cg", "--CASTgraph", help="Create CAST graphviz pdf",
             action='store_true')
+    parser.add_argument("-S", "--source", help="Turns off source reference information in the GrFN",
+            action='store_true')
     options = parser.parse_args(args)
     return options
 
@@ -145,7 +147,10 @@ def run_gcc_pipeline():
     # Set random seed to 0 for UUID generation for consistent results in
     # GrFN generation for tests
     misc.rd.seed(0)
-    grfn = cast.to_GrFN()
+    if args.source:
+        grfn = cast.to_GrFN(omit_source_ref=True)
+    else:
+        grfn = cast.to_GrFN(omit_source_ref=False)
     grfn.to_json_file(f"{program_name}--GrFN.json")
 
     print("Transforming GrFN into AGraph...")

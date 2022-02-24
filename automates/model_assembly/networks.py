@@ -1010,6 +1010,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
         self.lambdas = [n for n in self.nodes if isinstance(n, LambdaNode)]
         self.types = T
 
+        self.omit_source_info = False # Boolean flag that determines whether or not we generate source reference information for the GrFN
+
         # NOTE: removing detached variables from GrFN
         del_indices = list()
         for idx, var_node in enumerate(self.variables):
@@ -1741,7 +1743,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         :rtype: type
         :raises ExceptionName: Why the exception is raised.
         """
-        return {
+        data = {
             "uid": self.uid,
             "entry_point": "::".join(
                 ["@container", self.namespace, self.scope, self.name]
@@ -1760,6 +1762,46 @@ class GroundedFunctionNetwork(nx.DiGraph):
             ],
             "metadata": [m.to_dict() for m in self.metadata],
         }
+        if self.omit_source_info:
+            for v in data["variables"]:
+                for e in v["metadata"]:
+                    if e["type"] == "code_span_reference":
+                        e["code_span"] = None
+
+            for v in data["functions"]:
+                for e in v["metadata"]:
+                    if e["type"] == "code_span_reference":
+                        e["code_span"] = None
+
+            for v in data["subgraphs"]:
+                for e in v["metadata"]:
+                    if e["type"] == "code_span_reference":
+                        e["code_span"] = None
+
+            for v in data["types"]:
+                for e in v["metadata"]:
+                    if e["type"] == "code_span_reference":
+                        e["code_span"] = None
+
+            for v in data["metadata"]:
+                for e in v["metadata"]:
+                    if e["type"] == "code_span_reference":
+                        e["code_span"] = None
+
+        return data
+
+    def set_source_flag(self, flag):
+        """Toggles a flag in the GrFN object that tells us whether or not we need to omit the source reference
+            information in the GrFN JSON. At the moment the source reference information is the 'code_span' information.
+            By default the source_info flag is set to False, 
+
+        Args:
+            flag (Boolean): Flag is set to either True or False depending on whether or not we want
+                            the source information to be removed (True) or kept (False)
+        """
+
+        self.omit_source_info = flag
+
 
     def to_json(self) -> str:
         """Outputs the contents of this GrFN to a JSON object string.

@@ -181,9 +181,11 @@ class CAST(object):
 
         return AutoMATES_IR(GenericIdentifier.from_str(air["entrypoint"]), C, V, T, [], [], [])
 
-    def to_GrFN(self):
+    def to_GrFN(self,omit_source_ref=False):
         air = self.to_AIR()
         grfn = GroundedFunctionNetwork.from_AIR(air)
+        if omit_source_ref:
+            grfn.set_source_flag(omit_source_ref)
         return grfn
 
     def write_cast_object(self, cast_value):
