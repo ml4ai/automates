@@ -96,22 +96,24 @@ class FunctionData:
 
     def __eq__(self, other):
         
-        # this will be printed if the test fails
-        print(f"{50*'*'}")
-        print(f"DEBUGGING: in __eq__ for FunctionData")
-        print(f"{5*' '}self.name = {self.name}, other.name = {other.name}")
-        print(f"{5*' '}self.var_decls = {self.variable_declarations}, other.var_decls = {other.variable_declarations}")
-        print(f"{5*' '}self.params = {self.parameters}, other.params = {other.parameters}")
-        print(f"{5*' '}self.num_loops = {self.number_of_loops}, other.num_loops = {other.number_of_loops}")
-        print(f"{50*'*'}")
-
-        return (
+        equal = (
             self.name == other.name
             and self.variable_declarations == other.variable_declarations
             and self.parameters == other.parameters
             and self.number_of_loops == other.number_of_loops
         )
 
+        # We print out the difference, so it can be viewed in Github CI results
+        if not equal:
+            print(f"{50*'*'}")
+            print(f"DEBUGGING: in __eq__ for FunctionData")
+            print(f"{5*' '}self.name = {self.name}, other.name = {other.name}")
+            print(f"{5*' '}self.var_decls = {self.variable_declarations}, other.var_decls = {other.variable_declarations}")
+            print(f"{5*' '}self.params = {self.parameters}, other.params = {other.parameters}")
+            print(f"{5*' '}self.num_loops = {self.number_of_loops}, other.num_loops = {other.number_of_loops}")
+            print(f"{50*'*'}")
+
+        return equal
 
 def build_gcc_ast_json_from_source(test_name: str) -> SimpleNamespace:
     path_to_source = make_source_file_path(test_name)
@@ -153,13 +155,16 @@ def compare_global_variables(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bo
     ast1_global_names = set(ast1_global_names).difference(GLOBAL_NAMES_TO_SKIP)
     ast2_global_names = [gv.name for gv in ast2.globalVariables]
     ast2_global_names = set(ast2_global_names).difference(GLOBAL_NAMES_TO_SKIP)
+    
+    # We print out the difference, so it can be viewed in Github CI results
+    if set(ast1_global_names) != set(ast2_global_names):
+        print(f"{50*'*'}")
+        print(f"DEBUGGING: in compare_global_variables")
+        print(f"{5*' '}ast1_g_names = {ast1_global_names} and ast2_g_names = {ast2_global_names}")
+        print(f"{50*'*'}")
+        return False
 
-    print(f"{50*'*'}")
-    print(f"DEBUGGING: in compare_global_variables")
-    print(f"{5*' '}ast1_g_names = {ast1_global_names} and ast2_g_names = {ast2_global_names}")
-    print(f"{50*'*'}")
-
-    return set(ast1_global_names) == set(ast2_global_names)
+    return True
 
 
 def compare_ast_functions(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:

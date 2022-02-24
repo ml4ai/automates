@@ -40,7 +40,9 @@ def load_cast_from_json(path_to_json: str) -> CAST:
     return CAST.from_json_file(path_to_json)
 
 
-# TODO: Do we need to check equality in a different way
+# For now, we use the `__eq__` method on CAST objects.  It 
+# may be necessary to use a more fine-grained check in the
+# future.
 def check_cast_equality(cast1: CAST, cast2: CAST) -> bool:
     return cast1 == cast2
 
