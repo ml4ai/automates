@@ -1,0 +1,1347 @@
+{
+  "mainInputFilename": "nested_if_02.c",
+  "functions": [
+    {
+      "id": 4294964969,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 2,
+      "decl_col_start": 5,
+      "file": "nested_if_02.c",
+      "line_start": 2,
+      "line_end": 41,
+      "variableDeclarations": [
+        {
+          "name": "b",
+          "id": 4294964964,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "a",
+          "id": 4294964965,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "y",
+          "id": 4294964966,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "x",
+          "id": 4294964967,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964945,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 15,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 3,
+              "col_start": 9,
+              "file": "nested_if_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964967,
+                "name": "x",
+                "line_start": 3,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 5
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 4,
+              "col_start": 9,
+              "file": "nested_if_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "y",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 3
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 6,
+              "col_start": 9,
+              "file": "nested_if_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964965,
+                "name": "a",
+                "line_start": 6,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 7,
+              "col_start": 9,
+              "file": "nested_if_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964964,
+                "name": "b",
+                "line_start": 7,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 4
+                }
+              ]
+            },
+            {
+              "type": "conditional",
+              "line_start": 9,
+              "col_start": 5,
+              "file": "nested_if_02.c",
+              "operator": "lt_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964966,
+                  "name": "y",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964967,
+                  "name": "x",
+                  "line_start": 3,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                }
+              ],
+              "trueLabel": 3,
+              "falseLabel": 13
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 2,
+              "target": 3
+            },
+            {
+              "flags": 512,
+              "source": 2,
+              "target": 13
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 10,
+              "col_start": 9,
+              "file": "nested_if_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964965,
+                "name": "a",
+                "line_start": 6,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964965,
+                  "name": "a",
+                  "line_start": 6,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 11,
+              "col_start": 9,
+              "file": "nested_if_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964964,
+                "name": "b",
+                "line_start": 7,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964964,
+                  "name": "b",
+                  "line_start": 7,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": -1
+                }
+              ]
+            },
+            {
+              "type": "conditional",
+              "line_start": 13,
+              "col_start": 9,
+              "file": "nested_if_02.c",
+              "operator": "lt_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964965,
+                  "name": "a",
+                  "line_start": 6,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964964,
+                  "name": "b",
+                  "line_start": 7,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                }
+              ],
+              "trueLabel": 4,
+              "falseLabel": 10
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 3,
+              "target": 4
+            },
+            {
+              "flags": 512,
+              "source": 3,
+              "target": 10
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 3,
+          "dominators": [
+            0,
+            2,
+            3,
+            4
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 14,
+              "col_start": 13,
+              "file": "nested_if_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964967,
+                "name": "x",
+                "line_start": 3,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964967,
+                  "name": "x",
+                  "line_start": 3,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "conditional",
+              "line_start": 15,
+              "col_start": 13,
+              "file": "nested_if_02.c",
+              "operator": "le_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964965,
+                  "name": "a",
+                  "line_start": 6,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ],
+              "trueLabel": 5,
+              "falseLabel": 9
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 4,
+              "target": 5
+            },
+            {
+              "flags": 512,
+              "source": 4,
+              "target": 9
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 4,
+          "dominators": [
+            0,
+            2,
+            3,
+            4,
+            5
+          ],
+          "parents": [
+            4
+          ],
+          "parentsNearestCommonDom": 4,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 16,
+              "col_start": 17,
+              "file": "nested_if_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "y",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964966,
+                  "name": "y",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "conditional",
+              "line_start": 17,
+              "col_start": 17,
+              "file": "nested_if_02.c",
+              "operator": "gt_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964965,
+                  "name": "a",
+                  "line_start": 6,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ],
+              "trueLabel": 6,
+              "falseLabel": 7
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 5,
+              "target": 6
+            },
+            {
+              "flags": 512,
+              "source": 5,
+              "target": 7
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 5,
+          "dominators": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "parents": [
+            5
+          ],
+          "parentsNearestCommonDom": 5,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 18,
+              "col_start": 21,
+              "file": "nested_if_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964965,
+                "name": "a",
+                "line_start": 6,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964965,
+                  "name": "a",
+                  "line_start": 6,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 10
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 6,
+              "target": 10
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 5,
+          "dominators": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "parents": [
+            5
+          ],
+          "parentsNearestCommonDom": 5,
+          "statements": [
+            {
+              "type": "conditional",
+              "line_start": 20,
+              "col_start": 22,
+              "file": "nested_if_02.c",
+              "operator": "gt_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964964,
+                  "name": "b",
+                  "line_start": 7,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 3
+                }
+              ],
+              "trueLabel": 8,
+              "falseLabel": 10
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 7,
+              "target": 8
+            },
+            {
+              "flags": 512,
+              "source": 7,
+              "target": 10
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 7,
+          "dominators": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8
+          ],
+          "parents": [
+            7
+          ],
+          "parentsNearestCommonDom": 7,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 21,
+              "col_start": 21,
+              "file": "nested_if_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964967,
+                "name": "x",
+                "line_start": 3,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964967,
+                  "name": "x",
+                  "line_start": 3,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": -1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 10
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 8,
+              "target": 10
+            }
+          ]
+        },
+        {
+          "index": 9,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 4,
+          "dominators": [
+            0,
+            2,
+            3,
+            4,
+            9
+          ],
+          "parents": [
+            4
+          ],
+          "parentsNearestCommonDom": 4,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 25,
+              "col_start": 17,
+              "file": "nested_if_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "y",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964966,
+                  "name": "y",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": -1
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 9,
+              "target": 10
+            }
+          ]
+        },
+        {
+          "index": 10,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 3,
+          "dominators": [
+            0,
+            2,
+            3,
+            10
+          ],
+          "parents": [
+            3,
+            9,
+            7,
+            8,
+            6
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 30,
+              "col_start": 9,
+              "file": "nested_if_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "y",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964966,
+                  "name": "y",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": -1
+                }
+              ]
+            },
+            {
+              "type": "conditional",
+              "line_start": 32,
+              "col_start": 9,
+              "file": "nested_if_02.c",
+              "operator": "lt_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964964,
+                  "name": "b",
+                  "line_start": 7,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964967,
+                  "name": "x",
+                  "line_start": 3,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                }
+              ],
+              "trueLabel": 11,
+              "falseLabel": 12
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 10,
+              "target": 11
+            },
+            {
+              "flags": 512,
+              "source": 10,
+              "target": 12
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 10,
+          "dominators": [
+            0,
+            2,
+            3,
+            10,
+            11
+          ],
+          "parents": [
+            10
+          ],
+          "parentsNearestCommonDom": 10,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 33,
+              "col_start": 13,
+              "file": "nested_if_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "y",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964966,
+                  "name": "y",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 11,
+              "target": 12
+            }
+          ]
+        },
+        {
+          "index": 12,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 10,
+          "dominators": [
+            0,
+            2,
+            3,
+            10,
+            12
+          ],
+          "parents": [
+            10,
+            11
+          ],
+          "parentsNearestCommonDom": 10,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 36,
+              "col_start": 9,
+              "file": "nested_if_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964964,
+                "name": "b",
+                "line_start": 7,
+                "col_start": 9,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964964,
+                  "name": "b",
+                  "line_start": 7,
+                  "col_start": 9,
+                  "file": "nested_if_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": -1
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 12,
+              "target": 13
+            }
+          ]
+        },
+        {
+          "index": 13,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            13
+          ],
+          "parents": [
+            2,
+            12
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 39,
+              "col_start": 12,
+              "file": "nested_if_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964945,
+                "line_start": 39,
+                "col_start": 12,
+                "file": "nested_if_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 13,
+              "target": 14
+            }
+          ]
+        },
+        {
+          "index": 14,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 13,
+          "dominators": [
+            0,
+            2,
+            13,
+            14
+          ],
+          "parents": [
+            13
+          ],
+          "parentsNearestCommonDom": 13,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 0,
+              "col_start": 0,
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964945,
+                "line_start": 39,
+                "col_start": 12,
+                "file": "nested_if_02.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 14,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            14
+          ],
+          "parentsNearestCommonDom": 14,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+  ],
+  "recordTypes": [
+  ]
+}

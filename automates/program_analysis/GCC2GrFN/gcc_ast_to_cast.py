@@ -1,6 +1,7 @@
 from pprint import pprint
 from typing import List, Optional
 from dataclasses import dataclass
+from pathlib import Path
 
 from automates.program_analysis.CAST2GrFN.cast import CAST
 from automates.program_analysis.CAST2GrFN.model.cast import (
@@ -178,9 +179,10 @@ class GCC2CAST:
         if obj.keys() >= {"line_start", "col_start", "file"}:
             line = obj["line_start"]
             col = obj["col_start"]
-            file = obj["file"]
+            file_path = Path(obj["file"])
+            file_name = file_path.name
             source_refs.append(
-                SourceRef(source_file_name=file, col_start=col, row_start=line)
+                SourceRef(source_file_name=file_name, col_start=col, row_start=line)
             )
         return source_refs
 
@@ -215,15 +217,12 @@ class GCC2CAST:
         cast_type = gcc_type_to_var_type(var_type, self.type_ids_to_defined_types)
 
         id = variable["id"] if "id" in variable else None
-        line = variable["line_start"] if "line_start" in variable else None
-        col = variable["col_start"] if "col_start" in variable else None
-        file = variable["file"] if "file" in variable else None
-        source_ref = SourceRef(source_file_name=file, col_start=col, row_start=line)
+        source_refs = self.get_source_refs(variable)
 
         var_node = Var(
             val=Name(name=name, id=id),
             type=cast_type,
-            source_refs=[source_ref],
+            source_refs=source_refs,
         )
 
         if parse_value:
@@ -406,16 +405,13 @@ class GCC2CAST:
         member = operand["member"]
         field = member["name"]
 
-        line = member["line_start"]
-        col = member["col_start"]
-        file = member["file"]
-        source_ref = SourceRef(source_file_name=file, row_start=line, col_start=col)
+        source_refs = self.get_source_refs(operand)
 
         return [
             Attribute(
                 value=Name(name=var_name),
                 attr=Name(name=field),
-                source_refs=[source_ref],
+                source_refs=source_refs,
             )
         ]
 
@@ -755,13 +751,14 @@ class GCC2CAST:
         line_end = function["line_end"]
         decl_line = function["decl_line_start"]
         decl_col = function["decl_col_start"]
-        file = function["file"]
+        file_path = Path(function["file"])
+        file_name = file_path.name
 
         body_source_ref = SourceRef(
-            source_file_name=file, row_start=line_start, row_end=line_end
+            source_file_name=file_name, row_start=line_start, row_end=line_end
         )
         decl_source_ref = SourceRef(
-            source_file_name=file, row_start=decl_line, col_start=decl_col
+            source_file_name=file_name, row_start=decl_line, col_start=decl_col
         )
 
         return body_source_ref, decl_source_ref
