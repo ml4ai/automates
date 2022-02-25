@@ -53,7 +53,7 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
     class CastToAnnotatedCastVisitor - A visitor that traverses CAST nodes
     and generates an annotated cast version of the CAST.
 
-    The AnnotatedCastNodes have additional attributes (fields) that are used
+    The AnnCastNodes have additional attributes (fields) that are used
     in a later pass to maintain scoping information for GrFN containers.
     '''
 
@@ -78,7 +78,7 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
 
         return annotated_cast
 
-    def print_then_visit(self, node: AstNode) -> AnnotatedCastNode:
+    def print_then_visit(self, node: AstNode) -> AnnCastNode:
         # type(node) is a string which looks like
         # "class '<path.to.class.ClassName>'"
         class_name = str(type(node))
@@ -96,13 +96,13 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
         print(f"Assignment: type of rhs is {type(node.right)}")
         left = self.print_then_visit(node.left)
         right = self.print_then_visit(node.right)
-        return AnnotatedCastAssignment(left, right, node.source_refs)
+        return AnnCastAssignment(left, right, node.source_refs)
 
     @visit.register
     def _(self, node: Attribute):
         value = self.print_then_visit(node.value)
         attr  = self.print_then_visit(node.attr)
-        return AnnotatedCastAttribute(value, attr, node.source_refs)
+        return AnnCastAttribute(value, attr, node.source_refs)
 
     @visit.register
     def _(self, node: BinaryOp):
@@ -110,13 +110,13 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
         print(f"BinaryOp: type of rhs is {type(node.right)}")
         left = self.print_then_visit(node.left)
         right = self.print_then_visit(node.right)
-        return AnnotatedCastBinaryOp(node.op, left, right, node.source_refs)
+        return AnnCastBinaryOp(node.op, left, right, node.source_refs)
 
     @visit.register
     def _(self, node: Boolean):
         print(f"Boolean: type of boolean attribute is {type(node.boolean)}")
         boolean = self.print_then_visit(node.boolean)
-        return AnnotatedCastBoolean(boolean, node.source_refs)
+        return AnnCastBoolean(boolean, node.source_refs)
 
     @visit.register
     def _(self, node: Call):
@@ -124,7 +124,7 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
         #TODO: Is node.arguments a list of nodes?
         print(f"Call: type of arguments is {type(node.arguments)}")
         arguments = self.print_then_visit(node.arguments)
-        return AnnotatedCastCall(node.func, arguments, node.source_refs)
+        return AnnCastCall(node.func, arguments, node.source_refs)
 
     @visit.register
     def _(self, node: ClassDef):
@@ -133,7 +133,7 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
         #TODO: Is node.bases a list? yes, just a list of strings
         funcs = self.visit_list(node.funcs)
         fields = self.visit_list(node.fields)
-        return AnnotatedCastClassDef(node.name, node.bases, funcs, fields, node.source_refs)
+        return AnnCastClassDef(node.name, node.bases, funcs, fields, node.source_refs)
 
     @visit.register
     def _(self, node: Dict):
@@ -142,25 +142,25 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
         print(f"Dict: type of values is {type(node.values)}")
         keys = self.visit_list(node.keys)
         values = self.visit_list(node.values)
-        return AnnotatedCastDict(keys, values, node.source_refs)
+        return AnnCastDict(keys, values, node.source_refs)
 
     @visit.register
     def _(self, node: Expr):
         expr = self.print_then_visit(node.expr)
-        return AnnotatedCastExpr(expr, node.source_refs)
+        return AnnCastExpr(expr, node.source_refs)
 
     @visit.register
     def _(self, node: FunctionDef):
         name = node.name
         body = self.visit_list(node.body)
         args = self.visit_list(node.func_args)
-        return AnnotatedCastFunctionDef(name, args, body, node.source_refs)
+        return AnnCastFunctionDef(name, args, body, node.source_refs)
         
     @visit.register
     def _(self, node: List):
         #TODO - a list of values? yes
         values = self.visit_list(node.values)
-        return AnnotatedCastList(values, node.source_refs)
+        return AnnCastList(values, node.source_refs)
 
     @visit.register
     def _(self, node: Loop):
@@ -168,15 +168,15 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
         print(f"in Loop: expr is type {type(node.expr)}")
         expr = self.print_then_visit(node.expr)
         body = self.visit_list(node.body)
-        return AnnotatedCastLoop(expr,body, node.source_refs)
+        return AnnCastLoop(expr,body, node.source_refs)
 
     @visit.register
     def _(self, node: ModelBreak):
-        return AnnotatedCastModelBreak(node.source_refs)
+        return AnnCastModelBreak(node.source_refs)
 
     @visit.register
     def _(self, node: ModelContinue):
-        return AnnotatedCastModelContinue(node.source_refs)
+        return AnnCastModelContinue(node.source_refs)
 
     @visit.register
     def _(self, node: ModelIf):
@@ -185,56 +185,56 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
         body = self.visit_list(node.body)
         print(f"in ModelIf: orelse is type {type(node.orelse)}")
         orelse = self.visit_list(node.orelse)
-        return AnnotatedCastModelIf(expr, body, orelse, node.source_refs)
+        return AnnCastModelIf(expr, body, orelse, node.source_refs)
 
     @visit.register
     def _(self, node: ModelReturn):
-        return AnnotatedCastModelReturn(node.value, node.source_refs)
+        return AnnCastModelReturn(node.value, node.source_refs)
         
     @visit.register
     def _(self, node: Module):
         print(f"in visit Module name is {node.name}")
         print(f"len of body is {len(node.body)}")
         body = self.visit_list(node.body)
-        return AnnotatedCastModule(node.name, body, node.source_refs)
+        return AnnCastModule(node.name, body, node.source_refs)
 
     @visit.register
     def _(self, node: Name):
-        return AnnotatedCastName(node.name, node.id, node.source_refs)
+        return AnnCastName(node.name, node.id, node.source_refs)
 
     @visit.register
     def _(self, node: Number):
-        return AnnotatedCastNumber(node.number, node.source_refs)
+        return AnnCastNumber(node.number, node.source_refs)
 
     @visit.register
     def _(self, node: Set):
         values = self.visit_list(node.values)
-        return AnnotatedCastSet(values, node.source_refs)
+        return AnnCastSet(values, node.source_refs)
 
     @visit.register
     def _(self, node: String):
         string = self.print_then_visit(node.string)
-        return AnnotatedCastString(string, node.source_refs)
+        return AnnCastString(string, node.source_refs)
 
     @visit.register
     def _(self, node: Subscript):
         #TODO: Not quite sure what the types of value and slice are
         value = self.print_then_visit(node.value)
         slice = self.print_then_visit(node.slice)
-        return AnnotatedCastSubscript(value, slice, node.source_refs)
+        return AnnCastSubscript(value, slice, node.source_refs)
 
     @visit.register
     def _(self, node: Tuple):
         #TODO: Is values a list of nodes? Yes.
         values = self.visit_list(node.values)
-        return AnnotatedCastTuple(values, node.source_refs)
+        return AnnCastTuple(values, node.source_refs)
 
     @visit.register
     def _(self, node: UnaryOp):
         value = self.print_then_visit(node.value)
-        return AnnotatedCastUnaryOp(node.op, value, node.source_refs)
+        return AnnCastUnaryOp(node.op, value, node.source_refs)
 
     @visit.register
     def _(self, node: Var):
         val = self.print_then_visit(node.val)
-        return AnnotatedCastVar(val, node.type, node.source_refs)
+        return AnnCastVar(val, node.type, node.source_refs)

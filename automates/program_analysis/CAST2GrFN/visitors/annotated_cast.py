@@ -30,7 +30,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
-class AnnotatedCastNode(AstNode):
+class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):
         self._input_vars = {}
         self._updated_vars = {}
@@ -38,12 +38,14 @@ class AnnotatedCastNode(AstNode):
 
 '''
 class AnnCastAssignment
-class AnnAssignment
 class AnCastAssignment
 class ACAssignment
+
+class AnnAssignment
+class AnnCastNode
 '''
 
-class AnnotatedCastAssignment(AnnotatedCastNode):
+class AnnCastAssignment(AnnCastNode):
     def __init__(self, left, right, source_refs ):
         self.left = left
         self.right = right
@@ -52,7 +54,7 @@ class AnnotatedCastAssignment(AnnotatedCastNode):
     def __str__(self):
         return Assignment.__str__(self)
 
-class AnnotatedCastAttribute(AnnotatedCastNode):
+class AnnCastAttribute(AnnCastNode):
     def __init__(self, value, attr, source_refs):
         self.value = value
         self.attr = attr
@@ -61,7 +63,7 @@ class AnnotatedCastAttribute(AnnotatedCastNode):
     def __str__(self):
         return Attribute.__str__(self)
 
-class AnnotatedCastBinaryOp(AnnotatedCastNode):
+class AnnCastBinaryOp(AnnCastNode):
     def __init__(self, op, left, right, source_refs):
         self.op = op
         self.left = left
@@ -71,9 +73,7 @@ class AnnotatedCastBinaryOp(AnnotatedCastNode):
     def __str__(self):
         return BinaryOp.__str__(self)
 
-'''TODO: Not sure about BinaryOperator'''
-
-class AnnotatedCastBoolean(AnnotatedCastNode):
+class AnnCastBoolean(AnnCastNode):
     def __init__(self, boolean, source_refs):
         self.boolean = boolean
         self.source_refs = source_refs
@@ -81,7 +81,7 @@ class AnnotatedCastBoolean(AnnotatedCastNode):
     def __str__(self):
         return Boolean.__str__(self)
 
-class AnnotatedCastCall(AnnotatedCastNode):
+class AnnCastCall(AnnCastNode):
     def __init__(self, func, arguments, source_refs):
         self.func = func
         self.arguments = arguments
@@ -90,7 +90,7 @@ class AnnotatedCastCall(AnnotatedCastNode):
     def __str__(self):
         return Call.__str__(self)
 
-class AnnotatedCastClassDef(AnnotatedCastNode):
+class AnnCastClassDef(AnnCastNode):
     def __init__(self, name, bases, func, fields, source_refs):
         self.name = node.name
         self.bases = node.bases
@@ -101,7 +101,7 @@ class AnnotatedCastClassDef(AnnotatedCastNode):
     def __str__(self):
         return ClassDef.__str__(self)
 
-class AnnotatedCastDict(AnnotatedCastNode):
+class AnnCastDict(AnnCastNode):
     def __init__(self, keys, values, source_refs):
         self.keys = keys
         self.values = values
@@ -110,7 +110,7 @@ class AnnotatedCastDict(AnnotatedCastNode):
     def __str__(self):
         return Dict.__str__(self)
 
-class AnnotatedCastExpr(AnnotatedCastNode):
+class AnnCastExpr(AnnCastNode):
     def __init__(self, expr, source_refs):
         self.expr = expr
         self.source_refs = source_refs
@@ -118,7 +118,7 @@ class AnnotatedCastExpr(AnnotatedCastNode):
     def __str__(self):
         return Expr.__str__(self)
 
-class AnnotatedCastFunctionDef(AnnotatedCastNode):
+class AnnCastFunctionDef(AnnCastNode):
     def __init__(self, name, func_args, body, source_refs):
         self.name = name
         self.func_args = func_args
@@ -128,7 +128,7 @@ class AnnotatedCastFunctionDef(AnnotatedCastNode):
     def __str__(self):
         return FunctionDef.__str__(self)
 
-class AnnotatedCastList(AnnotatedCastNode):
+class AnnCastList(AnnCastNode):
     def __init__(self, values, source_refs):
         self.values = values
         self.source_refs = source_refs
@@ -136,7 +136,7 @@ class AnnotatedCastList(AnnotatedCastNode):
     def __str__(self):
         return List.__str__(self)
 
-class AnnotatedCastClassDef(AnnotatedCastNode):
+class AnnCastClassDef(AnnCastNode):
     def __init__(self, name, bases, funcs, fields, source_refs):
         self.name = name
         self.bases = bases
@@ -147,7 +147,7 @@ class AnnotatedCastClassDef(AnnotatedCastNode):
     def __str__(self):
         return ClassDef.__str__(self)
 
-class AnnotatedCastLoop(AnnotatedCastNode):
+class AnnCastLoop(AnnCastNode):
     def __init__(self, expr, body, source_refs):
         self.expr = expr
         self.body = body
@@ -170,21 +170,21 @@ class AnnotatedCastLoop(AnnotatedCastNode):
         return Loop.__str__(self)
 
 
-class AnnotatedCastModelBreak(AnnotatedCastNode):
+class AnnCastModelBreak(AnnCastNode):
     def __init__(self, source_refs):
         self.source_refs = source_refs
 
     def __str__(self):
         return ModelBreak.__str__(self)
 
-class AnnotatedCastModelContinue(AnnotatedCastNode):
+class AnnCastModelContinue(AnnCastNode):
     def __init__(self, node:ModelContinue):
         self.source_refs = node.source_refs
 
     def __str__(self):
         return ModelContinue.__str__(self)
 
-class AnnotatedCastModelIf(AnnotatedCastNode):
+class AnnCastModelIf(AnnCastNode):
     def __init__(self, expr, body, orelse, source_refs):
         self.expr = expr
         self.body = body
@@ -198,7 +198,7 @@ class AnnotatedCastModelIf(AnnotatedCastNode):
     def __str__(self):
         return ModelIf.__str__(self)
 
-class AnnotatedCastModelReturn(AnnotatedCastNode):
+class AnnCastModelReturn(AnnCastNode):
     def __init__(self, value, source_refs):
         self.value = value
         self.source_refs = source_refs
@@ -206,7 +206,7 @@ class AnnotatedCastModelReturn(AnnotatedCastNode):
     def __str__(self):
         return ModelReturn.__str__(self)
 
-class AnnotatedCastModule(AnnotatedCastNode):
+class AnnCastModule(AnnCastNode):
     def __init__(self, name, body, source_refs):
         self.name = name
         self.body = body
@@ -216,7 +216,7 @@ class AnnotatedCastModule(AnnotatedCastNode):
         return Module.__str__(self)
 
 
-class AnnotatedCastName(AnnotatedCastNode):
+class AnnCastName(AnnCastNode):
     def __init__(self, name, id, source_refs):
         self.name = name
         self.id = id
@@ -226,7 +226,7 @@ class AnnotatedCastName(AnnotatedCastNode):
         return Name.__str__(self)
 
 
-class AnnotatedCastNumber(AnnotatedCastNode):
+class AnnCastNumber(AnnCastNode):
     def __init__(self, number, source_refs):
         self.number = number
         self.source_refs = source_refs
@@ -234,7 +234,7 @@ class AnnotatedCastNumber(AnnotatedCastNode):
     def __str__(self):
         return Number.__str__(self)
 
-class AnnotatedCastSet(AnnotatedCastNode):
+class AnnCastSet(AnnCastNode):
     def __init__(self, values, source_refs):
         self.values = values
         self.source_refs = source_refs
@@ -242,7 +242,7 @@ class AnnotatedCastSet(AnnotatedCastNode):
     def __str__(self):
         return Set.__str__(self)
 
-class AnnotatedCastString(AnnotatedCastNode):
+class AnnCastString(AnnCastNode):
     def __init__(self, string, source_refs):
         self.string = string
         self.source_refs = source_refs
@@ -250,7 +250,7 @@ class AnnotatedCastString(AnnotatedCastNode):
     def __str__(self):
         return String.__str__(self)
 
-class AnnotatedCastSubscript(AnnotatedCastNode):
+class AnnCastSubscript(AnnCastNode):
     def __init__(self, value, slice, source_refs):
         self.value = node.value
         self.slice = node.slice
@@ -259,7 +259,7 @@ class AnnotatedCastSubscript(AnnotatedCastNode):
     def __str__(self):
         return Subscript.__str__(self)
 
-class AnnotatedCastTuple(AnnotatedCastNode):
+class AnnCastTuple(AnnCastNode):
     def __init__(self, values, source_refs):
         self.values = values
         self.source_refs = source_refs
@@ -267,7 +267,7 @@ class AnnotatedCastTuple(AnnotatedCastNode):
     def __str__(self):
         return Tuple.__str__(self)
 
-class AnnotatedCastUnaryOp(AnnotatedCastNode):
+class AnnCastUnaryOp(AnnCastNode):
     def __init__(self, op, value, source_refs):
         self.op = op
         self.value = value
@@ -276,7 +276,7 @@ class AnnotatedCastUnaryOp(AnnotatedCastNode):
     def __str__(self):
         return UnaryOp.__str__(self)
 
-class AnnotatedCastVar(AnnotatedCastNode):
+class AnnCastVar(AnnCastNode):
     def __init__(self, val, type, source_refs):
         self.val = val
         self.type = type
