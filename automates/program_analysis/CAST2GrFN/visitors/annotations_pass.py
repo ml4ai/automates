@@ -8,38 +8,7 @@ from typing import Dict
 
 from automates.utils.misc import uuid
 from .cast_visitor import CASTVisitor
-from automates.program_analysis.CAST2GrFN.cast import CAST
-from automates.program_analysis.CAST2GrFN.model.cast import (
-    AstNode,
-    Assignment,
-    Attribute,
-    BinaryOp,
-    BinaryOperator,
-    Boolean,
-    Call,
-    ClassDef,
-    Dict,
-    Expr,
-    FunctionDef,
-    List,
-    Loop,
-    ModelBreak,
-    ModelContinue,
-    ModelIf,
-    ModelReturn,
-    Module,
-    Name,
-    Number,
-    Set,
-    String,
-    SourceRef,
-    Subscript,
-    Tuple,
-    UnaryOp,
-    UnaryOperator,
-    VarType,
-    Var,
-)
+from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 
 def merge_variables(input_vars: Dict, updated_vars: Dict) -> Dict:
     """
@@ -73,22 +42,42 @@ def merge_variables(input_vars: Dict, updated_vars: Dict) -> Dict:
 
     return to_return
 
+class VariableContext:
+    def __init__(self):
+        self.highest_variable_version: Dict = defaultdict(lambda: -1)
+        self.id_to_ann_name: Dict
 
-class CastToAnnotatedCast:
-    def __init__(self, cast: CAST):
-        # we will start variable versions at -1 for now
-        self.highest_variable_version: Dict = defaultdict(lambda: -2)
-        self.cast = cast
+
+class AnnotationsPass:
+    def __init__(self, ann_cast: AnnCast):
+        # this dict maps Name collapsed numerical ids to the current highest version
+        # this will have to depend on scope
+        # we will start version numbers at 0
+        self.highest_variable_version: Dict = defaultdict(lambda: -1)
+        self.ann_cast = ann_cast
         self.module_functions = {}
+        self.con_scope_to_varialbe
         # start processing nodes
         input_vars = {}
-        for node in cast.nodes:
+        for node in self.ann_cast.nodes:
             updated_vars = self.print_then_visit(node, input_vars)
-    def incr_highest_variable_version(self, name: str):
-        self.highest_variable_version[name] += 1
-        return self.highest_variable_version[name]
 
-    def print_then_visit(self, node: AstNode, input_variables: Dict) -> Dict:
+    def collapse_id(self, id:int) -> int:
+        """
+        Returns the collapsed id for id if it already exists, 
+        otherwise creates a collapsed id for it
+        """
+        if id not in self.old_id_to_collapsed_id:
+            self.collapsed_id_counter += 1
+            self.old_id_to_collapsed_id[id] = self.collapsed_id_counter
+        
+        return self.old_id_to_collapsed_id[id]
+
+    def incr_highest_variable_version(self, id: int):
+        self.highest_variable_version[id] += 1
+        return self.highest_variable_version[id]
+
+    def print_then_visit(self, node: AnnCastNode, input_variables: Dict) -> Dict:
         # type(node) is a string which looks like
         # "class '<path.to.class.ClassName>'"
         class_name = str(type(node))
@@ -99,7 +88,7 @@ class CastToAnnotatedCast:
         print(f"with input_variables = {input_versions}")
         return self.visit(node, input_variables)
 
-    def collect_function_defs(self, node: Module) -> Dict:
+    def collect_function_defs(self, node: AnnCastModule) -> Dict:
         """
         Returns a dict mapping each string function name to
         the FunctionDef node for the functions defined in this 
@@ -110,55 +99,45 @@ class CastToAnnotatedCast:
 
         return dict(map(make_function, nodes_to_consider))
 
-    def determine_global_variables(self, node: Module) -> Dict:
+    def collect_global_variables(self, node: AnnCastModule) -> Dict:
         """
-        Set the `is_global` flag for each Name node appearing at the top level
-        of this Module.  Returns a dict mapping the string var name to Name node
-        for the found global variables
+        Returns a dict mapping the string var name to Name node
+        for the global variables declared in this module 
         """
-        nodes_to_consider = [n for n in node.body if isinstance(n, (Assignment, Var))]
+        nodes_to_consider = [n for n in node.body if isinstance(n, (AnnCastAssignment, AnnCastVar))]
 
-        def make_global(n):
+        def grab_global(n):
             var_node = None
-            if isinstance(n, Assignment):
+            if isinstance(n, AnnCastAssignment):
                 var_node = n.left
             else:
-                assert(isinstance(n, Var))
+                assert(isinstance(n, AnnCastVar))
                 var_node = n
             
-            # grab the Name from the Var node
+            # grab the Name from the AnnCastVar node
             name = var_node.val
-            name.is_global = True
+            # visit AnnName node to collapse id
+            self.visit(name, {})
 
             return (name.name, name)
 
-        return dict(map(make_global, nodes_to_consider))
+        return dict(map(grab_global, nodes_to_consider))
 
 
     @singledispatchmethod
-    def visit(self, node: AstNode, input_variables: Dict) -> Dict:
+    def visit(self, node: AnnCastNode, input_variables: Dict, enclosing_con_scope: List) -> Dict:
         """
-        Visit each AstNode, taking the input_variables, and return updated_variables
+        Visit each AnnCastNode, taking the input_variables, and return updated_variables
         """
         raise Exception(f"Unimplemented AST node of type: {type(node)}")
 
 
     @visit.register
-    def visit_module(self, node: Module, input_variables: Dict) -> Dict:
-        # NOTE: we believe we can identify global variables during CAST creation, and store that in
-        # is_global field of Name nodes
-        # if not, iterate over Var/Assignment nodes like in cast_to_air_visitor.py
-        node._input_variables = input_variables
+    def visit_module(self, node: AnnCastModule, input_variables: Dict) -> Dict:
+        node.input_variables = input_variables
 
-        # TESTING: Determine global variables here.  Later we are going to remove this 
-        # and do it in the Python/GCC to CAST translations.  This will require
-        # updating the CAST spec
-        global_vars = self.determine_global_variables(node)
+        global_vars = self.collect_global_variables(node)
         input_variables = merge_variables(input_variables, global_vars)
-
-        # TODO: we need to implement the global recognizing functionality
-        # in CAST translations to make sure each global is correctly identified
-        # at each of its uses
 
         # cache the FunctionDef's defined in this module
         self.module_functions = self.collect_function_defs(node)
@@ -167,7 +146,7 @@ class CastToAnnotatedCast:
         # want to visit the main function
         updated_variables = {}
         for n in node.body:
-            if isinstance(n, FunctionDef) and n.name != "main":
+            if isinstance(n, AnnCastFunctionDef) and n.name != "main":
                 continue
             updated_variables_new = self.print_then_visit(n, input_variables)
             input_variables = merge_variables(input_variables, updated_variables)
@@ -179,15 +158,21 @@ class CastToAnnotatedCast:
 
 
     @visit.register
-    def visit_function_def(self, node: FunctionDef, input_variables: Dict) -> Dict:
-        # Each argument is a Var node
+    def visit_function_def(self, node: AnnCastFunctionDef, input_variables: Dict, enclosing_con_scope: List) -> Dict:
+        """
+        A FunctionDef is associated with a new container scope. So, we create
+        new AnnCastName nodes for every input variable, and every parameter
+        of the function
+        """
+
+        # Each argument is a AnnCastVar node
         # Initialize each Name and add to input_variables
         for arg in node.func_args:
             name = arg.val
             name.version = -1
             input_variables[name.name] = name
         
-        node._input_variables = input_variables
+        node.input_variables = input_variables
         updated_variables = {}
         for n in node.body:
             updated_variables_new = self.print_then_visit(n, input_variables)
@@ -201,8 +186,8 @@ class CastToAnnotatedCast:
         return updated_variables
 
     @visit.register
-    def visit_call(self, node: Call, input_variables: Dict) -> Dict:
-        node._input_variables = input_variables
+    def visit_call(self, node: AnnCastCall, input_variables: Dict) -> Dict:
+        node.input_variables = input_variables
         assert(isinstance(node.func, Name))
         # we make a copy of the FunctionDef, and will visit it
         # with inputs_variables being all globals
@@ -214,40 +199,40 @@ class CastToAnnotatedCast:
         node.copied_definition = copy.deepcopy(self.module_functions[func_name])
         updated_variables = self.print_then_visit(node.copied_definition, input_vars_to_func)
 
-        node._updated_variables = updated_variables
+        node.updated_variables = updated_variables
         return updated_variables
 
 
     @visit.register
-    def visit_model_if(self, node: ModelIf, input_variables: Dict) -> Dict:
-        node._input_variables = input_variables
+    def visit_model_if(self, node: AnnCastModelIf, input_variables: Dict) -> Dict:
+        node.input_variables = input_variables
 
         # we visit expression first, because we need to pass
         # any updated variables to the if/else branches
         # NOTE: The `expr` stored at node is just an `AstNode`, and we do not
         # process enough to visit it.  For now, we will skip it
-        # node.updated_vars_expr = self.print_then_visit(node.expr, input_variables)
-        # input_variables = merge_variables(input_variables, node.updated_vars_expr)
+        # _expr = self.print_then_visit(node.expr, input_variables)
+        # input_variables = merge_variables(input_variables, _expr)
         
         # vist nodes in if branch, make a copy of input_variables, since it
         # needs the same input variables need to go in both if and else branches
         # shallow copy is okay here, because we are not mutating values, only keys
         if_branch_input = input_variables.copy()
-        if_updated_vars = {}
+        ifupdated_vars = {}
         for n in node.body:
-            if_updated_vars_new = self.print_then_visit(n, if_branch_input)
-            if_branch_input = merge_variables(if_branch_input, if_updated_vars_new)
-            if_updated_vars = merge_variables(if_updated_vars_new, if_updated_vars)
-        node.updated_vars_if_branch = if_updated_vars
+            ifupdated_vars_new = self.print_then_visit(n, if_branch_input)
+            if_branch_input = merge_variables(if_branch_input, ifupdated_vars_new)
+            ifupdated_vars = merge_variables(ifupdated_vars_new, ifupdated_vars)
+        _if_branch = ifupdated_vars
         # get the updated vars on the else branch if it exists, the input variables
         # should be those obtained from visiting expr
         else_branch_input = input_variables.copy()
-        else_updated_vars = {}
+        elseupdated_vars = {}
         for n in node.orelse:
-            else_updated_vars_new = self.print_then_visit(n, else_branch_input)
-            else_branch_input = merge_variables(else_branch_input, else_updated_vars_new)
-            else_updated_vars = merge_variables(else_updated_vars_new, else_updated_vars)
-        node.updated_vars_else_branch = else_updated_vars
+            elseupdated_vars_new = self.print_then_visit(n, else_branch_input)
+            else_branch_input = merge_variables(else_branch_input, elseupdated_vars_new)
+            elseupdated_vars = merge_variables(elseupdated_vars_new, elseupdated_vars)
+        _else_branch = elseupdated_vars
 
         # For each variable occuring in updated_vars_if_branch or updated_vars_else_branch
         #  we create a new Name node with an incremented version of that variable
@@ -256,20 +241,20 @@ class CastToAnnotatedCast:
 
         # the update method mutates and returns None, so we call them
         # on seperate lines
-        new_var_keys = set(node.updated_vars_if_branch.keys())
-        new_var_keys.update(node.updated_vars_else_branch.keys())
+        new_var_keys = set(_if_branch.keys())
+        new_var_keys.update(_else_branch.keys())
         updated_vars = {}
         for k in new_var_keys:
             name = None
-            if k in node.updated_vars_if_branch:
-                name = node.updated_vars_if_branch[k]
+            if k in _if_branch:
+                name = _if_branch[k]
             else:
-                name = node.updated_vars_else_branch[k]
+                name = _else_branch[k]
             new_name = copy.copy(name)
             new_name.version = self.incr_highest_variable_version(name.name)
             updated_vars[k] = new_name
 
-        node._updated_variables = updated_vars
+        node.updated_variables = updated_vars
 
         return updated_vars
 
@@ -278,36 +263,37 @@ class CastToAnnotatedCast:
     # be returned.  For now, we just assume that expressions will not change variable 
     # versions.
     @visit.register
-    def visit_expr(self, node: Expr, input_variables: Dict) -> Dict:
-        node._input_variables = input_variables
+    def visit_expr(self, node: AnnCastExpr, input_variables: Dict) -> Dict:
+        node.input_variables = input_variables
         updated_vars = {}
-        node._updated_variables = updated_vars
+        node.updated_variables = updated_vars
         return updated_vars
 
 
     @visit.register
-    def visit_assignment(self, node: Assignment, input_variables: Dict) -> Dict:
-        node._input_variables = input_variables
+    def visit_assignment(self, node: AnnCastAssignment, input_variables: Dict) -> Dict:
+        node.input_variables = input_variables
 
         # visit RHS first, because we may create a new version
         updated_variables = self.print_then_visit(node.right, input_variables)
         
         lhs = node.left
-        assert(isinstance(lhs, Var))
+        assert(isinstance(lhs, AnnCastVar))
 
         var_name = lhs.val
-        new_version = self.incr_highest_variable_version(var_name.name)
+        collapsed_id = self.collapse_id(var_name.id)
+        new_version = self.incr_highest_variable_version(collapsed_id)
         print(f"\tNew version of variable {var_name} is {new_version}")
         var_name.version = new_version
 
         updated_variables = merge_variables(updated_variables, {var_name.name: var_name})
-        node._updated_variables = updated_variables
+        node.updated_variables = updated_variables
         
         return updated_variables
 
     @visit.register
-    def visit_binary_op(self, node: BinaryOp, input_variables: Dict) -> Dict:
-        node._input_variables = input_variables
+    def visit_binary_op(self, node: AnnCastBinaryOp, input_variables: Dict) -> Dict:
+        node.input_variables = input_variables
 
         # visit LHS first
         updated_variables_left = self.print_then_visit(node.left, input_variables)
@@ -317,50 +303,47 @@ class CastToAnnotatedCast:
         updated_variables_right = self.print_then_visit(node.right, input_variables)
         updated_variables = merge_variables(updated_variables_left, updated_variables_right)
         
-        node._updated_variables = updated_variables
+        node.updated_variables = updated_variables
         return updated_variables
 
     @visit.register
-    def visit_return(self, node: ModelReturn, input_variables: Dict):
-        node._input_variables = input_variables
+    def visit_return(self, node: AnnCastModelReturn, input_variables: Dict):
+        node.input_variables = input_variables
         child = node.value
 
         updated_vars = self.print_then_visit(child, input_variables)
-        node._updated_variables = updated_vars
+        node.updated_variables = updated_vars
 
         return updated_vars
 
 
     @visit.register
-    def visit_var(self, node: Var, input_variables: Dict):
-        node._input_variables = input_variables
+    def visit_var(self, node: AnnCastVar, input_variables: Dict):
+        node.input_variables = input_variables
 
-        # we believe Var nodes do not update anything 
-        updated_vars = {}
-        node._updated_variables = updated_vars
-
-        # we will not visit the associated Name and VarType nodes
-        # since they also do not update anything
+        # we visit the Name node to collapse its id
+        node.updated_variables = self.visit(node.val, input_variables)
         
-        return updated_vars
+        return node.updated_variables
 
     @visit.register
-    def visit_name(self, node: Name, input_variables: Dict):
-        node._input_variables = input_variables
+    def visit_name(self, node: AnnCastName, input_variables: Dict):
+        node.input_variables = input_variables
 
         # Name nodes do not update anything
-        updated_vars = {}
-        node._updated_variables = updated_vars
+        # but we collapse their id
+        node.updated_variables = {}
+        node.id = self.collapse_id(node.id)
 
-        return updated_vars
+        return node.updated_variables
         
     @visit.register
-    def visit_number(self, node: Number, input_variables: Dict):
-        node._input_variables = input_variables
+    def visit_number(self, node: AnnCastNumber, input_variables: Dict):
+        node.input_variables = input_variables
 
         # Number nodes do no update antying
         updated_vars = {}
-        node._updated_variables = updated_vars
+        node.updated_variables = updated_vars
 
         return updated_vars
 

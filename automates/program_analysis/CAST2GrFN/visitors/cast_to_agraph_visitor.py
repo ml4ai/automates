@@ -5,6 +5,7 @@ from automates.utils.misc import uuid
 
 from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.cast import CAST
+from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -137,6 +138,18 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
+    def _(self, node: AnnCastAssignment):
+        """Visits Assignment nodes, the node's UID is returned
+        so it can be used to connect nodes in the digraph"""
+        left = self.visit(node.left)
+        right = self.visit(node.right)
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label="Assignment")
+        self.G.add_edge(node_uid, left)
+        self.G.add_edge(node_uid, right)
+        return node_uid
+
+    @visit.register
     def _(self, node: Attribute):
         """Visits Attribute nodes, the node's UID is returned
         so it can be used to connect nodes in the digraph"""
@@ -163,6 +176,19 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
+    def _(self, node: AnnCastBinaryOp):
+        """Visits BinaryOp nodes, the node's UID is returned
+        so it can be used to connect nodes in the digraph"""
+        left = self.visit(node.left)
+        right = self.visit(node.right)
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label=node.op)
+        self.G.add_edge(node_uid, left)
+        self.G.add_edge(node_uid, right)
+
+        return node_uid
+
+    @visit.register
     def _(self, node: Boolean):
         """Visits Boolean nodes, the node's UID is returned
         so it can be used to connect nodes in the digraph"""
@@ -172,6 +198,30 @@ class CASTToAGraphVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: Call):
+        """Visits Call (function call) nodes. We check to see
+        if we have arguments to the node and act accordingly.
+        Appending all the arguments of the function to this node,
+        if we have any. The node's UID is returned."""
+        func = self.visit(node.func)
+        args = []
+        if len(node.arguments) > 0:
+            args = self.visit_list(node.arguments)
+
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label="FunctionCall")
+        self.G.add_edge(node_uid, func)
+
+        args_uid = uuid.uuid4()
+        self.G.add_node(args_uid, label="Arguments")
+        self.G.add_edge(node_uid, args_uid)
+
+        for n in args:
+            self.G.add_edge(args_uid, n)
+
+        return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastCall):
         """Visits Call (function call) nodes. We check to see
         if we have arguments to the node and act accordingly.
         Appending all the arguments of the function to this node,
@@ -255,6 +305,49 @@ class CASTToAGraphVisitor(CASTVisitor):
         self.G.add_edge(node_uid, expr)
 
         return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastExpr):
+        """Visits expression nodes. The node's actual expression is visited
+        and added to this node. This node's UID is returned."""
+        expr = self.visit(node.expr)
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label="Expression")
+        self.G.add_edge(node_uid, expr)
+
+        return node_uid
+        
+    @visit.register
+    def _(self, node: AnnCastFunctionDef):
+        """Visits FunctionDef nodes. We visit all the arguments, and then
+        we visit the function's statements. They're then added to the graph.
+        This node's UID is returned."""
+        args = []
+        body = []
+        print(node.name)
+        if len(node.func_args) > 0:
+            args = self.visit_list(node.func_args)
+        if len(node.body) > 0:
+            body = self.visit_list(node.body)
+
+        node_uid = uuid.uuid4()
+        args_node = uuid.uuid4()
+        body_node = uuid.uuid4()
+
+        self.G.add_node(node_uid, label="Function: " + node.name)
+        self.G.add_node(args_node, label="Arguments")
+        self.G.add_node(body_node, label="Body")
+
+        self.G.add_edge(node_uid, body_node)
+        self.G.add_edge(node_uid, args_node)
+        for n in args:
+            self.G.add_edge(args_node, n)
+
+        for n in body:
+            self.G.add_edge(body_node, n)
+
+        return node_uid
+
 
     @visit.register
     def _(self, node: FunctionDef):
@@ -382,6 +475,18 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
+    def _(self, node: AnnCastModelReturn):
+        """Visits a ModelReturn (return statment) node.
+        We add the return value to this node with an edge.
+        The node's UID is returned"""
+        value = self.visit(node.value)
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label="Return")
+        self.G.add_edge(node_uid, value)
+
+        return node_uid
+
+    @visit.register
     def _(self, node: ModelReturn):
         """Visits a ModelReturn (return statment) node.
         We add the return value to this node with an edge.
@@ -392,6 +497,24 @@ class CASTToAGraphVisitor(CASTVisitor):
         self.G.add_edge(node_uid, value)
 
         return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastModule):
+        """Visits a Module node. This is the starting point for visiting
+        a CAST object. The return value isn't relevant here (I think)"""
+        program_uuid = uuid.uuid4()
+        self.G.add_node(program_uuid, label="Program: " + node.name)
+
+        module_uuid = uuid.uuid4()
+        self.G.add_node(module_uuid, label="Module: " + node.name)
+        self.G.add_edge(program_uuid, module_uuid)
+
+        body = self.visit_list(node.body)
+        for b in body:
+            self.G.add_edge(module_uuid, b)
+
+        return program_uuid
+
 
     @visit.register
     def _(self, node: Module):
@@ -411,6 +534,26 @@ class CASTToAGraphVisitor(CASTVisitor):
         return program_uuid
 
     @visit.register
+    def _(self, node: AnnCastName):
+        """Visits a Name node. We check to see if this Name node
+        belongs to a class. In which case it's being called as an
+        init(), and add this node's name to the graph accordingly,
+        and return the UID of this node."""
+        node_uid = uuid.uuid4()
+
+        class_init = False
+        for n in self.cast.nodes[0].body:
+            if isinstance(n,ClassDef) and n.name == node.name:
+                class_init = True
+                self.G.add_node(node_uid, label=node.name + " Init()")
+                break
+
+        if not class_init:
+            self.G.add_node(node_uid, label=node.name + " (id: " + str(node.id)+")")
+
+        return node_uid
+
+    @visit.register
     def _(self, node: Name):
         """Visits a Name node. We check to see if this Name node
         belongs to a class. In which case it's being called as an
@@ -428,6 +571,14 @@ class CASTToAGraphVisitor(CASTVisitor):
         if not class_init:
             self.G.add_node(node_uid, label=node.name + " (id: " + str(node.id)+")")
 
+        return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastNumber):
+        """Visits a Number node. We add this node's numeric value to the
+        graph and return the UID of this node."""
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label=node.number)
         return node_uid
 
     @visit.register
@@ -497,6 +648,12 @@ class CASTToAGraphVisitor(CASTVisitor):
         self.G.add_edge(node_uid, val)
 
         return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastVar):
+        """Visits a Var node by visiting its value"""
+        val = self.visit(node.val)
+        return val
 
     @visit.register
     def _(self, node: Var):

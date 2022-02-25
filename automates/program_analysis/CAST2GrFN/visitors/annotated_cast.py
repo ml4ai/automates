@@ -30,10 +30,14 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
+class AnnCast:
+    def __init__(self, ann_nodes: List):
+        self.nodes = ann_nodes
+
 class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):
-        self._input_vars = {}
-        self._updated_vars = {}
+        self.input_vars = {}
+        self.updated_vars = {}
         AstNode.__init__(self)
 
 '''
@@ -221,6 +225,10 @@ class AnnCastName(AnnCastNode):
         self.name = name
         self.id = id
         self.source_refs = source_refs
+        # container_scope is used to aid GrFN generation
+        self.container_scope = None
+        # versions are bound to the cope of the variable
+        self.version = None
 
     def __str__(self):
         return Name.__str__(self)

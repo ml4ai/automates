@@ -76,7 +76,7 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
         for node in nodes:
             annotated_cast.append(self.print_then_visit(node))
 
-        return annotated_cast
+        return AnnCast(annotated_cast)
 
     def print_then_visit(self, node: AstNode) -> AnnCastNode:
         # type(node) is a string which looks like
@@ -189,7 +189,8 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: ModelReturn):
-        return AnnCastModelReturn(node.value, node.source_refs)
+        value = self.print_then_visit(node.value)
+        return AnnCastModelReturn(value, node.source_refs)
         
     @visit.register
     def _(self, node: Module):
