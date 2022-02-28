@@ -16,6 +16,7 @@ class IdCollapsePass:
         # during the pass, we collpase Name ids to a range starting from zero
         self.old_id_to_collapsed_id = {}
         # this tracks what collapsed ids we have used so far
+        print("In IdCollapsePass")
         self.collapsed_id_counter = 0
         for node in self.ann_cast.nodes:
             self.print_then_visit(node)

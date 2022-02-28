@@ -29,6 +29,7 @@ def main():
     # idea for a change
     # id_collapse_pass(annotated_cast) # collapsed ids in annotated cast
 
+    print("Calling IdCollapsePass")
     collapsed_ids = IdCollapsePass(annotated_cast)
     V = CASTToAGraphVisitor(collapsed_ids)
     f_name = "CollapsedIds-AnnotatedCAST"
