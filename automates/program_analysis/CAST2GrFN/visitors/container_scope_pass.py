@@ -52,7 +52,7 @@ class ContainerScopePass:
         raise Exception(f"Unimplemented AST node of type: {type(node)}")
 
     def visit_node_list(self, node_list: typing.List[AnnCastNode], enclosing_con_scope):
-        return [self.visit(node) for node in node_list]
+        return [self.visit(node, enclosing_con_scope) for node in node_list]
 
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment, enclosing_con_scope):
@@ -82,20 +82,18 @@ class ContainerScopePass:
         assert isinstance(node.func, AnnCastName)
         func_name = node.func.name
         node.func.container_scope = enclosing_con_scope
-        for n in node.arguments:
-            self.visit(n, enclosing_con_scope)
+        self.visit_node_list(node.arguments, enclosing_con_scope)
 
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef, enclosing_con_scope):
         # We do not visit the name because it is a string
         assert isinstance(node.name, str)
+        classscope = enclosing_con_scope + [node.name]
         # node.bases is a list of strings
         # node.funcs is a list of Vars
-        for n in node.funcs:
-            self.visit(n, enclosing_con_scope)
+        self.visit_node_list(node.funcs, classscope)
         # node.fields is a list of Vars
-        for n in node.fields:
-            self.visit(n, enclosing_con_scope)
+        self.visit_node_list(node.fields, classscope)
 
     @_visit.register
     def visit_dict(self, node: AnnCastDict):
@@ -111,26 +109,21 @@ class ContainerScopePass:
         funcscope = enclosing_con_scope + [node.name]
         # Each argument is a AnnCastVar node
         # Initialize each Name and visit to modify its scope
-        for arg in node.func_args:
-            self.visit(arg, funcscope)
+        self.visit_node_list(node.func_args, funcscope)
 
-        for n in node.body:
-            self.visit(n, funcscope)
+        self.visit_node_list(node.body, funcscope)
 
     @_visit.register
     def visit_list(self, node: AnnCastList, enclosing_con_scope):
-        for n in node.values:
-            self.visit(n, enclosing_con_scope)
+        self.visit_node_list(node.values, enclosing_con_scope)
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, enclosing_con_scope):
         loopscope = self.next_loop_scope(enclosing_con_scope)
         self.visit(node.expr, loopscope)
 
-        # [" module", "func1", "loop0", "loopbody"]
         loopbodyscope = loopscope + ["loopbody"]
-        for n in node.body:
-            self.visit(n, loopbodyscope)
+        self.visit_node_list(node.body, loopbodyscope)
 
     @_visit.register
     def visit_model_break(self, node: AnnCastModelBreak):
@@ -148,15 +141,10 @@ class ContainerScopePass:
         self.visit(node.expr, ifscope)
 
         ifbodyscope = ifscope + ["ifbody"]
+        self.visit_node_list(node.body, ifbodyscope)
 
-        # [" module", "func1", "if0", "ifbody"]
-        for n in node.body:
-            self.visit(n, ifbodyscope)
-
-        # [" module", "func1", "if0", "elsebody"]
         orelsebodyscope = ifscope + ["elsebody"]
-        for n in node.orelse:
-            self.visit(n, orelsebodyscope)
+        self.visit_node_list(node.orelse, orelsebodyscope)
 
     @_visit.register
     def visit_return(self, node: AnnCastModelReturn, enclosing_con_scope):
@@ -172,8 +160,7 @@ class ContainerScopePass:
         # Get each global and add it as version 0 to initialize the
         # the enclosing container scope
         enclosing_con_scope = ["module"]
-        for n in node.body:
-            self.visit(n, enclosing_con_scope)
+        self.visit_node_list(node.body, enclosing_con_scope)
 
     @_visit.register
     def visit_name(self, node: AnnCastName, enclosing_con_scope):
