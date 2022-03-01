@@ -78,7 +78,7 @@ class IdCollapsePass:
 
     @visit.register
     def visit_call(self, node: AnnCastCall):
-        assert(isinstance(node.func, Name))
+        assert(isinstance(node.func, AnnCastName))
         node.func.id = self.collapse_id(node.func.id)
 
         for n in node.arguments:

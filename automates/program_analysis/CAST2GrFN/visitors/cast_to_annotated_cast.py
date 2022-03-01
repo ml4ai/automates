@@ -122,9 +122,11 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
     def _(self, node: Call):
         #TODO: Is node.func just a string name? yes
         #TODO: Is node.arguments a list of nodes?
+        print(f"Call: type of func is {type(node.func)}")
         print(f"Call: type of arguments is {type(node.arguments)}")
+        func = self.print_then_visit(node.func)
         arguments = self.visit_list(node.arguments)
-        return AnnCastCall(node.func, arguments, node.source_refs)
+        return AnnCastCall(func, arguments, node.source_refs)
 
     @visit.register
     def _(self, node: ClassDef):

@@ -679,7 +679,10 @@ class CASTToAGraphVisitor(CASTVisitor):
                 break
 
         if not class_init:
-            label=node.name + " id: " + str(node.id)+"\n" + ".".join(node.container_scope)
+            if isinstance(node.container_scope,list):
+                label=node.name + " id: " + str(node.id)+"\n" + ".".join(node.container_scope)
+            else:
+                label=node.name + " id: " + str(node.id)+"\n"
             self.G.add_node(node_uid, label=label)
 
         return node_uid

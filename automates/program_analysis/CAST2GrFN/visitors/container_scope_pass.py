@@ -75,9 +75,11 @@ class ContainerScopePass:
             
     @visit.register
     def visit_call(self, node: AnnCastCall, enclosing_con_scope):
-        assert(isinstance(node.func, Name))
+        assert(isinstance(node.func, AnnCastName))
         func_name = node.func.name
         node.func.container_scope = enclosing_con_scope
+        for n in node.arguments:
+            self.print_then_visit(n, enclosing_con_scope)
 
     @visit.register
     def visit_class_def(self, node: AnnCastClassDef, enclosing_con_scope):
