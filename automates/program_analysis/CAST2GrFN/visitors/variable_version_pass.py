@@ -1,14 +1,20 @@
+
 import typing
 
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 
 
-class AnnCastPass:
+class VariableVersionPass:
     def __init__(self, ann_cast: AnnCast):
         self.ann_cast = ann_cast
         self.nodes = self.ann_cast.nodes
-        # Any other state variables that are needed during
-        # the pass
+        # dict mapping container scopes to dicts which map Name id to highest version in that container scope
+        self.con_scope_to_highest_var_version = defaultdict(lambda: defaultdict(int))
+        # FILL OUT version field of AnnCastName nodes
+        # Function to grab the highest version and increment
+        # If nodes and Loop nodes, follow  previous notes/code about versions
+        # FunctionDef: expectation is that arguments will receive correct version of zero when visiting 
+        # because FunctionDef has its own scope, nodes in the body should be able to be handled without special cases
         for node in self.ann_cast.nodes:
             self.visit(node)
 
