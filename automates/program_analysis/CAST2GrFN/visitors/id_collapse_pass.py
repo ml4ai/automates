@@ -4,11 +4,12 @@ from collections import defaultdict
 import copy
 
 
-from typing import Dict
+import typing
 
 from automates.utils.misc import uuid
 from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
+
 
 class IdCollapsePass:
     def __init__(self, ann_cast: AnnCast):
@@ -19,134 +20,164 @@ class IdCollapsePass:
         print("In IdCollapsePass")
         self.collapsed_id_counter = 0
         for node in self.ann_cast.nodes:
-            self.print_then_visit(node)
+            self.visit(node)
         self.nodes = self.ann_cast.nodes
 
-    def collapse_id(self, id:int) -> int:
+    def collapse_id(self, id: int) -> int:
         """
-        Returns the collapsed id for id if it already exists, 
+        Returns the collapsed id for id if it already exists,
         otherwise creates a collapsed id for it
         """
         if id not in self.old_id_to_collapsed_id:
             self.old_id_to_collapsed_id[id] = self.collapsed_id_counter
             self.collapsed_id_counter += 1
-        
+
         return self.old_id_to_collapsed_id[id]
 
-    def print_then_visit(self, node: AnnCastNode):
+    def visit(self, node: AnnCastNode):
         # type(node) is a string which looks like
         # "class '<path.to.class.ClassName>'"
         class_name = str(type(node))
         last_dot = class_name.rfind(".")
-        class_name = class_name[last_dot+1:-2]
+        class_name = class_name[last_dot + 1 : -2]
         print(f"\nProcessing node type {class_name}")
-        return self.visit(node)
+        return self._visit(node)
 
+    def visit_body(self, node_list: typing.List[AnnCastNode]):
+        return [self.visit(node) for node in node_list]
 
     @singledispatchmethod
-    def visit(self, node: AnnCastNode) -> Dict:
+    def _visit(self, node: AnnCastNode) -> Dict:
         """
         Visit each AnnCastNode, collapsing AnnCastName ids along the way
         """
         raise Exception(f"Unimplemented AST node of type: {type(node)}")
 
+    @_visit.register
+    def visit_assignment(self, node: AnnCastAssignment):
+        self.visit(node.right)
+        assert isinstance(node.left, AnnCastVar)
+        self.visit(node.left)
 
-    @visit.register
-    def visit_module(self, node: AnnCastModule) -> Dict:
-        for n in node.body:
-            updated_variables_new = self.print_then_visit(n)
+    @_visit.register
+    def visit_attribute(self, node: AnnCastAttribute):
+        value = self.visit(node.value)
+        attr = self.visit(node.attr)
 
-    @visit.register
+    @_visit.register
+    def visit_binary_op(self, node: AnnCastBinaryOp):
+        # visit LHS first
+        self.visit(node.left)
+
+        # visit RHS second
+        self.visit(node.right)
+
+    @_visit.register
+    def visit_boolean(self, node: AnnCastBoolean):
+        pass
+
+    @_visit.register
+    def visit_call(self, node: AnnCastCall):
+        assert isinstance(node.func, AnnCastName)
+        node.func.id = self.collapse_id(node.func.id)
+
+        for n in node.arguments:
+            self.visit(n)
+
+    @_visit.register
+    def visit_class_def(self, node: AnnCastClassDef):
+        # Each func is an AnnCastVar node
+        for n in node.funcs:
+            self.visit(n)
+
+        # Each field (attribute) is an AnnCastVar node
+        for n in node.fields:
+            self.visit(n)
+
+    @_visit.register
+    def visit_dict(self, node: AnnCastDict):
+        pass
+
+    @_visit.register
+    def visit_expr(self, node: AnnCastExpr):
+        self.visit(node.expr)
+
+    @_visit.register
     def visit_function_def(self, node: AnnCastFunctionDef):
         # Each argument is a AnnCastVar node
         # Initialize each Name and add to input_variables
         for arg in node.func_args:
-            self.print_then_visit(arg)
-        
+            self.visit(arg)
+
         for n in node.body:
-            updated_variables_new = self.print_then_visit(n)
-            
-    @visit.register
-    def visit_class_def(self, node: AnnCastClassDef):
-        # Each func is an AnnCastVar node
-        for n in node.funcs:
-            self.print_then_visit(n)
-        
-        # Each field (attribute) is an AnnCastVar node
-        for n in node.fields:
-            self.print_then_visit(n)
+            updated_variables_new = self.visit(n)
 
-    @visit.register
-    def visit_call(self, node: AnnCastCall):
-        assert(isinstance(node.func, AnnCastName))
-        node.func.id = self.collapse_id(node.func.id)
-
-        for n in node.arguments:
-            self.print_then_visit(n)
-
-    @visit.register
-    def visit_model_if(self, node: AnnCastModelIf):
-        self.print_then_visit(node.expr)
-        for n in node.body:
-            self.print_then_visit(n)
-        for n in node.orelse:
-            self.print_then_visit(n)
-
-    @visit.register
-    def visit_loop(self, node: AnnCastLoop):
-        self.print_then_visit(node.expr)
-        for n in node.body:
-            self.print_then_visit(n)
-
-    @visit.register
-    def visit_expr(self, node: AnnCastExpr):
-        self.print_then_visit(node.expr)
-
-
-    @visit.register
-    def visit_assignment(self, node: AnnCastAssignment):
-        self.print_then_visit(node.right)
-        assert(isinstance(node.left, AnnCastVar))
-        self.print_then_visit(node.left)
-
-    @visit.register
-    def visit_binary_op(self, node: AnnCastBinaryOp):
-        # visit LHS first
-        self.print_then_visit(node.left)
-
-        # visit RHS second
-        self.print_then_visit(node.right)
-
-    @visit.register
-    def visit_return(self, node: AnnCastModelReturn):
-        child = node.value
-        self.print_then_visit(child)
-
-    @visit.register
+    @_visit.register
     def visit_list(self, node: AnnCastList):
         if len(node.values) > 0:
             for n in node.values:
-                self.print_then_visit(n)
+                self.visit(n)
 
-    @visit.register
-    def visit_string(self, node: AnnCastString):
+    @_visit.register
+    def visit_loop(self, node: AnnCastLoop):
+        self.visit(node.expr)
+        for n in node.body:
+            self.visit(n)
+
+    @_visit.register
+    def visit_model_break(self, node: AnnCastModelBreak):
         pass
 
-    @visit.register
-    def visit_var(self, node: AnnCastVar):
-        self.visit(node.val)
-        
-    @visit.register
-    def visit_unaryop(self, node: AnnCastUnaryOp):
-        self.visit(node.value)
+    @_visit.register
+    def visit_model_continue(self, node: AnnCastModelContinue):
+        pass
 
-    @visit.register
+    @_visit.register
+    def visit_model_if(self, node: AnnCastModelIf):
+        self.visit(node.expr)
+        for n in node.body:
+            self.visit(n)
+        for n in node.orelse:
+            self.visit(n)
+
+    @_visit.register
+    def visit_return(self, node: AnnCastModelReturn):
+        child = node.value
+        self.visit(child)
+
+    @_visit.register
+    def visit_module(self, node: AnnCastModule) -> Dict:
+        for n in node.body:
+            self.visit(n)
+
+    @_visit.register
     def visit_name(self, node: AnnCastName):
         node.id = self.collapse_id(node.id)
-        
-    @visit.register
+
+    @_visit.register
     def visit_number(self, node: AnnCastNumber):
         pass
 
+    @_visit.register
+    def visit_set(self, node: AnnCastSet):
+        pass
 
+    @_visit.register
+    def visit_string(self, node: AnnCastString):
+        pass
 
+    @_visit.register
+    def visit_subscript(self, node: AnnCastSubscript):
+        pass
+
+    @_visit.register
+    def visit_tuple(self, node: AnnCastTuple):
+        pass
+
+    @_visit.register
+    def visit_unaryop(self, node: AnnCastUnaryOp):
+        self.visit(node.value)
+
+    @_visit.register
+    def visit_var(self, node: AnnCastVar):
+        self.visit(node.val)

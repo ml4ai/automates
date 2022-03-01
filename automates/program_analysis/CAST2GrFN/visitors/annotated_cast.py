@@ -40,15 +40,6 @@ class AnnCastNode(AstNode):
         self.updated_vars = {}
         AstNode.__init__(self)
 
-'''
-class AnnCastAssignment
-class AnCastAssignment
-class ACAssignment
-
-class AnnAssignment
-class AnnCastNode
-'''
-
 class AnnCastAssignment(AnnCastNode):
     def __init__(self, left, right, source_refs ):
         self.left = left
