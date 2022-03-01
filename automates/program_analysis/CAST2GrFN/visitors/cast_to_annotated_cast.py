@@ -214,8 +214,7 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: String):
-        string = self.print_then_visit(node.string)
-        return AnnCastString(string, node.source_refs)
+        return AnnCastString(node.string, node.source_refs)
 
     @visit.register
     def _(self, node: Subscript):

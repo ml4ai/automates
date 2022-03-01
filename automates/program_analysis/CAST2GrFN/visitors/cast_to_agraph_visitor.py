@@ -150,6 +150,19 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
+    def _(self, node: AnnCastAttribute):
+        """Visits Attribute nodes, the node's UID is returned
+        so it can be used to connect nodes in the digraph"""
+        value = self.visit(node.value)
+        attr = self.visit(node.attr)
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label="Attribute")
+        self.G.add_edge(node_uid, value)
+        self.G.add_edge(node_uid, attr)
+
+        return node_uid
+
+    @visit.register
     def _(self, node: Attribute):
         """Visits Attribute nodes, the node's UID is returned
         so it can be used to connect nodes in the digraph"""
@@ -186,6 +199,14 @@ class CASTToAGraphVisitor(CASTVisitor):
         self.G.add_edge(node_uid, left)
         self.G.add_edge(node_uid, right)
 
+        return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastBoolean):
+        """Visits Boolean nodes, the node's UID is returned
+        so it can be used to connect nodes in the digraph"""
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label=node.boolean)
         return node_uid
 
     @visit.register
@@ -246,6 +267,37 @@ class CASTToAGraphVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: ClassDef):
+        """Visits ClassDef nodes. We visit all fields and functions
+        of the class definition, and connect them to this node.
+        This node's UID is returned."""
+        # TODO: Where should bases field be used?
+        funcs = []
+        fields = []
+        if len(node.funcs) > 0:
+            funcs = self.visit_list(node.funcs)
+        if len(node.fields) > 0:
+            fields = self.visit_list(node.fields)
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label="Class: " + node.name)
+
+        # Add attributes to the graph
+        attr_uid = uuid.uuid4()
+        self.G.add_node(attr_uid, label="Attributes")
+        self.G.add_edge(node_uid, attr_uid)
+        for n in fields:
+            self.G.add_edge(attr_uid, n)
+
+        # Add functions to the graph
+        funcs_uid = uuid.uuid4()
+        self.G.add_node(funcs_uid, label="Functions")
+        self.G.add_edge(node_uid, funcs_uid)
+        for n in funcs:
+            self.G.add_edge(funcs_uid, n)
+
+        return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastClassDef):
         """Visits ClassDef nodes. We visit all fields and functions
         of the class definition, and connect them to this node.
         This node's UID is returned."""
@@ -395,7 +447,46 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
+    def _(self, node: AnnCastList):
+        """Visits List nodes. We visit all the elements and add them to
+        this node. This node's UID is returned."""
+        values = []
+        if len(node.values) > 0:
+            values = self.visit_list(node.values)
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label="List")
+        for n in values:
+            self.G.add_edge(node_uid, n)
+
+        return node_uid
+
+    @visit.register
     def _(self, node: Loop):
+        """Visits Loop nodes. We visit the conditional expression and the
+        body of the loop, and connect them to this node in the graph.
+        This node's UID is returned."""
+        expr = self.visit(node.expr)
+        body = []
+        if len(node.body) > 0:
+            body = self.visit_list(node.body)
+        node_uid = uuid.uuid4()
+        test_uid = uuid.uuid4()
+        body_uid = uuid.uuid4()
+
+        self.G.add_node(node_uid, label="Loop")
+        self.G.add_node(test_uid, label="Test")
+        self.G.add_node(body_uid, label="Body")
+
+        self.G.add_edge(node_uid, test_uid)
+        self.G.add_edge(test_uid, expr)
+        self.G.add_edge(node_uid, body_uid)
+        for n in body:
+            self.G.add_edge(body_uid, n)
+
+        return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastLoop):
         """Visits Loop nodes. We visit the conditional expression and the
         body of the loop, and connect them to this node in the graph.
         This node's UID is returned."""
@@ -437,6 +528,45 @@ class CASTToAGraphVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: ModelIf):
+        """Visits a ModelIf (If statement) node.
+        We visit the condition, and then the body and orelse
+        attributes if we have any. They're all added to the Graph
+        accordingly. The node's UID is returned."""
+        expr = self.visit(node.expr)
+        body = []
+        orelse = []
+        if len(node.body) > 0:
+            body = self.visit_list(node.body)
+        if len(node.orelse) > 0:
+            orelse = self.visit_list(node.orelse)
+
+        node_uid = uuid.uuid4()
+        test_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label="If")
+        self.G.add_node(test_uid, label="Test")
+        self.G.add_edge(node_uid, test_uid)
+        self.G.add_edge(test_uid, expr)
+
+        body_uid = uuid.uuid4()
+        orelse_uid = uuid.uuid4()
+
+        # TODO: Handle strings of If/Elif/Elif/... constructs
+        self.G.add_node(body_uid, label="If Body")
+        self.G.add_node(orelse_uid, label="Else Body")
+
+        self.G.add_edge(node_uid, body_uid)
+        self.G.add_edge(node_uid, orelse_uid)
+
+        for n in body:
+            self.G.add_edge(body_uid, n)
+
+        for n in orelse:
+            self.G.add_edge(orelse_uid, n)
+
+        return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastModelIf):
         """Visits a ModelIf (If statement) node.
         We visit the condition, and then the body and orelse
         attributes if we have any. They're all added to the Graph
@@ -549,7 +679,8 @@ class CASTToAGraphVisitor(CASTVisitor):
                 break
 
         if not class_init:
-            self.G.add_node(node_uid, label=node.name + " (id: " + str(node.id)+")")
+            label=node.name + " id: " + str(node.id)+"\n" + ".".join(node.container_scope)
+            self.G.add_node(node_uid, label=label)
 
         return node_uid
 
@@ -612,6 +743,14 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
+    def _(self, node: AnnCastString):
+        """Visits a String node. We add this node's string to the
+        graph and return the UID of this node."""
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label=f'"{node.string}"')
+        return node_uid
+
+    @visit.register
     def _(self, node: Subscript):
         """Visits a Subscript node. We visit its value and slice, and add
         them to the graph along with this node. This node's UID is returned."""
@@ -635,6 +774,17 @@ class CASTToAGraphVisitor(CASTVisitor):
         self.G.add_node(node_uid, label="Tuple")
         for n in values:
             self.G.add_edge(node_uid, n)
+
+        return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastUnaryOp):
+        """Visits a UnaryOp node. We add this node's value and operator
+        to the graph and return this node's UID."""
+        val = self.visit(node.value)
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label=node.op)
+        self.G.add_edge(node_uid, val)
 
         return node_uid
 

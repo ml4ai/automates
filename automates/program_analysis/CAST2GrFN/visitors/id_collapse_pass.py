@@ -67,16 +67,35 @@ class IdCollapsePass:
             updated_variables_new = self.print_then_visit(n)
             
     @visit.register
+    def visit_class_def(self, node: AnnCastClassDef):
+        # Each func is an AnnCastVar node
+        for n in node.funcs:
+            self.print_then_visit(n)
+        
+        # Each field (attribute) is an AnnCastVar node
+        for n in node.fields:
+            self.print_then_visit(n)
+
+    @visit.register
     def visit_call(self, node: AnnCastCall):
-        # CHECK: nothing to do here?
         assert(isinstance(node.func, Name))
-        func_name = node.func.name
+        node.func.id = self.collapse_id(node.func.id)
+
+        for n in node.arguments:
+            self.print_then_visit(n)
 
     @visit.register
     def visit_model_if(self, node: AnnCastModelIf):
+        self.print_then_visit(node.expr)
         for n in node.body:
             self.print_then_visit(n)
         for n in node.orelse:
+            self.print_then_visit(n)
+
+    @visit.register
+    def visit_loop(self, node: AnnCastLoop):
+        self.print_then_visit(node.expr)
+        for n in node.body:
             self.print_then_visit(n)
 
     @visit.register
@@ -104,9 +123,23 @@ class IdCollapsePass:
         self.print_then_visit(child)
 
     @visit.register
+    def visit_list(self, node: AnnCastList):
+        if len(node.values) > 0:
+            for n in node.values:
+                self.print_then_visit(n)
+
+    @visit.register
+    def visit_string(self, node: AnnCastString):
+        pass
+
+    @visit.register
     def visit_var(self, node: AnnCastVar):
         self.visit(node.val)
         
+    @visit.register
+    def visit_unaryop(self, node: AnnCastUnaryOp):
+        self.visit(node.value)
+
     @visit.register
     def visit_name(self, node: AnnCastName):
         node.id = self.collapse_id(node.id)

@@ -7,6 +7,7 @@ from automates.program_analysis.CAST2GrFN.cast import CAST
 from automates.program_analysis.CAST2GrFN.visitors.annotations_pass import AnnotationsPass
 from automates.program_analysis.CAST2GrFN.visitors.cast_to_agraph_visitor import CASTToAGraphVisitor
 from automates.program_analysis.CAST2GrFN.visitors.id_collapse_pass import IdCollapsePass
+from automates.program_analysis.CAST2GrFN.visitors.container_scope_pass import ContainerScopePass
 
 
 def main():
@@ -29,12 +30,16 @@ def main():
     # idea for a change
     # id_collapse_pass(annotated_cast) # collapsed ids in annotated cast
 
-    print("Calling IdCollapsePass")
+    print("Calling IdCollapsePass------------------------")
     collapsed_ids = IdCollapsePass(annotated_cast)
     V = CASTToAGraphVisitor(collapsed_ids)
-    f_name = "CollapsedIds-AnnotatedCAST"
+    print("Calling ContainerScopePass-------------------")
+    con_scope  = ContainerScopePass(annotated_cast)   
+    V2 = CASTToAGraphVisitor(con_scope)
+
+    f_name = "con_scop-AnnCAST"
     pdf_file_name = f"{f_name}.pdf"
-    V.to_pdf(pdf_file_name)
+    V2.to_pdf(pdf_file_name)
 
     
 
