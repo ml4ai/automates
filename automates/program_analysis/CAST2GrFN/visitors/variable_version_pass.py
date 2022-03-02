@@ -1,5 +1,5 @@
-
 import typing
+from dataclasses import defaultdict
 
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 
@@ -8,15 +8,32 @@ class VariableVersionPass:
     def __init__(self, ann_cast: AnnCast):
         self.ann_cast = ann_cast
         self.nodes = self.ann_cast.nodes
-        # dict mapping container scopes to dicts which map Name id to highest version in that container scope
+
+        # dict mapping container scopes to dicts which 
+        # map Name id to highest version in that container scope
         self.con_scope_to_highest_var_version = defaultdict(lambda: defaultdict(int))
+
         # FILL OUT version field of AnnCastName nodes
         # Function to grab the highest version and increment
         # If nodes and Loop nodes, follow  previous notes/code about versions
         # FunctionDef: expectation is that arguments will receive correct version of zero when visiting 
         # because FunctionDef has its own scope, nodes in the body should be able to be handled without special cases
+
         for node in self.ann_cast.nodes:
             self.visit(node)
+
+    def get_highest_ver_in_con_scope(self, con_scope, id):
+        assert(id in self.con_scope_to_highest_var_version)
+        return self.con_scope_to_highest_var_version[scope][id]
+
+    def put_var_in_con_scope(self,con_scope, id):
+        # if id is in the scope, increment it
+        if id in self.con_scope_to_highest_var_version:
+            self.con_scope_to_highest_var_version[con_scope][id] += 1
+        # if id is not already in the scope's dictionary, it will add it as version 0
+        self.con_scope_to_highest_var_version[con_scope][id]
+        
+    
 
     def visit(self, node: AnnCastNode):
         """
