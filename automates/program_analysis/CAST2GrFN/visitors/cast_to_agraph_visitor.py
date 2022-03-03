@@ -39,6 +39,11 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
+# used for Container Labels
+def vars_to_str(str_start, vars):
+    vars_id_and_names = [f" {name}: {id}" for id, name in vars.items()]
+    return str_start + ", ".join(vars_id_and_names)
+
 
 class CASTTypeError(TypeError):
     """Used to create errors in the CASTToAGraphVisitor, in particular
@@ -386,7 +391,10 @@ class CASTToAGraphVisitor(CASTVisitor):
         args_node = uuid.uuid4()
         body_node = uuid.uuid4()
 
-        self.G.add_node(node_uid, label="Function: " + node.name)
+        modified_vars_str = vars_to_str("Modified: ", node.modified_vars)
+        accessed_vars_str = vars_to_str("Accessed: ", node.accessed_vars)
+        func_label = f"Function: {node.name}\n{modified_vars_str}\n{accessed_vars_str}"
+        self.G.add_node(node_uid, label=func_label)
         self.G.add_node(args_node, label="Arguments")
         self.G.add_node(body_node, label="Body")
 
@@ -498,7 +506,10 @@ class CASTToAGraphVisitor(CASTVisitor):
         test_uid = uuid.uuid4()
         body_uid = uuid.uuid4()
 
-        self.G.add_node(node_uid, label="Loop")
+        modified_vars_str = vars_to_str("Modified: ", node.modified_vars)
+        accessed_vars_str = vars_to_str("Accessed: ", node.accessed_vars)
+        loop_label = f"Loop\n{modified_vars_str}\n{accessed_vars_str}"
+        self.G.add_node(node_uid, label=loop_label)
         self.G.add_node(test_uid, label="Test")
         self.G.add_node(body_uid, label="Body")
 
@@ -581,7 +592,11 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         node_uid = uuid.uuid4()
         test_uid = uuid.uuid4()
-        self.G.add_node(node_uid, label="If")
+
+        modified_vars_str = vars_to_str("Modified: ", node.modified_vars)
+        accessed_vars_str = vars_to_str("Accessed: ", node.accessed_vars)
+        if_label = f"If\n{modified_vars_str}\n{accessed_vars_str}"
+        self.G.add_node(node_uid, label=if_label)
         self.G.add_node(test_uid, label="Test")
         self.G.add_edge(node_uid, test_uid)
         self.G.add_edge(test_uid, expr)

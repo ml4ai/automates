@@ -120,6 +120,11 @@ class AnnCastFunctionDef(AnnCastNode):
         self.body = body
         self.source_refs = source_refs
 
+        # dicts mapping a Name id to its string name
+        # used for container interfaces
+        self.modified_vars: typing.Dict[id, str]
+        self.accessed_vars: typing.Dict[id, str]
+
     def __str__(self):
         return FunctionDef.__str__(self)
 
@@ -148,6 +153,12 @@ class AnnCastLoop(AnnCastNode):
         self.body = body
         self.source_refs = source_refs
 
+        # dicts mapping a Name id to its string name
+        # used for container interfaces
+        self.modified_vars: typing.Dict[id, str]
+        self.accessed_vars: typing.Dict[id, str]
+
+        # TODO: Might delete below attributes
         # Dicts mapping strings to Names
         self.loop_body_variables = {}
         self.entry_variables = {}
@@ -160,6 +171,7 @@ class AnnCastLoop(AnnCastNode):
         # NOTE: depending on how Decision nodes are handled in GrFN, this
         # condition variable may not be necessary
         self.exit_condition_var = None
+
 
     def __str__(self):
         return Loop.__str__(self)
@@ -185,10 +197,18 @@ class AnnCastModelIf(AnnCastNode):
         self.body = body
         self.orelse = orelse
 
+        # dicts mapping a Name id to string name
+        # used for container interfaces
+        self.modified_vars: typing.Dict[id, str]
+        self.accessed_vars: typing.Dict[id, str]
+
+        self.source_refs = source_refs
+
+        # TODO: Maybe delete
         self.updated_vars_if_branch = {}
         self.updated_vars_else_branch = {}
 
-        self.source_refs = source_refs
+        
 
     def __str__(self):
         return ModelIf.__str__(self)

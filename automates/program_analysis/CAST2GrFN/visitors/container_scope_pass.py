@@ -9,150 +9,215 @@ from automates.utils.misc import uuid
 from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 
+# used in `con_scope_to_str()` and `visit_name()`
+CON_STR_SEP = "."
 
+# TODO: do we need to add any other characters to ensure the name 
+# is an illegal identifier
+LOOPBODY = "loop-body"
+ELSEBODY = "else-body"
+IFBODY = "if-body"
+
+
+class ContainerData:
+    modified_vars: typing.Dict[id, str]
+    accessed_vars: typing.Dict[id, str]
+
+    def __init__(self):
+        self.modified_vars = {}
+        self.accessed_vars = {}
+
+
+def con_scope_to_str(scope: List):
+    return CON_STR_SEP.join(scope)
+
+def vars_to_str(str_start, vars):
+    vars_id_and_names = [f" {name}: {id}" for id, name in vars.items()]
+    return str_start + ", ".join(vars_id_and_names)
+    
 class ContainerScopePass:
     def __init__(self, ann_cast: AnnCast):
         self.ann_cast = ann_cast
-        # some state variables possibly
-        # e.g. how many ifs/loops we've seen in current scope
+        # dicts mapping container scope strs to the if/loop count inside
+        # the container
         self.if_count = defaultdict(int)
         self.loop_count = defaultdict(int)
+        # dict mapping containter scope str to AnnCastNode
+        self.con_str_to_node = {}
+        # dict mapping container scope str to cached Container Data
+        self.con_str_to_con_data = {}
+
         for node in self.ann_cast.nodes:
-            self.visit(node, [])
+            # assign_lhs is False at the start of our visitor
+            self.visit(node, [], False)
         self.nodes = self.ann_cast.nodes
 
+        # add cached container data to container nodes
+        self.add_container_data_to_nodes()
+
     def next_if_scope(self, enclosing_con_scope):
-        scopestr = "".join(enclosing_con_scope)
+        scopestr = con_scope_to_str(enclosing_con_scope)
         count = self.if_count[scopestr]
         self.if_count[scopestr] += 1
         return enclosing_con_scope + [f"if{count}"]
 
     def next_loop_scope(self, enclosing_con_scope):
-        scopestr = "".join(enclosing_con_scope)
+        scopestr = con_scope_to_str(enclosing_con_scope)
         count = self.loop_count[scopestr]
         self.loop_count[scopestr] += 1
         return enclosing_con_scope + [f"loop{count}"]
 
-    def visit(self, node: AnnCastNode, enclosing_con_scope: typing.List):
+    def visit(self, node: AnnCastNode, enclosing_con_scope: typing.List, assign_lhs: bool):
         # type(node) is a string which looks like
         # "class '<path.to.class.ClassName>'"
         class_name = str(type(node))
         last_dot = class_name.rfind(".")
         class_name = class_name[last_dot + 1 : -2]
         print(f"\nProcessing node type {class_name}")
-        return self._visit(node, enclosing_con_scope)
+        return self._visit(node, enclosing_con_scope, assign_lhs)
+
+    def add_container_data_to_nodes(self):
+        for scopestr, data in self.con_str_to_con_data.items():
+            print(f"For scopestr: {scopestr} found data with")
+            modified_vars = vars_to_str("  Modified: ", data.modified_vars)
+            print(modified_vars)
+            accessed_vars = vars_to_str("  Accessed: ", data.accessed_vars)
+            print(accessed_vars)
+            container = self.con_str_to_node[scopestr]
+            container.accessed_vars = data.accessed_vars
+            container.modified_vars = data.modified_vars
+
+    def initialize_con_scope_data(self, con_scope: typing.List, node):
+        """
+        Create an empty `ContainterData` in `self.con_str_to_con_data`
+        and cache the container `node` in `self.con_str_to_node`
+        """
+        con_scopestr = con_scope_to_str(con_scope)
+        self.con_str_to_node[con_scopestr] = node
+        self.con_str_to_con_data[con_scopestr] = ContainerData()
 
     @singledispatchmethod
     def _visit(
-        self, node: AnnCastNode, enclosing_con_scope: typing.List
+        self, node: AnnCastNode, enclosing_con_scope: typing.List, assign_lhs: bool
     ) -> typing.Dict:
         """
         Visit each AnnCastNode
+        Parameters:
+          - `assign_lhs`: this denotes whether we are visiting the LHS or RHS of an AnnCastAssignment
+                      This is used to determine whether a variable (AnnCastName node) is 
+                      accessed or modified in that context
         """
         raise Exception(f"Unimplemented AST node of type: {type(node)}")
 
-    def visit_node_list(self, node_list: typing.List[AnnCastNode], enclosing_con_scope):
-        return [self.visit(node, enclosing_con_scope) for node in node_list]
+    def visit_node_list(self, node_list: typing.List[AnnCastNode], enclosing_con_scope, assign_lhs):
+        return [self.visit(node, enclosing_con_scope, assign_lhs) for node in node_list]
 
     @_visit.register
-    def visit_assignment(self, node: AnnCastAssignment, enclosing_con_scope):
+    def visit_assignment(self, node: AnnCastAssignment, enclosing_con_scope, assign_lhs):
         # TODO: what if the rhs has side-effects
-        self.visit(node.right, enclosing_con_scope)
+        self.visit(node.right, enclosing_con_scope, assign_lhs)
         assert isinstance(node.left, AnnCastVar)
-        self.visit(node.left, enclosing_con_scope)
+        self.visit(node.left, enclosing_con_scope, True)
 
     @_visit.register
-    def visit_attribute(self, node: AnnCastAttribute):
+    def visit_attribute(self, node: AnnCastAttribute, assign_lhs):
         pass
 
     @_visit.register
-    def visit_binary_op(self, node: AnnCastBinaryOp, enclosing_con_scope):
+    def visit_binary_op(self, node: AnnCastBinaryOp, enclosing_con_scope, assign_lhs):
         # visit LHS first
-        self.visit(node.left, enclosing_con_scope)
+        self.visit(node.left, enclosing_con_scope, assign_lhs)
 
         # visit RHS second
-        self.visit(node.right, enclosing_con_scope)
+        self.visit(node.right, enclosing_con_scope, assign_lhs)
 
     @_visit.register
-    def visit_boolean(self, node: AnnCastBoolean):
+    def visit_boolean(self, node: AnnCastBoolean, assign_lhs):
         pass
 
     @_visit.register
-    def visit_call(self, node: AnnCastCall, enclosing_con_scope):
+    def visit_call(self, node: AnnCastCall, enclosing_con_scope, assign_lhs):
         assert isinstance(node.func, AnnCastName)
         func_name = node.func.name
         node.func.container_scope = enclosing_con_scope
-        self.visit_node_list(node.arguments, enclosing_con_scope)
+        self.visit_node_list(node.arguments, enclosing_con_scope, assign_lhs)
 
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef, enclosing_con_scope):
+    def visit_class_def(self, node: AnnCastClassDef, enclosing_con_scope, assign_lhs):
         # We do not visit the name because it is a string
         assert isinstance(node.name, str)
         classscope = enclosing_con_scope + [node.name]
         # node.bases is a list of strings
         # node.funcs is a list of Vars
-        self.visit_node_list(node.funcs, classscope)
+        self.visit_node_list(node.funcs, classscope, assign_lhs)
         # node.fields is a list of Vars
-        self.visit_node_list(node.fields, classscope)
+        self.visit_node_list(node.fields, classscope, assign_lhs)
 
     @_visit.register
-    def visit_dict(self, node: AnnCastDict):
+    def visit_dict(self, node: AnnCastDict, assign_lhs):
         pass
 
     @_visit.register
-    def visit_expr(self, node: AnnCastExpr, enclosing_con_scope):
-        self.visit(node.expr, enclosing_con_scope)
+    def visit_expr(self, node: AnnCastExpr, enclosing_con_scope, assign_lhs):
+        self.visit(node.expr, enclosing_con_scope, assign_lhs)
 
     @_visit.register
-    def visit_function_def(self, node: AnnCastFunctionDef, enclosing_con_scope):
+    def visit_function_def(self, node: AnnCastFunctionDef, enclosing_con_scope, assign_lhs):
         # Modify scope to include the function name
         funcscope = enclosing_con_scope + [node.name]
+        
+        self.initialize_con_scope_data(funcscope, node)
+
         # Each argument is a AnnCastVar node
         # Initialize each Name and visit to modify its scope
-        self.visit_node_list(node.func_args, funcscope)
+        self.visit_node_list(node.func_args, funcscope, assign_lhs)
 
-        self.visit_node_list(node.body, funcscope)
-
-    @_visit.register
-    def visit_list(self, node: AnnCastList, enclosing_con_scope):
-        self.visit_node_list(node.values, enclosing_con_scope)
+        self.visit_node_list(node.body, funcscope, assign_lhs)
 
     @_visit.register
-    def visit_loop(self, node: AnnCastLoop, enclosing_con_scope):
+    def visit_list(self, node: AnnCastList, enclosing_con_scope, assign_lhs):
+        self.visit_node_list(node.values, enclosing_con_scope, assign_lhs)
+
+    @_visit.register
+    def visit_loop(self, node: AnnCastLoop, enclosing_con_scope, assign_lhs):
         loopscope = self.next_loop_scope(enclosing_con_scope)
-        self.visit(node.expr, loopscope)
+        self.initialize_con_scope_data(loopscope, node)
+        # TODO: What if expr has side-effects?
+        self.visit(node.expr, loopscope, assign_lhs)
 
-        loopbodyscope = loopscope + ["loopbody"]
-        self.visit_node_list(node.body, loopbodyscope)
+        loopbodyscope = loopscope + [LOOPBODY]
+        self.visit_node_list(node.body, loopbodyscope, assign_lhs)
 
     @_visit.register
-    def visit_model_break(self, node: AnnCastModelBreak):
+    def visit_model_break(self, node: AnnCastModelBreak, assign_lhs):
         pass
 
     @_visit.register
-    def visit_model_continue(self, node: AnnCastModelContinue):
+    def visit_model_continue(self, node: AnnCastModelContinue, assign_lhs):
         pass
 
     @_visit.register
-    def visit_model_if(self, node: AnnCastModelIf, enclosing_con_scope):
+    def visit_model_if(self, node: AnnCastModelIf, enclosing_con_scope, assign_lhs):
         # want orig enclosing
-        # TODO-what if the condition has a side-effect?
         ifscope = self.next_if_scope(enclosing_con_scope)
-        self.visit(node.expr, ifscope)
+        self.initialize_con_scope_data(ifscope, node)
+        
+        # TODO-what if the condition has a side-effect?
+        self.visit(node.expr, ifscope, assign_lhs)
 
-        ifbodyscope = ifscope + ["ifbody"]
-        self.visit_node_list(node.body, ifbodyscope)
+        ifbodyscope = ifscope + [IFBODY]
+        self.visit_node_list(node.body, ifbodyscope, assign_lhs)
 
-        orelsebodyscope = ifscope + ["elsebody"]
-        self.visit_node_list(node.orelse, orelsebodyscope)
+        orelsebodyscope = ifscope + [ELSEBODY]
+        self.visit_node_list(node.orelse, orelsebodyscope, assign_lhs)
 
     @_visit.register
-    def visit_return(self, node: AnnCastModelReturn, enclosing_con_scope):
+    def visit_return(self, node: AnnCastModelReturn, enclosing_con_scope, assign_lhs):
         child = node.value
-        self.visit(child, enclosing_con_scope)
+        self.visit(child, enclosing_con_scope, assign_lhs)
 
     @_visit.register
-    def visit_module(self, node: AnnCastModule, enclosing_con_scope) -> typing.Dict:
+    def visit_module(self, node: AnnCastModule, enclosing_con_scope, assign_lhs):
         # Enclosing scope for the module consists of the global variables
         # preceded by the module name, e.g., for globals g1 and g2 in module program, the
         # enclosing scope is initialized as ["program::g1_0", "program::g2_0"]
@@ -160,36 +225,57 @@ class ContainerScopePass:
         # Get each global and add it as version 0 to initialize the
         # the enclosing container scope
         enclosing_con_scope = ["module"]
-        self.visit_node_list(node.body, enclosing_con_scope)
+        self.visit_node_list(node.body, enclosing_con_scope, assign_lhs)
 
     @_visit.register
-    def visit_name(self, node: AnnCastName, enclosing_con_scope):
+    def visit_name(self, node: AnnCastName, enclosing_con_scope, assign_lhs):
         node.container_scope = enclosing_con_scope
+       
+        # check every prefix of enclosing_con_scope, and build
+        # its associated scopestr
+        # add to container data if this is an already cached container string     
+        scopestr = ""
+        for index, name in enumerate(enclosing_con_scope):
+            # add separator between container scope component names
+            if index != 0:
+                scopestr += f"{CON_STR_SEP}"
+            scopestr += f"{name}"
+            # fill in container data if this is a cached container str
+            if scopestr in self.con_str_to_con_data:
+                con_data = self.con_str_to_con_data[scopestr]
+                # if we are on LHS of assignment, this Name should be
+                # added to modified vars
+                if assign_lhs:
+                    con_data.modified_vars[node.id] = node.name
+                # otherwise it should be added to accessed_vars
+                else:
+                    con_data.accessed_vars[node.id] = node.name
+
 
     @_visit.register
-    def visit_number(self, node: AnnCastNumber, enclosing_con_scope):
+    def visit_number(self, node: AnnCastNumber, enclosing_con_scope, assign_lhs):
         pass
 
     @_visit.register
-    def visit_set(self, node: AnnCastSet):
+    def visit_set(self, node: AnnCastSet, assign_lhs):
         pass
 
     @_visit.register
-    def visit_string(self, node: AnnCastString, enclosing_con_scope):
+    def visit_string(self, node: AnnCastString, enclosing_con_scope, assign_lhs):
         pass
 
     @_visit.register
-    def visit_subscript(self, node: AnnCastSubscript):
+    def visit_subscript(self, node: AnnCastSubscript, assign_lhs):
         pass
 
     @_visit.register
-    def visit_tuple(self, node: AnnCastTuple):
+    def visit_tuple(self, node: AnnCastTuple, assign_lhs):
         pass
 
     @_visit.register
-    def visit_unary_op(self, node: AnnCastUnaryOp, enclosing_con_scope):
-        self.visit(node.value, enclosing_con_scope)
+    def visit_unary_op(self, node: AnnCastUnaryOp, enclosing_con_scope, assign_lhs):
+        self.visit(node.value, enclosing_con_scope, assign_lhs)
 
     @_visit.register
-    def visit_var(self, node: AnnCastVar, enclosing_con_scope):
-        self.visit(node.val, enclosing_con_scope)
+    def visit_var(self, node: AnnCastVar, enclosing_con_scope, assign_lhs):
+        self.visit(node.val, enclosing_con_scope, assign_lhs)
