@@ -167,6 +167,7 @@ class ContainerScopePass:
         funcscope = enclosing_con_scope + [node.name]
         
         self.initialize_con_scope_data(funcscope, node)
+        node.con_scope = funcscope
 
         # Each argument is a AnnCastVar node
         # Initialize each Name and visit to modify its scope
@@ -182,6 +183,7 @@ class ContainerScopePass:
     def visit_loop(self, node: AnnCastLoop, enclosing_con_scope, assign_lhs):
         loopscope = self.next_loop_scope(enclosing_con_scope)
         self.initialize_con_scope_data(loopscope, node)
+        node.con_scope = loopscope
         # TODO: What if expr has side-effects?
         self.visit(node.expr, loopscope, assign_lhs)
 
@@ -201,6 +203,7 @@ class ContainerScopePass:
         # want orig enclosing
         ifscope = self.next_if_scope(enclosing_con_scope)
         self.initialize_con_scope_data(ifscope, node)
+        node.con_scope = ifscope
         
         # TODO-what if the condition has a side-effect?
         self.visit(node.expr, ifscope, assign_lhs)

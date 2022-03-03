@@ -124,6 +124,7 @@ class AnnCastFunctionDef(AnnCastNode):
         # used for container interfaces
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
+        self.con_scope: List
 
     def __str__(self):
         return FunctionDef.__str__(self)
@@ -157,6 +158,7 @@ class AnnCastLoop(AnnCastNode):
         # used for container interfaces
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
+        self.con_scope: List
 
         # TODO: Might delete below attributes
         # Dicts mapping strings to Names
@@ -201,6 +203,7 @@ class AnnCastModelIf(AnnCastNode):
         # used for container interfaces
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
+        self.con_scope: List
 
         self.source_refs = source_refs
 

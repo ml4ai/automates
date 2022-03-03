@@ -4,6 +4,17 @@ from dataclasses import defaultdict
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 
 
+# used in `con_scope_to_str()` and `visit_name()`
+CON_STR_SEP = "."
+
+# TODO: do we need to add any other characters to ensure the name 
+# is an illegal identifier
+LOOPBODY = "loop-body"
+ELSEBODY = "else-body"
+IFBODY = "if-body"
+
+def con_scope_to_str(scope: List):
+    return CON_STR_SEP.join(scope)
 class VariableVersionPass:
     def __init__(self, ann_cast: AnnCast):
         self.ann_cast = ann_cast
@@ -11,7 +22,7 @@ class VariableVersionPass:
 
         # dict mapping container scopes to dicts which 
         # map Name id to highest version in that container scope
-        self.con_scope_to_highest_var_version = defaultdict(lambda: defaultdict(int))
+        self.con_scope_to_highest_var_version = {}
 
         # FILL OUT version field of AnnCastName nodes
         # Function to grab the highest version and increment
@@ -92,6 +103,9 @@ class VariableVersionPass:
 
     @_visit.register
     def visit_function_def(self, node: AnnCastFunctionDef):
+        # Initialize scope_to_highest_var_version
+        con_scopestr = con_scope_to_str(node.con_scope)
+        self.con_scope_to_highest_var_version[con_scopestr] = {}
         pass
 
     @_visit.register
@@ -100,6 +114,12 @@ class VariableVersionPass:
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop):
+        # Initialize scope_to_highest_var_version
+        con_scopestr = con_scope_to_str(node.con_scope)
+        # Initialize Loop
+        self.con_scope_to_highest_var_version[con_scopestr] = {}
+        # Initialize LoopBody
+        self.con_scope_to_highest_var_version[con_scopestr + [LOOPBODY]] = {}
         pass
 
     @_visit.register
@@ -112,6 +132,15 @@ class VariableVersionPass:
 
     @_visit.register
     def visit_model_if(self, node: AnnCastModelIf):
+        # Initialize scope_to_highest_var_version
+        con_scopestr = con_scope_to_str(node.con_scope)
+        # initialize If
+        # NOTE: Maybe the simple incrementing at each containter won't work
+        self.con_scope_to_highest_var_version[con_scopestr] = {}
+        # initialize IfBody
+        self.con_scope_to_highest_var_version[con_scopestr + [IFBODY]] = {}
+        # initialize ElseBody
+        self.con_scope_to_highest_var_version[con_scopestr + [ELSEBODY]] = {}
         pass
 
     @_visit.register
