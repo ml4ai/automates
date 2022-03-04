@@ -51,6 +51,18 @@ def var_dict_to_str(str_start, vars):
 class AnnCast:
     def __init__(self, ann_nodes: List):
         self.nodes = ann_nodes
+        # TODO: I think it would be better if the `name` attribute of FunctionDef's actually
+        # stored `Name` nodes instead of just being a str.  Storing a `Name` node there would allow
+        # us to refer to FunctionDef's with an ID.  On the GCC side, the gcc AST json already has these
+        # IDs filled out, and they are stored at the `Name` nodes at call sites.  We could add this same ID
+        # to the `Name` node created at the FunctionDef.  
+        # On the Python side, we have rules to assign IDs at call sites.  It is likely those same rules coudl
+        # be used when parsing FunctionDef's.
+        # Once this is implemented, this dict could map function IDs to there FunctionDef nodes.  
+        # For now, it maps a str (the name attribute of a FunctionDef) to the FunctionDef node.
+        # For now, this dict will be filled out during the ContainerScopePass.  Possibly this could be moved to a 
+        # different pass, but will need to be during/after IdCollapsePass
+        self.func_names_to_defs = {}
 
 class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):
@@ -142,7 +154,11 @@ class AnnCastFunctionDef(AnnCastNode):
         # used for container interfaces
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
-        self.con_scope: List
+        self.con_scope: typing.List
+
+        # dict mapping Name id to highest version at end of "block"
+        # TODO: What about using a default dict
+        self.body_highest_var_vers = {}
 
     def __str__(self):
         return FunctionDef.__str__(self)
@@ -179,7 +195,9 @@ class AnnCastLoop(AnnCastNode):
         self.con_scope: List
 
         # dicts mapping Name id to highest version at end of "block"
-        # self.
+        # TODO: What about using a default dict
+        self.expr_highest_var_vers = {}
+        self.body_highest_var_vers = {}
 
         # TODO: Might delete below attributes
         # Dicts mapping strings to Names
@@ -226,6 +244,12 @@ class AnnCastModelIf(AnnCastNode):
         self.accessed_vars: typing.Dict[id, str]
         self.con_scope: List
 
+        # dicts mapping Name id to highest version at end of "block"
+        # TODO: What about using a default dict
+        self.expr_highest_var_vers = {}
+        self.ifbody_highest_var_vers = {}
+        self.elsebody_highest_var_vers = {}
+
         self.source_refs = source_refs
 
         # TODO: Maybe delete
@@ -261,7 +285,7 @@ class AnnCastName(AnnCastNode):
         self.id = id
         self.source_refs = source_refs
         # container_scope is used to aid GrFN generation
-        self.container_scope = None
+        self.con_scope = None
         # versions are bound to the cope of the variable
         self.version = None
 

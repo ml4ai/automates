@@ -51,16 +51,6 @@ class ContainerScopePass:
         self.loop_count[scopestr] += 1
         return enclosing_con_scope + [f"loop{count}"]
 
-    def visit(
-        self, node: AnnCastNode, enclosing_con_scope: typing.List, assign_lhs: bool
-    ):
-        # type(node) is a string which looks like
-        # "class '<path.to.class.ClassName>'"
-        class_name = str(type(node))
-        last_dot = class_name.rfind(".")
-        class_name = class_name[last_dot + 1 : -2]
-        print(f"\nProcessing node type {class_name}")
-        return self._visit(node, enclosing_con_scope, assign_lhs)
 
     def add_container_data_to_nodes(self):
         for scopestr, data in self.con_str_to_con_data.items():
@@ -81,6 +71,17 @@ class ContainerScopePass:
         con_scopestr = con_scope_to_str(con_scope)
         self.con_str_to_node[con_scopestr] = node
         self.con_str_to_con_data[con_scopestr] = ContainerData()
+        
+    def visit(
+        self, node: AnnCastNode, enclosing_con_scope: typing.List, assign_lhs: bool
+    ):
+        # type(node) is a string which looks like
+        # "class '<path.to.class.ClassName>'"
+        class_name = str(type(node))
+        last_dot = class_name.rfind(".")
+        class_name = class_name[last_dot + 1 : -2]
+        print(f"\nProcessing node type {class_name}")
+        return self._visit(node, enclosing_con_scope, assign_lhs)
 
     @singledispatchmethod
     def _visit(
@@ -128,10 +129,10 @@ class ContainerScopePass:
     @_visit.register
     def visit_call(self, node: AnnCastCall, enclosing_con_scope, assign_lhs):
         assert isinstance(node.func, AnnCastName)
-        func_name = node.func.name
-        node.func.container_scope = enclosing_con_scope
+        node.func.con_scope = enclosing_con_scope
         self.visit_node_list(node.arguments, enclosing_con_scope, assign_lhs)
 
+    # TODO: What to do for classes about modified/accessed vars?
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef, enclosing_con_scope, assign_lhs):
         # We do not visit the name because it is a string
@@ -155,6 +156,9 @@ class ContainerScopePass:
     def visit_function_def(
         self, node: AnnCastFunctionDef, enclosing_con_scope, assign_lhs
     ):
+        # Add this AnnCastFunctionDef node to the AnnotatedCast `func_names_to_def` dict
+        self.ann_cast.func_names_to_defs[node.name] = node
+
         # Modify scope to include the function name
         funcscope = enclosing_con_scope + [node.name]
 
@@ -210,23 +214,17 @@ class ContainerScopePass:
 
     @_visit.register
     def visit_return(self, node: AnnCastModelReturn, enclosing_con_scope, assign_lhs):
-        child = node.value
-        self.visit(child, enclosing_con_scope, assign_lhs)
+        self.visit(node.value, enclosing_con_scope, assign_lhs)
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, enclosing_con_scope, assign_lhs):
-        # Enclosing scope for the module consists of the global variables
-        # preceded by the module name, e.g., for globals g1 and g2 in module program, the
-        # enclosing scope is initialized as ["program::g1_0", "program::g2_0"]
-
-        # Get each global and add it as version 0 to initialize the
-        # the enclosing container scope
+        # Container scope for the module will be called "module" for now
         enclosing_con_scope = ["module"]
         self.visit_node_list(node.body, enclosing_con_scope, assign_lhs)
 
     @_visit.register
     def visit_name(self, node: AnnCastName, enclosing_con_scope, assign_lhs):
-        node.container_scope = enclosing_con_scope
+        node.con_scope = enclosing_con_scope
 
         # check every prefix of enclosing_con_scope, and build
         # its associated scopestr
