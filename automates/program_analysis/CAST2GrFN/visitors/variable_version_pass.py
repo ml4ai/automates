@@ -3,18 +3,6 @@ from dataclasses import defaultdict
 
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 
-
-# used in `con_scope_to_str()` and `visit_name()`
-CON_STR_SEP = "."
-
-# TODO: do we need to add any other characters to ensure the name 
-# is an illegal identifier
-LOOPBODY = "loop-body"
-ELSEBODY = "else-body"
-IFBODY = "if-body"
-
-def con_scope_to_str(scope: List):
-    return CON_STR_SEP.join(scope)
 class VariableVersionPass:
     def __init__(self, ann_cast: AnnCast):
         self.ann_cast = ann_cast

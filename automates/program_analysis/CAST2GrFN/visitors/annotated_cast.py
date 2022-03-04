@@ -30,6 +30,24 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
+# used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
+CON_STR_SEP = "."
+
+# TODO: do we need to add any other characters to ensure the name 
+# is an illegal identifier
+LOOPBODY = "loop-body"
+ELSEBODY = "else-body"
+IFBODY = "if-body"
+LOOPEXPR = "loop-expr"
+IFEXPR = "if-expr"
+
+def con_scope_to_str(scope: List):
+    return CON_STR_SEP.join(scope)
+
+def var_dict_to_str(str_start, vars):
+    vars_id_and_names = [f" {name}: {id}" for id, name in vars.items()]
+    return str_start + ", ".join(vars_id_and_names)
+
 class AnnCast:
     def __init__(self, ann_nodes: List):
         self.nodes = ann_nodes
@@ -159,6 +177,9 @@ class AnnCastLoop(AnnCastNode):
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
         self.con_scope: List
+
+        # dicts mapping Name id to highest version at end of "block"
+        # self.
 
         # TODO: Might delete below attributes
         # Dicts mapping strings to Names

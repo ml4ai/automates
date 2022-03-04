@@ -9,15 +9,6 @@ from automates.utils.misc import uuid
 from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 
-# used in `con_scope_to_str()` and `visit_name()`
-CON_STR_SEP = "."
-
-# TODO: do we need to add any other characters to ensure the name 
-# is an illegal identifier
-LOOPBODY = "loop-body"
-ELSEBODY = "else-body"
-IFBODY = "if-body"
-
 
 class ContainerData:
     modified_vars: typing.Dict[id, str]
@@ -28,13 +19,6 @@ class ContainerData:
         self.accessed_vars = {}
 
 
-def con_scope_to_str(scope: List):
-    return CON_STR_SEP.join(scope)
-
-def vars_to_str(str_start, vars):
-    vars_id_and_names = [f" {name}: {id}" for id, name in vars.items()]
-    return str_start + ", ".join(vars_id_and_names)
-    
 class ContainerScopePass:
     def __init__(self, ann_cast: AnnCast):
         self.ann_cast = ann_cast
@@ -67,7 +51,9 @@ class ContainerScopePass:
         self.loop_count[scopestr] += 1
         return enclosing_con_scope + [f"loop{count}"]
 
-    def visit(self, node: AnnCastNode, enclosing_con_scope: typing.List, assign_lhs: bool):
+    def visit(
+        self, node: AnnCastNode, enclosing_con_scope: typing.List, assign_lhs: bool
+    ):
         # type(node) is a string which looks like
         # "class '<path.to.class.ClassName>'"
         class_name = str(type(node))
@@ -79,9 +65,9 @@ class ContainerScopePass:
     def add_container_data_to_nodes(self):
         for scopestr, data in self.con_str_to_con_data.items():
             print(f"For scopestr: {scopestr} found data with")
-            modified_vars = vars_to_str("  Modified: ", data.modified_vars)
+            modified_vars = var_dict_to_str("  Modified: ", data.modified_vars)
             print(modified_vars)
-            accessed_vars = vars_to_str("  Accessed: ", data.accessed_vars)
+            accessed_vars = var_dict_to_str("  Accessed: ", data.accessed_vars)
             print(accessed_vars)
             container = self.con_str_to_node[scopestr]
             container.accessed_vars = data.accessed_vars
@@ -104,16 +90,20 @@ class ContainerScopePass:
         Visit each AnnCastNode
         Parameters:
           - `assign_lhs`: this denotes whether we are visiting the LHS or RHS of an AnnCastAssignment
-                      This is used to determine whether a variable (AnnCastName node) is 
+                      This is used to determine whether a variable (AnnCastName node) is
                       accessed or modified in that context
         """
         raise Exception(f"Unimplemented AST node of type: {type(node)}")
 
-    def visit_node_list(self, node_list: typing.List[AnnCastNode], enclosing_con_scope, assign_lhs):
+    def visit_node_list(
+        self, node_list: typing.List[AnnCastNode], enclosing_con_scope, assign_lhs
+    ):
         return [self.visit(node, enclosing_con_scope, assign_lhs) for node in node_list]
 
     @_visit.register
-    def visit_assignment(self, node: AnnCastAssignment, enclosing_con_scope, assign_lhs):
+    def visit_assignment(
+        self, node: AnnCastAssignment, enclosing_con_scope, assign_lhs
+    ):
         # TODO: what if the rhs has side-effects
         self.visit(node.right, enclosing_con_scope, assign_lhs)
         assert isinstance(node.left, AnnCastVar)
@@ -162,10 +152,12 @@ class ContainerScopePass:
         self.visit(node.expr, enclosing_con_scope, assign_lhs)
 
     @_visit.register
-    def visit_function_def(self, node: AnnCastFunctionDef, enclosing_con_scope, assign_lhs):
+    def visit_function_def(
+        self, node: AnnCastFunctionDef, enclosing_con_scope, assign_lhs
+    ):
         # Modify scope to include the function name
         funcscope = enclosing_con_scope + [node.name]
-        
+
         self.initialize_con_scope_data(funcscope, node)
         node.con_scope = funcscope
 
@@ -185,7 +177,8 @@ class ContainerScopePass:
         self.initialize_con_scope_data(loopscope, node)
         node.con_scope = loopscope
         # TODO: What if expr has side-effects?
-        self.visit(node.expr, loopscope, assign_lhs)
+        loopexprscope = loopscope + [LOOPEXPR]
+        self.visit(node.expr, loopexprscope, assign_lhs)
 
         loopbodyscope = loopscope + [LOOPBODY]
         self.visit_node_list(node.body, loopbodyscope, assign_lhs)
@@ -204,9 +197,10 @@ class ContainerScopePass:
         ifscope = self.next_if_scope(enclosing_con_scope)
         self.initialize_con_scope_data(ifscope, node)
         node.con_scope = ifscope
-        
+
         # TODO-what if the condition has a side-effect?
-        self.visit(node.expr, ifscope, assign_lhs)
+        ifexprscope = ifscope + [IFEXPR]
+        self.visit(node.expr, ifexprscope, assign_lhs)
 
         ifbodyscope = ifscope + [IFBODY]
         self.visit_node_list(node.body, ifbodyscope, assign_lhs)
@@ -233,10 +227,10 @@ class ContainerScopePass:
     @_visit.register
     def visit_name(self, node: AnnCastName, enclosing_con_scope, assign_lhs):
         node.container_scope = enclosing_con_scope
-       
+
         # check every prefix of enclosing_con_scope, and build
         # its associated scopestr
-        # add to container data if this is an already cached container string     
+        # add to container data if this is an already cached container string
         scopestr = ""
         for index, name in enumerate(enclosing_con_scope):
             # add separator between container scope component names
@@ -253,7 +247,6 @@ class ContainerScopePass:
                 # otherwise it should be added to accessed_vars
                 else:
                     con_data.accessed_vars[node.id] = node.name
-
 
     @_visit.register
     def visit_number(self, node: AnnCastNumber, enclosing_con_scope, assign_lhs):
