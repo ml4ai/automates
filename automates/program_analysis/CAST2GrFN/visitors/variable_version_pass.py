@@ -12,12 +12,13 @@ class VariableVersionPass:
 
         # dict mapping container scopes strs to dicts which
         # map Name id to highest version in that container scope
-        # the values of this dict are defaultdicts which start at 0
         self.con_scope_to_highest_var_vers = {}
 
-        # FILL OUT version field of AnnCastName nodes
-        # Function to grab the highest version and increment
-        # If nodes and Loop nodes, follow  previous notes/code about versions
+        # Fill out the version field of AnnCastName nodes and
+        # populate the dictionaries for containers nodes
+        # that hold the mappings of variable ids to their 
+        # highest version in that scope
+
         # FunctionDef: expectation is that arguments will receive correct version of zero when visiting
         # because FunctionDef has its own scope, nodes in the body should be able to be handled without special cases
 
@@ -25,15 +26,26 @@ class VariableVersionPass:
             # when visitor starts, assign_lhs is False
             self.visit(node, False)
 
-    def init_highest_var_vers_dict(self, con_scopestr):
+    def init_highest_var_vers_dict(self, con_scopestr, var_ids):
         """
         Initialize highest var version dict for scope `con_scopestr`
-        with a defaultdict starting at zero
+        If the scope is the module, then use a defaultdict starting at zero
+        otherwise, create a dictionary mapping each of the ids to zero
         """
-        # TODO: add an additional of var ids parameter, and initialize all those 
+        # DONE: add an additional var ids parameter, and initialize all those 
         # variables instead of defaultdict (unless con_scopestr is "module")
         # create versions 0 of any modified or accessed variables
-        self.con_scope_to_highest_var_vers[con_scopestr] = defaultdict(int)
+        if con_scopestr == "module":
+           self.con_scope_to_highest_var_vers[con_scopestr] = defaultdict(int)
+        else:
+            # TODO: Could we ever have a container with no modified or accessed variables?
+            #       Maybe a debugging function that only prints?
+            assert(len(var_ids) > 0)
+            self.con_scope_to_highest_var_vers[con_scopestr] = {}
+            for id in var_ids:
+                self.con_scope_to_highest_var_vers[con_scopestr][id] = 0
+            print(f"initialized highest_vars_vers_dict {self.con_scope_to_highest_var_vers[con_scopestr]}")
+                       
 
     def get_highest_ver_in_con_scope(self, con_scopestr, id):
         """
@@ -47,11 +59,15 @@ class VariableVersionPass:
         Grab the next version of `id` in scope for `con_scopestr`
         Should only be called after `con_scopestr` is in the `self.con_scope_to_highest_var_vers`
         """
-        # if id is in the scope, increment it
-        # if id in self.con_scope_to_highest_var_vers:
-        self.con_scope_to_highest_var_vers[con_scopestr][id] += 1
-        # if id is not already in the scope's dictionary, it will add it as version 0
-        # self.con_scope_to_highest_var_vers[con_scope][id]
+        print(f"incr: id={id}  scope dictionary {con_scopestr}={self.con_scope_to_highest_var_vers[con_scopestr]} ")
+        # TODO: if id is in the container scope, increment it
+        if id in self.con_scope_to_highest_var_vers[con_scopestr]:
+            #print(f"incr: id={id} is in dict")
+            self.con_scope_to_highest_var_vers[con_scopestr][id] += 1
+        # otherwise, add it as version 0
+        else:
+            #print(f"incr: id={id} is NOT in dict")
+            self.con_scope_to_highest_var_vers[con_scopestr][id] = 0
 
     def incr_vars_in_con_scope(self, scopestr, vars):
         """
@@ -60,6 +76,16 @@ class VariableVersionPass:
         """
         for var_id in vars:
             self.incr_version_in_con_scope(scopestr, var_id)
+
+    def merge_accessed_modified_vars(self, node):
+        """
+        Merge the ids of the accessed and modified variables of `node` and
+        return the merge as a list ids
+        """
+        ids = set(node.modified_vars.keys())
+        ids.update(node.accessed_vars.keys())
+        return list(ids)
+        
 
     def visit(self, node: AnnCastNode, assign_lhs: bool):
         # type(node) is a string which looks like
@@ -144,17 +170,17 @@ class VariableVersionPass:
 
         # Initialize scope_to_highest_var_vers
         con_scopestr = con_scope_to_str(node.con_scope)
-        # TODO:
+        # DONE:
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(con_scopestr)
+        self.init_highest_var_vers_dict(con_scopestr, self.merge_accessed_modified_vars(node))
         
         # visit children
         self.visit_node_list(node.func_args, assign_lhs)
         self.visit_node_list(node.body, assign_lhs)
 
-        # stored highest var version
+        # store highest var version
         node.body_highest_var_vers = self.con_scope_to_highest_var_vers[con_scopestr]
 
         # DEBUGGING
@@ -171,23 +197,23 @@ class VariableVersionPass:
         expr_scopestr = con_scope_to_str(node.con_scope + [LOOPEXPR])
         body_scopestr = con_scope_to_str(node.con_scope + [LOOPBODY])
         # Initialize LoopExpr
-        # TODO:
+        # DONE:
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(expr_scopestr)
+        self.init_highest_var_vers_dict(expr_scopestr, self.merge_accessed_modified_vars(node))
+
         # Initialize LoopBody
-        # TODO:
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(body_scopestr)
+        self.init_highest_var_vers_dict(body_scopestr, self.merge_accessed_modified_vars(node))
 
         # visit children
         self.visit(node.expr, assign_lhs)
         self.visit_node_list(node.body, assign_lhs)
 
-        # stored highest var version
+        # store highest var version
         node.expr_highest_var_vers = self.con_scope_to_highest_var_vers[expr_scopestr]
         node.body_highest_var_vers = self.con_scope_to_highest_var_vers[body_scopestr]
         
@@ -215,30 +241,30 @@ class VariableVersionPass:
         ifbody_scopestr = con_scope_to_str(node.con_scope + [IFBODY])
         elsebody_scopestr = con_scope_to_str(node.con_scope + [ELSEBODY])
         # initialize IfExpr
-        # TODO:
+        # DONE:
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(expr_scopestr)
+        self.init_highest_var_vers_dict(expr_scopestr, self.merge_accessed_modified_vars(node))
+
         # initialize IfBody
-        # TODO:
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(ifbody_scopestr)
+        self.init_highest_var_vers_dict(ifbody_scopestr, self.merge_accessed_modified_vars(node))
+
         # initialize ElseBody
-        # TODO:
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(elsebody_scopestr)
+        self.init_highest_var_vers_dict(elsebody_scopestr, self.merge_accessed_modified_vars(node))
 
         # visit children
         self.visit(node.expr, assign_lhs)
         self.visit_node_list(node.body, assign_lhs)
         self.visit_node_list(node.orelse, assign_lhs)
 
-        # stored highest var version
+        # store highest var version
         node.expr_highest_var_vers = self.con_scope_to_highest_var_vers[expr_scopestr]
         node.ifbody_highest_var_vers = self.con_scope_to_highest_var_vers[ifbody_scopestr]
         node.elsebody_highest_var_vers = self.con_scope_to_highest_var_vers[elsebody_scopestr]
@@ -247,6 +273,9 @@ class VariableVersionPass:
         print(f"  ExprHighestVers: {node.expr_highest_var_vers}")
         print(f"  IfBodyHighestVers: {node.ifbody_highest_var_vers}")
         print(f"  ElseBodyHighestVers: {node.elsebody_highest_var_vers}")
+        prev_scopestr = con_scope_to_str(node.con_scope[:-1])
+        print("Enclosing scope:")
+        print(f"  {prev_scopestr}: {self.con_scope_to_highest_var_vers[prev_scopestr] }")
 
         # increment versions of vars in previous scope that are modified by this container
         prev_scopestr = con_scope_to_str(node.con_scope[:-1])
@@ -265,7 +294,7 @@ class VariableVersionPass:
         # pass in as extra parameter
         # This won't work for module, instead we actually do want a defaultdict
         # since at the module it can "see" all variables
-        self.init_highest_var_vers_dict("module")
+        self.init_highest_var_vers_dict("module",[])
         self.visit_node_list(node.body, assign_lhs)
 
     @_visit.register
@@ -273,8 +302,10 @@ class VariableVersionPass:
         con_scopestr = con_scope_to_str(node.con_scope)
         # TODO: Should we not increment on first use even its LHS of an assigment?
         if assign_lhs:
+            print(f"On LHS: {node.name}:{node.id}" )
             # if not in, skip this increment
             self.incr_version_in_con_scope(con_scopestr, node.id)
+            print("after incr scope dict is",  self.con_scope_to_highest_var_vers[con_scopestr])
         node.version = self.get_highest_ver_in_con_scope(con_scopestr, node.id)
 
     @_visit.register

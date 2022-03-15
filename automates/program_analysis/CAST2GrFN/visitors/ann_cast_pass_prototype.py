@@ -29,7 +29,7 @@ class AnnCastPass:
         return [self.visit(node) for node in node_list]
 
     @singledispatchmethod
-    def _visit(self, node: AnnCastAstNode):
+    def _visit(self, node: AnnCastNode):
         """
         Internal visit
         """

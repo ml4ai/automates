@@ -1,10 +1,18 @@
 import typing
 from collections import defaultdict
 from functools import singledispatchmethod
+from dataclasses import dataclass
 import copy
 
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 
+@dataclass
+class VariableIdentifier:
+    namespace: str
+    scope: str
+    var_name: str
+    index: int
+    metadata: List
 
 def merge_vars(incoming_vars: Dict, outgoing_vars: Dict) -> Dict:
     """
@@ -18,7 +26,6 @@ def merge_vars(incoming_vars: Dict, outgoing_vars: Dict) -> Dict:
     to_return = {}
 
     compare_versions = lambda n1, n2: n1 if n1.version > n2.version else n2
-
 
     # the update method mutates and returns None, so we call them
     # on seperate lines
@@ -38,6 +45,13 @@ def merge_vars(incoming_vars: Dict, outgoing_vars: Dict) -> Dict:
     return to_return
 
 
+def make_grfn_variable(node: AnnCastNode):
+    return VariableIdentifier("default_ns", 
+                               con_scope_to_str(node.con_scope), 
+                               node.name, 
+                               node.version,
+                               [])
+
 # For DEBUGGING - make a string of the variable dictionary
 def mkstr(var_dict):
     s = "{"
@@ -55,17 +69,6 @@ class IncomingOutgoingPass:
         incoming_vars = {}
         for node in self.ann_cast.nodes:
             outgoing_vars = self.visit(node, incoming_vars)
-
-    def collect_function_defs(self, node: AnnCastModule) -> Dict:
-        """
-        Returns a dict mapping each string function name to
-        the FunctionDef node for the functions defined in this 
-        Module
-        """
-        nodes_to_consider = [n for n in node.body if isinstance(n, FunctionDef)]
-        make_function = lambda func_def: (func_def.name, func_def)
-
-        return dict(map(make_function, nodes_to_consider))
 
     def collect_global_variables(self, node: AnnCastModule) -> Dict:
         """
@@ -124,7 +127,7 @@ class IncomingOutgoingPass:
         node.incoming_vars = incoming_vars
         # visit RHS first since it may update variables
         outgoing_vars = self.visit(node.right, incoming_vars)
-        #print(f"in Assignment after visit RHS outgoing_vars: ", mkstr(outgoing_vars))
+        print(f"in Assignment after visit RHS outgoing_vars: ", mkstr(outgoing_vars))
 
         lhs = node.left
         assert(isinstance(lhs, AnnCastVar))
@@ -134,9 +137,11 @@ class IncomingOutgoingPass:
         #        an indexed list, parallel assignment w/ tuple, etc, on the LHS
         assert(isinstance(name_node, AnnCastName))
 
-        #print(f"in Assignment name node on lhs: {name_node.name} {name_node.id}")
+        #TODO - Create the GrFN var and add to the dictionary
+
+        print(f"in Assignment name node on lhs: {name_node.name} {name_node.id}")
         outgoing_vars = merge_vars(outgoing_vars, {name_node.id: name_node})
-        #print(f"in Assignment after merge outgoing_vars: ", mkstr(outgoing_vars))
+        print(f"in Assignment after merge outgoing_vars: ", mkstr(outgoing_vars))
         node.outgoing_vars = outgoing_vars
 
         return node.outgoing_vars
@@ -187,11 +192,16 @@ class IncomingOutgoingPass:
         """
         """
 
+        print(f"FunctionDef con_scop: {node.con_scope}")
+
         # Each argument is a AnnCastVar node
-        # Add each Name node to incoming_vars
+        # create a GrFN VariableIdentifier for each argument
+        # and add it to the collection of GrFN variables
+        # Also add it to the incoming_vars
         for arg in node.func_args:
             name = arg.val
             incoming_vars[name.id] = name
+            self.var_ids_to_grfn_var[name.id] = make_grfn_var(name)
         
         node.incoming_vars = incoming_vars
         print(f"For function {node.name} :incoming_vars = {incoming_vars}")
@@ -265,7 +275,21 @@ class IncomingOutgoingPass:
 
     @_visit.register
     def visit_model_if(self, node: AnnCastModelIf, incoming_vars: Dict):
+
+        # We don't really need to save these in an attribute
         node.incoming_vars = incoming_vars
+
+        # TODO
+        # set the node.incoming_interface_in to the  incoming_vars
+
+        # TODO
+        # For each variable in the union of the modified and accessed vars,
+        # create a GrFN var and add it to the collection of GrFN vars
+        # These variables will be assgined to node.incoming_interface_out
+
+        # Note: the interface will need to 'connect' the GrFN variables, i.e.,
+        #       connect incoming_interface_in to incoming_interfacae_out
+
         outgoing_vars = self.visit(node.expr, incoming_vars)
 
         # since the conditional expression may have side-effects,
@@ -283,8 +307,8 @@ class IncomingOutgoingPass:
             ifoutgoing_vars = merge_vars(ifoutgoing_vars_new, ifoutgoing_vars)
 
         # If a variable is modified in the if block, it will appear in the 
-        # ifoutgoing variables. The lambda made for the conditional will connect 
-        # any outgoing variable to the version that came into the if statement
+        # ifoutgoing variables. 
+        print(f"in If: ifoutgoing_vars: ", mkstr(ifoutgoing_vars))
 
         # get the outgoing vars on the else branch if it exists; the incoming variables
         # should be those obtained from visiting expr
@@ -296,8 +320,9 @@ class IncomingOutgoingPass:
             elseoutgoing_vars = merge_vars(elseoutgoing_vars_new, elseoutgoing_vars)
 
         # If a variable is modified in the else block, it will appear in the 
-        # elseoutgoing variables. The lambda made for the conditional will connect 
-        # any outgoing variable to the version that came into the if statement
+        # elseoutgoing variables. 
+        print(f"in If: elseoutgoing_vars: ", mkstr(elseoutgoing_vars))
+
 
         # merge the outgoing variables from the if and else branches 
         outgoing_vars = merge_vars(ifoutgoing_vars, elseoutgoing_vars)
