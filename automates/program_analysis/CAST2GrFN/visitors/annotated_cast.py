@@ -30,6 +30,8 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
+import typing
+
 # used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
 CON_STR_SEP = "."
 
@@ -41,12 +43,32 @@ IFBODY = "if-body"
 LOOPEXPR = "loop-expr"
 IFEXPR = "if-expr"
 
-def con_scope_to_str(scope: List):
+def con_scope_to_str(scope: typing.List):
     return CON_STR_SEP.join(scope)
 
 def var_dict_to_str(str_start, vars):
     vars_id_and_names = [f" {name}: {id}" for id, name in vars.items()]
     return str_start + ", ".join(vars_id_and_names)
+
+def ann_cast_name_to_fullid(node):
+    """
+    Returns a string representing the fullid of the name node.
+    The fullid has format
+      'name.id.version.con_scopestr'
+    This should only be called after both VariableVersionPass and 
+    ContainerScopePass have completed
+    """
+    pieces = [node.name, str(node.id), str(node.version), con_scope_to_str(node.con_scope)]
+    return CON_STR_SEP.join(pieces)
+
+def build_fullid(var_name: str, id: int, version: int, con_scopestr: str):
+    """
+    Returns a string representing the fullid.
+    The fullid has format
+      'var_name.id.version.con_scopestr'
+    """
+    pieces = [var_name, str(id), str(version), con_scopestr]
+    return CON_STR_SEP.join(pieces)
 
 class AnnCast:
     def __init__(self, ann_nodes: List):
@@ -62,9 +84,10 @@ class AnnCast:
         # For now, it maps a str (the name attribute of a FunctionDef) to the FunctionDef node.
         # For now, this dict will be filled out during the ContainerScopePass.  Possibly this could be moved to a 
         # different pass, but will need to be during/after IdCollapsePass
-        self.func_names_to_defs = {}
+        self.func_name_to_def = {}
         self.grfn_id_to_grfn_var = {}
-        self.fullid_to_grf_id = {}
+        # the fullid of a AnnCastName node is a string which includes its variable name, numerical id,  version, and scope
+        self.fullid_to_grfn_id = {}
 
 class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):

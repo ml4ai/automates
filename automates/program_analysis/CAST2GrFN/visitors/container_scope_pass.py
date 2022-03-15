@@ -156,8 +156,8 @@ class ContainerScopePass:
     def visit_function_def(
         self, node: AnnCastFunctionDef, enclosing_con_scope, assign_lhs
     ):
-        # Add this AnnCastFunctionDef node to the AnnotatedCast `func_names_to_def` dict
-        self.ann_cast.func_names_to_defs[node.name] = node
+        # Add this AnnCastFunctionDef node to the AnnotatedCast `func_name_to_def` dict
+        self.ann_cast.func_name_to_def[node.name] = node
 
         # Modify scope to include the function name
         funcscope = enclosing_con_scope + [node.name]

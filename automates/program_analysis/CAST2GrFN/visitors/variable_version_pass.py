@@ -142,7 +142,7 @@ class VariableVersionPass:
         # TODO: Once FunctionDef store Name nodes, convert to ID
         # TODO: func_id = node.func.id
         func_name = node.func.name
-        function_def = self.ann_cast.func_names_to_defs[func_name]
+        function_def = self.ann_cast.func_name_to_def[func_name]
         # the enclosing container scope is stored in the Call's AnnCastName node
         con_scopestr = con_scope_to_str(node.func.con_scope)
         self.incr_vars_in_con_scope(con_scopestr, function_def.modified_vars)

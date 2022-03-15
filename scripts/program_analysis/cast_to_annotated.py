@@ -10,6 +10,7 @@ from automates.program_analysis.CAST2GrFN.visitors.id_collapse_pass import IdCol
 from automates.program_analysis.CAST2GrFN.visitors.container_scope_pass import ContainerScopePass
 from automates.program_analysis.CAST2GrFN.visitors.variable_version_pass import VariableVersionPass
 from automates.program_analysis.CAST2GrFN.visitors.incoming_outgoing_pass import IncomingOutgoingPass
+from automates.program_analysis.CAST2GrFN.visitors.grfn_var_creation_pass import GrfnVarCreationPass
 
 
 def main():
@@ -41,8 +42,11 @@ def main():
     print("\nCalling VariableVersionPass-------------------")
     VariableVersionPass(annotated_cast)
 
-    print("\nCalling IncomingOutgoingPass-------------------")
-    IncomingOutgoingPass(annotated_cast)
+    print("\nCalling GrfnVarCreationPass-------------------")
+    GrfnVarCreationPass(annotated_cast)
+
+    # print("\nCalling IncomingOutgoingPass-------------------")
+    # IncomingOutgoingPass(annotated_cast)
 
     V2 = CASTToAGraphVisitor(annotated_cast)
 
