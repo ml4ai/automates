@@ -63,8 +63,8 @@ class AnnCast:
         # For now, this dict will be filled out during the ContainerScopePass.  Possibly this could be moved to a 
         # different pass, but will need to be during/after IdCollapsePass
         self.func_names_to_defs = {}
-        self.var_ids_to_grfn_var = {}
-        self.scope_to_grfs_vars = {}
+        self.grfn_id_to_grfn_var = {}
+        self.fullid_to_grf_id = {}
 
 class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):

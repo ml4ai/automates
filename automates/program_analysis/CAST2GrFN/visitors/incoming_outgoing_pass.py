@@ -279,6 +279,10 @@ class IncomingOutgoingPass:
         # We don't really need to save these in an attribute
         node.incoming_vars = incoming_vars
 
+        #incoming = { "x.1.module.main.v2": Gr2, "y.0.module.main.v2": ,Gr3}
+        #incoming_interface_out = { "x.1.module.main.if0.v0": Gr5, "y.0.module.main.if0.v0" :Gr6}
+        # Also put the if0.if-body, expr and else-body scopes in the global dictionary
+
         # TODO
         # set the node.incoming_interface_in to the  incoming_vars
 
@@ -288,7 +292,7 @@ class IncomingOutgoingPass:
         # These variables will be assgined to node.incoming_interface_out
 
         # Note: the interface will need to 'connect' the GrFN variables, i.e.,
-        #       connect incoming_interface_in to incoming_interfacae_out
+        #       connect incoming_interface_in to incoming_interface_out
 
         outgoing_vars = self.visit(node.expr, incoming_vars)
 
@@ -301,10 +305,16 @@ class IncomingOutgoingPass:
         # should be those obtained from visiting expr
         ifincoming_vars = incoming_vars.copy()
         ifoutgoing_vars = {}
+        # { "x.1.module.main.if0.ifbody.v0": Gr? , "y.0.module.main.if0.v0" :Gr6}
         for n in node.body:
             ifoutgoing_vars_new = self.visit(n, ifincoming_vars)
             ifincoming_vars = merge_vars(ifincoming_vars, ifoutgoing_vars_new)
             ifoutgoing_vars = merge_vars(ifoutgoing_vars_new, ifoutgoing_vars)
+
+        #
+        #incoming_interface_out = { "x.1.module.main.if0.v0": Gr5, "y.0.module.main.if0.v0" :Gr6}
+        # this node's modified variables need to be assignmed to outgoing_interface_in
+        #outgoing_interface_in = { "x.1.module.main.if0.v1" : Gr?}
 
         # If a variable is modified in the if block, it will appear in the 
         # ifoutgoing variables. 
