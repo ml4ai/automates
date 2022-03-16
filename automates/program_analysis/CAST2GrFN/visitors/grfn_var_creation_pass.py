@@ -94,21 +94,19 @@ class GrfnVarCreationPass:
         self.ann_cast.fullid_to_grfn_id = self.fullid_to_grfn_id
         self.ann_cast.grfn_id_to_grfn_var = self.grfn_id_to_grfn_var
 
-    def create_grfn_vars_helper(self, var_name: str, id: int, version: int, con_scopestr: str, endings: typing.List):
+    def store_grfn_var(self, fullid: str, grfn_var: VariableNode):
         """
-        Create GrFN variables and cache them in GrFN state dicts.
-        Uses the list of `endings` to generate additional variables for the branches of
-        a ModelIf and Loop nodes
+        Cache `grfn` in `grfn_id_to_grfn_var` and add `fullid` to `fullid_to_grfn_id`
         """
-        grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
-        fullid = build_fullid(var_name, id, version, con_scopestr)
         self.fullid_to_grfn_id[fullid] = grfn_var.uid
         self.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
-        # link up the variables along each branch of endings to use the same GrFN variable
-        for ending in endings:
-            scopestr = con_scopestr + CON_STR_SEP + ending
-            fullid = build_fullid(var_name, id, version, scopestr)
-            self.fullid_to_grfn_id[fullid] = grfn_var.uid
+
+    def link_grfn_vars(self, src_fullid: str, tgt_fullid: str):
+        """
+        Put the GrFN id associated with `tgt_fullid` into dict `fullid_to_grfn_id` for key
+        `src_fullid` 
+        """
+        self.fullid_to_grfn_id[src_fullid] = self.fullid_to_grfn_id[tgt_fullid]
         
     def create_grfn_vars_function_def(self, node: AnnCastFunctionDef):
         """
@@ -124,15 +122,41 @@ class GrfnVarCreationPass:
         for id, var_name in used_vars.items():
             # we introduce version 0 at the top of the container
             version = 0
-            endings = []
-            self.create_grfn_vars_helper(var_name, id, version, con_scopestr, endings)
+            grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
+            fullid = build_fullid(var_name, id, version, con_scopestr)
+            self.store_grfn_var(fullid, grfn_var)
+
+    def link_model_if_bodies_grfn_vars(self, node:AnnCastModelIf):
+        """
+        Links version zero of loop-body and else-body variables to their highest 
+        versions inside loop-expr.  
+        This should be called after visiting if-expr.
+        """
+        # union modified and accessed vars
+        used_vars = {**node.modified_vars, **node.accessed_vars}
+        con_scopestr = con_scope_to_str(node.con_scope)
+
+        # link up all used_vars to the highest version GrFN variable from if-expr
+        body_version = 0
+        for id, var_name in used_vars.items():
+            expr_version = node.expr_highest_var_vers[id]
+            expr_scopestr = con_scopestr + CON_STR_SEP + IFEXPR
+            expr_fullid = build_fullid(var_name, id, expr_version, expr_scopestr)
+            for ending in [IFBODY, ELSEBODY]:
+                body_scopestr = con_scopestr + CON_STR_SEP + ending
+                body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
+
+                self.link_grfn_vars(body_fullid, expr_fullid)
 
     def create_grfn_vars_model_if(self, node: AnnCastModelIf):
         """
         Create GrFN `VariableNode`s for variables which are accessed
-        or modified by this ModelIf container
-        This creates a version zero of all of these variables that will
-        be used on the top interface
+        or modified by this ModelIf container. This does the following:
+        
+            - creates a version zero GrFN variable of all used variables. 
+              These GrFN variables will be used on the top interface.
+            - links version zero of loop-expr variables to created version zero GrFN variables
+            - creates version one GrFN variables to be used at the bottom decision node
         """
         # union modified and accessed vars
         used_vars = {**node.modified_vars, **node.accessed_vars}
@@ -141,22 +165,33 @@ class GrfnVarCreationPass:
         for id, var_name in used_vars.items():
             # we introduce version 0 at the top of the container
             version = 0
-            endings = [IFEXPR, IFBODY, ELSEBODY]
-            self.create_grfn_vars_helper(var_name, id, version, con_scopestr, endings)
+            grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
+            fullid = build_fullid(var_name, id, version, con_scopestr)
+            self.store_grfn_var(fullid, grfn_var)
+
+            # link version 0 expr variables
+            expr_scopestr = con_scopestr + CON_STR_SEP + IFEXPR
+            expr_fullid = build_fullid(var_name, id, version, expr_scopestr)
+            self.link_grfn_vars(expr_fullid, fullid)
 
         for id, var_name in node.modified_vars.items():
-            # and we introduct version 1 to be used as the output of the Decision node
+            # we introduce version 1 to be used as the output of the Decision node
             # for modified variables
             version = 1
-            endings = []
-            self.create_grfn_vars_helper(var_name, id, version, con_scopestr, endings)
+            grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
+            fullid = build_fullid(var_name, id, version, con_scopestr)
+            self.store_grfn_var(fullid, grfn_var)
 
     def create_grfn_vars_loop(self, node: AnnCastLoop):
         """
         Create GrFN `VariableNode`s for variables which are accessed
-        or modified by this Loop container
-        This creates a version zero of all of these variables that will
-        be used on the top interface
+        or modified by this Loop container.  This does the following:
+            - creates a version zero GrFN variable for all used variables. 
+              These GrFN variables will be used on the top interface.
+            - creates a version 2 GrFN variable for all used variables. 
+              These GrFN variables are used in the when evaluating loop-expr.
+            - links version 0 variables inside loop-expr to the created version 2 GrFN variables
+            - TODO: decide what to do for exiting loop
         """
         # union modified and accessed vars
         used_vars = {**node.modified_vars, **node.accessed_vars}
@@ -165,8 +200,67 @@ class GrfnVarCreationPass:
         for id, var_name in used_vars.items():
             # we introduce version 0 at the top of a container
             version = 0
-            endings = [LOOPEXPR, LOOPBODY]
-            self.create_grfn_vars_helper(var_name, id, version, con_scopestr, endings)
+            grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
+            fullid = build_fullid(var_name, id, version, con_scopestr)
+            self.store_grfn_var(fullid, grfn_var)
+
+        for id, var_name in node.modified_vars.items():
+            # we introduce version 2 to be used for loop-expr, and they
+            # are the output of a decision node between version 0 variables
+            # and the highest version inside loop-body
+            version = 2
+            grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
+            fullid = build_fullid(var_name, id, version, con_scopestr)
+            self.store_grfn_var(fullid, grfn_var)
+
+            # link version 0 expr variables to created version 2
+            expr_version = 0
+            expr_scopestr = con_scopestr + CON_STR_SEP + LOOPEXPR
+            expr_fullid = build_fullid(var_name, id, expr_version, expr_scopestr)
+            self.link_grfn_vars(expr_fullid, fullid)
+
+    def link_loop_body_entry_grfn_vars(self, node:AnnCastLoop):
+        """
+        Links version zero of loop-body variables to their highest 
+        versions inside loop-expr.  
+        This should be called after visiting loop-expr.
+        """
+        # union modified and accessed vars
+        used_vars = {**node.modified_vars, **node.accessed_vars}
+        con_scopestr = con_scope_to_str(node.con_scope)
+
+        # link up all used_vars to the highest version GrFN variable from loop-expr
+        body_version = 0
+        for id, var_name in used_vars.items():
+            expr_version = node.expr_highest_var_vers[id]
+            expr_scopestr = con_scopestr + CON_STR_SEP + LOOPEXPR
+            expr_fullid = build_fullid(var_name, id, expr_version, expr_scopestr)
+            body_scopestr = con_scopestr + CON_STR_SEP + LOOPBODY
+            body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
+
+            self.link_grfn_vars(body_fullid, expr_fullid)
+
+
+    def link_loop_body_exit_grfn_vars(self, node:AnnCastLoop):
+        """
+        Links version one of loop scope variables to their highest version
+        inside loop-body.   
+        This should be called after visiting loop-body.
+        """
+        # union modified and accessed vars
+        used_vars = {**node.modified_vars, **node.accessed_vars}
+        con_scopestr = con_scope_to_str(node.con_scope)
+
+        # link up v1 variables to the highest version GrFN variable from loop-body
+        for id, var_name in used_vars.items():
+            body_version = node.body_highest_var_vers[id]
+            body_scopestr = con_scopestr + CON_STR_SEP + LOOPBODY
+            body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
+            con_version = 1
+            con_fullid = build_fullid(var_name, id, con_version, con_scopestr)
+
+            self.link_grfn_vars(con_fullid, body_fullid)
+
 
     def print_created_grfn_vars(self):
         print("Created the follwing GrFN variables")
@@ -240,7 +334,9 @@ class GrfnVarCreationPass:
         self.create_grfn_vars_loop(node)
         # visit children
         self.visit(node.expr)
+        self.link_loop_body_entry_grfn_vars(node)
         self.visit_node_list(node.body)
+        self.link_loop_body_exit_grfn_vars(node)
 
     @_visit.register
     def visit_model_break(self, node: AnnCastModelBreak):
@@ -255,6 +351,8 @@ class GrfnVarCreationPass:
         self.create_grfn_vars_model_if(node)
         # visit children
         self.visit(node.expr)
+        # link highest version vars inside expr to bodies
+        self.link_model_if_bodies_grfn_vars(node)
         self.visit_node_list(node.body)
         self.visit_node_list(node.orelse)
 
