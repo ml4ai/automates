@@ -4,20 +4,8 @@ from functools import singledispatchmethod
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 
 from automates.model_assembly.structures import (
-    # GenericContainer,
-    # LoopContainer,
-    # GenericStmt,
-    # CallStmt,
-    # OperatorStmt,
-    # LambdaStmt,
     GenericIdentifier,
-    # ContainerIdentifier,
     VariableIdentifier,
-    # TypeIdentifier,
-    # ObjectDefinition,
-    # VariableDefinition,
-    # TypeDefinition,
-    # GrFNExecutionException,
 )
 
 from automates.model_assembly.networks import (
@@ -25,43 +13,16 @@ from automates.model_assembly.networks import (
     VariableNode
 )
 
-def create_grfn_var_from_name_node(node: AnnCastName):
-    """
-    Creates a `VariableNode` for this `AnnCastName` node.
-    """
-    con_scopestr = con_scope_to_str(node.con_scope)
-    return create_grfn_var(node.name, node.id, node.version, con_scopestr)
-
-def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
-    """
-    Creates a GrFN `VariableNode` using the parameters
-    """
-    # TODO: For now, we are passing in an empty Metadata
-    # list.  We should update this to include the necessary
-    # metadata
-    # We may also need to update the namespace and scope 
-    # we provide
-    identifier = VariableIdentifier("default_ns", con_scopestr, var_name, version)
-
-    # TODO: change to using UUIDs?
-    # uid = GenericNode.create_node_id()
-    uid = build_fullid(var_name, id, version, con_scopestr)
-    # TODO: fill in metadata
-    metadata = []
-    return VariableNode(uid, identifier, metadata)
 
 class GrfnVarCreationPass:
     def __init__(self, ann_cast: AnnCast):
         self.ann_cast = ann_cast
         self.nodes = self.ann_cast.nodes
-        self.grfn_id_to_grfn_var = {}
         # the fullid of a AnnCastName node is a string which includes its variable name, numerical id,  version, and scope
-        self.fullid_to_grfn_id = {}
         for node in self.ann_cast.nodes:
             self.visit(node)
 
         self.print_created_grfn_vars()
-        self.store_grfn_state_in_ann_cast()
 
     def visit(self, node: AnnCastNode):
         """
@@ -85,28 +46,30 @@ class GrfnVarCreationPass:
         this AnnCastName node
         """
         fullid = ann_cast_name_to_fullid(node)
-        return self.grfn_id_to_grfn_var[self.fullid_to_grfn_id[fullid]]
+        return self.ann_cast.grfn_id_to_grfn_var[self.ann_cast.fullid_to_grfn_id[fullid]]
 
-    def store_grfn_state_in_ann_cast(self):
-        """
-        Update annotated CAST to retain the GrFN variable data
-        """
-        self.ann_cast.fullid_to_grfn_id = self.fullid_to_grfn_id
-        self.ann_cast.grfn_id_to_grfn_var = self.grfn_id_to_grfn_var
+    # def store_grfn_state_in_ann_cast(self):
+    #     """
+    #     Update annotated CAST to retain the GrFN variable data
+    #     """
+    #     self.ann_cast.fullid_to_grfn_id = self.ann_cast.fullid_to_grfn_id
+    #     self.ann_cast.grfn_id_to_grfn_var = self.ann_cast.grfn_id_to_grfn_var
 
+    # TODO: possibly remove this and replace calls to this with AnnCast.store_grfn_var
+    # Same with link_grfn_vars and get_grfn_var
     def store_grfn_var(self, fullid: str, grfn_var: VariableNode):
         """
         Cache `grfn` in `grfn_id_to_grfn_var` and add `fullid` to `fullid_to_grfn_id`
         """
-        self.fullid_to_grfn_id[fullid] = grfn_var.uid
-        self.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
+        self.ann_cast.fullid_to_grfn_id[fullid] = grfn_var.uid
+        self.ann_cast.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
 
     def link_grfn_vars(self, src_fullid: str, tgt_fullid: str):
         """
         Put the GrFN id associated with `tgt_fullid` into dict `fullid_to_grfn_id` for key
         `src_fullid` 
         """
-        self.fullid_to_grfn_id[src_fullid] = self.fullid_to_grfn_id[tgt_fullid]
+        self.ann_cast.fullid_to_grfn_id[src_fullid] = self.ann_cast.fullid_to_grfn_id[tgt_fullid]
         
     def create_grfn_vars_function_def(self, node: AnnCastFunctionDef):
         """
@@ -265,11 +228,11 @@ class GrfnVarCreationPass:
     def print_created_grfn_vars(self):
         print("Created the follwing GrFN variables")
         print("-"*50)
-        print(f"{'fullid':<50}{'grfn_id':<50}{'index':<10}")
-        print(f"{'------':<50}{'-------':<50}{'-----':<10}")
-        for fullid, grfn_id in self.fullid_to_grfn_id.items():
-            grfn_var = self.grfn_id_to_grfn_var[grfn_id]
-            print(f"{fullid:<50}{grfn_id:<50}{grfn_var.identifier.index:<10}")
+        print(f"{'fullid':<70}{'grfn_id':<70}{'index':<2}")
+        print(f"{'------':<70}{'-------':<70}{'-----':<2}")
+        for fullid, grfn_id in self.ann_cast.fullid_to_grfn_id.items():
+            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+            print(f"{fullid:<70}{grfn_id:<70}{grfn_var.identifier.index:<2}")
 
 
     @singledispatchmethod
@@ -368,13 +331,13 @@ class GrfnVarCreationPass:
     def visit_name(self, node: AnnCastName):
         fullid = ann_cast_name_to_fullid(node)
         # if we haven't already created the GrFN `VariableNode`, create it
-        if fullid not in self.fullid_to_grfn_id:
+        if fullid not in self.ann_cast.fullid_to_grfn_id:
             grfn_var = create_grfn_var_from_name_node(node)
-            self.fullid_to_grfn_id[fullid] = grfn_var.uid
-            self.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
+            self.ann_cast.fullid_to_grfn_id[fullid] = grfn_var.uid
+            self.ann_cast.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
 
         # now, store the grfn_id in the nane node
-        node.grfn_id = self.fullid_to_grfn_id[fullid]
+        node.grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
 
     @_visit.register
     def visit_number(self, node: AnnCastNumber):

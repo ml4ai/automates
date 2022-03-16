@@ -42,8 +42,8 @@ def main():
     print("\nCalling VariableVersionPass-------------------")
     VariableVersionPass(annotated_cast)
 
-    # print("\nCalling GrfnVarCreationPass-------------------")
-    # GrfnVarCreationPass(annotated_cast)
+    print("\nCalling GrfnVarCreationPass-------------------")
+    GrfnVarCreationPass(annotated_cast)
 
     # print("\nCalling IncomingOutgoingPass-------------------")
     # IncomingOutgoingPass(annotated_cast)

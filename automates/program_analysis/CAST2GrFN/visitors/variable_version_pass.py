@@ -54,10 +54,12 @@ class VariableVersionPass:
         """
         return self.con_scope_to_highest_var_vers[con_scopestr][id]
 
-    def incr_version_in_con_scope(self, con_scopestr, id):
+    def incr_version_in_con_scope(self, con_scopestr: str, id: int, var_name: str):
         """
         Grab the next version of `id` in scope for `con_scopestr`
         Should only be called after `con_scopestr` is in the `self.con_scope_to_highest_var_vers`
+
+        Also creates a GrFN variable for the newly added version
         """
         print(f"incr: id={id}  scope dictionary {con_scopestr}={self.con_scope_to_highest_var_vers[con_scopestr]} ")
         # TODO: if id is in the container scope, increment it
@@ -69,13 +71,19 @@ class VariableVersionPass:
             #print(f"incr: id={id} is NOT in dict")
             self.con_scope_to_highest_var_vers[con_scopestr][id] = 0
 
+        # Create a GrFN variable for the newly created version
+        version = self.con_scope_to_highest_var_vers[con_scopestr][id]
+        grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
+        fullid = build_fullid(var_name, id, version, con_scopestr)
+        self.ann_cast.store_grfn_var(fullid, grfn_var)
+
     def incr_vars_in_con_scope(self, scopestr, vars):
         """
         This will increment all versions of variables in `scopestr` that are
-        in the iterable `vars` which contains variable ids
+        in the dict `vars` which contains variable ids mapped to AnnCastName nodes
         """
-        for var_id in vars:
-            self.incr_version_in_con_scope(scopestr, var_id)
+        for var_id, var_name in vars.items():
+            self.incr_version_in_con_scope(scopestr, var_id, var_name)
 
     def merge_accessed_modified_vars(self, node):
         """
@@ -166,7 +174,8 @@ class VariableVersionPass:
         # increment versions of vars in previous scope that are modified by this container
         prev_scopestr = con_scope_to_str(node.con_scope[:-1])
         for var_id in node.modified_vars:
-            self.incr_version_in_con_scope(prev_scopestr, var_id)
+            var_name = node.modified_vars[var_id]
+            self.incr_version_in_con_scope(prev_scopestr, var_id, var_name)
 
         # Initialize scope_to_highest_var_vers
         con_scopestr = con_scope_to_str(node.con_scope)
@@ -304,7 +313,7 @@ class VariableVersionPass:
         if assign_lhs:
             print(f"On LHS: {node.name}:{node.id}" )
             # if not in, skip this increment
-            self.incr_version_in_con_scope(con_scopestr, node.id)
+            self.incr_version_in_con_scope(con_scopestr, node.id, node.name)
             print("after incr scope dict is",  self.con_scope_to_highest_var_vers[con_scopestr])
         node.version = self.get_highest_ver_in_con_scope(con_scopestr, node.id)
 

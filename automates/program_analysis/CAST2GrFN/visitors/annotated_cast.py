@@ -30,6 +30,16 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
+from automates.model_assembly.structures import (
+    GenericIdentifier,
+    VariableIdentifier,
+)
+
+from automates.model_assembly.networks import (
+    GenericNode,
+    VariableNode
+)
+
 import typing
 
 # used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
@@ -69,6 +79,31 @@ def build_fullid(var_name: str, id: int, version: int, con_scopestr: str):
     """
     pieces = [var_name, str(id), str(version), con_scopestr]
     return CON_STR_SEP.join(pieces)
+    
+def create_grfn_var_from_name_node(node):
+    """
+    Creates a `VariableNode` for this `AnnCastName` node.
+    """
+    con_scopestr = con_scope_to_str(node.con_scope)
+    return create_grfn_var(node.name, node.id, node.version, con_scopestr)
+
+def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
+    """
+    Creates a GrFN `VariableNode` using the parameters
+    """
+    # TODO: For now, we are passing in an empty Metadata
+    # list.  We should update this to include the necessary
+    # metadata
+    # We may also need to update the namespace and scope 
+    # we provide
+    identifier = VariableIdentifier("default_ns", con_scopestr, var_name, version)
+
+    # TODO: change to using UUIDs?
+    # uid = GenericNode.create_node_id()
+    uid = build_fullid(var_name, id, version, con_scopestr)
+    # TODO: fill in metadata
+    metadata = []
+    return VariableNode(uid, identifier, metadata)
 
 class AnnCast:
     def __init__(self, ann_nodes: List):
@@ -88,6 +123,13 @@ class AnnCast:
         self.grfn_id_to_grfn_var = {}
         # the fullid of a AnnCastName node is a string which includes its variable name, numerical id,  version, and scope
         self.fullid_to_grfn_id = {}
+
+    def store_grfn_var(self, fullid: str, grfn_var: VariableNode):
+        """
+        Cache `grfn` in `grfn_id_to_grfn_var` and add `fullid` to `fullid_to_grfn_id`
+        """
+        self.fullid_to_grfn_id[fullid] = grfn_var.uid
+        self.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
 
 class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):
