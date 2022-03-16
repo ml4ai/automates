@@ -82,7 +82,7 @@ def build_fullid(var_name: str, id: int, version: int, con_scopestr: str):
     
 def create_grfn_var_from_name_node(node):
     """
-    Creates a `VariableNode` for this `AnnCastName` node.
+    Creates a GrFN `VariableNode` for this `AnnCastName` node.
     """
     con_scopestr = con_scope_to_str(node.con_scope)
     return create_grfn_var(node.name, node.id, node.version, con_scopestr)
@@ -121,12 +121,13 @@ class AnnCast:
         # different pass, but will need to be during/after IdCollapsePass
         self.func_name_to_def = {}
         self.grfn_id_to_grfn_var = {}
-        # the fullid of a AnnCastName node is a string which includes its variable name, numerical id,  version, and scope
+        # the fullid of a AnnCastName node is a string which includes its 
+        # variable name, numerical id, version, and scope
         self.fullid_to_grfn_id = {}
 
     def store_grfn_var(self, fullid: str, grfn_var: VariableNode):
         """
-        Cache `grfn` in `grfn_id_to_grfn_var` and add `fullid` to `fullid_to_grfn_id`
+        Cache `grfn_var` in `grfn_id_to_grfn_var` and add `fullid` to `fullid_to_grfn_id`
         """
         self.fullid_to_grfn_id[fullid] = grfn_var.uid
         self.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
@@ -224,10 +225,10 @@ class AnnCastFunctionDef(AnnCastNode):
         self.con_scope: typing.List
     
         # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
-        self.incoming_interface_in: typing.Dict
-        self.incoming_interface_out: typing.Dict
-        self.outgoing_interface_in: typing.Dict
-        self.outgoing_interface_out: typing.Dict
+        self.incoming_interface_in = {}
+        self.incoming_interface_out = {}
+        self.outgoing_interface_in = {}
+        self.outgoing_interface_out = {}
 
         # dict mapping Name id to highest version at end of "block"
         # TODO: What about using a default dict
@@ -273,15 +274,15 @@ class AnnCastLoop(AnnCastNode):
         self.body_highest_var_vers = {}
 
         # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
-        self.incoming_interface_in: typing.Dict
-        self.incoming_interface_out: typing.Dict
-        self.outgoing_interface_in: typing.Dict
-        self.outgoing_interface_out: typing.Dict
-        self.condition_in: typing.Dict
-        self.condition_out: typing.Dict
-        self.decision_in: typing.Dict
-        self.decision_out: typing.Dict
-        self.exit: typing.Dict
+        self.incoming_interface_in = {}
+        self.incoming_interface_out = {}
+        self.outgoing_interface_in = {}
+        self.outgoing_interface_out = {}
+        self.condition_in = {}
+        self.condition_out = {}
+        self.decision_in = {}
+        self.decision_out = {}
+        self.exit: typing = {}
 
         # TODO: Might delete below attributes
         # Dicts mapping strings to Names
@@ -335,14 +336,14 @@ class AnnCastModelIf(AnnCastNode):
         self.elsebody_highest_var_vers = {}
 
         # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
-        self.incoming_interface_in: typing.Dict
-        self.incoming_interface_out: typing.Dict
-        self.outgoing_interface_in: typing.Dict
-        self.outgoing_interface_out: typing.Dict
-        self.condition_in: typing.Dict
-        self.condition_out: typing.Dict
-        self.decision_in: typing.Dict
-        self.decision_out: typing.Dict
+        self.incoming_interface_in = {}
+        self.incoming_interface_out = {}
+        self.outgoing_interface_in = {}
+        self.outgoing_interface_out = {}
+        self.condition_in = {}
+        self.condition_out = {}
+        self.decision_in = {}
+        self.decision_out = {}
 
         self.source_refs = source_refs
 
