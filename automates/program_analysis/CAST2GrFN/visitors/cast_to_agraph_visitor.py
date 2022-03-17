@@ -388,7 +388,8 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
         accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
-        func_label = f"Function: {node.name}\n{modified_vars_str}\n{accessed_vars_str}"
+        highest_ver = var_dict_to_str("HiVer: ", node.body_highest_var_vers)
+        func_label = f"Function: {node.name}\n{modified_vars_str}\n{accessed_vars_str}\n{highest_ver}"
         self.G.add_node(node_uid, label=func_label)
         self.G.add_node(args_node, label="Arguments")
         self.G.add_node(body_node, label="Body")
@@ -590,7 +591,10 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
         accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
-        if_label = f"If\n{modified_vars_str}\n{accessed_vars_str}"
+        exp_highest_ver = var_dict_to_str("HiVer_expr: ", node.expr_highest_var_vers)
+        ifb_highest_ver = var_dict_to_str("HiVer_body: ", node.ifbody_highest_var_vers)
+        elseb_highest_ver = var_dict_to_str("HiVer_else: ", node.elsebody_highest_var_vers)
+        if_label = f"If\n{modified_vars_str}\n{accessed_vars_str}\n{exp_highest_ver}\n{ifb_highest_ver}\n{elseb_highest_ver}"
         self.G.add_node(node_uid, label=if_label)
         self.G.add_node(test_uid, label="Test")
         self.G.add_edge(node_uid, test_uid)

@@ -225,10 +225,10 @@ class AnnCastFunctionDef(AnnCastNode):
         self.con_scope: typing.List
     
         # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
-        self.incoming_interface_in = {}
-        self.incoming_interface_out = {}
-        self.outgoing_interface_in = {}
-        self.outgoing_interface_out = {}
+        self.top_interface_in = {}
+        self.top_interface_out = {}
+        self.bot_interface_in = {}
+        self.bot_interface_out = {}
 
         # dict mapping Name id to highest version at end of "block"
         # TODO: What about using a default dict
@@ -274,10 +274,10 @@ class AnnCastLoop(AnnCastNode):
         self.body_highest_var_vers = {}
 
         # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
-        self.incoming_interface_in = {}
-        self.incoming_interface_out = {}
-        self.outgoing_interface_in = {}
-        self.outgoing_interface_out = {}
+        self.top_interface_in = {}
+        self.top_interface_out = {}
+        self.bot_interface_in = {}
+        self.bot_interface_out = {}
         self.condition_in = {}
         self.condition_out = {}
         self.decision_in = {}
@@ -336,10 +336,10 @@ class AnnCastModelIf(AnnCastNode):
         self.elsebody_highest_var_vers = {}
 
         # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
-        self.incoming_interface_in = {}
-        self.incoming_interface_out = {}
-        self.outgoing_interface_in = {}
-        self.outgoing_interface_out = {}
+        self.top_interface_in = {}
+        self.top_interface_out = {}
+        self.bot_interface_in = {}
+        self.bot_interface_out = {}
         self.condition_in = {}
         self.condition_out = {}
         self.decision_in = {}

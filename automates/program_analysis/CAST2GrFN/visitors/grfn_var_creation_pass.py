@@ -89,20 +89,20 @@ class GrfnVarCreationPass:
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.store_grfn_var(fullid, grfn_var)
-            # TODO/IDEA: add fullid to incoming_interface_out
+            # TODO/IDEA: add fullid to top_interface_out
             # map the variable unique id to the grfn fullid
-            node.incoming_interface_out[id] = fullid
+            node.top_interface_out[id] = fullid
 
-    def add_modified_vars_to_outgoing_interface(self, node: AnnCastFunctionDef):
+    def add_modified_vars_to_bot_interface(self, node: AnnCastFunctionDef):
         """
         Add the highest version of the modified vars of this FunctionDef container
-        to its `outgoing_interface_out` variables
+        to its `bot_interface_in` variables
         """
         con_scopestr = con_scope_to_str(node.con_scope)
         for id, var_name in node.modified_vars.items():
             version = node.body_highest_var_vers[id]
             fullid = build_fullid(var_name, id, version, con_scopestr)
-            node.outgoing_interface_out[id] = fullid
+            node.bot_interface_in[id] = fullid
 
     def link_model_if_bodies_grfn_vars(self, node:AnnCastModelIf):
         """
@@ -146,10 +146,10 @@ class GrfnVarCreationPass:
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.store_grfn_var(fullid, grfn_var)
-            # TODO/IDEA: add fullid to incoming_interface_out
+            # TODO/IDEA: add fullid to top_interface_out
             # TODO: Do we need the variable name as well?
             #       Could concat var and id to to make the key
-            node.incoming_interface_out[id] = fullid
+            node.top_interface_out[id] = fullid
 
             # link version 0 expr variables
             expr_scopestr = con_scopestr + CON_STR_SEP + IFEXPR
@@ -163,9 +163,8 @@ class GrfnVarCreationPass:
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.store_grfn_var(fullid, grfn_var)
-            # TODO/IDEA: add fullid to outgoing_interface_in
-            # QUES: This should be out, not in, right?
-            node.outgoing_interface_out[id] = fullid
+            # TODO/IDEA: add fullid to bot_interface_in
+            node.bot_interface_in[id] = fullid
 
     def create_grfn_vars_loop(self, node: AnnCastLoop):
         """
@@ -188,8 +187,8 @@ class GrfnVarCreationPass:
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.store_grfn_var(fullid, grfn_var)
-            # TODO/IDEA: add fullid to incoming_interface_out
-            node.incoming_interface_out[id] = fullid
+            # TODO/IDEA: add fullid to top_interface_out
+            node.top_interface_out[id] = fullid
 
         for id, var_name in node.modified_vars.items():
             # we introduce version 2 to be used for loop-expr, and they
@@ -312,11 +311,11 @@ class GrfnVarCreationPass:
         self.visit_node_list(node.func_args)
         self.visit_node_list(node.body)
         # TODO/IDEA: for highest versions of modified vars 
-        # create fullids and add to outgoing_interface_in
-        self.add_modified_vars_to_outgoing_interface(node)
+        # create fullids and add to bot_interface_in
+        self.add_modified_vars_to_bot_interface(node)
         print("FunctionDef Interface vars")
-        print(f"    incoming_interface_out: {node.incoming_interface_out}")
-        print(f"    outgoing_interface_out: {node.outgoing_interface_out}")
+        print(f"    top_interface_out: {node.top_interface_out}")
+        print(f"    bot_interface_out: {node.bot_interface_out}")
 
     @_visit.register
     def visit_list(self, node: AnnCastList):
@@ -330,7 +329,7 @@ class GrfnVarCreationPass:
         self.link_loop_body_entry_grfn_vars(node)
         self.visit_node_list(node.body)
         self.link_loop_body_exit_grfn_vars(node)
-        # TODO: decide what to do for outgoing_interface_in
+        # TODO: decide what to do for bot_interface_in
 
     @_visit.register
     def visit_model_break(self, node: AnnCastModelBreak):
@@ -350,8 +349,8 @@ class GrfnVarCreationPass:
         self.visit_node_list(node.body)
         self.visit_node_list(node.orelse)
         print("ModelIf Interface vars")
-        print(f"    incoming_interface_out: {node.incoming_interface_out}")
-        print(f"    outgoing_interface_out: {node.outgoing_interface_out}")
+        print(f"    top_interface_out: {node.top_interface_out}")
+        print(f"    bot_interface_out: {node.bot_interface_out}")
 
     @_visit.register
     def visit_model_return(self, node: AnnCastModelReturn):
