@@ -13,10 +13,12 @@ from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 class ContainerData:
     modified_vars: typing.Dict[id, str]
     accessed_vars: typing.Dict[id, str]
+    used_vars: typing.Dict[id, str]
 
     def __init__(self):
         self.modified_vars = {}
         self.accessed_vars = {}
+        self.used_vars = {}
 
 
 class ContainerScopePass:
@@ -59,9 +61,12 @@ class ContainerScopePass:
             print(modified_vars)
             accessed_vars = var_dict_to_str("  Accessed: ", data.accessed_vars)
             print(accessed_vars)
+            used_vars = var_dict_to_str("  Used: ", data.accessed_vars)
+            print(used_vars)
             container = self.con_str_to_node[scopestr]
             container.accessed_vars = data.accessed_vars
             container.modified_vars = data.modified_vars
+            container.used_vars = data.used_vars
 
     def initialize_con_scope_data(self, con_scope: typing.List, node):
         """
@@ -245,6 +250,8 @@ class ContainerScopePass:
                 # otherwise it should be added to accessed_vars
                 else:
                     con_data.accessed_vars[node.id] = node.name
+                # for any type of use, add to containers used_vars
+                con_data.used_vars[node.id] = node.name
 
     @_visit.register
     def visit_number(self, node: AnnCastNumber, enclosing_con_scope, assign_lhs):

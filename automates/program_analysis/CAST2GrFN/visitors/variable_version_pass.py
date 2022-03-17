@@ -54,6 +54,9 @@ class VariableVersionPass:
         """
         return self.con_scope_to_highest_var_vers[con_scopestr][id]
 
+    def is_var_in_con_scope(self, con_scopestr: str, id: int):
+        return id in self.con_scope_to_highest_var_vers[con_scopestr]
+
     def incr_version_in_con_scope(self, con_scopestr: str, id: int, var_name: str):
         """
         Grab the next version of `id` in scope for `con_scopestr`
@@ -85,14 +88,31 @@ class VariableVersionPass:
         for var_id, var_name in vars.items():
             self.incr_version_in_con_scope(scopestr, var_id, var_name)
 
-    def merge_accessed_modified_vars(self, node):
+    def populate_interface(self, con_scopestr, vars, interface):
         """
-        Merge the ids of the accessed and modified variables of `node` and
-        return the merge as a list ids
+        Parameters:
+          - `con_scopestr`: a cached container scope 
+          - `vars`: a dict mapping numerical ids to variable names
+          - `interface`: a dict mapping numerical variable ids to fullids 
+                         (e.g. the top or bottom interface of a container node)
+
+        For each variable from `vars`, put the highest version of that variable
+        from container `con_scopestr` into `interface` 
         """
-        ids = set(node.modified_vars.keys())
-        ids.update(node.accessed_vars.keys())
-        return list(ids)
+        # add vars to interface
+        for id, var_name in vars.items():
+            highest_ver = self.get_highest_ver_in_con_scope(con_scopestr, id)
+            fullid = build_fullid(var_name, id, highest_ver, con_scopestr)
+            interface[id] = fullid
+
+    # def merge_accessed_modified_vars(self, node):
+    #     """
+    #     Merge the ids of the accessed and modified variables of `node` and
+    #     return the merge as a list ids
+    #     """
+    #     ids = set(node.modified_vars.keys())
+    #     ids.update(node.accessed_vars.keys())
+    #     return list(ids)
         
 
     def visit(self, node: AnnCastNode, assign_lhs: bool):
@@ -151,9 +171,26 @@ class VariableVersionPass:
         # TODO: func_id = node.func.id
         func_name = node.func.name
         function_def = self.ann_cast.func_name_to_def[func_name]
-        # the enclosing container scope is stored in the Call's AnnCastName node
-        con_scopestr = con_scope_to_str(node.func.con_scope)
-        self.incr_vars_in_con_scope(con_scopestr, function_def.modified_vars)
+        # populate interfaces and increment versions in calling scope of modified variables
+        # the calling container scope is stored in the Call's AnnCastName node
+        calling_scopestr = con_scope_to_str(node.func.con_scope)
+        # TODO: Figure out how to do Call and FunctionDef interface
+        # For the top Call interface, we want to have arguments and globals going in
+        # The FunctionDef top interface has parameters and globals
+        # IDEA to recognize globals: iterate over modified vars of FunctionDef 
+        # and check if variable id appears in calling scope
+        check_global = lambda var: self.is_var_in_con_scope(calling_scopestr, var[0])
+        global_vars = dict(filter(check_global, function_def.modified_vars.items()))
+        # populate call nodes's top interface in
+        # TODO: add arguments
+        self.populate_interface(calling_scopestr, global_vars, node.top_interface_in)
+        # increment versions 
+        self.incr_vars_in_con_scope(calling_scopestr, global_vars)
+        # populate bot interface out
+        # TODO: add return values
+        self.populate_interface(calling_scopestr, global_vars, node.bot_interface_out)
+
+        # self.populate_interface(calling_scopestr, function_def.used_vars, node.top_interface_in)
 
     
     # TODO: How to handle class definitions?
@@ -183,7 +220,7 @@ class VariableVersionPass:
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(con_scopestr, self.merge_accessed_modified_vars(node))
+        self.init_highest_var_vers_dict(con_scopestr, node.used_vars.keys())
         
         # visit children
         self.visit_node_list(node.func_args, assign_lhs)
@@ -210,13 +247,13 @@ class VariableVersionPass:
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(expr_scopestr, self.merge_accessed_modified_vars(node))
+        self.init_highest_var_vers_dict(expr_scopestr, node.used_vars.keys())
 
         # Initialize LoopBody
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(body_scopestr, self.merge_accessed_modified_vars(node))
+        self.init_highest_var_vers_dict(body_scopestr, node.used_vars.keys())
 
         # visit children
         self.visit(node.expr, assign_lhs)
@@ -226,9 +263,16 @@ class VariableVersionPass:
         node.expr_highest_var_vers = self.con_scope_to_highest_var_vers[expr_scopestr]
         node.body_highest_var_vers = self.con_scope_to_highest_var_vers[body_scopestr]
         
-        # increment versions of vars in previous scope that are modified by this container
+        # populate interfaces and increment versions in previous scope of modified variables
         prev_scopestr = con_scope_to_str(node.con_scope[:-1])
+        # populate top interface in
+        self.populate_interface(prev_scopestr, node.used_vars, node.top_interface_in)
+        # increment versions 
         self.incr_vars_in_con_scope(prev_scopestr, node.modified_vars)
+        # populate bot interface out
+        # TODO: prune variables that are not alive in previous scope
+        # We could do this now, or later
+        self.populate_interface(prev_scopestr, node.modified_vars, node.bot_interface_out)
 
         # DEBUGGING
         print(f"\nFor LOOP: {con_scope_to_str(node.con_scope)}")
@@ -254,41 +298,48 @@ class VariableVersionPass:
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(expr_scopestr, self.merge_accessed_modified_vars(node))
+        self.init_highest_var_vers_dict(expr_scopestr, node.used_vars.keys())
 
         # initialize IfBody
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(ifbody_scopestr, self.merge_accessed_modified_vars(node))
+        self.init_highest_var_vers_dict(ifbody_scopestr, node.used_vars.keys())
 
         # initialize ElseBody
         # create versions 0 of any modified or accessed variables
         # use that merge_variables function on accessed_vars and modified_vars
         # pass in as extra parameter
-        self.init_highest_var_vers_dict(elsebody_scopestr, self.merge_accessed_modified_vars(node))
+        self.init_highest_var_vers_dict(elsebody_scopestr, node.used_vars.keys())
 
         # visit children
         self.visit(node.expr, assign_lhs)
         self.visit_node_list(node.body, assign_lhs)
         self.visit_node_list(node.orelse, assign_lhs)
 
-        # store highest var version
+        # store highest var versions
         node.expr_highest_var_vers = self.con_scope_to_highest_var_vers[expr_scopestr]
         node.ifbody_highest_var_vers = self.con_scope_to_highest_var_vers[ifbody_scopestr]
         node.elsebody_highest_var_vers = self.con_scope_to_highest_var_vers[elsebody_scopestr]
 
+        # populate interfaces and increment versions in previous scope of modified variables
+        prev_scopestr = con_scope_to_str(node.con_scope[:-1])
+        # populate top interface in
+        self.populate_interface(prev_scopestr, node.used_vars, node.top_interface_in)
+        # increment versions 
+        self.incr_vars_in_con_scope(prev_scopestr, node.modified_vars)
+        # populate bot interface out
+        # TODO: prune variables that are not alive in previous scope
+        # We could do this now, or later
+        self.populate_interface(prev_scopestr, node.modified_vars, node.bot_interface_out)
+
+        # DEBUGGING
         print(f"\nFor IF: {con_scope_to_str(node.con_scope)}")
         print(f"  ExprHighestVers: {node.expr_highest_var_vers}")
         print(f"  IfBodyHighestVers: {node.ifbody_highest_var_vers}")
         print(f"  ElseBodyHighestVers: {node.elsebody_highest_var_vers}")
-        prev_scopestr = con_scope_to_str(node.con_scope[:-1])
         print("Enclosing scope:")
         print(f"  {prev_scopestr}: {self.con_scope_to_highest_var_vers[prev_scopestr] }")
-
-        # increment versions of vars in previous scope that are modified by this container
-        prev_scopestr = con_scope_to_str(node.con_scope[:-1])
-        self.incr_vars_in_con_scope(prev_scopestr, node.modified_vars)
 
     @_visit.register
     def visit_return(self, node: AnnCastModelReturn, assign_lhs: bool):

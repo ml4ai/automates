@@ -346,6 +346,10 @@ class GrfnVarCreationPass:
         self.visit(node.expr)
         # link highest version vars inside expr to bodies
         self.link_model_if_bodies_grfn_vars(node)
+        # IDEA: Create Condtion Var, populate node.condition_in and node.condition_out
+        # populate node.decision_in, node.decision_out
+        # For node.decision_in, we will combine highest_var_versions of if-body and else-body
+        # but we will need to prune some i.e. variables local to the if/else-body
         self.visit_node_list(node.body)
         self.visit_node_list(node.orelse)
         print("ModelIf Interface vars")

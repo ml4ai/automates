@@ -253,7 +253,11 @@ class CASTToAGraphVisitor(CASTVisitor):
             args = self.visit_list(node.arguments)
 
         node_uid = uuid.uuid4()
-        self.G.add_node(node_uid, label="FunctionCall")
+        label = "Call"
+        top_iface_in_vars_str = var_dict_to_str("Top In: ", node.top_interface_in)
+        bot_iface_out_vars_str = var_dict_to_str("Bot Out: ", node.bot_interface_out)
+        label = f"{label}\n{top_iface_in_vars_str}\n{bot_iface_out_vars_str}"
+        self.G.add_node(node_uid, label=label)
         self.G.add_edge(node_uid, func)
 
         args_uid = uuid.uuid4()
@@ -504,7 +508,13 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
         accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
+        top_iface_in_vars_str = var_dict_to_str("Top In: ", node.top_interface_in)
+        top_iface_out_vars_str = var_dict_to_str("Top Out: ", node.top_interface_out)
+        bot_iface_in_vars_str = var_dict_to_str("Bot In: ", node.bot_interface_in)
+        bot_iface_out_vars_str = var_dict_to_str("Bot Out: ", node.bot_interface_out)
         loop_label = f"Loop\n{modified_vars_str}\n{accessed_vars_str}"
+        loop_label = f"{loop_label}\n{top_iface_in_vars_str}\n{top_iface_out_vars_str}"
+        loop_label = f"{loop_label}\n{bot_iface_in_vars_str}\n{bot_iface_out_vars_str}"
         self.G.add_node(node_uid, label=loop_label)
         self.G.add_node(test_uid, label="Test")
         self.G.add_node(body_uid, label="Body")
@@ -591,10 +601,16 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
         accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
+        top_iface_in_vars_str = var_dict_to_str("Top In: ", node.top_interface_in)
+        top_iface_out_vars_str = var_dict_to_str("Top Out: ", node.top_interface_out)
+        bot_iface_in_vars_str = var_dict_to_str("Bot In: ", node.bot_interface_in)
+        bot_iface_out_vars_str = var_dict_to_str("Bot Out: ", node.bot_interface_out)
         exp_highest_ver = var_dict_to_str("HiVer_expr: ", node.expr_highest_var_vers)
         ifb_highest_ver = var_dict_to_str("HiVer_body: ", node.ifbody_highest_var_vers)
         elseb_highest_ver = var_dict_to_str("HiVer_else: ", node.elsebody_highest_var_vers)
         if_label = f"If\n{modified_vars_str}\n{accessed_vars_str}\n{exp_highest_ver}\n{ifb_highest_ver}\n{elseb_highest_ver}"
+        if_label = f"{if_label}\n{top_iface_in_vars_str}\n{top_iface_out_vars_str}"
+        if_label = f"{if_label}\n{bot_iface_in_vars_str}\n{bot_iface_out_vars_str}"
         self.G.add_node(node_uid, label=if_label)
         self.G.add_node(test_uid, label="Test")
         self.G.add_edge(node_uid, test_uid)

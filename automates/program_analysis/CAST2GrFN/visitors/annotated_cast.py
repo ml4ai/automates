@@ -179,6 +179,13 @@ class AnnCastCall(AnnCastNode):
         self.func = func
         self.arguments = arguments
         self.source_refs = source_refs
+        
+        # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
+        self.top_interface_in = {}
+        self.top_interface_out = {}
+        self.bot_interface_in = {}
+        self.bot_interface_out = {}
+
 
     def __str__(self):
         return Call.__str__(self)
@@ -222,6 +229,7 @@ class AnnCastFunctionDef(AnnCastNode):
         # used for container interfaces
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
+        self.used_vars: typing.Dict[id, str]
         self.con_scope: typing.List
     
         # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
@@ -266,6 +274,7 @@ class AnnCastLoop(AnnCastNode):
         # used for container interfaces
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
+        self.used_vars: typing.Dict[id, str]
         self.con_scope: List
 
         # dicts mapping Name id to highest version at end of "block"
@@ -327,6 +336,7 @@ class AnnCastModelIf(AnnCastNode):
         # used for container interfaces
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
+        self.used_vars: typing.Dict[id, str]
         self.con_scope: List
 
         # dicts mapping Name id to highest version at end of "block"
