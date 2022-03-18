@@ -242,17 +242,13 @@ class VariableVersionPass:
         # Initialize scope_to_highest_var_version
         expr_scopestr = con_scope_to_str(node.con_scope + [LOOPEXPR])
         body_scopestr = con_scope_to_str(node.con_scope + [LOOPBODY])
+
         # Initialize LoopExpr
-        # DONE:
         # create versions 0 of any modified or accessed variables
-        # use that merge_variables function on accessed_vars and modified_vars
-        # pass in as extra parameter
         self.init_highest_var_vers_dict(expr_scopestr, node.used_vars.keys())
 
         # Initialize LoopBody
         # create versions 0 of any modified or accessed variables
-        # use that merge_variables function on accessed_vars and modified_vars
-        # pass in as extra parameter
         self.init_highest_var_vers_dict(body_scopestr, node.used_vars.keys())
 
         # visit children
@@ -294,22 +290,15 @@ class VariableVersionPass:
         ifbody_scopestr = con_scope_to_str(node.con_scope + [IFBODY])
         elsebody_scopestr = con_scope_to_str(node.con_scope + [ELSEBODY])
         # initialize IfExpr
-        # DONE:
         # create versions 0 of any modified or accessed variables
-        # use that merge_variables function on accessed_vars and modified_vars
-        # pass in as extra parameter
         self.init_highest_var_vers_dict(expr_scopestr, node.used_vars.keys())
 
         # initialize IfBody
         # create versions 0 of any modified or accessed variables
-        # use that merge_variables function on accessed_vars and modified_vars
-        # pass in as extra parameter
         self.init_highest_var_vers_dict(ifbody_scopestr, node.used_vars.keys())
 
         # initialize ElseBody
         # create versions 0 of any modified or accessed variables
-        # use that merge_variables function on accessed_vars and modified_vars
-        # pass in as extra parameter
         self.init_highest_var_vers_dict(elsebody_scopestr, node.used_vars.keys())
 
         # visit children
@@ -330,6 +319,8 @@ class VariableVersionPass:
         self.incr_vars_in_con_scope(prev_scopestr, node.modified_vars)
         # populate bot interface out
         # TODO: prune variables that are not alive in previous scope
+        # NOTE: gcc puts all variable declarations in the body at the top-level of the function
+        #       so any nested variable declarations cannot be distinguished as not in scope
         # We could do this now, or later
         self.populate_interface(prev_scopestr, node.modified_vars, node.bot_interface_out)
 

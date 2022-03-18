@@ -1,4 +1,5 @@
 import typing
+import re
 from functools import singledispatchmethod
 
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
@@ -41,6 +42,14 @@ class GrfnVarCreationPass:
     def visit_node_list(self, node_list: typing.List[AnnCastNode]):
         return [self.visit(node) for node in node_list]
 
+    def make_cond_var_name(con_scopestr):
+        """
+        Make a condition variable name from the scope string `con_scopestr`
+        """
+        var_name = "".join(re.findall("if\d*\.",con_scopestr))
+        var_name = var_name.replace(".","_").replace("if","")
+        return "COND_" + var_name[:-1]
+
     def get_grfn_var_for_name_node(self, node: AnnCastName):
         """
         Obtains the GrFN variable node for the fullid of
@@ -64,6 +73,23 @@ class GrfnVarCreationPass:
         """
         self.ann_cast.fullid_to_grfn_id[fullid] = grfn_var.uid
         self.ann_cast.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
+
+    def populate_interface(self, con_scopestr, vars, interface):
+        """
+        Parameters:
+          - `con_scopestr`: a cached container scope 
+          - `vars`: a dict mapping numerical ids to variable names
+          - `interface`: a dict mapping numerical variable ids to fullids 
+                         (e.g. the top or bottom interface of a container node)
+
+        For each variable from `vars`, put the highest version of that variable
+        from container `con_scopestr` into `interface` 
+        """
+        # add vars to interface
+        for id, var_name in vars.items():
+            highest_ver = self.get_highest_ver_in_con_scope(con_scopestr, id)
+            fullid = build_fullid(var_name, id, highest_ver, con_scopestr)
+            interface[id] = fullid
 
     def link_grfn_vars(self, src_fullid: str, tgt_fullid: str):
         """
@@ -346,10 +372,17 @@ class GrfnVarCreationPass:
         self.visit(node.expr)
         # link highest version vars inside expr to bodies
         self.link_model_if_bodies_grfn_vars(node)
+
         # IDEA: Create Condtion Var, populate node.condition_in and node.condition_out
+        # What is the id for the condition variable? 
+        if_scopestr = con_scope_to_str(node.con_scope)
+        #cond_var_name = make_cond_var_name(if_scopestr)
+        #self.populate_interface(if_scopestr, node.used_vars, node.condition_in)
+
         # populate node.decision_in, node.decision_out
         # For node.decision_in, we will combine highest_var_versions of if-body and else-body
         # but we will need to prune some i.e. variables local to the if/else-body
+
         self.visit_node_list(node.body)
         self.visit_node_list(node.orelse)
         print("ModelIf Interface vars")
