@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from collections import defaultdict
 import copy
 import typing
+import re
 
 
 from automates.utils.misc import uuid
@@ -63,6 +64,19 @@ class ContainerScopePass:
             print(accessed_vars)
             used_vars = var_dict_to_str("  Used: ", data.accessed_vars)
             print(used_vars)
+
+            # For if expression container data, we add it to the
+            # expr_*_vars attributes of AnnCastModelIf node
+            if_expr_suffix = CON_STR_SEP + IFEXPR
+            if scopestr.endswith(if_expr_suffix):
+                # remove the final if expr suffix to obtain if container scope 
+                if_scopestr = re.sub(f"{if_expr_suffix}$", "", scopestr)
+                if_container = self.con_str_to_node[if_scopestr]
+                if_container.expr_accessed_vars = data.accessed_vars
+                if_container.expr_modified_vars = data.modified_vars
+                if_container.expr_used_vars = data.used_vars
+                continue
+
             container = self.con_str_to_node[scopestr]
             container.accessed_vars = data.accessed_vars
             container.modified_vars = data.modified_vars
@@ -74,8 +88,14 @@ class ContainerScopePass:
         and cache the container `node` in `self.con_str_to_node`
         """
         con_scopestr = con_scope_to_str(con_scope)
-        self.con_str_to_node[con_scopestr] = node
+        # initialize container data for this node
         self.con_str_to_con_data[con_scopestr] = ContainerData()
+        # Note: we do not cache the ModelIf.Expr node, 
+        # since that node does not have fields to store variable info
+        # instead that info is stored in the ModelIf node itself
+        if_expr_suffix = CON_STR_SEP + IFEXPR
+        if not con_scopestr.endswith(if_expr_suffix):
+            self.con_str_to_node[con_scopestr] = node
         
     def visit(
         self, node: AnnCastNode, enclosing_con_scope: typing.List, assign_lhs: bool
@@ -209,6 +229,8 @@ class ContainerScopePass:
 
         # TODO-what if the condition has a side-effect?
         ifexprscope = ifscope + [IFEXPR]
+        # we store an additional ContainerData for the if expression
+        self.initialize_con_scope_data(ifexprscope, node)
         self.visit(node.expr, ifexprscope, assign_lhs)
 
         ifbodyscope = ifscope + [IFBODY]

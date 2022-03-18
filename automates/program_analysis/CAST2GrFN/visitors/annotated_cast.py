@@ -60,6 +60,19 @@ def var_dict_to_str(str_start, vars):
     vars_id_and_names = [f" {name}: {id}" for id, name in vars.items()]
     return str_start + ", ".join(vars_id_and_names)
 
+def interface_to_str(str_start, interface):
+    return str_start + ", ".join(interface.values())
+
+def decision_in_to_str(str_start, decision):
+    if_else_fullids = []
+    for d in decision.values():
+        ifid = d[IFBODY]
+        elseid = d[ELSEBODY]
+        if_else_fullids.append(f" If: {ifid}; Else: {elseid}")
+
+    return str_start + ", ".join(if_else_fullids)
+
+
 def ann_cast_name_to_fullid(node):
     """
     Returns a string representing the fullid of the name node.
@@ -108,6 +121,8 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
 class AnnCast:
     def __init__(self, ann_nodes: List):
         self.nodes = ann_nodes
+        # populated after IdCollapsePass, and used to give ids to GrFN condition variables
+        self.collapsed_id_counter = 0
         # TODO: I think it would be better if the `name` attribute of FunctionDef's actually
         # stored `Name` nodes instead of just being a str.  Storing a `Name` node there would allow
         # us to refer to FunctionDef's with an ID.  On the GCC side, the gcc AST json already has these
@@ -180,7 +195,7 @@ class AnnCastCall(AnnCastNode):
         self.arguments = arguments
         self.source_refs = source_refs
         
-        # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
+        # dicts mapping a Name id to its fullid
         self.top_interface_in = {}
         self.top_interface_out = {}
         self.bot_interface_in = {}
@@ -232,7 +247,7 @@ class AnnCastFunctionDef(AnnCastNode):
         self.used_vars: typing.Dict[id, str]
         self.con_scope: typing.List
     
-        # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
+        # dicts mapping a Name id to its fullid
         self.top_interface_in = {}
         self.top_interface_out = {}
         self.bot_interface_in = {}
@@ -282,7 +297,7 @@ class AnnCastLoop(AnnCastNode):
         self.expr_highest_var_vers = {}
         self.body_highest_var_vers = {}
 
-        # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
+        # dicts mapping a Name id to its fullid
         self.top_interface_in = {}
         self.top_interface_out = {}
         self.bot_interface_in = {}
@@ -338,14 +353,18 @@ class AnnCastModelIf(AnnCastNode):
         self.accessed_vars: typing.Dict[id, str]
         self.used_vars: typing.Dict[id, str]
         self.con_scope: List
-
+        # dicts mapping a Name id to variable string name
+        # for variables used in the if expr
+        self.expr_accessed_vars = {}
+        self.expr_modified_vars = {}
+        self.expr_used_vars = {}
         # dicts mapping Name id to highest version at end of "block"
         # TODO: What about using a default dict
         self.expr_highest_var_vers = {}
         self.ifbody_highest_var_vers = {}
         self.elsebody_highest_var_vers = {}
 
-        # dicts mapping a Name id to its GrFN variable identifier (VariableIdentifier)
+        # dicts mapping a Name id to its fullid
         self.top_interface_in = {}
         self.top_interface_out = {}
         self.bot_interface_in = {}

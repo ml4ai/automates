@@ -42,7 +42,7 @@ class GrfnVarCreationPass:
     def visit_node_list(self, node_list: typing.List[AnnCastNode]):
         return [self.visit(node) for node in node_list]
 
-    def make_cond_var_name(con_scopestr):
+    def make_cond_var_name(self, con_scopestr):
         """
         Make a condition variable name from the scope string `con_scopestr`
         """
@@ -74,22 +74,22 @@ class GrfnVarCreationPass:
         self.ann_cast.fullid_to_grfn_id[fullid] = grfn_var.uid
         self.ann_cast.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
 
-    def populate_interface(self, con_scopestr, vars, interface):
-        """
-        Parameters:
-          - `con_scopestr`: a cached container scope 
-          - `vars`: a dict mapping numerical ids to variable names
-          - `interface`: a dict mapping numerical variable ids to fullids 
-                         (e.g. the top or bottom interface of a container node)
+    # def populate_interface(self, con_scopestr, vars, interface):
+    #     """
+    #     Parameters:
+    #       - `con_scopestr`: a cached container scope 
+    #       - `vars`: a dict mapping numerical ids to variable names
+    #       - `interface`: a dict mapping numerical variable ids to fullids 
+    #                      (e.g. the top or bottom interface of a container node)
 
-        For each variable from `vars`, put the highest version of that variable
-        from container `con_scopestr` into `interface` 
-        """
-        # add vars to interface
-        for id, var_name in vars.items():
-            highest_ver = self.get_highest_ver_in_con_scope(con_scopestr, id)
-            fullid = build_fullid(var_name, id, highest_ver, con_scopestr)
-            interface[id] = fullid
+    #     For each variable from `vars`, put the highest version of that variable
+    #     from container `con_scopestr` into `interface` 
+    #     """
+    #     # add vars to interface
+    #     for id, var_name in vars.items():
+    #         highest_ver = self.get_highest_ver_in_con_scope(con_scopestr, id)
+    #         fullid = build_fullid(var_name, id, highest_ver, con_scopestr)
+    #         interface[id] = fullid
 
     def link_grfn_vars(self, src_fullid: str, tgt_fullid: str):
         """
@@ -159,7 +159,7 @@ class GrfnVarCreationPass:
         
             - creates a version zero GrFN variable of all used variables. 
               These GrFN variables will be used on the top interface.
-            - links version zero of loop-expr variables to created version zero GrFN variables
+            - links version zero of if-expr variables to created version zero GrFN variables
             - creates version one GrFN variables to be used at the bottom decision node
         """
         # union modified and accessed vars
@@ -191,6 +191,69 @@ class GrfnVarCreationPass:
             self.store_grfn_var(fullid, grfn_var)
             # TODO/IDEA: add fullid to bot_interface_in
             node.bot_interface_in[id] = fullid
+    
+    def setup_model_if_condition(self, node: AnnCastModelIf):
+        """
+        Creates a GrFN `VariableNode` for the condtion variable of 
+        this ModelIf containter.  Populates the `condition_in` and `condition_out`
+        attributes based on the if expr's used variables and the newly
+        created GrFN condition variable.
+        """
+        if_scopestr = con_scope_to_str(node.con_scope)
+        expr_scopestr = con_scope_to_str(node.con_scope + [IFEXPR])
+
+        # inputs to condition node are the highest versions of used variables of the expr
+        for id, var_name in node.expr_used_vars.items():
+            highest_ver = node.expr_highest_var_vers[id]
+            fullid = build_fullid(var_name, id, highest_ver, expr_scopestr)
+            node.condition_in[id] = fullid
+
+        # build condition variable
+        cond_name = self.make_cond_var_name(if_scopestr)
+        # use new collapsed id
+        cond_id = self.ann_cast.collapsed_id_counter
+        self.ann_cast.collapsed_id_counter += 1
+        cond_version = 0
+        cond_fullid = build_fullid(cond_name, cond_id, cond_version, if_scopestr)
+        cond_var = create_grfn_var(cond_name, cond_id, cond_version, if_scopestr)
+        self.ann_cast.fullid_to_grfn_id[cond_fullid] = cond_var.uid
+        self.ann_cast.grfn_id_to_grfn_var[cond_var.uid] = cond_var
+
+        # ouput of condition node is new condition var
+        node.condition_out[cond_id] = cond_fullid
+
+    def setup_model_if_decision(self, node: AnnCastModelIf):
+        """
+        Precondition: `setup_model_if_condition` has already been called on this node
+
+        Populates `decision_in` and `decision_out` attributes of node.
+        Inputs to the decision node are the highest versions of modified variables
+        along if branch and else branch.
+        Outputs are version 1 variables at the if container scope.
+
+        Note, the condition variable will also link to the Decision node in GrFN,
+        but we do not add it to the `decision_in` dict to make iterating over that
+        dict simpler
+        """
+        if_scopestr = con_scope_to_str(node.con_scope)
+        ifbody_scopestr = con_scope_to_str(node.con_scope + [IFBODY])
+        elsebody_scopestr = con_scope_to_str(node.con_scope + [ELSEBODY])
+        # inputs to decision node are the highest versions in if-body and else-body
+        # of variables modified within if container
+        for id, var_name in node.modified_vars.items():
+            if_highest = node.ifbody_highest_var_vers[id]
+            if_fullid = build_fullid(var_name, id, if_highest, ifbody_scopestr)
+            else_highest = node.elsebody_highest_var_vers[id]
+            else_fullid = build_fullid(var_name, id, else_highest, elsebody_scopestr)
+            node.decision_in[id] = {IFBODY: if_fullid, ELSEBODY: else_fullid}
+
+        # outputs to the decision node are version 1 variables in if container scope
+        # TODO: Change constant 1 to a named constant
+        out_version = 1
+        for id, var_name in node.modified_vars.items():
+            fullid = build_fullid(var_name, id, out_version, if_scopestr)
+            node.decision_out[id] = fullid
+        
 
     def create_grfn_vars_loop(self, node: AnnCastLoop):
         """
@@ -368,16 +431,11 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_model_if(self, node: AnnCastModelIf):
         self.create_grfn_vars_model_if(node)
-        # visit children
+        # visit expr, then setup condition info
         self.visit(node.expr)
+        self.setup_model_if_condition(node)
         # link highest version vars inside expr to bodies
         self.link_model_if_bodies_grfn_vars(node)
-
-        # IDEA: Create Condtion Var, populate node.condition_in and node.condition_out
-        # What is the id for the condition variable? 
-        if_scopestr = con_scope_to_str(node.con_scope)
-        #cond_var_name = make_cond_var_name(if_scopestr)
-        #self.populate_interface(if_scopestr, node.used_vars, node.condition_in)
 
         # populate node.decision_in, node.decision_out
         # For node.decision_in, we will combine highest_var_versions of if-body and else-body
@@ -385,6 +443,8 @@ class GrfnVarCreationPass:
 
         self.visit_node_list(node.body)
         self.visit_node_list(node.orelse)
+        
+        self.setup_model_if_decision(node)
         print("ModelIf Interface vars")
         print(f"    top_interface_out: {node.top_interface_out}")
         print(f"    bot_interface_out: {node.bot_interface_out}")

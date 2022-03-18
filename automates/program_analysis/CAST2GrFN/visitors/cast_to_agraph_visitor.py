@@ -601,15 +601,22 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
         accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
-        top_iface_in_vars_str = var_dict_to_str("Top In: ", node.top_interface_in)
-        top_iface_out_vars_str = var_dict_to_str("Top Out: ", node.top_interface_out)
-        bot_iface_in_vars_str = var_dict_to_str("Bot In: ", node.bot_interface_in)
-        bot_iface_out_vars_str = var_dict_to_str("Bot Out: ", node.bot_interface_out)
-        exp_highest_ver = var_dict_to_str("HiVer_expr: ", node.expr_highest_var_vers)
-        ifb_highest_ver = var_dict_to_str("HiVer_body: ", node.ifbody_highest_var_vers)
-        elseb_highest_ver = var_dict_to_str("HiVer_else: ", node.elsebody_highest_var_vers)
-        if_label = f"If\n{modified_vars_str}\n{accessed_vars_str}\n{exp_highest_ver}\n{ifb_highest_ver}\n{elseb_highest_ver}"
+        # top inteface
+        top_iface_in_vars_str = interface_to_str("Top In: ", node.top_interface_in)
+        top_iface_out_vars_str = interface_to_str("Top Out: ", node.top_interface_out)
+        # condition node
+        condition_in = interface_to_str("Cond In: ", node.condition_in)
+        condition_out = interface_to_str("Cond Out: ", node.condition_out)
+        # decision node
+        decision_in = decision_in_to_str("Dec In: ", node.decision_in)
+        decision_out = interface_to_str("Dec Out: ", node.decision_out)
+        # bot interface
+        bot_iface_in_vars_str = interface_to_str("Bot In: ", node.bot_interface_in)
+        bot_iface_out_vars_str = interface_to_str("Bot Out: ", node.bot_interface_out)
+        if_label = f"If\n{modified_vars_str}\n{accessed_vars_str}"
         if_label = f"{if_label}\n{top_iface_in_vars_str}\n{top_iface_out_vars_str}"
+        if_label = f"{if_label}\n{condition_in}\n{condition_out}"
+        if_label = f"{if_label}\n{decision_in}\n{decision_out}"
         if_label = f"{if_label}\n{bot_iface_in_vars_str}\n{bot_iface_out_vars_str}"
         self.G.add_node(node_uid, label=if_label)
         self.G.add_node(test_uid, label="Test")

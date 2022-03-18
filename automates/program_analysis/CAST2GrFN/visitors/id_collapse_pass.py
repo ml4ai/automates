@@ -22,6 +22,10 @@ class IdCollapsePass:
         for node in self.ann_cast.nodes:
             self.visit(node)
         self.nodes = self.ann_cast.nodes
+        self.store_highest_id()
+
+    def store_highest_id(self):
+        self.ann_cast.collapsed_id_counter = self.collapsed_id_counter
 
     def collapse_id(self, id: int) -> int:
         """
