@@ -357,6 +357,8 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment):
         # TODO: what if the rhs has side-effects
+        # IDEA: add inputs/outputs dict to AnnCastAssignment,
+        # populate those here.  This could make to_grfn_pass of Assignment nodes easier
         self.visit(node.right)
         assert isinstance(node.left, AnnCastVar)
         self.visit(node.left)
@@ -380,6 +382,10 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_call(self, node: AnnCastCall):
         assert isinstance(node.func, AnnCastName)
+        # If we copy FunctionDef container, we should make GrFN variables here for 
+        # this call of that function
+        # It may be as simple as creating variables for all used variables of the function,
+        # but the scope needs to be consistent with the call site location
         self.visit_node_list(node.arguments)
 
     @_visit.register

@@ -240,6 +240,23 @@ class AnnCastFunctionDef(AnnCastNode):
         self.body = body
         self.source_refs = source_refs
 
+        # for bot_interface_in
+        self.ret_val = {}
+        self.imported_globals = {} # Accumulate at call sites?
+        # What about this? How does g1 get added to func2's imported_globals?
+        # int g1 = 1;
+        # int func1() {
+        #     func2();
+        # }
+        #
+        # int func2() {
+        #     g1 = 0;
+        # }
+        #
+        # int main() {
+        #     func1();
+        # }
+
         # dicts mapping a Name id to its string name
         # used for container interfaces
         self.modified_vars: typing.Dict[id, str]

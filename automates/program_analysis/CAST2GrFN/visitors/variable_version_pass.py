@@ -177,17 +177,31 @@ class VariableVersionPass:
         # TODO: Figure out how to do Call and FunctionDef interface
         # For the top Call interface, we want to have arguments and globals going in
         # The FunctionDef top interface has parameters and globals
-        # IDEA to recognize globals: iterate over modified vars of FunctionDef 
+        # recognize globals: iterate over modified vars of FunctionDef 
         # and check if variable id appears in calling scope
+        # TODO: change this check to include variables from module scope?
+        # if we do this, we might as well add globals attribute to AnnCastModule and potentially
+        # store them on an earlier pass
         check_global = lambda var: self.is_var_in_con_scope(calling_scopestr, var[0])
         global_vars = dict(filter(check_global, function_def.modified_vars.items()))
         # populate call nodes's top interface in
-        # TODO: add arguments
+        # TODO: add argument
+        # For each argument, create a parameter GrFN variable using the arguments index
+        # E.g. Arg0, Param0, Arg1, Param1,...
+        # top interface inputs: Arg0, Arg1,...
+        # top interface outputs: Param0, Param1,...
+        #
+        # Separate FunctionDef container idea:
+        # Arg0 = x, Arg1 = 5
+        # Call(Arg0, Arg1)
+        #    FunctionDef container separate
         self.populate_interface(calling_scopestr, global_vars, node.top_interface_in)
         # increment versions 
         self.incr_vars_in_con_scope(calling_scopestr, global_vars)
         # populate bot interface out
         # TODO: add return values
+        # Create a GrFN var for the return value, and store in AnnCastCall node
+        # and add to bot interface
         self.populate_interface(calling_scopestr, global_vars, node.bot_interface_out)
 
         # self.populate_interface(calling_scopestr, function_def.used_vars, node.top_interface_in)
