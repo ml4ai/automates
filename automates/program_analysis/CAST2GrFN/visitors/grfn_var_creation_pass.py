@@ -211,8 +211,7 @@ class GrfnVarCreationPass:
         # build condition variable
         cond_name = self.make_cond_var_name(if_scopestr)
         # use new collapsed id
-        cond_id = self.ann_cast.collapsed_id_counter
-        self.ann_cast.collapsed_id_counter += 1
+        cond_id = self.ann_cast.next_collapsed_id()
         cond_version = 0
         cond_fullid = build_fullid(cond_name, cond_id, cond_version, if_scopestr)
         cond_var = create_grfn_var(cond_name, cond_id, cond_version, if_scopestr)

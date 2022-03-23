@@ -1,3 +1,7 @@
+import uuid
+import typing
+from dataclasses import dataclass
+
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
     Assignment,
@@ -30,17 +34,16 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
+from automates.model_assembly.metadata import LambdaType
 from automates.model_assembly.structures import (
-    GenericIdentifier,
     VariableIdentifier,
 )
 
 from automates.model_assembly.networks import (
-    GenericNode,
+    LambdaNode,
     VariableNode
 )
 
-import typing
 
 # used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
 CON_STR_SEP = "."
@@ -92,6 +95,32 @@ def build_fullid(var_name: str, id: int, version: int, con_scopestr: str):
     """
     pieces = [var_name, str(id), str(version), con_scopestr]
     return CON_STR_SEP.join(pieces)
+
+def create_grfn_literal_node(metadata: typing.List):
+    """
+    Creates a GrFN `LambdaNode` with type `LITERAL` and metadata `metadata`.
+    The created node has an empty lambda expression (`func_str` attribute)
+    """
+    lambda_uuid = str(uuid.uuid4())
+    # we fill out lambda expression in a later pass
+    lambda_str = ""
+    lambda_func = lambda: None
+    lambda_type = LambdaType.LITERAL
+    return LambdaNode(lambda_uuid, lambda_type,
+                      lambda_str, lambda_func, metadata)
+
+def create_grfn_assign_node(metadata: typing.List):
+    """
+    Creates a GrFN `LambdaNode` with type `ASSIGN` and metadata `metadata`.
+    The created node has an empty lambda expression (`func_str` attribute)
+    """
+    lambda_uuid = str(uuid.uuid4())
+    # we fill out lambda expression in a later pass
+    lambda_str = ""
+    lambda_func = lambda: None
+    lambda_type = LambdaType.ASSIGN
+    return LambdaNode(lambda_uuid, lambda_type,
+                      lambda_str, lambda_func, metadata)
     
 def create_grfn_var_from_name_node(node):
     """
@@ -118,16 +147,31 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
     metadata = []
     return VariableNode(uid, identifier, metadata)
 
+@dataclass
+class GrfnAssignment():  
+        grfn_node: LambdaNode
+        inputs = {}
+        outputs = {}
+
 class AnnCast:
-    def __init__(self, ann_nodes: List):
+    def __init__(self, ann_nodes: typing.List):
         self.nodes = ann_nodes
         # populated after IdCollapsePass, and used to give ids to GrFN condition variables
         self.collapsed_id_counter = 0
+        # dict mapping function IDs to their FunctionDef nodes.  
         self.func_id_to_def = {}
         self.grfn_id_to_grfn_var = {}
         # the fullid of a AnnCastName node is a string which includes its 
         # variable name, numerical id, version, and scope
         self.fullid_to_grfn_id = {}
+
+    def next_collapsed_id(self):
+        """
+        Return the next collapsed id, and increment `collapsed_id_counter`
+        """
+        to_return = self.collapsed_id_counter
+        self.collapsed_id_counter += 1
+        return to_return
 
     def store_grfn_var(self, fullid: str, grfn_var: VariableNode):
         """
@@ -147,6 +191,9 @@ class AnnCastAssignment(AnnCastNode):
         self.left = left
         self.right = right
         self.source_refs = source_refs
+
+        self.grfn_assignment: GrfnAssignment
+
 
     def __str__(self):
         return Assignment.__str__(self)
@@ -180,7 +227,7 @@ class AnnCastBoolean(AnnCastNode):
 
 class AnnCastCall(AnnCastNode):
     def __init__(self, func, arguments, source_refs):
-        self.func = func
+        self.func: AnnCastName = func
         self.arguments = arguments
         self.source_refs = source_refs
         
@@ -190,6 +237,17 @@ class AnnCastCall(AnnCastNode):
         self.bot_interface_in = {}
         self.bot_interface_out = {}
 
+        # for bot_interface
+        # ret_val should map fullid to grfn_id
+        self.ret_val = {}
+        self.modified_globals = {} # Store when accumulating modified variables
+
+        # GrFN VariableNodes for created GrFN argument variables
+        # this dict maps argument positional index to GrFN VariableNode
+        self.grfn_argument_nodes = {}
+        # GrfnAssignment's for created GrFN argument variables
+        # this dict maps argument positional index to GrfnAssignment
+        self.grfn_assignments = {}
 
     def __str__(self):
         return Call.__str__(self)
@@ -230,8 +288,9 @@ class AnnCastFunctionDef(AnnCastNode):
         self.source_refs = source_refs
 
         # for bot_interface_in
+        # ret_val should map fullid to grfn_id
         self.ret_val = {}
-        self.imported_globals = {} # Accumulate at call sites?
+        self.modified_globals = {} # Store when accumulating modified variables
         # What about this? How does g1 get added to func2's imported_globals?
         # int g1 = 1;
         # int func1() {
@@ -415,7 +474,7 @@ class AnnCastName(AnnCastNode):
         self.id = id
         self.source_refs = source_refs
         # container_scope is used to aid GrFN generation
-        self.con_scope = None
+        self.con_scope: typing.List = []
         # versions are bound to the cope of the variable
         self.version = None
         self.grfn_id = None

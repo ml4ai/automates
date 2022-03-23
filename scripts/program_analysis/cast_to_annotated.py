@@ -12,6 +12,7 @@ from automates.program_analysis.CAST2GrFN.visitors.variable_version_pass import 
 from automates.program_analysis.CAST2GrFN.visitors.incoming_outgoing_pass import IncomingOutgoingPass
 from automates.program_analysis.CAST2GrFN.visitors.grfn_var_creation_pass import GrfnVarCreationPass
 from automates.program_analysis.CAST2GrFN.visitors.to_grfn_pass import ToGrfnPass
+from automates.program_analysis.CAST2GrFN.visitors.grfn_assignment_pass import GrfnAssignmentPass
 
 
 def main():
@@ -46,11 +47,15 @@ def main():
     print("\nCalling GrfnVarCreationPass-------------------")
     GrfnVarCreationPass(annotated_cast)
 
+    print("\nCalling GrfnAssignmentPass-------------------")
+    GrfnAssignmentPass(annotated_cast)
+
     # print("\nCalling IncomingOutgoingPass-------------------")
     # IncomingOutgoingPass(annotated_cast)
 
     print("\nCalling ToGrfnPass-------------------")
     ToGrfnPass(annotated_cast)
+
 
     V2 = CASTToAGraphVisitor(annotated_cast)
 
