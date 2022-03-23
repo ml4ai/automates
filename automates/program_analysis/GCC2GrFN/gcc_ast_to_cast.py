@@ -767,7 +767,7 @@ class GCC2CAST:
     def parse_function(self, function):
         # clear functions variables to prepare for parsing
         self.clear_function_dependent_vars()
-        name = function["name"]
+        name_node = Name(function["name"], function["id"])
 
         parameters = function["parameters"] if "parameters" in function else []
         var_declarations = (
@@ -817,7 +817,7 @@ class GCC2CAST:
                 self.top_level_pseudo_loop_body.append(new_return)
 
         return FunctionDef(
-            name=name,
+            name=name_node,
             func_args=arguments,
             body=self.top_level_pseudo_loop_body,
             source_refs=[body_source_ref, decl_source_ref],

@@ -167,10 +167,8 @@ class VariableVersionPass:
         self.visit_node_list(node.arguments, assign_lhs)
         # in the current scope, increment all versions of variables
         # that are modified by this call
-        # TODO: Once FunctionDef store Name nodes, convert to ID
-        # TODO: func_id = node.func.id
-        func_name = node.func.name
-        function_def = self.ann_cast.func_name_to_def[func_name]
+        func_id = node.func.id
+        function_def = self.ann_cast.func_id_to_def[func_id]
         # populate interfaces and increment versions in calling scope of modified variables
         # the calling container scope is stored in the Call's AnnCastName node
         calling_scopestr = con_scope_to_str(node.func.con_scope)

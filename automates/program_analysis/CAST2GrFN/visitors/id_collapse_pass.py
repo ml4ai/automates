@@ -105,6 +105,9 @@ class IdCollapsePass:
 
     @_visit.register
     def visit_function_def(self, node: AnnCastFunctionDef):
+        # collapse the function id
+        node.name.id = self.collapse_id(node.name.id)
+        self.ann_cast.func_id_to_def[node.name.id] = node
         # Each argument is a AnnCastVar node
         # Initialize each Name and add to input_variables
         self.visit_node_list(node.func_args)

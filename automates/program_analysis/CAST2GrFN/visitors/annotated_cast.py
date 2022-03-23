@@ -123,18 +123,7 @@ class AnnCast:
         self.nodes = ann_nodes
         # populated after IdCollapsePass, and used to give ids to GrFN condition variables
         self.collapsed_id_counter = 0
-        # TODO: I think it would be better if the `name` attribute of FunctionDef's actually
-        # stored `Name` nodes instead of just being a str.  Storing a `Name` node there would allow
-        # us to refer to FunctionDef's with an ID.  On the GCC side, the gcc AST json already has these
-        # IDs filled out, and they are stored at the `Name` nodes at call sites.  We could add this same ID
-        # to the `Name` node created at the FunctionDef.  
-        # On the Python side, we have rules to assign IDs at call sites.  It is likely those same rules coudl
-        # be used when parsing FunctionDef's.
-        # Once this is implemented, this dict could map function IDs to there FunctionDef nodes.  
-        # For now, it maps a str (the name attribute of a FunctionDef) to the FunctionDef node.
-        # For now, this dict will be filled out during the ContainerScopePass.  Possibly this could be moved to a 
-        # different pass, but will need to be during/after IdCollapsePass
-        self.func_name_to_def = {}
+        self.func_id_to_def = {}
         self.grfn_id_to_grfn_var = {}
         # the fullid of a AnnCastName node is a string which includes its 
         # variable name, numerical id, version, and scope
