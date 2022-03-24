@@ -1,6 +1,6 @@
 import uuid
 import typing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -148,22 +148,29 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
     return VariableNode(uid, identifier, metadata)
 
 
-'''
 @dataclass
 class GrfnAssignment():  
-        grfn_node: LambdaNode
-        inputs = {}
-        outputs = {}
-'''
+        assignment_node: LambdaNode
+        assignment_type: LambdaType
+        inputs: typing.Dict[str, str] = field(default_factory=dict)
+        outputs: typing.Dict[str, str] = field(default_factory=dict)
 
-class GrfnAssignment:
-    def __init__(self, grfn_node: LambdaNode):
-        self.grfn_node = grfn_node
-        self.inputs = {}
-        self.outputs = {}
 
-    def __str__(self):
-        return f"GrFNasgn: {str(self.grfn_node)}\n\t inputs  : {self.inputs}\n\t outputs : {self.outputs}"
+@dataclass
+class GrfnCallArg():  
+        assignment_node: LambdaNode
+        assignment_type: LambdaType
+        grfn_var: VariableNode
+        inputs: typing.Dict[str, str] = field(default_factory=dict)
+
+# class GrfnAssignment:
+#     def __init__(self, grfn_node: LambdaNode):
+#         self.grfn_node = grfn_node
+#         self.inputs = {}
+#         self.outputs = {}
+# 
+#     def __str__(self):
+#         return f"GrFNasgn: {str(self.grfn_node)}\n\t inputs  : {self.inputs}\n\t outputs : {self.outputs}"
 
 class AnnCast:
     def __init__(self, ann_nodes: typing.List):
@@ -254,12 +261,10 @@ class AnnCastCall(AnnCastNode):
         self.ret_val = {}
         self.modified_globals = {} # Store when accumulating modified variables
 
-        # GrFN VariableNodes for created GrFN argument variables
-        # this dict maps argument positional index to GrFN VariableNode
-        self.grfn_argument_nodes = {}
-        # GrfnAssignment's for created GrFN argument variables
-        # this dict maps argument positional index to GrfnAssignment
-        self.grfn_assignments = {}
+        # this dict maps argument positional index to GrfnCallArg's
+        # Each GrfnCallArg stores the ASSIGN node, the inputs to the ASSIGN node,
+        # and the GrFN VariableNode which is the output of the ASSIGN node
+        self.grfn_arguments: typing.Dict[int, GrfnCallArg] = {}
 
     def __str__(self):
         return Call.__str__(self)

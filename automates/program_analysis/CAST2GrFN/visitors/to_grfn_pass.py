@@ -198,44 +198,35 @@ class ToGrfnPass:
 
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment, subgraph: GrFNSubgraph):
-        # TODO: what if the rhs has side-effect
-        lambda_uuid = str(uuid.uuid4())
-        # TODO: correct values for these
-        lambda_str = ""
-        lambda_func = lambda: None
-        lambda_metadata = []
-        assert isinstance(node.left, AnnCastVar)
-        output_node = self.ann_cast.grfn_id_to_grfn_var[node.left.val.grfn_id]
+        # add ASSIGN or LITERAL node to network
+        assignment_node = node.grfn_assignment.assignment_node
+        self.network.add_node(assignment_node, **assignment_node.get_kwargs())
+        # accumulate created nodes to add to subgraph
+        subgraph_nodes = [assignment_node]
+        # accumulate inputs to assignment node
+        inputs = []
+        for fullid, grfn_id in node.grfn_assignment.inputs.items():
+            input = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+            inputs.append(input)
+            subgraph_nodes.append(input)
+        # accumulate outputs from assignment node 
+        outputs = []
+        for fullid, grfn_id in node.grfn_assignment.outputs.items():
+            output = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+            outputs.append(output)
+            subgraph_nodes.append(output)
 
-        # TODO: these cases are not exhaustive
-        if isinstance(node.right, AnnCastNumber):
-            lambda_type = LambdaType.LITERAL
-            assignment_node = LambdaNode(lambda_uuid, lambda_type,
-                                         lambda_str, lambda_func, lambda_metadata)
-            self.network.add_node(assignment_node, **assignment_node.get_kwargs())
-            self.network.add_edge(assignment_node, output_node)
-            self.hyper_edges.append(HyperEdge([], assignment_node, [output_node]))
-            subgraph_nodes = [output_node, assignment_node]
-
-        elif isinstance(node.right, AnnCastName):
-            lambda_type = LambdaType.ASSIGN
-            assignment_node = LambdaNode(lambda_uuid, lambda_type, 
-                                         lambda_str, lambda_func, lambda_metadata)
-            input_node = self.ann_cast.grfn_id_to_grfn_var[node.right.grfn_id]
-            self.network.add_node(assignment_node, **assignment_node.get_kwargs())
-            self.network.add_edge(input_node, assignment_node)
-            self.network.add_edge(assignment_node, output_node)
-            self.hyper_edges.append(HyperEdge([input_node], assignment_node, [output_node]))
-            subgraph_nodes = [output_node, assignment_node, input_node]
-
+        # build input edge set 
+        input_edges = zip(inputs, [assignment_node] * len(inputs))
+        # build output edge set 
+        output_edges = zip([assignment_node] * len(outputs), outputs)
+        # add edges to network
+        self.network.add_edges_from(input_edges)
+        self.network.add_edges_from(output_edges)
+        # add HyperEdges to GrFN
+        self.hyper_edges.append(HyperEdge(inputs, assignment_node, outputs))
+        # add subgraph_nodes
         subgraph.nodes.extend(subgraph_nodes)
-
-        # TODO: actually visit, will probably need to propagate assignment_node
-        # self.visit(node.right)
-        # self.visit(node.left)
-
-        
-
 
 
     @_visit.register

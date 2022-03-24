@@ -381,6 +381,20 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_call(self, node: AnnCastCall):
         assert isinstance(node.func, AnnCastName)
+        # Create new GrFN for return value
+        var_name = f"{node.func.name}_RETURN_VAL"
+        id = self.ann_cast.next_collapsed_id()
+        version = 0
+        con_scopestr = con_scope_to_str(node.func.con_scope)
+        ret_val = create_grfn_var(var_name, id, version, con_scopestr)
+        fullid = build_fullid(var_name, id, version, con_scopestr)
+        self.store_grfn_var(fullid, ret_val)
+
+        # store created fullid and grfn_id in node's ret_val
+        # TODO: also store analog associated FunctionDef? and link through interfaces?
+        node.ret_val[fullid] = ret_val.uid
+
+        # TODO: decide whether we should do this
         # If we copy FunctionDef container, we should make GrFN variables here for 
         # this call of that function
         # It may be as simple as creating variables for all used variables of the function,

@@ -240,6 +240,18 @@ class GCC2CAST:
         default_val = default_cast_val_for_gcc_types(
             v["type"], self.type_ids_to_defined_types
         )
+        # TODO: Rethink how variable declarations are handled
+        # It does not make much sense to create an Assignment node from
+        # a declaration
+        # We could just return None, however there is a potential issue with
+        # code like
+        # int x;
+        # int y = x + 1;
+        # this would compile fine, and both x and y would end up with random
+        # values
+        # However, the translation to CAST would fail, when trying to 
+        # evaluate the expression "x + 1" because there is no value for "x"
+        # in `self.variables_ids_to_expression`
         if "id" in v:
             self.variables_ids_to_expression[v["id"]] = default_val
         if var is not None:

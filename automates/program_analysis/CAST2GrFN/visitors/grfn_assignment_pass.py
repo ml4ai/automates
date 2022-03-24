@@ -56,19 +56,16 @@ class GrfnAssignmentPass:
         # TODO: add correct metadata
         metadata = []
         if is_literal(node.right):
-            node.grfn_assignment = GrfnAssignment(create_grfn_literal_node(metadata))
+            node.grfn_assignment = GrfnAssignment(create_grfn_literal_node(metadata), LambdaType.LITERAL)
         else:
-            node.grfn_assignment = GrfnAssignment(create_grfn_assign_node(metadata))
+            node.grfn_assignment = GrfnAssignment(create_grfn_assign_node(metadata), LambdaType.ASSIGN)
             
-        print(f"Assignment before visiting children:")
-        print(f"     grfn_assignment.inputs:  {node.grfn_assignment.inputs}")
-        print(f"     grfn_assignment.outputs: {node.grfn_assignment.outputs}")
-
         self.visit(node.right, node.grfn_assignment.inputs)
         assert isinstance(node.left, AnnCastVar)
         self.visit(node.left, node.grfn_assignment.outputs)
 
-        print(f"Assignment after visiting children:")
+        # DEBUGGING
+        print(f"GrFN {node.grfn_assignment.assignment_type} after visiting children:")
         print(f"     grfn_assignment.inputs:  {node.grfn_assignment.inputs}")
         print(f"     grfn_assignment.outputs: {node.grfn_assignment.outputs}")
 
@@ -109,23 +106,20 @@ class GrfnAssignmentPass:
 
             # TODO: add correct metadata for ASSIGN/LITERAL node
             metadata = []
-            # if its a literal, there are no inputs
+            # create GrfnCallArg based on assignment type
             if is_literal(n):
-                node.grfn_assignments[i] = GrfnAssignment(create_grfn_literal_node(metadata))
+                grfn_call_arg = GrfnCallArg(create_grfn_literal_node(metadata), LambdaType.LITERAL, grfn_var)
             else:
-                node.grfn_assignments[i] = GrfnAssignment(create_grfn_assign_node(metadata))
-                # add to assignment inputs by visiting `n`
-                self.visit(n, node.grfn_assignments[i].inputs)
+                grfn_call_arg = GrfnCallArg(create_grfn_assign_node(metadata), LambdaType.ASSIGN, grfn_var)
 
-            # NOTE: node.grfn_assignments[i] will have an empty outputs dict because
-            # we know what the ouptut GrFN VariableNode is, and we store it in grfn_argument_nodes
-            node.grfn_argument_nodes[i] = grfn_var
+            # store GrfnCallArg at positional argument index
+            node.grfn_arguments[i] = grfn_call_arg
+            # populate GrfnCallArg inputs
+            self.visit(n, grfn_call_arg.inputs)
             
         print(f"Call after processing arguments:")
-        print(f"     grfn_argument_nodes: {node.grfn_argument_nodes}")
-        print(f"     grfn_assignments:")
-        for pos, grfn_asgn in node.grfn_assignments.items():
-            print(f"     {pos} : {str(grfn_asgn)}")
+        for pos, grfn_call_arg in node.grfn_arguments.items():
+            print(f"     {pos} : {str(grfn_call_arg)}")
 
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef, add_to: typing.Dict):

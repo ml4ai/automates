@@ -50,11 +50,8 @@ def main():
     print("\nCalling GrfnAssignmentPass-------------------")
     GrfnAssignmentPass(annotated_cast)
 
-    # print("\nCalling IncomingOutgoingPass-------------------")
-    # IncomingOutgoingPass(annotated_cast)
-
-    #print("\nCalling ToGrfnPass-------------------")
-    #ToGrfnPass(annotated_cast)
+    print("\nCalling ToGrfnPass-------------------")
+    ToGrfnPass(annotated_cast)
 
 
     V2 = CASTToAGraphVisitor(annotated_cast)
