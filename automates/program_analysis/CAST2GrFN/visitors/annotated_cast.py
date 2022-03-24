@@ -147,11 +147,23 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
     metadata = []
     return VariableNode(uid, identifier, metadata)
 
+
+'''
 @dataclass
 class GrfnAssignment():  
         grfn_node: LambdaNode
         inputs = {}
         outputs = {}
+'''
+
+class GrfnAssignment:
+    def __init__(self, grfn_node: LambdaNode):
+        self.grfn_node = grfn_node
+        self.inputs = {}
+        self.outputs = {}
+
+    def __str__(self):
+        return f"GrFNasgn: {str(self.grfn_node)}\n\t inputs  : {self.inputs}\n\t outputs : {self.outputs}"
 
 class AnnCast:
     def __init__(self, ann_nodes: typing.List):

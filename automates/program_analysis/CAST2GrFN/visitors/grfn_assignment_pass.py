@@ -60,9 +60,17 @@ class GrfnAssignmentPass:
         else:
             node.grfn_assignment = GrfnAssignment(create_grfn_assign_node(metadata))
             
+        print(f"Assignment before visiting children:")
+        print(f"     grfn_assignment.inputs:  {node.grfn_assignment.inputs}")
+        print(f"     grfn_assignment.outputs: {node.grfn_assignment.outputs}")
+
         self.visit(node.right, node.grfn_assignment.inputs)
         assert isinstance(node.left, AnnCastVar)
         self.visit(node.left, node.grfn_assignment.outputs)
+
+        print(f"Assignment after visiting children:")
+        print(f"     grfn_assignment.inputs:  {node.grfn_assignment.inputs}")
+        print(f"     grfn_assignment.outputs: {node.grfn_assignment.outputs}")
 
     @_visit.register
     def visit_attribute(self, node: AnnCastAttribute, add_to: typing.Dict):
@@ -112,6 +120,12 @@ class GrfnAssignmentPass:
             # NOTE: node.grfn_assignments[i] will have an empty outputs dict because
             # we know what the ouptut GrFN VariableNode is, and we store it in grfn_argument_nodes
             node.grfn_argument_nodes[i] = grfn_var
+            
+        print(f"Call after processing arguments:")
+        print(f"     grfn_argument_nodes: {node.grfn_argument_nodes}")
+        print(f"     grfn_assignments:")
+        for pos, grfn_asgn in node.grfn_assignments.items():
+            print(f"     {pos} : {str(grfn_asgn)}")
 
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef, add_to: typing.Dict):
