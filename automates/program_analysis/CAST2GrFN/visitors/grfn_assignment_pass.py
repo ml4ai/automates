@@ -25,6 +25,70 @@ class GrfnAssignmentPass:
             add_to = {}
             self.visit(node, add_to)
 
+    def create_call_args_and_params(self, node: AnnCastCall):
+        """
+        Creates initial version for each argument and each formal parameter
+        Links these argument and parameters through the `top_interface_in` and `top_interface_out`
+        For each argument, creates a `GrfnAssignment` which stores the assignment `LambdaNode`
+        """
+        # TODO: potentially also create assoicated GrFN var for parameter 
+        # inside FunctionDef?
+        func_def = self.ann_cast.func_id_to_def[node.func.id]
+        # call container is used to scope parameters
+        call_con_name = call_container_name(node)
+
+        # create argument and parameter variables
+        # argument variables are inputs to the top interface
+        # paramter variables are outputs of the top interface
+        for i, n in enumerate(node.arguments):
+            # argument name and scope str
+            arg_name = call_argument_name(node, i)
+            arg_con_scopestr = con_scope_to_str(node.func.con_scope)
+
+            # parameter name and scopestr
+            param = func_def.func_args[i]
+            assert(isinstance(param, AnnCastVar))
+            param_name = param.val.name
+            param_con_scopestr = con_scope_to_str(node.func.con_scope + [call_con_name])
+
+            # argument and parameter share id, and start with initial version
+            id = self.ann_cast.next_collapsed_id()
+            version = VAR_INIT_VERSION
+
+            # build and store GrFN variables for argument and parameter
+            arg_grfn_var = create_grfn_var(arg_name, id, version, arg_con_scopestr)
+            arg_fullid = build_fullid(arg_name, id, version, arg_con_scopestr)
+            self.ann_cast.store_grfn_var(arg_fullid, arg_grfn_var)
+
+            param_grfn_var = create_grfn_var(param_name, id, version, param_con_scopestr)
+            param_fullid = build_fullid(param_name, id, version, param_con_scopestr)
+            self.ann_cast.store_grfn_var(param_fullid, param_grfn_var)
+
+            # link argument and parameter through top interface
+            node.top_interface_in[id] = arg_fullid
+            node.top_interface_out[id] = param_fullid
+
+            # create GrfnAssignment based on assignment type
+            # TODO: add correct metadata for ASSIGN/LITERAL node
+            metadata = []
+            if is_literal(n):
+                arg_assignment = GrfnAssignment(create_grfn_literal_node(metadata), LambdaType.LITERAL)
+            else:
+                arg_assignment = GrfnAssignment(create_grfn_assign_node(metadata), LambdaType.ASSIGN)
+
+            # store argument as output to GrfnAssignment
+            arg_assignment.outputs[arg_fullid] = arg_grfn_var.uid
+
+            # populate GrfnAssignment inputs
+            self.visit(n, arg_assignment.inputs)
+
+            # store GrfnAssignment for this argument
+            node.arg_assigments[i] = arg_assignment
+
+        print("After create_call_args_and_params():")
+        print(f"\ttop_interface_in = {node.top_interface_in}")
+        print(f"\ttop_interface_out = {node.top_interface_out}")
+
     def visit(self, node: AnnCastNode, add_to: typing.Dict):
         """
         `add_to` is either the input or outputs to an GrFN Assignment/Literal node
@@ -89,37 +153,14 @@ class GrfnAssignmentPass:
     def visit_call(self, node: AnnCastCall, add_to: typing.Dict):
         assert isinstance(node.func, AnnCastName)
         # add ret_val to add_to dict
-        for fullid, grfn_id in node.ret_val.items():
+        for fullid, grfn_id in node.out_ret_val.items():
             add_to[fullid] = grfn_id
 
-        # create argument variables
-        for i, n in enumerate(node.arguments):
-            var_name = f"{node.func.name}_ARG_{i}"
-            id = self.ann_cast.next_collapsed_id()
-            version = 0
-            con_scopestr = con_scope_to_str(node.func.con_scope)
-
-            # TODO: potentially also create assoicated GrFN var for parameter 
-            # inside FunctionDef?
-            # If we do this, we should also set up interaces
-            grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
-
-            # TODO: add correct metadata for ASSIGN/LITERAL node
-            metadata = []
-            # create GrfnCallArg based on assignment type
-            if is_literal(n):
-                grfn_call_arg = GrfnCallArg(create_grfn_literal_node(metadata), LambdaType.LITERAL, grfn_var)
-            else:
-                grfn_call_arg = GrfnCallArg(create_grfn_assign_node(metadata), LambdaType.ASSIGN, grfn_var)
-
-            # store GrfnCallArg at positional argument index
-            node.grfn_arguments[i] = grfn_call_arg
-            # populate GrfnCallArg inputs
-            self.visit(n, grfn_call_arg.inputs)
+        self.create_call_args_and_params(node)
             
         print(f"Call after processing arguments:")
-        for pos, grfn_call_arg in node.grfn_arguments.items():
-            print(f"     {pos} : {str(grfn_call_arg)}")
+        for pos, grfn_assignment in node.arg_assigments.items():
+            print(f"     {pos} : {str(grfn_assignment)}")
 
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef, add_to: typing.Dict):

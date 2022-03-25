@@ -58,22 +58,6 @@ class GrfnVarCreationPass:
         fullid = ann_cast_name_to_fullid(node)
         return self.ann_cast.grfn_id_to_grfn_var[self.ann_cast.fullid_to_grfn_id[fullid]]
 
-    # def store_grfn_state_in_ann_cast(self):
-    #     """
-    #     Update annotated CAST to retain the GrFN variable data
-    #     """
-    #     self.ann_cast.fullid_to_grfn_id = self.ann_cast.fullid_to_grfn_id
-    #     self.ann_cast.grfn_id_to_grfn_var = self.ann_cast.grfn_id_to_grfn_var
-
-    # TODO: possibly remove this and replace calls to this with AnnCast.store_grfn_var
-    # Same with link_grfn_vars and get_grfn_var
-    def store_grfn_var(self, fullid: str, grfn_var: VariableNode):
-        """
-        Cache `grfn` in `grfn_id_to_grfn_var` and add `fullid` to `fullid_to_grfn_id`
-        """
-        self.ann_cast.fullid_to_grfn_id[fullid] = grfn_var.uid
-        self.ann_cast.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
-
     # def populate_interface(self, con_scopestr, vars, interface):
     #     """
     #     Parameters:
@@ -114,7 +98,7 @@ class GrfnVarCreationPass:
             version = 0
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
-            self.store_grfn_var(fullid, grfn_var)
+            self.ann_cast.store_grfn_var(fullid, grfn_var)
             # TODO/IDEA: add fullid to top_interface_out
             # map the variable unique id to the grfn fullid
             node.top_interface_out[id] = fullid
@@ -171,7 +155,7 @@ class GrfnVarCreationPass:
             version = 0
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
-            self.store_grfn_var(fullid, grfn_var)
+            self.ann_cast.store_grfn_var(fullid, grfn_var)
             # TODO/IDEA: add fullid to top_interface_out
             # TODO: Do we need the variable name as well?
             #       Could concat var and id to to make the key
@@ -188,7 +172,7 @@ class GrfnVarCreationPass:
             version = 1
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
-            self.store_grfn_var(fullid, grfn_var)
+            self.ann_cast.store_grfn_var(fullid, grfn_var)
             # TODO/IDEA: add fullid to bot_interface_in
             node.bot_interface_in[id] = fullid
     
@@ -274,7 +258,7 @@ class GrfnVarCreationPass:
             version = 0
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
-            self.store_grfn_var(fullid, grfn_var)
+            self.ann_cast.store_grfn_var(fullid, grfn_var)
             # TODO/IDEA: add fullid to top_interface_out
             node.top_interface_out[id] = fullid
 
@@ -285,7 +269,7 @@ class GrfnVarCreationPass:
             version = 2
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
-            self.store_grfn_var(fullid, grfn_var)
+            self.ann_cast.store_grfn_var(fullid, grfn_var)
 
             # link version 0 expr variables to created version 2
             expr_version = 0
@@ -381,18 +365,26 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_call(self, node: AnnCastCall):
         assert isinstance(node.func, AnnCastName)
-        # Create new GrFN for return value
-        var_name = f"{node.func.name}_RETURN_VAL"
+        # Create new GrFN for return value for bot interface in and bot interface out
+        var_name = call_ret_val_name(node)
         id = self.ann_cast.next_collapsed_id()
         version = 0
         con_scopestr = con_scope_to_str(node.func.con_scope)
-        ret_val = create_grfn_var(var_name, id, version, con_scopestr)
-        fullid = build_fullid(var_name, id, version, con_scopestr)
-        self.store_grfn_var(fullid, ret_val)
+        call_con_scopestr = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
+        in_ret_val = create_grfn_var(var_name, id, version, call_con_scopestr)
+        in_fullid = build_fullid(var_name, id, version, call_con_scopestr)
+        self.ann_cast.store_grfn_var(in_fullid, in_ret_val)
+        out_ret_val = create_grfn_var(var_name, id, version, con_scopestr)
+        out_fullid = build_fullid(var_name, id, version, con_scopestr)
+        self.ann_cast.store_grfn_var(out_fullid, out_ret_val)
 
         # store created fullid and grfn_id in node's ret_val
         # TODO: also store analog associated FunctionDef? and link through interfaces?
-        node.ret_val[fullid] = ret_val.uid
+        node.out_ret_val[out_fullid] = out_ret_val.uid
+        node.in_ret_val[in_fullid] = in_ret_val.uid
+        # link ret values on bot interface
+        node.bot_interface_in[in_fullid] = in_ret_val.uid
+        node.bot_interface_out[out_fullid] = out_ret_val.uid
 
         # TODO: decide whether we should do this
         # If we copy FunctionDef container, we should make GrFN variables here for 

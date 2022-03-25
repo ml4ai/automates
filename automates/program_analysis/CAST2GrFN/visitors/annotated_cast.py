@@ -56,6 +56,11 @@ IFBODY = "if-body"
 LOOPEXPR = "loop-expr"
 IFEXPR = "if-expr"
 
+VAR_INIT_VERSION = 0
+# TODO: better name for exit version?
+VAR_EXIT_VERSION = 1
+
+
 def con_scope_to_str(scope: typing.List):
     return CON_STR_SEP.join(scope)
 
@@ -74,6 +79,27 @@ def decision_in_to_str(str_start, decision):
         if_else_fullids.append(f" If: {ifid}; Else: {elseid}")
 
     return str_start + ", ".join(if_else_fullids)
+
+def call_argument_name(node, arg_index: int) -> str:
+    """
+    Returns the call site argument name for argument with index `arg_index`
+    Used for the AnnCastCall's top interface in
+    """
+    return f"{node.func.name}-call{node.invocation_index}-arg{arg_index}"
+
+def call_container_name(node) -> str:
+    """
+    Returns the call site container name
+    Used for the AnnCastCall's top interface out and bot interface in
+    """
+    return f"{node.func.name}-call{node.invocation_index}"
+
+def call_ret_val_name(node) -> str:
+    """
+    Returns the call site return value name
+    Used for the AnnCastCall's bot interface out
+    """
+    return f"{node.func.name}-call{node.invocation_index}-ret_val"
 
 
 def ann_cast_name_to_fullid(node):
@@ -137,7 +163,7 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
     # list.  We should update this to include the necessary
     # metadata
     # We may also need to update the namespace and scope 
-    # we provide
+    # we provide, e.g. use :: instead of . as delimiter
     identifier = VariableIdentifier("default_ns", con_scopestr, var_name, version)
 
     # TODO: change to using UUIDs?
@@ -155,13 +181,6 @@ class GrfnAssignment():
         inputs: typing.Dict[str, str] = field(default_factory=dict)
         outputs: typing.Dict[str, str] = field(default_factory=dict)
 
-
-@dataclass
-class GrfnCallArg():  
-        assignment_node: LambdaNode
-        assignment_type: LambdaType
-        grfn_var: VariableNode
-        inputs: typing.Dict[str, str] = field(default_factory=dict)
 
 # class GrfnAssignment:
 #     def __init__(self, grfn_node: LambdaNode):
@@ -249,6 +268,9 @@ class AnnCastCall(AnnCastNode):
         self.func: AnnCastName = func
         self.arguments = arguments
         self.source_refs = source_refs
+
+        # the index of this Call node over all invocations of this function
+        self.invocation_index: int 
         
         # dicts mapping a Name id to its fullid
         self.top_interface_in = {}
@@ -258,13 +280,15 @@ class AnnCastCall(AnnCastNode):
 
         # for bot_interface
         # ret_val should map fullid to grfn_id
-        self.ret_val = {}
+        self.in_ret_val = {}
+        self.out_ret_val = {}
         self.modified_globals = {} # Store when accumulating modified variables
 
-        # this dict maps argument positional index to GrfnCallArg's
-        # Each GrfnCallArg stores the ASSIGN node, the inputs to the ASSIGN node,
-        # and the GrFN VariableNode which is the output of the ASSIGN node
-        self.grfn_arguments: typing.Dict[int, GrfnCallArg] = {}
+        # this dict maps argument positional index to GrfnAssignment's
+        # Each GrfnAssignment stores the ASSIGN/LITERAL node, 
+        # the inputs to the ASSIGN/LITERAL node, and the outputs to the ASSIGN/LITERAL node
+        # In this case, the output will map the arguments fullid to its grfn_id
+        self.arg_assigments: typing.Dict[int, GrfnAssignment] = {}
 
     def __str__(self):
         return Call.__str__(self)

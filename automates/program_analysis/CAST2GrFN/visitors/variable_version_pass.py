@@ -105,6 +105,7 @@ class VariableVersionPass:
             fullid = build_fullid(var_name, id, highest_ver, con_scopestr)
             interface[id] = fullid
 
+
     # def merge_accessed_modified_vars(self, node):
     #     """
     #     Merge the ids of the accessed and modified variables of `node` and
@@ -182,6 +183,7 @@ class VariableVersionPass:
         # store them on an earlier pass
         check_global = lambda var: self.is_var_in_con_scope(calling_scopestr, var[0])
         global_vars = dict(filter(check_global, function_def.modified_vars.items()))
+
         # populate call nodes's top interface in
         # TODO: add argument
         # For each argument, create a parameter GrFN variable using the arguments index

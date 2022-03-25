@@ -19,6 +19,9 @@ class IdCollapsePass:
         # this tracks what collapsed ids we have used so far
         print("In IdCollapsePass")
         self.collapsed_id_counter = 0
+        # dict mapping collapsed function id to number of invocations
+        # used to populate `invocation_index` of AnnCastCall nodes
+        self.func_invocation_counter = defaultdict(int)
         for node in self.ann_cast.nodes:
             self.visit(node)
         self.nodes = self.ann_cast.nodes
@@ -37,6 +40,15 @@ class IdCollapsePass:
             self.collapsed_id_counter += 1
 
         return self.old_id_to_collapsed_id[id]
+
+    def next_function_invocation(self, coll_func_id: int) -> int:
+        """
+        Returns the next invocation index for function with collapsed id `coll_func_id`
+        """
+        index = self.func_invocation_counter[coll_func_id]
+        self.func_invocation_counter[coll_func_id] += 1
+
+        return index
 
     def visit(self, node: AnnCastNode):
         # type(node) is a string which looks like
@@ -84,6 +96,7 @@ class IdCollapsePass:
     def visit_call(self, node: AnnCastCall):
         assert isinstance(node.func, AnnCastName)
         node.func.id = self.collapse_id(node.func.id)
+        node.invocation_index = self.next_function_invocation(node.func.id)
 
         self.visit_node_list(node.arguments)
 
