@@ -42,6 +42,7 @@
 #include "cgraph.h"
 #include "options.h"
 #include "context.h"
+#include "dominance.h"
 
 #include "langhooks.h"
 
@@ -73,6 +74,23 @@ int json_needs_comma = 0;
       printf(__VA_ARGS__); \
   } while (0)
 #endif
+
+// Function was taken from cfgloop.c of the gcc source, there is no prototype for it in cfgloop.h,
+// so the compiler complains of undefined reference without this definition
+// Returns the list of latch edges of `loop`
+static vec<edge> 
+get_loop_latch_edges (const struct loop *loop)
+{
+  edge_iterator ei;
+  edge e;
+  vec<edge> ret = vNULL;
+  FOR_EACH_EDGE (e, ei, loop->header->preds)
+    {
+      if (dominated_by_p (CDI_DOMINATORS, e->src, loop->header))
+        ret.safe_push (e);
+    }
+  return ret;
+}
 
 typedef struct json_context
 {
@@ -1130,9 +1148,45 @@ static void dump_local_decls(struct function *fun)
 
 static void dump_basic_block(basic_block bb)
 {
-
   json_start_object();
   json_int_field("index", bb->index);
+  struct loop* loop_father = bb->loop_father;
+  json_int_field("loopFatherNum", loop_father->num);
+  json_bool_field("loopHeader", bb_loop_header_p(bb));
+  basic_block immediate_dom = get_immediate_dominator(CDI_DOMINATORS, bb);
+  if (immediate_dom) {
+      json_int_field("immediateDominatorIndex", immediate_dom->index);
+  }
+  // dump all dominators of this basic block
+  json_array_field("dominators");
+  basic_block other_bb;
+  FOR_ALL_BB_FN(other_bb, cfun)
+  {
+      if (dominated_by_p(CDI_DOMINATORS, bb, other_bb)) {
+          json_int(other_bb->index);
+      }
+  }
+  json_end_array();
+
+  // find the parents of this BB, and also
+  // the nearest common dominator for those parents
+  json_array_field("parents");
+  bitmap parents_bitmap = BITMAP_ALLOC(NULL);
+  TRACE("Building parents bitmap for bb %d\n", bb->index);
+  edge e;
+  edge_iterator ei;
+  FOR_EACH_EDGE(e, ei, bb->preds) {
+      json_int(e->src->index);
+      bitmap_set_bit(parents_bitmap, e->src->index);
+  };
+  json_end_array();
+  // if the BB has no parents, skip adding the field
+  if (bitmap_count_bits(parents_bitmap) != 0) {
+      basic_block nearest_common_dom = nearest_common_dominator_for_set(CDI_DOMINATORS, parents_bitmap);
+      json_int_field("parentsNearestCommonDom", nearest_common_dom->index);
+  }
+  BITMAP_FREE(parents_bitmap);
+
   // json_int_field("line_start", LOCATION_LINE(bb->locus));
   json_array_field("statements");
 
@@ -1142,8 +1196,6 @@ static void dump_basic_block(basic_block bb)
   {
     dump_statement(bb, gsi_stmt(gsi));
   }
-  edge e;
-  edge_iterator ei;
   FOR_EACH_EDGE(e, ei, bb->succs)
   {
 
@@ -1169,6 +1221,86 @@ static void dump_basic_block(basic_block bb)
 
   json_end_array();
   json_end_object();
+}
+
+static void dump_loop_siblings_indices(struct loop* loop) {
+  struct loop* sibling = loop->next;
+  while (sibling) {
+    json_int(sibling->num);
+    sibling = sibling->next;
+  }
+}
+
+static void dump_loop(struct loop* loop) {
+  json_start_object();
+  json_int_field("num", loop->num);
+  json_int_field("headerBB", loop->header->index);
+  json_int_field("depth", loop_depth(loop));
+
+  // dump latch BBs
+  vec<edge> latches;
+  edge e;
+  int i;
+  latches = get_loop_latch_edges(loop);
+  if (latches.length() > 1) {
+    TRACE("dump_loop: WARNING loop %d has multiple latches\n", loop->num);
+  }
+  json_int_field("numLatches", latches.length());
+  json_array_field("latchBBs");
+  FOR_EACH_VEC_ELT (latches, i, e)
+      json_int(e->src->index);
+  latches.release ();
+  json_end_array();
+
+  json_int_field("numNodes", loop->num_nodes);
+  json_array_field("loopBody");
+  basic_block* bbs = NULL;
+  // For the default top level loop of the function (num zero), we cannot use 
+  // get_loop_body_in_dom_order() because gcc crashes (it asserts that the loop is not the top level).
+  // So, only call get_loop_body_in_dom_order() for non top level loops
+  if (loop->num == 0) 
+      bbs = get_loop_body(loop);
+  else 
+      bbs = get_loop_body_in_dom_order(loop);
+  for (int i = 0; i < loop->num_nodes; i++)
+      json_int(bbs[i]->index);
+  free(bbs);
+  json_end_array();
+
+  struct loop* immediate_superloop = loop_outer(loop);
+  if (immediate_superloop) {
+    json_int_field("immediateSuperloop", immediate_superloop->num);
+  }
+
+  // dump superloops
+  json_array_field("superloops");
+  const size_t num_superloops = loop_depth(loop);
+  for (size_t i = 0; i < num_superloops; ++i) {
+    json_int((*loop->superloops)[i]->num);
+  }
+  json_end_array();
+
+  // dump children loops
+  json_array_field("children");
+  struct loop* child = loop->inner;
+  if (child) {
+    json_int(child->num);
+    dump_loop_siblings_indices(child);
+  }
+  json_end_array();
+  json_end_object();
+}
+
+
+static void dump_loops() {
+  json_array_field("loops");
+  struct loop* loop;
+  FOR_EACH_LOOP(loop, LI_INCLUDE_ROOT) {
+      if (loop == NULL) continue;
+      
+      dump_loop(loop);
+  }
+  json_end_array();
 }
 
 static unsigned int dump_function_ast(void)
@@ -1201,6 +1333,10 @@ static unsigned int dump_function_ast(void)
 
   TRACE("dump_function: dumping locals...\n");
   dump_local_decls(cfun);
+
+  TRACE("dump_function: dumping loops...\n");
+  json_int_field("numberOfLoops", number_of_loops(cfun));
+  dump_loops();
 
   TRACE("dump_function: dumping basic blocks...\n");
   json_array_field("basicBlocks");

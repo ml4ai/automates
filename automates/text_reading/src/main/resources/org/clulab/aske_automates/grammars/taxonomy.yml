@@ -2,21 +2,38 @@
   - Phrase:
       - Identifier:
         - VariableGazetteer
+      - Location
+      - Date:
+        - Year
       - Model
+      - ModelComponent
+      - Parameter
+      - CommLineParameter
       - Measurement:
-        - Value:
-          - ValueAndUnit
-        - Unit:
-          - UnitRelation
+        - Value
+        - Unit
+      - Filename
+      - Language
+      - Repository
+      - String
+      - Command
+      - VerbPhrase
 - Event:
+  - CommandLineParamValuePair
   - ContextEvent
   - Conj
   - Causal
+  - DateEvent
   - Description:
     - ConjDescription
     - ConjDescriptionType2
+  - ModelDescr:
+    - ModelLimitation
   - ParameterSetting
+  - ParamAndUnit
   - IntervalParameterSetting
   - Function
   - Context
-  - Command
+  - CommandSequence
+  - MD_Context
+  - UnitRelation

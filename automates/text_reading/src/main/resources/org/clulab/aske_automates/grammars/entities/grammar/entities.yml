@@ -9,7 +9,7 @@ rules:
       # avoids event triggers, coordinations, refs, etc.
       [chunk='B-NP' & !mention=Avoid & !entity=NUMBER & !tag = /VBG/]? [chunk='I-NP' & !mention=Avoid & !word = /\(|\)|,|=|\[|\]/]+
       |
-      [chunk='B-NP' & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]
+      [chunk='B-NP' & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]+
       |
       [tag = "NNP" & entity = LOCATION]+
       |
@@ -31,7 +31,17 @@ rules:
     priority: 1
     type: token
     pattern: |
-      [chunk='B-VP' & word = /[a-zA-Z]/ & !mention=Avoid]
+      [chunk=/B-VP|I-VP/ & tag = /VB/ & !outgoing = /^nsubj/]
+      |
+      [tag = /VBN/]
+    # note: for some cases verbs function as nouns (i.e., gerunds) & this also takes care of wrongly parsed chunks.
+
+  - name: single_VP_for_modelDescr
+    label: VerbPhrase
+    priority: 1
+    type: token
+    pattern: |
+      [chunk=/B-VP|I-VP/ & tag = /VB/]
 
   - name: single_adjP # note: added due to def test t1k. needs to check if this cause any errors.
     label: Phrase

@@ -68,9 +68,17 @@ class CosmosJsonDataLoader extends DataLoader {
     */
   def loadFile(f: File): Seq[String] = {
     val cosmosDoc = CosmosJsonProcessor.mkDocument(f)
-    cosmosDoc.cosmosOjects.filter(section => (section.cls.getOrElse("") != "Figure" && section.cls.getOrElse("") != "Table" ) && section.cls.getOrElse("") != "Reference text"  && section.cls.getOrElse("") != "Page Footer" && section.detectCls.getOrElse("") != "Equation").map(co => co.content.get + "<::>" + co.pdfName.getOrElse("unknown_doc") + "<::>" + co.pageNum.get.mkString(",") + "<::>" + co.blockIdx.get.mkString(",")) // for some papers, also  && section.cls.getOrElse("") != "Equation" and && section.cls.getOrElse("") != "Section Header"
+    cosmosDoc.cosmosOjects.filter(section => (section.cls.getOrElse("") != "Figure" && section.cls.getOrElse("") != "Table" ) && section.cls.getOrElse("") != "Reference text"  && section.cls.getOrElse("") != "Page Footer" && section.detectCls.getOrElse("") != "Equation"  && section.detectCls.getOrElse("") != "Section Header").map(co => co.content.get + "<::>" + co.pdfName.getOrElse("unknown_doc") + "<::>" + co.pageNum.get.mkString(",") + "<::>" + co.blockIdx.get.mkString(",")).map(string => remapSpecialSymbols(string)) // for some papers, also  && section.cls.getOrElse("") != "Equation" and && section.cls.getOrElse("") != "Section Header"
   }
   override val extension: String = "json"
+  val specialCharMap: Map[String, String] = Map("(cid:27)" -> "ff", "(cid:28)" -> "ft", "cid:0" -> " ")
+  def remapSpecialSymbols(string: String): String = {
+    var newString = string
+    for ((key, value) <- specialCharMap) {
+      newString = newString.replace(key, value)
+    }
+    newString
+  }
 }
 
 class PDFDataLoader extends DataLoader {
@@ -123,7 +131,7 @@ class MarkdownTextDataLoader extends DataLoader {
     * @param f the File being loaded
     * @return string content of file (wrapped in sequence)
     */
-  def loadFile(f: File): Seq[String] = getTextFromFile(f).split("\n").filter(_.nonEmpty)
+  def loadFile(f: File): Seq[String] = getTextFromFile(f).split("\n").filter(_.nonEmpty).map(t=>t.replace("`", ""))
   override val extension: String = "md"
 }
 

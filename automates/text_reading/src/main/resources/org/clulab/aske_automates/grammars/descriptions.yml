@@ -14,7 +14,6 @@ rules:
       variable:Identifier{2,} = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       description: Phrase = <cop nmod_of? nmod_in? conj_and?
 
-
   - name: identifier_cop_conj_description2
     label: ConjDescriptionType2
     priority: ${priority}
@@ -276,8 +275,8 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma=/give/]
-      variable:Identifier = nmod_agent
-      description: Phrase = nsubjpass
+      variable:Identifier = nmod_agent | nmod root
+      description: Phrase = nsubjpass | <acl <nmod_to nsubj
 
 
   - name: multiplied_by_descr_identifier

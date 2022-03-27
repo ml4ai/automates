@@ -11,15 +11,17 @@ rules:
       # we want any coordinated entities we might encounter to be split
       [tag=CC]
 
-#   the chunker is wont to gobble up verbs with clear arguments as part of NPs, hence this rule
-  - name: "verbs-with-args"
-    label: Avoid
-    priority: 1
-    example: "X HINDERS Y."
-    type: token
-    pattern: |
-      # avoid verbs with arguments
-      [tag = /^V/ & outgoing=/^nsubj/  & !tag = 'VBN']
+# NOTE: this avoid rule prevented verb phrases that are needed for modelDescrs from being captured, and hence was disabled.
+#       The limitations were incorporated into single_VP rule in entities.yml
+##   the chunker is wont to gobble up verbs with clear arguments as part of NPs, hence this rule
+#  - name: "verbs-with-args"
+#    label: Avoid
+#    priority: 1
+#    example: "X HINDERS Y."
+#    type: token
+#    pattern: |
+#      # avoid verbs with arguments
+#      [tag = /^V/ & outgoing=/^nsubj/  & !tag = 'VBN']
 
   - name: "references-et-al"
     label: Avoid

@@ -1,0 +1,245 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+## TODO: coreferencing (the model, our model, this, it...) needs to be addressed.
+
+  - name: model_verb1
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "SWAT incorporates a simple empirical model to predict the trophic status of water bodies."
+    pattern: |
+      trigger = [lemma = /predict|understand|investigate|examine|suggest/]
+      modelName:Model = <acl_to (<dobj nsubj)? | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj (compound)?
+      modelDescr:Phrase = dobj | ccomp
+
+  - name: model_verb2
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Our model also offers an opportunity to further decompose the different contributions to annual price variability."
+    pattern: |
+      trigger = [lemma = /offer|provide|reproduce/]
+      modelName:Model = nsubj (compound)? | <xcomp advcl dobj
+      modelDescr:Phrase = dobj
+
+  - name: model_cannot
+    label: ModelLimitation
+    priority: ${priority}
+    type: token
+    action: ${action}
+    example: "we show first that the standard Susceptible-Infected-Removed (SIR) model cannot account for the patterns observed in various regions where the disease spread."
+    pattern: |
+      @modelName:Model (?<trigger> [word = "cannot"]) (?<modelDescr> [chunk = /B-VP/] (${PP+NP} [tag = /VBN/] ${PP+NP} [word = "where"] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP/|word = "spread"])?)
+
+  - name: model_limitation
+    label: ModelLimitation
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "The major limitation of MWSWAT was its reduced capability in larger water-sheds."
+    pattern: |
+      trigger = [lemma = "limitation"] (?= "of")
+      modelName:Model = nmod_of
+      modelDescr:Phrase = <nsubj
+
+  - name: model_not_verb
+    label: ModelLimitation
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: ""
+    pattern: |
+      trigger = [word = "not"] (?= [lemma = /hold/])
+      modelName:Model = <neg nsubj
+      modelDescr:VerbPhrase = <neg
+
+  - name: model_not_adj
+    label: ModelLimitation
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "However, existing early warning models of forced migration focus on understanding the causes9 and are not as successful in predicting refugee movements as in predicting natural disasters10–12."
+    pattern: |
+      trigger = [word = "not"] [word = /as/]? [tag = /JJ/]
+      modelName:Model = <conj_and
+      modelDescr:Phrase = advcl_in
+
+  - name: model_cop
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "The Soil and Water Assessment Tool (SWAT) model is a robust watershed modeling tool."
+    pattern: |
+      trigger = [lemma = "be"]
+      modelName:Model = <cop nsubj
+      modelDescr:Phrase = <cop
+
+  - name: model_allows_for
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "This allows for more realistic simulation of the soil water profile and application of excess irrigation for leaching salts."
+    pattern: |
+      trigger = [lemma = "allow"]
+      modelName:Model = nsubj (nmod_in | nmod_of)?
+      modelDescr:Phrase+ = nmod_for | dobj | xcomp ccomp
+
+  - name: model_contributes_to
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "It also contributes to understanding complex ecosystems as well as water availability, water quality, climate change, and agricultural production issues across the world"
+    pattern: |
+      trigger = [lemma = "contribute"]
+      modelName:Model = nsubj
+      modelDescr:Phrase+ = advcl_to
+
+  - name: model_capability
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "QSWAT has added capabilities of merging small subbasins and has static and dynamic visualizations of outputs."
+    pattern: |
+      trigger = [lemma = "capability"]
+      modelName:Model = <dobj? nsubj
+      modelDescr:Phrase+ = acl_of | acl_to
+
+  - name: model_can_verb
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "QSWAT can also show the total, daily, monthly or annual means, maxima and minima for reach and subbasin out-puts."
+    pattern: |
+      trigger = [lemma = "can"]
+      modelName:Model = <aux nsubj
+      modelDescr:VerbPhrase+ = <aux
+
+# note: This rule overlaps with model_cop rule. If it turns out that this rule can be fully incorporated into model_cop rule, we can delete this rule.
+#  - name: model_useful_to
+#    label: ModelDescr
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "Our model would then be useful to enforce proper precautionary measures immediately."
+#    pattern: |
+#      trigger = [lemma = "useful"] (?= "to")
+#      model:Model = nsubj
+#      modelDescr:VerbPhrase+ = xcomp
+
+  - name: model_consist_of
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "A high-resolution SWAT model, consisting of sub-field level hydrologic response units, was applied to Lake Champlain’s Missisquoi Bay Watershed, located along the United States–Canadian border."
+    pattern: |
+      trigger = [lemma = "consist"] (?= "of")
+      modelName:Model = <acl
+      modelDescr:Phrase = nmod_of
+
+  - name: model_applied_to
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Computational models have been widely applied to study migration processes."
+    pattern: |
+      trigger = [lemma = "apply"]
+      modelName:Model = nsubjpass | dobj
+      modelDescr:VerbPhrase = xcomp | advcl_to
+
+  - name: model_purpose
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "It was developed to predict the impact of land management practices on water, sediment and agricultural chemical yields (e.g., fertilizer and pesticides) in large complex watersheds with varying soils, land uses and management conditions over long periods of time."
+    pattern: |
+      trigger = [word = /developed|designed/] (?=[word = /^to$|^for$/])
+      modelName:Model = nsubjpass | <acl nsubj
+      modelDescr:VerbPhrase = xcomp
+
+  - name: model_languageInfo
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: ""
+    pattern: |
+      trigger = [word = /written|implemented/] (?=[word = /^in$/])
+      modelName:Model = nsubjpass
+      modelDescr:Phrase+ = nmod_in
+
+  - name: model_characteristic
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "A main characteristic of our model is that the supply function refers not only to current production, but includes supply from storage."
+    pattern: |
+      trigger = [word = "characteristic"]
+      modelName:Model = nmod_of
+      modelDescr:VerbPhrase+ = <nsubj ccomp
+
+  - name: model_version
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Based on these findings, we chose to use the FabSim3 toolkit, which is an improved version of FabSim."
+    pattern: |
+      trigger = [tag = /JJ|VBN/]? [word = "version"]
+      modelName:Model = nsubj compound?
+      modelDescr:Model+ = nmod_of
+
+  - name: model_focus
+    label: ModelDescr
+    priority: ${priority}
+    type: token
+    action: ${action}
+    example: "However, existing early warning models of forced migration focus on understanding the causes and are not as successful in predicting refugee movements as in predicting natural disasters."
+    pattern: |
+      @modelName:Model (${PP+NP})? (?<trigger> [word = "focus"] [word = "on"]) (?<modelDescr> [tag = /VBG/] [chunk = /B-NP|I-NP/]*)
+
+  - name: apply_model_in_order_to
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "In this paper, we apply a global, annual supply-demand equilibrium model in order to quantify to what degree i) observed annual wheat price fluctuations over the last four decades can be explained by reported variations in production in the presence of dynamic storage; and ii) the remaining unexplained price variations in the last decade can be traced back to reported trade policy responses in the wheat market, as opposed to external drivers."
+    pattern: |
+      trigger = [word = "apply"]
+      modelName:Model = dobj
+      modelDescr:Phrase = advcl_in_order
+
+  - name: optimised/used_for
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "FLEE is optimised for simplicity and flexibility and provides a range of scripts to handle and convert refugee data from the UNHCR database."
+    pattern: |
+      trigger = [word=/optimised|used/]
+      modelName:Model = nsubjpass
+      modelDescr:Phrase = nmod_for
+
+  ## New rules for model construction ###
+
+  - name: model_input_data
+    label: ModelDescr
+    priority: ${priority}
+    type: token
+    action: ${action}
+    example: "Three formats of csv files, namely locations.csv, routes.csv and closures.csv, are integrated with FLEE’s input interface."
+    pattern: |
+      (@modelDescr:ModelComponent [word = /\,|and/]?)+ [word = /.*/]{,5} @model:Model [word = "'"] [word = "s"] (?<trigger> [word = "input"])
+

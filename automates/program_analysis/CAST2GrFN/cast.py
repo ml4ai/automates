@@ -81,6 +81,18 @@ CAST_NODES_TYPES_LIST = [
 ]
 
 
+def compare_name_nodes(name1: Name, name2: Name) -> bool:
+    """
+    Checks if two Name nodes are equal, by only looking at
+    their `name` fields.  The `__eq__` method on `Name` nodes generated
+    by Swagger also checks the `id` attribute, which we do not expect
+    to be consistent across CAST generations, since it is a UUID
+    """
+    if not (isinstance(name1, Name) and isinstance(name2, Name)):
+        return False
+    return name1.name == name2.name
+
+
 class CASTJsonException(Exception):
     """
     Class used to represent exceptions encountered when encoding/decoding CAST json
@@ -103,12 +115,32 @@ class CAST(object):
         self.cast_source_language = cast_source_language
 
     def __eq__(self, other):
-        return len(self.nodes) == len(other.nodes) and all(
-            [
-                self_node == other_node
-                for self_node, other_node in zip(self.nodes, other.nodes)
-            ]
-        )
+        """
+        For equality, the two CAST objects must have the same node data.
+        When checking each node, we allow a custom node comparison function.
+        Currently, the only case where we do a custom comparison is for Name nodes.
+        For all other nodes we use their Swagger generated `__eq__` method
+        """
+        if len(self.nodes) != len(other.nodes):
+            return False
+
+        compare_nodes = lambda n1, n2, comparator: comparator(n1, n2)
+
+        for i, node in enumerate(self.nodes):
+            other_node = other.nodes[i]
+            if isinstance(node, Name):
+                comparator = compare_name_nodes
+            else:
+                comparator = lambda n1, n2: n1 == n2
+
+            if not compare_nodes(node, other_node, comparator):
+                print(f"**Self node **\n")
+                print(f"{node}")
+                print(f"\n**Other node**\n")
+                print(f"{other_node}")
+                return False
+
+        return True
 
     def to_AGraph(self):
         G = nx.DiGraph()
@@ -179,7 +211,9 @@ class CAST(object):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
-        return AutoMATES_IR(GenericIdentifier.from_str(air["entrypoint"]), C, V, T, [], [], [])
+        return AutoMATES_IR(
+            GenericIdentifier.from_str(air["entrypoint"]), C, V, T, [], [], []
+        )
 
     def to_GrFN(self):
         air = self.to_AIR()

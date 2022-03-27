@@ -32,7 +32,7 @@ object CosmosJsonProcessor {
       }
     else {
         val previousBlock = newBlocks.last
-        if (!endsWithBlockEndPunkt(previousBlock.content.get) && !block.content.get.head.isUpper) {
+        if (!endsWithBlockEndPunkt(previousBlock.content.get) && !block.content.get.head.isUpper && !block.content.get.head.isDigit) {
         // then combine
         val newBlock = CosmosObject(
           block.pdfName,
@@ -84,6 +84,7 @@ object CosmosJsonProcessor {
     val cls = json("postprocess_cls").str
     val detectCls = json("detect_cls").str
     val postprocessScore = json("postprocess_score").num
+    val detect_cls = json("detect_cls").str
 
     CosmosObject(pdfName, Some(Seq(pageNum)), Some(Seq(blockIdx)), Some(content), Some(cls), Some(detectCls), Some(postprocessScore)) //todo: add bounding box?
   }

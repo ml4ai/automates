@@ -1,0 +1,29 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+  - name: entity-date
+    label: Date
+    priority: ${priority1}
+    type: token
+    example: "The crisis continued for several years and to capture it simulation period is 820 days from 1 December 2013 to 29 February 2016 ."
+    pattern: |
+      [word = /\d{1,2}/ & entity = "DATE"]* [word = /[A-Z]+[a-z]+/ & entity = "DATE"]+ [word = /\d{4}/ & entity = "DATE"]
+
+  - name: entity-year
+    label: Year
+    priority: ${priority1}
+    type: token
+    example: "The crisis continued for several years and to capture it simulation period is 820 days from 1 December 2013 to 29 February 2016 ."
+    pattern: |
+      [word = /19\d\d/ & entity = "DATE"] | [word = /20\d\d/ & entity = "DATE"]
+
+  - name: date-event
+    label: DateEvent
+    priority: ${priority2}
+    type: dependency
+    example: "These crises include the 2015 - 2016 civil war in Burundi and the 2013 - 2016 conflict in the Central African Republic ( CAR )"
+    pattern: |
+      trigger: Date
+      verb: VerbPhrase = </nmod_*/
+      subj: Phrase = </nmod_*/ nsubj

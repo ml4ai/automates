@@ -1,6 +1,10 @@
 GCCDIR = /usr/local/gcc-10.1.0/bin/
 
 CXX = $(GCCDIR)/g++-10.1
+# use CUSTOM_GCC_10_PATH for CXX if it is set
+ifdef CUSTOM_GCC_10_PATH
+CXX = $(CUSTOM_GCC_10_PATH)
+endif
 # Flags for the C++ compiler: enable C++11 and all the warnings, -fno-rtti is required for GCC plugins
 CXXFLAGS = -std=c++11 -fno-rtti 
 # Workaround for an issue of -std=c++11 and the current GCC headers

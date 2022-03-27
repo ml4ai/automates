@@ -1,0 +1,1019 @@
+{
+  "mainInputFilename": "if_else_if_03.c",
+  "functions": [
+    {
+      "id": 4294964968,
+      "name": "func",
+      "mangledName": "_Z4funci",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 2,
+      "decl_col_start": 5,
+      "file": "if_else_if_03.c",
+      "line_start": 3,
+      "line_end": 18,
+      "parameters": [
+        {
+          "name": "input",
+          "id": 4294964969,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 2,
+          "col_start": 14,
+          "file": "if_else_if_03.c"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "name": "x",
+          "id": 4294964966,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964953,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 11,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 4,
+              "col_start": 9,
+              "file": "if_else_if_03.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "x",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "if_else_if_03.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            },
+            {
+              "type": "conditional",
+              "line_start": 5,
+              "col_start": 5,
+              "file": "if_else_if_03.c",
+              "operator": "gt_expr",
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964969,
+                  "name": "input",
+                  "line_start": 2,
+                  "col_start": 14,
+                  "file": "if_else_if_03.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 10
+                }
+              ],
+              "trueLabel": 3,
+              "falseLabel": 6
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 2,
+              "target": 3
+            },
+            {
+              "flags": 512,
+              "source": 2,
+              "target": 6
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 6,
+              "col_start": 11,
+              "file": "if_else_if_03.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "x",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "if_else_if_03.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 100
+                }
+              ]
+            },
+            {
+              "type": "conditional",
+              "line_start": 7,
+              "col_start": 9,
+              "file": "if_else_if_03.c",
+              "operator": "eq_expr",
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964969,
+                  "name": "input",
+                  "line_start": 2,
+                  "col_start": 14,
+                  "file": "if_else_if_03.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 50
+                }
+              ],
+              "trueLabel": 4,
+              "falseLabel": 5
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 3,
+              "target": 4
+            },
+            {
+              "flags": 512,
+              "source": 3,
+              "target": 5
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 3,
+          "dominators": [
+            0,
+            2,
+            3,
+            4
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 8,
+              "col_start": 15,
+              "file": "if_else_if_03.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "x",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "if_else_if_03.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964966,
+                  "name": "x",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "if_else_if_03.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 9
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 4,
+              "target": 9
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 3,
+          "dominators": [
+            0,
+            2,
+            3,
+            5
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 10,
+              "col_start": 15,
+              "file": "if_else_if_03.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "x",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "if_else_if_03.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964966,
+                  "name": "x",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "if_else_if_03.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": -1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 9
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 5,
+              "target": 9
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            6
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "conditional",
+              "line_start": 12,
+              "col_start": 12,
+              "file": "if_else_if_03.c",
+              "operator": "gt_expr",
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964969,
+                  "name": "input",
+                  "line_start": 2,
+                  "col_start": 14,
+                  "file": "if_else_if_03.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 99
+                }
+              ],
+              "trueLabel": 7,
+              "falseLabel": 8
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 6,
+              "target": 7
+            },
+            {
+              "flags": 512,
+              "source": 6,
+              "target": 8
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 6,
+          "dominators": [
+            0,
+            2,
+            6,
+            7
+          ],
+          "parents": [
+            6
+          ],
+          "parentsNearestCommonDom": 6,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 13,
+              "col_start": 11,
+              "file": "if_else_if_03.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "x",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "if_else_if_03.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 10
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 9
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 7,
+              "target": 9
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 6,
+          "dominators": [
+            0,
+            2,
+            6,
+            8
+          ],
+          "parents": [
+            6
+          ],
+          "parentsNearestCommonDom": 6,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 15,
+              "col_start": 11,
+              "file": "if_else_if_03.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "x",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "if_else_if_03.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 8,
+              "target": 9
+            }
+          ]
+        },
+        {
+          "index": 9,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            9
+          ],
+          "parents": [
+            5,
+            7,
+            8,
+            4
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 17,
+              "col_start": 12,
+              "file": "if_else_if_03.c",
+              "operator": "var_decl",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964953,
+                "line_start": 17,
+                "col_start": 12,
+                "file": "if_else_if_03.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964966,
+                  "name": "x",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "if_else_if_03.c"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 9,
+              "target": 10
+            }
+          ]
+        },
+        {
+          "index": 10,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 9,
+          "dominators": [
+            0,
+            2,
+            9,
+            10
+          ],
+          "parents": [
+            9
+          ],
+          "parentsNearestCommonDom": 9,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 17,
+              "col_start": 12,
+              "file": "if_else_if_03.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964953,
+                "line_start": 17,
+                "col_start": 12,
+                "file": "if_else_if_03.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 10,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            10
+          ],
+          "parentsNearestCommonDom": 10,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    },
+    {
+      "id": 4294964965,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 20,
+      "decl_col_start": 5,
+      "file": "if_else_if_03.c",
+      "line_start": 21,
+      "line_end": 24,
+      "variableDeclarations": [
+        {
+          "name": "y",
+          "id": 4294964963,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964951,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "call",
+              "line_start": 22,
+              "col_start": 17,
+              "file": "if_else_if_03.c",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964963,
+                "name": "y",
+                "line_start": 22,
+                "col_start": 9,
+                "file": "if_else_if_03.c"
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294964968,
+                  "mangledName": "_Z4funci",
+                  "name": "func",
+                  "line_start": 2,
+                  "col_start": 5,
+                  "file": "if_else_if_03.c"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1000
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 23,
+              "col_start": 12,
+              "file": "if_else_if_03.c",
+              "operator": "var_decl",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964951,
+                "line_start": 23,
+                "col_start": 12,
+                "file": "if_else_if_03.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964963,
+                  "name": "y",
+                  "line_start": 22,
+                  "col_start": 9,
+                  "file": "if_else_if_03.c"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 0,
+              "col_start": 0,
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964951,
+                "line_start": 23,
+                "col_start": 12,
+                "file": "if_else_if_03.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+  ],
+  "recordTypes": [
+  ]
+}
