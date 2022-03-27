@@ -153,12 +153,18 @@ MAP_OP_TO_TYPECATS = \
      '-': ('ANY', 'ANY', 'ANY'),
      '*': ('ANY', 'ANY', 'ANY'),
      '/': ('ANY', 'ANY', 'ANY'),
+
+     # --------- operators below this line are not supported by dynamic analysis
      '%': ('INT', 'INT', 'INT'),
      # bitwise logical operators
      '&': ('NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT'),  # bitwise AND
      '|': ('NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT'),  # bitwise inclusive OR
      '^': ('NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT')   # bitwise exclusive OR
      }
+
+# TODO: Add additional math functions:
+# min(x, y), max(x, y), sqrt, abs, sin
+
 
 # Sequence of operators
 OPS = tuple(MAP_OP_TO_TYPECATS.keys())
