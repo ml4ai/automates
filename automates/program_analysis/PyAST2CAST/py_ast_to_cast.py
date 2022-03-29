@@ -2,6 +2,9 @@ from typing import Type, Union
 import ast
 import os 
 import sys
+from functools import singledispatchmethod
+
+from numpy import isin
 
 from automates.utils.misc import uuid
 from scripts.program_analysis.astpp import parseprint
@@ -39,7 +42,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 )
 
 
-class PyASTToCAST(ast.NodeVisitor):
+class PyASTToCAST():
     """Class PyASTToCast
     This class is used to convert a Python program into a CAST object.
     In particular, given a PyAST object that represents the Python program's
@@ -67,6 +70,7 @@ class PyASTToCAST(ast.NodeVisitor):
         - Filenames
         - Classes
         - Var_Count
+        - global_identifier_dict
     """
     def __init__(self, file_name: str):
         """Initializes any auxiliary data structures that are used 
@@ -80,7 +84,7 @@ class PyASTToCAST(ast.NodeVisitor):
                         visited
            - classes: A dictionary of class names and their associated functions.
            - var_count: An int used when CAST variables need to be generated (i.e. loop variables, etc)
-
+           - global_identifier_dict: A dictionary used to map global variables to unique identifiers
         """
 
         self.aliases = {}
@@ -88,10 +92,15 @@ class PyASTToCAST(ast.NodeVisitor):
         self.filenames = [file_name]
         self.classes = {}
         self.var_count = 0
+        self.global_identifier_dict = {}
+        self.id_count = 0
 
-        
+    @singledispatchmethod
+    def visit(self, node: AstNode, prev_scope_id_dict: Dict):
+        pass
 
-    def visit_Assign(self, node: ast.Assign):
+    @visit.register
+    def visit_Assign(self, node: ast.Assign, prev_scope_id_dict: Dict):
         """Visits a PyAST Assign node, and returns its CAST representation.
         Either the assignment is simple, like x = {expression},
         or the assignment is complex, like x = y = z = ... {expression}
@@ -108,14 +117,14 @@ class PyASTToCAST(ast.NodeVisitor):
         right = []
 
         if len(node.targets) == 1:
-            l_visit = self.visit(node.targets[0])
-            r_visit = self.visit(node.value)
+            l_visit = self.visit(node.targets[0], prev_scope_id_dict)
+            r_visit = self.visit(node.value, prev_scope_id_dict)
             left.extend(l_visit)
             right.extend(r_visit)
         elif len(node.targets) > 1:
-            left.extend(self.visit(node.targets[0]))
+            left.extend(self.visit(node.targets[0],prev_scope_id_dict))
             node.targets = node.targets[1:]
-            right.extend(self.visit(node))
+            right.extend(self.visit(node,prev_scope_id_dict))
         else:
             raise ValueError(f"Unexpected number of targets for node: {len(node.targets)}")
 
@@ -124,7 +133,8 @@ class PyASTToCAST(ast.NodeVisitor):
 
         return [Assignment(left[0], right[0], source_refs=ref)]
 
-    def visit_Attribute(self, node: ast.Attribute):
+    @visit.register
+    def visit_Attribute(self, node: ast.Attribute, prev_scope_id_dict: Dict):
         """Visits a PyAST Attribute node, which is used when accessing
         the attribute of a class. Whether it's a field or method of a class.
 
@@ -137,12 +147,15 @@ class PyASTToCAST(ast.NodeVisitor):
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
-        value = self.visit(node.value)
-        attr = Name(node.attr, source_refs=ref)
+        value = self.visit(node.value, prev_scope_id_dict)
+        
+        # TODO: We need a variable ID name here, which one?
+        attr = Name(node.attr, id=-1, source_refs=ref)
 
         return [Attribute(value[0], attr, source_refs=ref)]
 
-    def visit_AugAssign(self, node:ast.AugAssign):
+    @visit.register
+    def visit_AugAssign(self, node:ast.AugAssign, prev_scope_id_dict: Dict):
         """Visits a PyAST AugAssign node, which is used for an
         augmented assignment, like x += 1. AugAssign node is converted
         to a regular PyAST Assign node and passed to that visitor to 
@@ -200,7 +213,7 @@ class PyASTToCAST(ast.NodeVisitor):
                                                 end_col_offset=node.end_col_offset,
                                                 lineno=node.lineno,
                                                 end_lineno=node.end_lineno
-                ),
+                                ),
                                 op=node.op,
                                 right=value,
                                 col_offset=node.col_offset,
@@ -215,10 +228,11 @@ class PyASTToCAST(ast.NodeVisitor):
                                 )
 
 
-        return self.visit(convert)
+        return self.visit(convert, prev_scope_id_dict)
 
 
-    def visit_BinOp(self, node: ast.BinOp):
+    @visit.register
+    def visit_BinOp(self, node: ast.BinOp, prev_scope_id_dict: Dict):
         """Visits a PyAST BinOp node, which consists of all the arithmetic
         and bitwise operators.
 
@@ -244,9 +258,9 @@ class PyASTToCAST(ast.NodeVisitor):
             ast.BitAnd: BinaryOperator.BITAND,
             ast.BitXor: BinaryOperator.BITXOR,
         }
-        left = self.visit(node.left)
+        left = self.visit(node.left, prev_scope_id_dict)
         op = ops[type(node.op)]
-        right = self.visit(node.right)
+        right = self.visit(node.right, prev_scope_id_dict)
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         leftb = []
@@ -259,7 +273,8 @@ class PyASTToCAST(ast.NodeVisitor):
 
         return leftb + rightb + [BinaryOp(op, left[-1], right[-1], source_refs=ref)]
 
-    def visit_Break(self, node: ast.Break):
+    @visit.register
+    def visit_Break(self, node: ast.Break, prev_scope_id_dict: Dict):
         """Visits a PyAST Break node, which is just a break statement
            nothing to be done for a Break node, just return a ModelBreak()
            object
@@ -275,7 +290,8 @@ class PyASTToCAST(ast.NodeVisitor):
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         return [ModelBreak(source_refs=ref)]
 
-    def visit_BoolOp(self, node: ast.BoolOp):
+    @visit.register
+    def visit_BoolOp(self, node: ast.BoolOp, prev_scope_id_dict: Dict):
         """Visits a BoolOp node, which is a boolean operation connected with 'and'/'or's 
            The BoolOp node gets converte into an AST Compare node, and then the work is 
            passed off to it.
@@ -293,9 +309,10 @@ class PyASTToCAST(ast.NodeVisitor):
         ref = [self.filenames[-1], node.col_offset, node.end_col_offset, node.lineno, node.end_lineno]
 
         compare_op = ast.Compare(left=vals[0], ops=bool_ops, comparators=vals[1:], col_offset=node.col_offset, end_col_offset=node.end_col_offset, lineno=node.lineno, end_lineno=node.end_lineno)
-        return self.visit(compare_op) 
+        return self.visit(compare_op, prev_scope_id_dict) 
 
-    def visit_Call(self, node: ast.Call):
+    @visit.register
+    def visit_Call(self, node: ast.Call, prev_scope_id_dict: Dict):
         """Visits a PyAST Call node, which represents a function call.
         Special care must be taken to see if it's a function call or a class's
         method call. The CAST is generated a little different depending on
@@ -313,22 +330,24 @@ class PyASTToCAST(ast.NodeVisitor):
         kw_args = []
         if len(node.args) > 0:
             for arg in node.args:
-                func_args.extend(self.visit(arg))
+                func_args.extend(self.visit(arg, prev_scope_id_dict))
 
         if len(node.keywords) > 0:
             for arg in node.keywords:
-                kw_args.extend(self.visit(arg.value))
+                kw_args.extend(self.visit(arg.value, prev_scope_id_dict))
 
         args = func_args + kw_args
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         if isinstance(node.func,ast.Attribute):
-            res = self.visit(node.func)
+            res = self.visit(node.func, prev_scope_id_dict)
             return [Call(res[0], args, source_refs=ref)]
         else:
-            return [Call(Name(node.func.id, source_refs=ref), args, source_refs=ref)]
+            # TODO: We need an id here, which one?
+            return [Call(Name(node.func.id, id=-1, source_refs=ref), args, source_refs=ref)]
 
-    def visit_ClassDef(self, node: ast.ClassDef):
+    @visit.register
+    def visit_ClassDef(self, node: ast.ClassDef, prev_scope_id_dict: Dict):
         """Visits a PyAST ClassDef node, which is used to define user classes.
         Acquiring the fields of the class involves going through the __init__
         function and seeing if the attributes are associated with the self
@@ -347,11 +366,11 @@ class PyASTToCAST(ast.NodeVisitor):
 
         bases = []
         for base in node.bases:
-            bases.extend(self.visit(base))
+            bases.extend(self.visit(base, prev_scope_id_dict))
         
         funcs = []
         for func in node.body:
-            funcs.extend(self.visit(func))
+            funcs.extend(self.visit(func, prev_scope_id_dict))
             if isinstance(func,ast.FunctionDef):
                 self.classes[name].append(func.name)
         
@@ -369,12 +388,14 @@ class PyASTToCAST(ast.NodeVisitor):
                 attr_node = func_node.targets[0]
                 if attr_node.value.id == "self":
                     ref = [SourceRef(source_file_name=self.filenames[-1], col_start=attr_node.col_offset, col_end=attr_node.end_col_offset, row_start=attr_node.lineno, row_end=attr_node.end_lineno)]
-                    fields.append(Var(Name(attr_node.attr, source_refs=ref), "float", source_refs=ref))
+                    # Need IDs for name, which one?
+                    fields.append(Var(Name(attr_node.attr, id=-1,source_refs=ref), "float", source_refs=ref))
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         return [ClassDef(name, bases, funcs, fields, source_refs=ref)]
 
-    def visit_Compare(self, node: ast.Compare):
+    @visit.register
+    def visit_Compare(self, node: ast.Compare, prev_scope_id_dict: Dict):
         """Visits a PyAST Compare node, which consists of boolean operations
 
         Args:
@@ -413,11 +434,12 @@ class PyASTToCAST(ast.NodeVisitor):
             right = node.comparators[0]
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        l = self.visit(left)
-        r = self.visit(right)
+        l = self.visit(left, prev_scope_id_dict)
+        r = self.visit(right, prev_scope_id_dict)
         return [BinaryOp(op, l[0], r[0], source_refs=ref)]
 
-    def visit_Constant(self, node: ast.Constant):
+    @visit.register
+    def visit_Constant(self, node: ast.Constant, prev_scope_id_dict: Dict):
         """Visits a PyAST Constant node, which can hold either numeric or
         string values. A dictionary is used to index into which operation
         we're doing.
@@ -447,7 +469,8 @@ class PyASTToCAST(ast.NodeVisitor):
         else:
             raise TypeError(f"Type {node.value} not supported")
 
-    def visit_Continue(self, node: ast.Continue):
+    @visit.register
+    def visit_Continue(self, node: ast.Continue, prev_scope_id_dict: Dict):
         """Visits a PyAST Continue node, which is just a continue statement
            nothing to be done for a Continue node, just return a ModelContinue node
 
@@ -461,7 +484,8 @@ class PyASTToCAST(ast.NodeVisitor):
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         return [ModelContinue(source_refs=ref)]
 
-    def visit_Dict(self, node: ast.Dict):
+    @visit.register
+    def visit_Dict(self, node: ast.Dict, prev_scope_id_dict: Dict):
         """Visits a PyAST Dict node, which represents a dictionary.
 
         Args:
@@ -475,16 +499,17 @@ class PyASTToCAST(ast.NodeVisitor):
         values = []
         if len(node.keys) > 0:
             for piece in node.keys:
-                keys.extend(self.visit(piece))
+                keys.extend(self.visit(piece, prev_scope_id_dict))
 
         if len(node.values) > 0:
             for piece in node.values:
-                values.extend(self.visit(piece))
+                values.extend(self.visit(piece, prev_scope_id_dict))
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         return [Dict(keys, values, source_refs=ref)]
 
-    def visit_Expr(self, node: ast.Expr):
+    @visit.register
+    def visit_Expr(self, node: ast.Expr, prev_scope_id_dict: Dict):
         """Visits a PyAST Expr node, which represents some kind of standalone
         expression.
 
@@ -498,12 +523,13 @@ class PyASTToCAST(ast.NodeVisitor):
         """
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        val = self.visit(node.value)
+        val = self.visit(node.value, prev_scope_id_dict)
         if len(val) > 1:
             return val
         return [Expr(val[0],source_refs=ref)]
 
-    def visit_For(self, node: ast.For):
+    @visit.register
+    def visit_For(self, node: ast.For, prev_scope_id_dict: Dict):
         """Visits a PyAST For node, which represents Python for loops.
         A For loop is different than a While loop, in that we need to do a
         conversion such that the resulting CAST Loop appropriately captures a
@@ -518,12 +544,12 @@ class PyASTToCAST(ast.NodeVisitor):
                   loops and While loops.
         """
 
-        target = self.visit(node.target)[0]
-        iterable = self.visit(node.iter)[0]
+        target = self.visit(node.target, prev_scope_id_dict)[0]
+        iterable = self.visit(node.iter, prev_scope_id_dict)[0]
 
         body = []
         for piece in (node.body + node.orelse):
-            body.extend(self.visit(piece))
+            body.extend(self.visit(piece, prev_scope_id_dict))
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         var_name = f"generated_index_{self.var_count}"
@@ -531,8 +557,9 @@ class PyASTToCAST(ast.NodeVisitor):
         self.var_count += 1
 
         # TODO: Mark these as variables that were generated by this script at some point
-        count_var = Assignment(Var(Name(var_name, source_refs=ref), "float", source_refs=ref), Number(0, source_refs=ref), source_refs=ref)
-        list_var = Assignment(Var(Name(list_name, source_refs=ref), "list", source_refs=ref), Call(Name("list", source_refs=ref),[iterable],source_refs=ref), source_refs=ref)
+        # TODO: Need some identifiers for these
+        count_var = Assignment(Var(Name(var_name, id=-1, source_refs=ref), "float", source_refs=ref), Number(0, source_refs=ref), source_refs=ref)
+        list_var = Assignment(Var(Name(list_name, id=-1, source_refs=ref), "list", source_refs=ref), Call(Name("list", id=-1,source_refs=ref),[iterable],source_refs=ref), source_refs=ref)
 
         loop_cond = BinaryOp(
             BinaryOperator.LT,
@@ -603,7 +630,8 @@ class PyASTToCAST(ast.NodeVisitor):
 
         return [count_var, list_var, Loop(expr=loop_cond, body=loop_assign + body + loop_increment, source_refs=ref)]
 
-    def visit_FunctionDef(self, node: ast.FunctionDef):
+    @visit.register
+    def visit_FunctionDef(self, node: ast.FunctionDef, prev_scope_id_dict: Dict):
         """Visits a PyAST FunctionDef node. Which is used for a Python
         function definition.
 
@@ -614,19 +642,52 @@ class PyASTToCAST(ast.NodeVisitor):
             FunctionDef: A CAST Function Definition node
         """
 
+        # TODO: SCOPING
+
         body = []
         args = []
         # TODO: Correct typing instead of just 'float'
+        cur_scope_identifier_dict = {}
         if len(node.args.args) > 0:
-            args = [Var(Name(arg.arg,source_refs=[SourceRef(self.filenames[-1], arg.col_offset, arg.end_col_offset, arg.lineno, arg.end_lineno)]), 
+            args = [Var(Name(arg.arg,id=-1,source_refs=[SourceRef(self.filenames[-1], arg.col_offset, arg.end_col_offset, arg.lineno, arg.end_lineno)]), 
                     "float", 
                     source_refs=[SourceRef(self.filenames[-1], arg.col_offset, arg.end_col_offset, arg.lineno, arg.end_lineno)]) 
                     for arg in node.args.args]
+
+        functions_to_visit = []
+
         if len(node.body) > 0:
             # To account for nested loops we check to see if the CAST node is in a list and
             # extend accordingly
             for piece in node.body:
-                to_add = self.visit(piece)
+                # We defer visiting function defs until we've cleared the other variables in this function
+                if isinstance(piece, ast.FunctionDef):
+                    cur_scope_identifier_dict[piece.name] = self.id_count
+                    self.id_count += 1
+                    functions_to_visit.append(piece)
+                    continue
+                
+                # If we have any global declarations we use their 
+                # ids instead of the local variables
+                #if isinstance(piece, ast.Global):
+                 #   for v in piece.names:
+                  #      cur_scope_identifier_dict[v] = self.global_identifier_dict[v]   
+               # if isinstance(piece,ast.Name):
+                    # On a load, the variable either exists in the current scope, or on the previous one
+                    # So we load the identifier appropriately, or if it's not in the current scope, load from the previous scope
+                #    if isinstance(piece.ctx,ast.Load):
+                 #       if piece.id not in cur_scope_identifier_dict:
+                  #          cur_scope_identifier_dict[piece.id] = prev_scope_id_dict[piece.id]
+
+                    # On a store, the variable is either in the previous scope, or doesn't exist
+                    # If it doesn't exist then we have to create it and store it
+                   # if isinstance(piece.ctx, ast.Store):
+                    #    if piece.id not in cur_scope_identifier_dict:
+                     #       cur_scope_identifier_dict[piece.id] = self.id_count
+                      #      self.id_count += 1
+                                 
+                print(piece)
+                to_add = self.visit(piece, cur_scope_identifier_dict)
                 if isinstance(to_add,Module):
                     body.extend([to_add])
                 elif hasattr(to_add, "__iter__") or hasattr(to_add, "__getitem__"):
@@ -634,11 +695,21 @@ class PyASTToCAST(ast.NodeVisitor):
                 else:
                     raise TypeError(f"Unexpected type in visit_FuncDef: {type(to_add)}")
 
+            # Visit the functions here
+            for piece in functions_to_visit:
+                
+                # Currently visiting the entire function, instead of just the body
+                # This might have to change to properly reflect the GIST in github
+                to_add = self.visit(piece, prev_scope_id_dict)
+                body.extend(to_add)
+
+
         # TODO: Decorators? Returns? Type_comment?
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         return [FunctionDef(node.name, args, body, source_refs=ref)]
 
-    def visit_Lambda(self, node: ast.Lambda):
+    @visit.register
+    def visit_Lambda(self, node: ast.Lambda, prev_scope_id_dict: Dict):
         """Visits a PyAST Lambda node. Which is used for a Python Lambda
         function definition. It works pretty analogously to the FunctionDef
         node visitor. It also returns a FunctionDef node like the PyAST
@@ -652,7 +723,10 @@ class PyASTToCAST(ast.NodeVisitor):
 
         """
 
-        body = self.visit(node.body)
+        # TODO: SCOPING?
+
+
+        body = self.visit(node.body, prev_scope_id_dict)
         args = []
         # TODO: Correct typing instead of just 'float'
         if len(node.args.args) > 0:
@@ -664,7 +738,8 @@ class PyASTToCAST(ast.NodeVisitor):
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         return [FunctionDef("LAMBDA", args, body, source_refs=ref)]
 
-    def visit_ListComp(self, node: ast.ListComp):
+    @visit.register
+    def visit_ListComp(self, node: ast.ListComp, prev_scope_id_dict: Dict):
         """Visits a PyAST ListComp node, which are used for Python list comprehensions.
         List comprehensions generate a list from some generator expression.
 
@@ -699,7 +774,7 @@ class PyASTToCAST(ast.NodeVisitor):
             else:
                 outer_loop = ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),iter=first_gen.iter,body=[node.elt],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
 
-        visit_loop = self.visit(outer_loop)
+        visit_loop = self.visit(outer_loop, prev_scope_id_dict)
 
         #TODO: Multiple generators, if statements
         while i < len(generators):    
@@ -708,7 +783,8 @@ class PyASTToCAST(ast.NodeVisitor):
         return visit_loop
 
 
-    def visit_If(self, node: ast.If):
+    @visit.register
+    def visit_If(self, node: ast.If, prev_scope_id_dict: Dict):
         """Visits a PyAST If node. Which is used to represent If statements.
         We visit each of the pieces accordingly and construct the CAST
         representation. else/elif statements are stored in the 'orelse' field,
@@ -721,23 +797,30 @@ class PyASTToCAST(ast.NodeVisitor):
             ModelIf: A CAST If statement node.
         """
 
-        node_test = self.visit(node.test)
+        node_test = self.visit(node.test, prev_scope_id_dict)
 
         node_body = []
         if len(node.body) > 0:
             for piece in node.body:
-                node_body.extend(self.visit(piece))
+                node_body.extend(self.visit(piece, prev_scope_id_dict))
 
         node_orelse = []
         if len(node.orelse) > 0:
             for piece in node.orelse:
-                node_orelse.extend(self.visit(piece))
+                node_orelse.extend(self.visit(piece, prev_scope_id_dict))
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
         return [ModelIf(node_test[0], node_body, node_orelse, source_refs=ref)]
 
-    def visit_IfExp(self, node: ast.IfExp):
+    @visit.register
+    def visit_Global(self, node: ast.Global, prev_scope_id_dict: Dict):
+        for v in node.names:
+            prev_scope_id_dict[v] = self.global_identifier_dict[v]   
+        return []
+
+    @visit.register
+    def visit_IfExp(self, node: ast.IfExp, prev_scope_id_dict: Dict):
         """Visits a PyAST IfExp node, which is Python's ternary operator.
         The node gets translated into a CAST ModelIf node by visiting all its parts,
         since IfExp behaves like an If statement.
@@ -746,14 +829,15 @@ class PyASTToCAST(ast.NodeVisitor):
             node (ast.IfExp): [description]
         """
 
-        node_test = self.visit(node.test)
-        node_body = self.visit(node.body)
-        node_orelse = self.visit(node.orelse)
+        node_test = self.visit(node.test, prev_scope_id_dict)
+        node_body = self.visit(node.body, prev_scope_id_dict)
+        node_orelse = self.visit(node.orelse, prev_scope_id_dict)
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
         return [ModelIf(node_test[0], node_body, node_orelse, source_refs=ref)]
 
-    def visit_Import(self, node:ast.Import):
+    @visit.register
+    def visit_Import(self, node:ast.Import, prev_scope_id_dict: Dict):
         """Visits a PyAST Import node, which is used for importing libraries
         that are used in programs. In particular, it's imports in the form of
         'import X', where X is some library.
@@ -785,12 +869,13 @@ class PyASTToCAST(ast.NodeVisitor):
             else:
                 file_contents = open(path).read()
                 self.visited.add(true_name)
-                return self.visit(ast.parse(file_contents))
+                return self.visit(ast.parse(file_contents), {})
         else:
             return [Module(name=name,body=[],source_refs=ref)]
 
 
-    def visit_ImportFrom(self, node:ast.ImportFrom):
+    @visit.register
+    def visit_ImportFrom(self, node:ast.ImportFrom, prev_scope_id_dict: Dict):
         """Visits a PyAST ImportFrom node, which is used for importing libraries
         that are used in programs. In particular, it's imports in the form of
         'import X', where X is some library.
@@ -838,12 +923,12 @@ class PyASTToCAST(ast.NodeVisitor):
 
                     visited_funcs = []
                     for f in funcs:
-                        visited_funcs.extend(self.visit(f))
+                        visited_funcs.extend(self.visit(f, {}))
                     
                     self.filenames.pop()
                     return visited_funcs
                 else: # Importing the entire file
-                    full_file = self.visit(contents)
+                    full_file = self.visit(contents, {})
                     self.filenames.pop()
                     return full_file
         else:
@@ -851,7 +936,8 @@ class PyASTToCAST(ast.NodeVisitor):
             return [Module(name=name,body=[],source_refs=ref)]
 
 
-    def visit_List(self, node:ast.List):
+    @visit.register
+    def visit_List(self, node:ast.List, prev_scope_id_dict: Dict):
         """Visits a PyAST List node. Which is used to represent Python lists.
 
         Args:
@@ -865,12 +951,13 @@ class PyASTToCAST(ast.NodeVisitor):
         if len(node.elts) > 0:
             to_ret = []
             for piece in node.elts:
-                to_ret.extend(self.visit(piece))
+                to_ret.extend(self.visit(piece, prev_scope_id_dict))
             return [List(to_ret,source_refs=ref)]
         else:
             return [List([],source_refs=ref)]
 
-    def visit_Module(self, node: ast.Module):
+    @visit.register
+    def visit_Module(self, node: ast.Module, prev_scope_id_dict: Dict):
         """Visits a PyAST Module node. This is the starting point of CAST Generation,
         as the body of the Module node (usually) contains the entire Python
         program.
@@ -882,18 +969,52 @@ class PyASTToCAST(ast.NodeVisitor):
             Module: A CAST Module node.
         """
 
+        # TODO: SCOPING
+
         # Visit all the nodes and make a Module object out of them
         body = []
+        funcs = []
         for piece in node.body:
-            to_add = self.visit(piece)
+            # Assignments at the global level are a special case
+            # These are global variables
+            # We 'pretend' they're in a function by passing in the global map
+            #if isinstance(piece, ast.Assign):
+             #   for nm in piece.targets:
+              #      if isinstance(nm, ast.Name):
+               #         if not nm.id in self.global_identifier_dict.keys():
+                            # Insert the name into global id_dict
+                #            self.global_identifier_dict[nm.id] = self.id_count
+                 #           self.id_count = self.id_count + 1
+                # to_add = self.visit(piece, self.global_identifier_dict)
+                # body.extend(to_add)
+                # continue
+
+            # Defer visiting function defs until all global vars are processed
+            if isinstance(piece, ast.FunctionDef):
+                self.global_identifier_dict[piece.name] = self.id_count
+                self.id_count += 1
+                funcs.append(piece)
+                continue
+
+            to_add = self.visit(piece, prev_scope_id_dict)
+            if isinstance(piece, ast.Assign):
+                for k in prev_scope_id_dict.keys():
+                    self.global_identifier_dict[k] = prev_scope_id_dict[k]
+
             if isinstance(to_add,Module):
                 body.extend([to_add])
             else:
                 body.extend(to_add)
 
+        # Visit all the functions
+        for piece in funcs:
+            to_add = self.visit(piece, prev_scope_id_dict)
+            body.extend(to_add)
+
         return Module(name=self.filenames[-1].split(".")[0], body=body, source_refs=None)
 
-    def visit_Name(self, node: ast.Name):
+    @visit.register
+    def visit_Name(self, node: ast.Name, prev_scope_id_dict: Dict):
         """This visits PyAST Name nodes, which consist of
            id: The name of a variable as a string
            ctx: The context in which the variable is being used
@@ -906,33 +1027,47 @@ class PyASTToCAST(ast.NodeVisitor):
 
         """
         
+        # TODO: SCOPING
+        
         # ref = None #[self.filenames[-1], node.col_offset, node.end_col_offset, node.lineno, node.end_lineno]
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
+        print(prev_scope_id_dict)
         #ref = [self.filenames[-1], node.col_offset, node.end_col_offset, node.lineno, node.end_lineno]
         if isinstance(node.ctx,ast.Load):
             if node.id in self.aliases: 
-                return [Name(self.aliases[node.id], source_refs=ref)]
+                return [Name(self.aliases[node.id], id=-1, source_refs=ref)]
 
-            return [Name(node.id, source_refs=ref)]
+            if node.id in prev_scope_id_dict:
+                return [Name(node.id, id=prev_scope_id_dict[node.id], source_refs=ref)]
+            else:
+                prev_scope_id_dict[node.id] = self.global_identifier_dict[node.id]
+                return [Name(node.id, id=self.global_identifier_dict[node.id], source_refs=ref)]
             
         if isinstance(node.ctx,ast.Store):
             if node.id in self.aliases: 
-                return [Var(Name(self.aliases[node.id],source_refs=ref), "float", source_refs=ref)]
+                return [Var(Name(self.aliases[node.id], id=-1, source_refs=ref), "float", source_refs=ref)]
 
             # TODO: Typing so it's not hardcoded to floats
-            return [Var(Name(node.id,source_refs=ref), "float", source_refs=ref)]
+            if node.id in prev_scope_id_dict:
+                return [Var(Name(node.id, id=prev_scope_id_dict[node.id],source_refs=ref), "float", source_refs=ref)]
+            else:
+                prev_scope_id_dict[node.id] = self.id_count
+                self.id_count += 1
+                return [Var(Name(node.id, id=prev_scope_id_dict[node.id],source_refs=ref), "float", source_refs=ref)]
 
         if isinstance(node.ctx,ast.Del):
             # TODO: At some point..
             raise NotImplementedError()
 
-    def visit_Pass(self, node: ast.Pass):
+    @visit.register
+    def visit_Pass(self, node: ast.Pass, prev_scope_id_dict: Dict):
         """A PyAST Pass visitor, for essentially NOPs."""
 
         return []
 
-    def visit_Raise(self, node: ast.Raise):
+    @visit.register
+    def visit_Raise(self, node: ast.Raise, prev_scope_id_dict: Dict):
         """A PyAST Raise visitor, for Raising exceptions
 
            TODO: To be implemented.
@@ -940,7 +1075,8 @@ class PyASTToCAST(ast.NodeVisitor):
 
         return []
 
-    def visit_Return(self, node: ast.Return):
+    @visit.register
+    def visit_Return(self, node: ast.Return, prev_scope_id_dict: Dict):
         """Visits a PyAST Return node and creates a CAST return node
            that has one field, which is the expression computing the value
            to be returned. The PyAST's value node is visited.
@@ -954,9 +1090,10 @@ class PyASTToCAST(ast.NodeVisitor):
         """
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        return [ModelReturn(self.visit(node.value)[0], source_refs=ref)]
+        return [ModelReturn(self.visit(node.value, prev_scope_id_dict)[0], source_refs=ref)]
 
-    def visit_UnaryOp(self, node: ast.UnaryOp):
+    @visit.register
+    def visit_UnaryOp(self, node: ast.UnaryOp, prev_scope_id_dict: Dict):
         """Visits a PyAST UnaryOp node. Which represents Python unary operations.
         A dictionary is used to index into which operation we're doing.
 
@@ -976,12 +1113,13 @@ class PyASTToCAST(ast.NodeVisitor):
         op = ops[type(node.op)]
         operand = node.operand
 
-        opd = self.visit(operand)
+        opd = self.visit(operand, prev_scope_id_dict)
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         return [UnaryOp(op, opd[0], source_refs=ref)]
 
-    def visit_Set(self, node: ast.Set):
+    @visit.register
+    def visit_Set(self, node: ast.Set, prev_scope_id_dict: Dict):
         """Visits a PyAST Set node. Which is used to represent Python sets.
 
         Args:
@@ -996,12 +1134,13 @@ class PyASTToCAST(ast.NodeVisitor):
         if len(node.elts) > 0:
             to_ret = []
             for piece in node.elts:
-                to_ret.extend(self.visit(piece))
+                to_ret.extend(self.visit(piece, prev_scope_id_dict))
             return [Set(to_ret,source_refs=ref)]
         else:
             return [Set([], source_refs=ref)]
 
-    def visit_Subscript(self, node: ast.Subscript):
+    @visit.register
+    def visit_Subscript(self, node: ast.Subscript, prev_scope_id_dict: Dict):
         """Visits a PyAST Subscript node, which represents subscripting into
         a list in Python. A Subscript is either a Slice (i.e. x[0:2]), an 
         Extended slice (i.e. x[0:2, 3]), or a constant (i.e. x[3]). 
@@ -1018,7 +1157,7 @@ class PyASTToCAST(ast.NodeVisitor):
             Subscript: A CAST Subscript node
         """
 
-        value = self.visit(node.value)[0]
+        value = self.visit(node.value, prev_scope_id_dict)[0]
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
         # 'Visit' the slice 
@@ -1028,12 +1167,12 @@ class PyASTToCAST(ast.NodeVisitor):
 
         if isinstance(slc,ast.Slice):
             if slc.lower is not None:
-                lower = self.visit(slc.lower)[0]
+                lower = self.visit(slc.lower, prev_scope_id_dict)[0]
             else:
                 lower = Number(0, source_refs=ref)
             
             if slc.upper is not None:
-                upper = self.visit(slc.upper)[0]
+                upper = self.visit(slc.upper, prev_scope_id_dict)[0]
             else:
                 if isinstance(node.value,ast.Call):
                     if isinstance(node.value.func,ast.Attribute):
@@ -1046,7 +1185,7 @@ class PyASTToCAST(ast.NodeVisitor):
                     upper = Call(Name("len", source_refs=ref), [Name(node.value.id, source_refs=ref)], source_refs=ref)
 
             if slc.step is not None:
-                step = self.visit(slc.step)[0]
+                step = self.visit(slc.step, prev_scope_id_dict)[0]
             else:
                 step = Number(1, source_refs=ref)
 
@@ -1135,12 +1274,12 @@ class PyASTToCAST(ast.NodeVisitor):
                     # the slice bounds to the new temp list 
                     # Append the cast and temp list accordingly
                     if dim.lower is not None:
-                        lower = self.visit(dim.lower)[0]
+                        lower = self.visit(dim.lower, prev_scope_id_dict)[0]
                     else:
                         lower = Number(0, source_refs=ref)
                     
                     if dim.upper is not None:
-                        upper = self.visit(dim.upper)[0]
+                        upper = self.visit(dim.upper, prev_scope_id_dict)[0]
                     else:
                         if isinstance(node.value,ast.Call):
                             if isinstance(node.value.func,ast.Attribute):
@@ -1153,7 +1292,7 @@ class PyASTToCAST(ast.NodeVisitor):
                             upper = Call(Name("len", source_refs=ref), [Name(node.value.id, source_refs=ref)], source_refs=ref)
 
                     if dim.step is not None:
-                        step = self.visit(dim.step)[0]
+                        step = self.visit(dim.step, prev_scope_id_dict)[0]
                     else:
                         step = Number(1, source_refs=ref)
 
@@ -1189,7 +1328,7 @@ class PyASTToCAST(ast.NodeVisitor):
                     # and copies the elements according to the index number
                     # Append that new temp list and its corresponding CAST 
                     # to our result 
-                    curr_dim = self.visit(dim)[0]
+                    curr_dim = self.visit(dim, prev_scope_id_dict)[0]
 
                     loop_cond = BinaryOp(
                         BinaryOperator.LT,
@@ -1218,12 +1357,13 @@ class PyASTToCAST(ast.NodeVisitor):
 
             return result
         else:
-            sl = self.visit(slc)
+            sl = self.visit(slc, prev_scope_id_dict)
 
         return [Subscript(value, sl[0], source_refs=ref)]
 
 
-    def visit_Index(self, node: ast.Index):
+    @visit.register
+    def visit_Index(self, node: ast.Index, prev_scope_id_dict: Dict):
         """Visits a PyAST Index node, which represents the value being used
         for an index. This visitor doesn't create its own CAST node, but
         returns CAST depending on the value that the Index node holds.
@@ -1236,9 +1376,10 @@ class PyASTToCAST(ast.NodeVisitor):
                      different CAST nodes are returned.
         """
 
-        return self.visit(node.value)
+        return self.visit(node.value, prev_scope_id_dict)
 
-    def visit_Tuple(self, node: ast.Tuple):
+    @visit.register
+    def visit_Tuple(self, node: ast.Tuple, prev_scope_id_dict: Dict):
         """Visits a PyAST Tuple node. Which is used to represent Python tuple.
 
         Args:
@@ -1252,12 +1393,13 @@ class PyASTToCAST(ast.NodeVisitor):
         if len(node.elts) > 0:
             to_ret = []
             for piece in node.elts:
-                to_ret.extend(self.visit(piece))
+                to_ret.extend(self.visit(piece, prev_scope_id_dict))
             return [Tuple(to_ret, source_refs=ref)]
         else:
             return [Tuple([], source_refs=ref)]
 
-    def visit_Try(self, node:ast.Try):
+    @visit.register
+    def visit_Try(self, node:ast.Try, prev_scope_id_dict: Dict):
         """Visits a PyAST Try node, which represents Try/Except blocks.
         These are used for Python's exception handling
 
@@ -1268,11 +1410,12 @@ class PyASTToCAST(ast.NodeVisitor):
 
         body = []
         for piece in node.body:
-            body.extend(self.visit(piece))
+            body.extend(self.visit(piece, prev_scope_id_dict))
             
         return body
 
-    def visit_While(self, node: ast.While):
+    @visit.register
+    def visit_While(self, node: ast.While, prev_scope_id_dict: Dict):
         """Visits a PyAST While node, which represents a while loop.
 
         Args:
@@ -1283,18 +1426,19 @@ class PyASTToCAST(ast.NodeVisitor):
                   loops and While loops.
         """
 
-        test = self.visit(node.test)[0]
+        test = self.visit(node.test, prev_scope_id_dict)[0]
 
         body = []
         for piece in (node.body + node.orelse):
-            to_add = self.visit(piece)
+            to_add = self.visit(piece, prev_scope_id_dict)
             body.extend(to_add)
         
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         return [Loop(expr=test, body=body, source_refs=ref)]
 
 
-    def visit_With(self, node: ast.With):
+    @visit.register
+    def visit_With(self, node: ast.With, prev_scope_id_dict: Dict):
         """Visits a PyAST With node. With nodes are used as follows:
         with a as b, c as d: 
             do things with b and d
@@ -1315,10 +1459,10 @@ class PyASTToCAST(ast.NodeVisitor):
         variables = [] 
         for item in node.items:
             ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-            variables.extend([Assignment(left=self.visit(item.optional_vars)[0],right=self.visit(item.context_expr)[0], source_refs=ref)])
+            variables.extend([Assignment(left=self.visit(item.optional_vars, prev_scope_id_dict)[0],right=self.visit(item.context_expr, prev_scope_id_dict)[0], source_refs=ref)])
 
         body = []
         for piece in node.body:
-            body.extend(self.visit(piece))
+            body.extend(self.visit(piece, prev_scope_id_dict))
 
         return variables + body        

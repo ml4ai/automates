@@ -426,7 +426,7 @@ class CASTToAGraphVisitor(CASTVisitor):
                 break
 
         if not class_init:
-            self.G.add_node(node_uid, label=node.name)
+            self.G.add_node(node_uid, label=node.name + " (id: " + str(node.id)+")")
 
         return node_uid
 
