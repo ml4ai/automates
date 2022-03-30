@@ -372,8 +372,8 @@ class ToGrfnPass:
     def visit_loop(self, node: AnnCastLoop, subgraph: GrFNSubgraph):
         # TODO: Loop
         # visit children
-        self.visit(node.expr)
-        self.visit_node_list(node.body)
+        self.visit(node.expr, subgraph)
+        self.visit_node_list(node.body, subgraph)
 
     @_visit.register
     def visit_model_break(self, node: AnnCastModelBreak, subgraph: GrFNSubgraph):

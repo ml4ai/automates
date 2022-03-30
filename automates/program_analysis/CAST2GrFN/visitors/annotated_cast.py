@@ -60,6 +60,13 @@ VAR_INIT_VERSION = 0
 # TODO: better name for exit version?
 VAR_EXIT_VERSION = 1
 
+# the variable versions for loop interface are adjusted 
+# because the top loop interface has special semantics
+# it choose between the initial version, or the version
+# updated after loop body execution
+LOOP_VAR_UPDATED_VERSION = 1
+LOOP_VAR_EXIT_VERSION = 0
+
 
 def con_scope_to_str(scope: typing.List):
     return CON_STR_SEP.join(scope)
@@ -399,20 +406,23 @@ class AnnCastLoop(AnnCastNode):
         self.con_scope: List
 
         # dicts mapping Name id to highest version at end of "block"
-        # TODO: What about using a default dict
         self.expr_highest_var_vers = {}
         self.body_highest_var_vers = {}
 
         # dicts mapping a Name id to its fullid
-        self.top_interface_in = {}
+        # initial versions for the top interface come from enclosing scope
+        # updated version for the top interface are versions 
+        # at the bottom of the loop after one or more executions of the loop
+        self.top_interface_initial = {}
+        self.top_interface_updated = {}
         self.top_interface_out = {}
         self.bot_interface_in = {}
         self.bot_interface_out = {}
         self.condition_in = {}
         self.condition_out = {}
-        self.decision_in = {}
-        self.decision_out = {}
-        self.exit: typing = {}
+        self.condition_var = {}
+        # TODO: decide type of exit
+        self.exit = None
 
         # TODO: Might delete below attributes
         # Dicts mapping strings to Names
@@ -477,6 +487,7 @@ class AnnCastModelIf(AnnCastNode):
         self.bot_interface_out = {}
         self.condition_in = {}
         self.condition_out = {}
+        self.condition_var = {}
         self.decision_in = {}
         self.decision_out = {}
 

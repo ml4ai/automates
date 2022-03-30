@@ -105,16 +105,39 @@ class VariableVersionPass:
             fullid = build_fullid(var_name, id, highest_ver, con_scopestr)
             interface[id] = fullid
 
+    def populate_loop_interfaces(self, node: AnnCastLoop):
+        # populate interfaces and increment versions in previous scope of modified variables
+        prev_scopestr = con_scope_to_str(node.con_scope[:-1])
+        # populate top interface initial
+        # these are versions coming in from enclosing scope
+        self.populate_interface(prev_scopestr, node.used_vars, node.top_interface_initial)
+        # increment versions of modified vars 
+        self.incr_vars_in_con_scope(prev_scopestr, node.modified_vars)
+        # populate bot interface out
+        self.populate_interface(prev_scopestr, node.modified_vars, node.bot_interface_out)
 
-    # def merge_accessed_modified_vars(self, node):
-    #     """
-    #     Merge the ids of the accessed and modified variables of `node` and
-    #     return the merge as a list ids
-    #     """
-    #     ids = set(node.modified_vars.keys())
-    #     ids.update(node.accessed_vars.keys())
-    #     return list(ids)
-        
+        # populate "inside" of interfaces
+        con_scopestr = con_scope_to_str(node.con_scope)
+        # populate top interface updated
+        # these are versions of modified variables at the bottom of the loop
+        for id, var_name in node.modified_vars.items():
+            version = LOOP_VAR_UPDATED_VERSION
+            fullid = build_fullid(var_name, id, version, con_scopestr)
+            node.top_interface_updated[id] = fullid
+        # populate top interface out
+        # the top interface chooses between initial and updated versions; 
+        # by convention the produced version is `LOOP_VAR_EXIT_VERSION` since this
+        # is passed to bot interface out
+        for id, var_name in node.used_vars.items():
+            version = LOOP_VAR_EXIT_VERSION
+            fullid = build_fullid(var_name, id, version, con_scopestr)
+            node.top_interface_out[id] = fullid
+        # populate bot interface in
+        # the bot interface takes `LOOP_VAR_EXIT_VERSION` modified variables
+        for id, var_name in node.modified_vars.items():
+            version = LOOP_VAR_EXIT_VERSION
+            fullid = build_fullid(var_name, id, version, con_scopestr)
+            node.bot_interface_in[id] = fullid
 
     def visit(self, node: AnnCastNode, assign_lhs: bool):
         # type(node) is a string which looks like
@@ -230,10 +253,7 @@ class VariableVersionPass:
 
         # Initialize scope_to_highest_var_vers
         con_scopestr = con_scope_to_str(node.con_scope)
-        # DONE:
         # create versions 0 of any modified or accessed variables
-        # use that merge_variables function on accessed_vars and modified_vars
-        # pass in as extra parameter
         self.init_highest_var_vers_dict(con_scopestr, node.used_vars.keys())
         
         # visit children
@@ -272,17 +292,9 @@ class VariableVersionPass:
         # store highest var version
         node.expr_highest_var_vers = self.con_scope_to_highest_var_vers[expr_scopestr]
         node.body_highest_var_vers = self.con_scope_to_highest_var_vers[body_scopestr]
-        
-        # populate interfaces and increment versions in previous scope of modified variables
-        prev_scopestr = con_scope_to_str(node.con_scope[:-1])
-        # populate top interface in
-        self.populate_interface(prev_scopestr, node.used_vars, node.top_interface_in)
-        # increment versions 
-        self.incr_vars_in_con_scope(prev_scopestr, node.modified_vars)
-        # populate bot interface out
-        # TODO: prune variables that are not alive in previous scope
-        # We could do this now, or later
-        self.populate_interface(prev_scopestr, node.modified_vars, node.bot_interface_out)
+
+        # populate all of this loops interfaces
+        self.populate_loop_interfaces(node)
 
         # DEBUGGING
         print(f"\nFor LOOP: {con_scope_to_str(node.con_scope)}")
@@ -332,11 +344,8 @@ class VariableVersionPass:
         # increment versions 
         self.incr_vars_in_con_scope(prev_scopestr, node.modified_vars)
         # populate bot interface out
-        # TODO: prune variables that are not alive in previous scope
-        # NOTE: gcc puts all variable declarations in the body at the top-level of the function
-        #       so any nested variable declarations cannot be distinguished as not in scope
-        # We could do this now, or later
         self.populate_interface(prev_scopestr, node.modified_vars, node.bot_interface_out)
+        # TODO: move code that populates top_interface_out and bot_interface_in to here (if possible)
 
         # DEBUGGING
         print(f"\nFor IF: {con_scope_to_str(node.con_scope)}")

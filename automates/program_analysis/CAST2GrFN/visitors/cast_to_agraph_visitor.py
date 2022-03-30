@@ -506,15 +506,16 @@ class CASTToAGraphVisitor(CASTVisitor):
         test_uid = uuid.uuid4()
         body_uid = uuid.uuid4()
 
-        modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
-        accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
-        top_iface_in_vars_str = var_dict_to_str("Top In: ", node.top_interface_in)
-        top_iface_out_vars_str = var_dict_to_str("Top Out: ", node.top_interface_out)
-        bot_iface_in_vars_str = var_dict_to_str("Bot In: ", node.bot_interface_in)
-        bot_iface_out_vars_str = var_dict_to_str("Bot Out: ", node.bot_interface_out)
-        loop_label = f"Loop\n{modified_vars_str}\n{accessed_vars_str}"
-        loop_label = f"{loop_label}\n{top_iface_in_vars_str}\n{top_iface_out_vars_str}"
-        loop_label = f"{loop_label}\n{bot_iface_in_vars_str}\n{bot_iface_out_vars_str}"
+        modified_vars = var_dict_to_str("Modified: ", node.modified_vars)
+        accessed_vars = var_dict_to_str("Accessed: ", node.accessed_vars)
+        top_iface_init_vars = interface_to_str("Top Init: ", node.top_interface_initial)
+        top_iface_updt_vars = interface_to_str("Top Updt: ", node.top_interface_updated)
+        top_iface_out_vars = interface_to_str("Top Out: ", node.top_interface_out)
+        bot_iface_in_vars = interface_to_str("Bot In: ", node.bot_interface_in)
+        bot_iface_out_vars = interface_to_str("Bot Out: ", node.bot_interface_out)
+        loop_label = f"Loop\n{modified_vars}\n{accessed_vars}"
+        loop_label = f"{loop_label}\n{top_iface_init_vars}\n{top_iface_updt_vars}\n{top_iface_out_vars}"
+        loop_label = f"{loop_label}\n{bot_iface_in_vars}\n{bot_iface_out_vars}"
         self.G.add_node(node_uid, label=loop_label)
         self.G.add_node(test_uid, label="Test")
         self.G.add_node(body_uid, label="Body")
