@@ -175,6 +175,8 @@ class GrfnVarCreationPass:
             self.ann_cast.store_grfn_var(fullid, grfn_var)
             # TODO/IDEA: add fullid to bot_interface_in
             node.bot_interface_in[id] = fullid
+
+    # TODO: create analog for loop condition
     
     def setup_model_if_condition(self, node: AnnCastModelIf):
         """
@@ -253,6 +255,7 @@ class GrfnVarCreationPass:
         used_vars = {**node.modified_vars, **node.accessed_vars}
         con_scopestr = con_scope_to_str(node.con_scope)
 
+        # TODO: Update variable creation to use semantics we have decided on e.g. create LOOP_VAR_*VERSION
         for id, var_name in used_vars.items():
             # we introduce version 0 at the top of a container
             version = 0
@@ -262,6 +265,7 @@ class GrfnVarCreationPass:
             # TODO/IDEA: add fullid to top_interface_out
             node.top_interface_out[id] = fullid
 
+        # TODO: Check this versioning
         for id, var_name in node.modified_vars.items():
             # we introduce version 2 to be used for loop-expr, and they
             # are the output of a decision node between version 0 variables

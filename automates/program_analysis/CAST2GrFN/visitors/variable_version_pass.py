@@ -134,6 +134,7 @@ class VariableVersionPass:
             node.top_interface_out[id] = fullid
         # populate bot interface in
         # the bot interface takes `LOOP_VAR_EXIT_VERSION` modified variables
+        # TODO: This is not completely correct, it needs to take highest version on from expr
         for id, var_name in node.modified_vars.items():
             version = LOOP_VAR_EXIT_VERSION
             fullid = build_fullid(var_name, id, version, con_scopestr)
