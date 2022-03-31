@@ -26,25 +26,27 @@ class VariableVersionPass:
             # when visitor starts, assign_lhs is False
             self.visit(node, False)
 
+    def init_highest_var_vers_dict_module(self):
+        """
+        Create a defaultdict to track highest variable versions 
+        at "module" scope.  Since we do not know the variables in advance
+        like we do for other containers, we use a defaultdict
+        """
+        self.con_scope_to_highest_var_vers[MODULE_SCOPE] = defaultdict(int)
+
     def init_highest_var_vers_dict(self, con_scopestr, var_ids):
         """
         Initialize highest var version dict for scope `con_scopestr`
         If the scope is the module, then use a defaultdict starting at zero
         otherwise, create a dictionary mapping each of the ids to zero
         """
-        # DONE: add an additional var ids parameter, and initialize all those 
-        # variables instead of defaultdict (unless con_scopestr is "module")
-        # create versions 0 of any modified or accessed variables
-        if con_scopestr == "module":
-           self.con_scope_to_highest_var_vers[con_scopestr] = defaultdict(int)
-        else:
-            # TODO: Could we ever have a container with no modified or accessed variables?
-            #       Maybe a debugging function that only prints?
-            assert(len(var_ids) > 0)
-            self.con_scope_to_highest_var_vers[con_scopestr] = {}
-            for id in var_ids:
-                self.con_scope_to_highest_var_vers[con_scopestr][id] = 0
-            print(f"initialized highest_vars_vers_dict {self.con_scope_to_highest_var_vers[con_scopestr]}")
+        # TODO: Could we ever have a container with no modified or accessed variables?
+        #       Maybe a debugging function that only prints?
+        assert(len(var_ids) > 0)
+        self.con_scope_to_highest_var_vers[con_scopestr] = {}
+        for id in var_ids:
+            self.con_scope_to_highest_var_vers[con_scopestr][id] = 0
+        print(f"initialized highest_vars_vers_dict {self.con_scope_to_highest_var_vers[con_scopestr]}")
                        
 
     def get_highest_ver_in_con_scope(self, con_scopestr, id):
@@ -64,14 +66,13 @@ class VariableVersionPass:
 
         Also creates a GrFN variable for the newly added version
         """
+        # DEBUGGING
         print(f"incr: id={id}  scope dictionary {con_scopestr}={self.con_scope_to_highest_var_vers[con_scopestr]} ")
-        # TODO: if id is in the container scope, increment it
+
         if id in self.con_scope_to_highest_var_vers[con_scopestr]:
-            #print(f"incr: id={id} is in dict")
             self.con_scope_to_highest_var_vers[con_scopestr][id] += 1
         # otherwise, add it as version 0
         else:
-            #print(f"incr: id={id} is NOT in dict")
             self.con_scope_to_highest_var_vers[con_scopestr][id] = 0
 
         # Create a GrFN variable for the newly created version
@@ -126,17 +127,45 @@ class VariableVersionPass:
             node.top_interface_updated[id] = fullid
         # populate top interface out
         # the top interface chooses between initial and updated versions; 
-        # by convention the produced version is `LOOP_VAR_EXIT_VERSION` since this
-        # is passed to bot interface out
+        # by convention the produced version is `VAR_INIT_VERSION`
+        # which is consistent with other containers 
         for id, var_name in node.used_vars.items():
-            version = LOOP_VAR_EXIT_VERSION
+            version = VAR_INIT_VERSION
             fullid = build_fullid(var_name, id, version, con_scopestr)
             node.top_interface_out[id] = fullid
         # populate bot interface in
-        # the bot interface takes `LOOP_VAR_EXIT_VERSION` modified variables
-        # TODO: This is not completely correct, it needs to take highest version on from expr
+        # the bot interface takes `VAR_EXIT_VERSION` modified variables
+        # During GrFN Variable Creation, these versions will be aliased to 
+        # the highest version occuring in the loop expr
         for id, var_name in node.modified_vars.items():
-            version = LOOP_VAR_EXIT_VERSION
+            version = VAR_EXIT_VERSION
+            fullid = build_fullid(var_name, id, version, con_scopestr)
+            node.bot_interface_in[id] = fullid
+
+    def populate_model_if_interfaces(self, node: AnnCastModelIf):
+        # populate interfaces and increment versions in previous scope of modified variables
+        prev_scopestr = con_scope_to_str(node.con_scope[:-1])
+        # populate top interface in
+        self.populate_interface(prev_scopestr, node.used_vars, node.top_interface_in)
+        # increment versions 
+        self.incr_vars_in_con_scope(prev_scopestr, node.modified_vars)
+        # populate bot interface out
+        self.populate_interface(prev_scopestr, node.modified_vars, node.bot_interface_out)
+
+        # populate "inside" of interfaces
+        con_scopestr = con_scope_to_str(node.con_scope)
+        # populate top interface out 
+        # by convention the top interface produces version VAR_INIT_VERSION variables
+        # and these are propagated to if expr, if body, and else body 
+        for id, var_name in node.used_vars.items():
+            version = VAR_INIT_VERSION
+            fullid = build_fullid(var_name, id, version, con_scopestr)
+            node.top_interface_out[id] = fullid
+        # populate bot interface in
+        # by convention, the bot interface in takes version VAR_EXIT_VERSION variables
+        # these versions are produced by the Decision node (which is done during GrFN Variable Creation)
+        for id, var_name in node.modified_vars.items():
+            version = VAR_EXIT_VERSION
             fullid = build_fullid(var_name, id, version, con_scopestr)
             node.bot_interface_in[id] = fullid
 
@@ -231,9 +260,9 @@ class VariableVersionPass:
         # self.populate_interface(calling_scopestr, function_def.used_vars, node.top_interface_in)
 
     
-    # TODO: How to handle class definitions?
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef, assign_lhs: bool):
+    # TODO: How to handle class definitions?
         pass
 
     @_visit.register
@@ -338,23 +367,14 @@ class VariableVersionPass:
         node.ifbody_highest_var_vers = self.con_scope_to_highest_var_vers[ifbody_scopestr]
         node.elsebody_highest_var_vers = self.con_scope_to_highest_var_vers[elsebody_scopestr]
 
-        # populate interfaces and increment versions in previous scope of modified variables
-        prev_scopestr = con_scope_to_str(node.con_scope[:-1])
-        # populate top interface in
-        self.populate_interface(prev_scopestr, node.used_vars, node.top_interface_in)
-        # increment versions 
-        self.incr_vars_in_con_scope(prev_scopestr, node.modified_vars)
-        # populate bot interface out
-        self.populate_interface(prev_scopestr, node.modified_vars, node.bot_interface_out)
-        # TODO: move code that populates top_interface_out and bot_interface_in to here (if possible)
+        # populate interfaces
+        self.populate_model_if_interfaces(node)
 
         # DEBUGGING
         print(f"\nFor IF: {con_scope_to_str(node.con_scope)}")
         print(f"  ExprHighestVers: {node.expr_highest_var_vers}")
         print(f"  IfBodyHighestVers: {node.ifbody_highest_var_vers}")
         print(f"  ElseBodyHighestVers: {node.elsebody_highest_var_vers}")
-        print("Enclosing scope:")
-        print(f"  {prev_scopestr}: {self.con_scope_to_highest_var_vers[prev_scopestr] }")
 
     @_visit.register
     def visit_return(self, node: AnnCastModelReturn, assign_lhs: bool):
@@ -362,20 +382,12 @@ class VariableVersionPass:
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, assign_lhs: bool):
-        # TODO: decide if we want to keep track of versions in module
-        # TODO:
-        # create versions 0 of any modified or accessed variables
-        # use that merge_variables function on accessed_vars and modified_vars
-        # pass in as extra parameter
-        # This won't work for module, instead we actually do want a defaultdict
-        # since at the module it can "see" all variables
-        self.init_highest_var_vers_dict("module",[])
+        self.init_highest_var_vers_dict_module()
         self.visit_node_list(node.body, assign_lhs)
 
     @_visit.register
     def visit_name(self, node: AnnCastName, assign_lhs: bool):
         con_scopestr = con_scope_to_str(node.con_scope)
-        # TODO: Should we not increment on first use even its LHS of an assigment?
         if assign_lhs:
             print(f"On LHS: {node.name}:{node.id}" )
             # if not in, skip this increment

@@ -56,16 +56,21 @@ IFBODY = "if-body"
 LOOPEXPR = "loop-expr"
 IFEXPR = "if-expr"
 
+MODULE_SCOPE = "module"
+
 VAR_INIT_VERSION = 0
 # TODO: better name for exit version?
 VAR_EXIT_VERSION = 1
 
-# the variable versions for loop interface are adjusted 
+# the variable versions for loop interface are extended 
+# to include `LOOP_VAR_UPDATED_VERSION`
 # because the top loop interface has special semantics
-# it choose between the initial version, or the version
+# it chooses between the initial version, or the version
 # updated after loop body execution
-LOOP_VAR_UPDATED_VERSION = 1
-LOOP_VAR_EXIT_VERSION = 0
+# However, the top_interface_out produces `VAR_INIT_VERSION`
+# and bot_interface_in accepts `VAR_EXIT_VERSION` which is consistent
+# with other containers
+LOOP_VAR_UPDATED_VERSION = 2
 
 
 def con_scope_to_str(scope: typing.List):
@@ -224,6 +229,13 @@ class AnnCast:
         """
         self.fullid_to_grfn_id[fullid] = grfn_var.uid
         self.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
+
+    def get_grfn_var(self, fullid: str):
+        """
+        Returns the cached GrFN VariableNode associated with `fullid`
+        """
+        grfn_id = self.fullid_to_grfn_id[fullid]
+        return self.grfn_id_to_grfn_var[grfn_id]
 
 class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):
@@ -403,11 +415,17 @@ class AnnCastLoop(AnnCastNode):
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
         self.used_vars: typing.Dict[id, str]
-        self.con_scope: List
+        self.con_scope: typing.List
 
         # dicts mapping Name id to highest version at end of "block"
         self.expr_highest_var_vers = {}
         self.body_highest_var_vers = {}
+
+        # dicts mapping a Name id to variable string name
+        # for variables used in the if expr
+        self.expr_accessed_vars = {}
+        self.expr_modified_vars = {}
+        self.expr_used_vars = {}
 
         # dicts mapping a Name id to its fullid
         # initial versions for the top interface come from enclosing scope
@@ -420,7 +438,8 @@ class AnnCastLoop(AnnCastNode):
         self.bot_interface_out = {}
         self.condition_in = {}
         self.condition_out = {}
-        self.condition_var = {}
+        # GrFN VarialeNode for the condition node
+        self.condition_var = None
         # TODO: decide type of exit
         self.exit = None
 
@@ -468,7 +487,7 @@ class AnnCastModelIf(AnnCastNode):
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
         self.used_vars: typing.Dict[id, str]
-        self.con_scope: List
+        self.con_scope: typing.List
         # dicts mapping a Name id to variable string name
         # for variables used in the if expr
         self.expr_accessed_vars = {}
@@ -487,9 +506,10 @@ class AnnCastModelIf(AnnCastNode):
         self.bot_interface_out = {}
         self.condition_in = {}
         self.condition_out = {}
-        self.condition_var = {}
         self.decision_in = {}
         self.decision_out = {}
+        # GrFN VarialeNode for the condition node
+        self.condition_var = None
 
         self.source_refs = source_refs
 

@@ -58,24 +58,8 @@ class GrfnVarCreationPass:
         fullid = ann_cast_name_to_fullid(node)
         return self.ann_cast.grfn_id_to_grfn_var[self.ann_cast.fullid_to_grfn_id[fullid]]
 
-    # def populate_interface(self, con_scopestr, vars, interface):
-    #     """
-    #     Parameters:
-    #       - `con_scopestr`: a cached container scope 
-    #       - `vars`: a dict mapping numerical ids to variable names
-    #       - `interface`: a dict mapping numerical variable ids to fullids 
-    #                      (e.g. the top or bottom interface of a container node)
 
-    #     For each variable from `vars`, put the highest version of that variable
-    #     from container `con_scopestr` into `interface` 
-    #     """
-    #     # add vars to interface
-    #     for id, var_name in vars.items():
-    #         highest_ver = self.get_highest_ver_in_con_scope(con_scopestr, id)
-    #         fullid = build_fullid(var_name, id, highest_ver, con_scopestr)
-    #         interface[id] = fullid
-
-    def link_grfn_vars(self, src_fullid: str, tgt_fullid: str):
+    def alias_grfn_vars(self, src_fullid: str, tgt_fullid: str):
         """
         Put the GrFN id associated with `tgt_fullid` into dict `fullid_to_grfn_id` for key
         `src_fullid` 
@@ -99,8 +83,7 @@ class GrfnVarCreationPass:
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.ann_cast.store_grfn_var(fullid, grfn_var)
-            # TODO/IDEA: add fullid to top_interface_out
-            # map the variable unique id to the grfn fullid
+            # TODO: move to variable version pass?
             node.top_interface_out[id] = fullid
 
     def add_modified_vars_to_bot_interface(self, node: AnnCastFunctionDef):
@@ -114,74 +97,98 @@ class GrfnVarCreationPass:
             fullid = build_fullid(var_name, id, version, con_scopestr)
             node.bot_interface_in[id] = fullid
 
-    def link_model_if_bodies_grfn_vars(self, node:AnnCastModelIf):
+    def alias_if_expr_highest_vers(self, node: AnnCastModelIf):
         """
-        Links version zero of loop-body and else-body variables to their highest 
-        versions inside loop-expr.  
-        This should be called after visiting if-expr.
+        Precondition: This should be called after visiting if-expr.
+
+        Aliases highest version variables from the if expr to both
+         - `VAR_INIT_VERSION` of if-body variables 
+         - `VAR_INIT_VERSION` of else-body variables 
         """
-        # union modified and accessed vars
-        used_vars = {**node.modified_vars, **node.accessed_vars}
         con_scopestr = con_scope_to_str(node.con_scope)
 
-        # link up all used_vars to the highest version GrFN variable from if-expr
-        body_version = 0
-        for id, var_name in used_vars.items():
+        # alias all used_vars in if body and else body to the 
+        # highest version GrFN variable from if-expr
+        body_version = VAR_INIT_VERSION
+        for id, var_name in node.used_vars.items():
             expr_version = node.expr_highest_var_vers[id]
             expr_scopestr = con_scopestr + CON_STR_SEP + IFEXPR
             expr_fullid = build_fullid(var_name, id, expr_version, expr_scopestr)
-            for ending in [IFBODY, ELSEBODY]:
-                body_scopestr = con_scopestr + CON_STR_SEP + ending
-                body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
 
-                self.link_grfn_vars(body_fullid, expr_fullid)
+            for body in [IFBODY, ELSEBODY]:
+                body_scopestr = con_scopestr + CON_STR_SEP + body
+                body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
+                self.alias_grfn_vars(body_fullid, expr_fullid)
 
     def create_grfn_vars_model_if(self, node: AnnCastModelIf):
         """
         Create GrFN `VariableNode`s for variables which are accessed
         or modified by this ModelIf container. This does the following:
         
-            - creates a version zero GrFN variable of all used variables. 
-              These GrFN variables will be used on the top interface.
-            - links version zero of if-expr variables to created version zero GrFN variables
-            - creates version one GrFN variables to be used at the bottom decision node
+            - creates a version `VAR_INIT_VERSION` GrFN variable of all used variables. 
+              These GrFN variables will be used for the `top_interface_out`.
+            - aliases `VAR_INIT_VERSION` of if-expr variables to created `VAR_INIT_VERSION` GrFN variables
+            - for modified variables, creates version `VAR_EXIT_VERSION` GrFN variables to 
+               be used for the `decision_out` and `top_interface_in` 
         """
-        # union modified and accessed vars
-        used_vars = {**node.modified_vars, **node.accessed_vars}
         con_scopestr = con_scope_to_str(node.con_scope)
 
-        for id, var_name in used_vars.items():
-            # we introduce version 0 at the top of the container
-            version = 0
+        # by convention, we introduce version `VAR_INIT_VERSION` at the top of the container
+        for id, var_name in node.used_vars.items():
+            version = VAR_INIT_VERSION
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.ann_cast.store_grfn_var(fullid, grfn_var)
-            # TODO/IDEA: add fullid to top_interface_out
-            # TODO: Do we need the variable name as well?
-            #       Could concat var and id to to make the key
-            node.top_interface_out[id] = fullid
 
-            # link version 0 expr variables
+            # alias VAR_INIT_VERSION expr variables
             expr_scopestr = con_scopestr + CON_STR_SEP + IFEXPR
             expr_fullid = build_fullid(var_name, id, version, expr_scopestr)
-            self.link_grfn_vars(expr_fullid, fullid)
+            self.alias_grfn_vars(expr_fullid, fullid)
 
+        # by convention, we introduce `VAR_EXIT_VERSION` for modified variables
+        # to be used as the output of the Decision node, and input to bot interface
         for id, var_name in node.modified_vars.items():
-            # we introduce version 1 to be used as the output of the Decision node
-            # for modified variables
-            version = 1
+            version = VAR_EXIT_VERSION
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.ann_cast.store_grfn_var(fullid, grfn_var)
-            # TODO/IDEA: add fullid to bot_interface_in
-            node.bot_interface_in[id] = fullid
 
-    # TODO: create analog for loop condition
-    
+    def setup_loop_condition(self, node: AnnCastLoop):
+        """
+        Creates a GrFN `VariableNode` for the condtion variable of 
+        this Loop container.  Populates the `condition_in` and `condition_out`
+        attributes based on the loop expr's used variables and the newly
+        created GrFN condition variable.
+        """
+        loop_scopestr = con_scope_to_str(node.con_scope)
+        expr_scopestr = con_scope_to_str(node.con_scope + [LOOPEXPR])
+
+        # inputs to condition node are the highest versions of used variables of the expr
+        for id, var_name in node.expr_used_vars.items():
+            highest_ver = node.expr_highest_var_vers[id]
+            fullid = build_fullid(var_name, id, highest_ver, expr_scopestr)
+            node.condition_in[id] = fullid
+
+        # build condition variable
+        cond_name = self.make_cond_var_name(loop_scopestr)
+        # use new collapsed id
+        cond_id = self.ann_cast.next_collapsed_id()
+        cond_version = VAR_INIT_VERSION
+        cond_fullid = build_fullid(cond_name, cond_id, cond_version, loop_scopestr)
+        cond_var = create_grfn_var(cond_name, cond_id, cond_version, loop_scopestr)
+        self.ann_cast.fullid_to_grfn_id[cond_fullid] = cond_var.uid
+        self.ann_cast.grfn_id_to_grfn_var[cond_var.uid] = cond_var
+
+        # cache condtiional variable
+        node.condition_var = cond_var
+
+        # ouput of condition node is new condition var
+        node.condition_out[cond_id] = cond_fullid
+
     def setup_model_if_condition(self, node: AnnCastModelIf):
         """
         Creates a GrFN `VariableNode` for the condtion variable of 
-        this ModelIf containter.  Populates the `condition_in` and `condition_out`
+        this ModelIf container.  Populates the `condition_in` and `condition_out`
         attributes based on the if expr's used variables and the newly
         created GrFN condition variable.
         """
@@ -198,11 +205,14 @@ class GrfnVarCreationPass:
         cond_name = self.make_cond_var_name(if_scopestr)
         # use new collapsed id
         cond_id = self.ann_cast.next_collapsed_id()
-        cond_version = 0
+        cond_version = VAR_INIT_VERSION
         cond_fullid = build_fullid(cond_name, cond_id, cond_version, if_scopestr)
         cond_var = create_grfn_var(cond_name, cond_id, cond_version, if_scopestr)
         self.ann_cast.fullid_to_grfn_id[cond_fullid] = cond_var.uid
         self.ann_cast.grfn_id_to_grfn_var[cond_var.uid] = cond_var
+
+        # cache condtiional variable
+        node.condition_var = cond_var
 
         # ouput of condition node is new condition var
         node.condition_out[cond_id] = cond_fullid
@@ -214,9 +224,9 @@ class GrfnVarCreationPass:
         Populates `decision_in` and `decision_out` attributes of node.
         Inputs to the decision node are the highest versions of modified variables
         along if branch and else branch.
-        Outputs are version 1 variables at the if container scope.
+        Outputs are version `VAR_EXIT_VERSION` variables at the if container scope.
 
-        Note, the condition variable will also link to the Decision node in GrFN,
+        Note, the condition variable will also have an edge to the Decision node in GrFN,
         but we do not add it to the `decision_in` dict to make iterating over that
         dict simpler
         """
@@ -232,9 +242,8 @@ class GrfnVarCreationPass:
             else_fullid = build_fullid(var_name, id, else_highest, elsebody_scopestr)
             node.decision_in[id] = {IFBODY: if_fullid, ELSEBODY: else_fullid}
 
-        # outputs to the decision node are version 1 variables in if container scope
-        # TODO: Change constant 1 to a named constant
-        out_version = 1
+        # outputs to the decision node are version `VAR_EXIT_VERSION` variables in if container scope
+        out_version = VAR_EXIT_VERSION
         for id, var_name in node.modified_vars.items():
             fullid = build_fullid(var_name, id, out_version, if_scopestr)
             node.decision_out[id] = fullid
@@ -244,84 +253,84 @@ class GrfnVarCreationPass:
         """
         Create GrFN `VariableNode`s for variables which are accessed
         or modified by this Loop container.  This does the following:
-            - creates a version zero GrFN variable for all used variables. 
-              These GrFN variables will be used on the top interface.
-            - creates a version 2 GrFN variable for all used variables. 
-              These GrFN variables are used in the when evaluating loop-expr.
-            - links version 0 variables inside loop-expr to the created version 2 GrFN variables
-            - TODO: decide what to do for exiting loop
+            - creates a version VAR_INIT_VERSION GrFN variable for all used variables. 
+              These GrFN variables will be produced by the `top_interface_out`.
+              Furthermore, they aliased with loop expr init version variables.
+            - creates a version LOOP_VAR_UPDATED_VERSION GrFN variable for all modified variables. 
+              These GrFN variables are used for `top_interface_updated`.
+            - creates a version VAR_EXIT_VERSION GrFN variable for all modified variables
+              These GrFN variables are used for `bot_interface_in`.
         """
-        # union modified and accessed vars
-        used_vars = {**node.modified_vars, **node.accessed_vars}
         con_scopestr = con_scope_to_str(node.con_scope)
 
-        # TODO: Update variable creation to use semantics we have decided on e.g. create LOOP_VAR_*VERSION
-        for id, var_name in used_vars.items():
-            # we introduce version 0 at the top of a container
-            version = 0
-            grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
-            fullid = build_fullid(var_name, id, version, con_scopestr)
-            self.ann_cast.store_grfn_var(fullid, grfn_var)
-            # TODO/IDEA: add fullid to top_interface_out
-            node.top_interface_out[id] = fullid
-
-        # TODO: Check this versioning
-        for id, var_name in node.modified_vars.items():
-            # we introduce version 2 to be used for loop-expr, and they
-            # are the output of a decision node between version 0 variables
-            # and the highest version inside loop-body
-            version = 2
+        # create version `VAR_INIT_VERSION` for used variables
+        for id, var_name in node.used_vars.items():
+            version = VAR_INIT_VERSION
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.ann_cast.store_grfn_var(fullid, grfn_var)
 
-            # link version 0 expr variables to created version 2
-            expr_version = 0
+            # alias VAR_INIT_VERSION expr variables
+            expr_version = VAR_INIT_VERSION
             expr_scopestr = con_scopestr + CON_STR_SEP + LOOPEXPR
             expr_fullid = build_fullid(var_name, id, expr_version, expr_scopestr)
-            self.link_grfn_vars(expr_fullid, fullid)
+            self.alias_grfn_vars(expr_fullid, fullid)
 
-    def link_loop_body_entry_grfn_vars(self, node:AnnCastLoop):
+        # create version `LOOP_VAR_UPDATED_VERSION`  and `LOOP_VAR_EXIT_VERSION` 
+        # for modified variables
+        for id, var_name in node.modified_vars.items():
+            for version in [LOOP_VAR_UPDATED_VERSION, VAR_EXIT_VERSION]:
+                grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
+                fullid = build_fullid(var_name, id, version, con_scopestr)
+                self.ann_cast.store_grfn_var(fullid, grfn_var)
+
+    def alias_loop_expr_highest_vers(self, node:AnnCastLoop):
         """
-        Links version zero of loop-body variables to their highest 
-        versions inside loop-expr.  
-        This should be called after visiting loop-expr.
+        Precondition: This should be called after visiting loop-expr.
+
+        Aliases highest version variables from the loop expr to both
+         - `VAR_INIT_VERSION` of loop-body variables 
+         - `VAR_EXIT_VERSION` of modified variables
         """
-        # union modified and accessed vars
-        used_vars = {**node.modified_vars, **node.accessed_vars}
         con_scopestr = con_scope_to_str(node.con_scope)
 
-        # link up all used_vars to the highest version GrFN variable from loop-expr
-        body_version = 0
-        for id, var_name in used_vars.items():
+        # alias intial body version for used_vars to the 
+        # highest version GrFN variable from loop-expr
+        # if the variable is modified, also alias 
+        # exit version to highest version from loop-expr
+        body_version = VAR_INIT_VERSION
+        exit_version = VAR_EXIT_VERSION
+        for id, var_name in node.used_vars.items():
             expr_version = node.expr_highest_var_vers[id]
             expr_scopestr = con_scopestr + CON_STR_SEP + LOOPEXPR
             expr_fullid = build_fullid(var_name, id, expr_version, expr_scopestr)
             body_scopestr = con_scopestr + CON_STR_SEP + LOOPBODY
             body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
+            self.alias_grfn_vars(body_fullid, expr_fullid)
 
-            self.link_grfn_vars(body_fullid, expr_fullid)
+            if id in node.modified_vars:
+                exit_scopestr = con_scopestr
+                exit_fullid = build_fullid(var_name, id, exit_version, exit_scopestr)
+                self.alias_grfn_vars(exit_fullid, expr_fullid)
 
-
-    def link_loop_body_exit_grfn_vars(self, node:AnnCastLoop):
+    def alias_loop_body_highest_vers(self, node:AnnCastLoop):
         """
-        Links version one of loop scope variables to their highest version
-        inside loop-body.   
-        This should be called after visiting loop-body.
+        Precondition: This should be called after visiting loop-body.
+
+        Aliases highest version variables from the loop body to
+        `LOOP_VAR_UPDATED_VERSION` variables.
         """
-        # union modified and accessed vars
-        used_vars = {**node.modified_vars, **node.accessed_vars}
         con_scopestr = con_scope_to_str(node.con_scope)
 
-        # link up v1 variables to the highest version GrFN variable from loop-body
-        for id, var_name in used_vars.items():
+        # alias `LOOP_VAR_UPDATED_VERSION` modified variables 
+        # to the highest version occuring the loop body
+        updated_version = LOOP_VAR_UPDATED_VERSION
+        for id, var_name in node.modified_vars.items():
             body_version = node.body_highest_var_vers[id]
             body_scopestr = con_scopestr + CON_STR_SEP + LOOPBODY
             body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
-            con_version = 1
-            con_fullid = build_fullid(var_name, id, con_version, con_scopestr)
-
-            self.link_grfn_vars(con_fullid, body_fullid)
+            updated_fullid = build_fullid(var_name, id, updated_version, con_scopestr)
+            self.alias_grfn_vars(updated_fullid, body_fullid)
 
 
     def print_created_grfn_vars(self):
@@ -414,8 +423,7 @@ class GrfnVarCreationPass:
         self.create_grfn_vars_function_def(node)
         self.visit_node_list(node.func_args)
         self.visit_node_list(node.body)
-        # TODO/IDEA: for highest versions of modified vars 
-        # create fullids and add to bot_interface_in
+        # TODO: move this to variable version pass?
         self.add_modified_vars_to_bot_interface(node)
         print("FunctionDef Interface vars")
         print(f"    top_interface_out: {node.top_interface_out}")
@@ -430,10 +438,10 @@ class GrfnVarCreationPass:
         self.create_grfn_vars_loop(node)
         # visit children
         self.visit(node.expr)
-        self.link_loop_body_entry_grfn_vars(node)
+        self.setup_loop_condition(node)
+        self.alias_loop_expr_highest_vers(node)
         self.visit_node_list(node.body)
-        self.link_loop_body_exit_grfn_vars(node)
-        # TODO: decide what to do for bot_interface_in
+        self.alias_loop_body_highest_vers(node)
 
     @_visit.register
     def visit_model_break(self, node: AnnCastModelBreak):
@@ -449,17 +457,16 @@ class GrfnVarCreationPass:
         # visit expr, then setup condition info
         self.visit(node.expr)
         self.setup_model_if_condition(node)
-        # link highest version vars inside expr to bodies
-        self.link_model_if_bodies_grfn_vars(node)
-
-        # populate node.decision_in, node.decision_out
-        # For node.decision_in, we will combine highest_var_versions of if-body and else-body
-        # but we will need to prune some i.e. variables local to the if/else-body
+        # alias highest version vars inside expr to initial body versions
+        self.alias_if_expr_highest_vers(node)
 
         self.visit_node_list(node.body)
         self.visit_node_list(node.orelse)
         
+        # populate node.decision_in, node.decision_out
         self.setup_model_if_decision(node)
+
+        # DEBUGGING
         print("ModelIf Interface vars")
         print(f"    top_interface_out: {node.top_interface_out}")
         print(f"    bot_interface_out: {node.bot_interface_out}")

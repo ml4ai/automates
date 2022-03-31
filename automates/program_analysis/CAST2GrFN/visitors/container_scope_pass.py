@@ -54,6 +54,14 @@ class ContainerScopePass:
         self.loop_count[scopestr] += 1
         return enclosing_con_scope + [f"loop{count}"]
 
+    def add_container_data_to_expr(self, container, data):
+        """
+        Adds container data to `expr_*_vars` attributes of ModelIf and Loop nodes
+        """
+        container.expr_accessed_vars = data.accessed_vars
+        container.expr_modified_vars = data.modified_vars
+        container.expr_used_vars = data.used_vars
+
 
     def add_container_data_to_nodes(self):
         for scopestr, data in self.con_str_to_con_data.items():
@@ -72,9 +80,17 @@ class ContainerScopePass:
                 # remove the final if expr suffix to obtain if container scope 
                 if_scopestr = re.sub(f"{if_expr_suffix}$", "", scopestr)
                 if_container = self.con_str_to_node[if_scopestr]
-                if_container.expr_accessed_vars = data.accessed_vars
-                if_container.expr_modified_vars = data.modified_vars
-                if_container.expr_used_vars = data.used_vars
+                self.add_container_data_to_expr(if_container, data)
+                continue
+
+            # For loop expression container data, we add it to the
+            # expr_*_vars attributes of AnnCastLoop node
+            loop_expr_suffix = CON_STR_SEP + LOOPEXPR
+            if scopestr.endswith(loop_expr_suffix):
+                # remove the final if expr suffix to obtain if container scope 
+                loop_scopestr = re.sub(f"{loop_expr_suffix}$", "", scopestr)
+                loop_container = self.con_str_to_node[loop_scopestr]
+                self.add_container_data_to_expr(loop_container, data)
                 continue
 
             container = self.con_str_to_node[scopestr]
@@ -90,11 +106,16 @@ class ContainerScopePass:
         con_scopestr = con_scope_to_str(con_scope)
         # initialize container data for this node
         self.con_str_to_con_data[con_scopestr] = ContainerData()
-        # Note: we do not cache the ModelIf.Expr node, 
-        # since that node does not have fields to store variable info
-        # instead that info is stored in the ModelIf node itself
+
+        # Note: we do not cache the ModelIf.Expr or the Loop.Expr node, 
+        # since those nodes do not have fields to store variable info
+        # instead that info is stored in the ModelIf or Loop node itself
         if_expr_suffix = CON_STR_SEP + IFEXPR
         if not con_scopestr.endswith(if_expr_suffix):
+            self.con_str_to_node[con_scopestr] = node
+
+        loop_expr_suffix = CON_STR_SEP + LOOPEXPR
+        if not con_scopestr.endswith(loop_expr_suffix):
             self.con_str_to_node[con_scopestr] = node
         
     def visit(
@@ -204,6 +225,8 @@ class ContainerScopePass:
         node.con_scope = loopscope
         # TODO: What if expr has side-effects?
         loopexprscope = loopscope + [LOOPEXPR]
+        # we store an additional ContainerData for the loop expression
+        self.initialize_con_scope_data(loopexprscope, node)
         self.visit(node.expr, loopexprscope, assign_lhs)
 
         loopbodyscope = loopscope + [LOOPBODY]

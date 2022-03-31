@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn
+from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn, Optional
 from abc import ABC, abstractmethod
 from functools import singledispatch
 from dataclasses import dataclass
@@ -264,6 +264,7 @@ class LambdaNode(GenericNode):
         except Exception as e:
             raise GrFNExecutionException(e)
 
+    # TODO: add logic for LOOP_TOP_INTERFACE type
     def parse_result(self, values, res):
         if (
             self.func_type == LambdaType.INTERFACE
@@ -436,6 +437,8 @@ class GrFNSubgraph:
     basename: str
     occurrence_num: int
     parent: str
+    # TODO: maybe uncomment
+    # parent: Optional[GrFNSubgraph]
     type: str
     border_color: str
     nodes: Iterable[GenericNode]

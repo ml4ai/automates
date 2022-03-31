@@ -20,6 +20,7 @@ from automates.model_assembly.networks import (
     GenericNode,
     GroundedFunctionNetwork,
     GrFNSubgraph,
+    GrFNLoopSubgraph,
     HyperEdge,
     LambdaNode,
     VariableNode
@@ -64,7 +65,6 @@ class ToGrfnPass:
         A.draw("AnnCast-to-GrFN.pdf", prog="dot")
 
 
-    # def create_interface_node(self, interface_in, interface_out, subgraph: GrFNSubgraph):
     def create_interface_node(self):
         # TODO: correct values for thes
         lambda_uuid = str(uuid.uuid4())
@@ -77,27 +77,38 @@ class ToGrfnPass:
                                      lambda_str, lambda_func, lambda_metadata)
 
         return interface_node
-        # self.network.add_node(interface_node, **interface_node.get_kwargs())
-        # inputs = []
-        # for var_id, fullid in interface_in.items():
-        #     grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-        #     grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
-        #     self.network.add_edge(grfn_var, interface_node)
-        #     inputs.append(grfn_var)
 
-        # outputs = []
-        # for var_id, fullid in interface_out.items():
-        #     grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-        #     grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
-        #     self.network.add_edge(interface_node, grfn_var)
-        #     outputs.append(grfn_var)
+    def create_loop_top_interface(self):
+        # TODO: correct values for these
+        lambda_uuid = str(uuid.uuid4())
+        lambda_str = ""
+        lambda_func = lambda: None
+        lambda_metadata = []
+        lambda_type = LambdaType.LOOP_TOP_INTERFACE
 
-        # self.hyper_edges.append(HyperEdge(inputs, interface_node, outputs))
-        # # TODO: inputs should not be in subgraph for top interface
-        # # and outputs should not be in subgraph for bot interface
-        # subgraph.nodes.extend(inputs)
-        # subgraph.nodes.append(interface_node)
-        # subgraph.nodes.extend(outputs)
+        interface_node = LambdaNode(lambda_uuid, lambda_type,
+                                     lambda_str, lambda_func, lambda_metadata)
+
+        return interface_node
+
+    def add_grfn_edges(self, inputs: typing.List, lambda_node, outputs: typing.List):
+        """ Parameters:
+              - `inputs` and `outputs` are lists of GrFN VariableNode's
+              - `lambda_node` is a GrFN LambdaNode
+            
+            For each input in `inputs`, adds an edge from input to `lambda_node`
+            For each output in `outputs`, adds an edge from `lambda_node` to output
+            Adds a `HyperEdge` between `inputs`, `lambda_node`, and `outputs`
+        """
+        # build input edge set 
+        input_edges = zip(inputs, [lambda_node] * len(inputs))
+        # build output edge set 
+        output_edges = zip([lambda_node] * len(outputs), outputs)
+        # add edges to network
+        self.network.add_edges_from(input_edges)
+        self.network.add_edges_from(output_edges)
+        # add HyperEdges to GrFN
+        self.hyper_edges.append(HyperEdge(inputs, lambda_node, outputs))
 
     def create_condition_node(self, condition_in, condition_out, subgraph: GrFNSubgraph):
         # TODO: correct values for these
@@ -189,15 +200,7 @@ class ToGrfnPass:
             outputs.append(output)
             subgraph_nodes.append(output)
 
-        # build input edge set 
-        input_edges = zip(inputs, [assignment_node] * len(inputs))
-        # build output edge set 
-        output_edges = zip([assignment_node] * len(outputs), outputs)
-        # add edges to network
-        self.network.add_edges_from(input_edges)
-        self.network.add_edges_from(output_edges)
-        # add HyperEdges to GrFN
-        self.hyper_edges.append(HyperEdge(inputs, assignment_node, outputs))
+        self.add_grfn_edges(inputs, assignment_node, outputs)
         # add subgraph_nodes
         subgraph.nodes.extend(subgraph_nodes)
         
@@ -370,10 +373,61 @@ class ToGrfnPass:
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, subgraph: GrFNSubgraph):
-        # TODO: Loop
-        # visit children
+        parent = subgraph
+        # make a new subgraph for this If Container
+        type = "LoopContainer"
+        border_color = GrFNSubgraph.get_border_color(type)
+        metadata = []
+        nodes = []
+        occs = 0
+        uid = str(uuid.uuid4())
+        # TODO: figure out naming scheme
+        ns = "default-ns"
+        scope = con_scope_to_str(node.con_scope)
+        basename = scope
+        # TODO: decide if parent needs to be a str or not
+        subgraph = GrFNLoopSubgraph(uid, ns, scope, basename,
+                                occs, parent, type, border_color, nodes, metadata)
+        self.subgraphs.add_node(subgraph)
+        self.subgraphs.add_edge(parent, subgraph)
+
+        # build top interface
+        bot_interface = self.create_loop_top_interface()
+        self.network.add_node(bot_interface, **bot_interface.get_kwargs())
+        # collect initial GrFN VariableNodes
+        grfn_initial = map(self.ann_cast.get_grfn_var, node.top_interface_initial.values())
+        # collect updated GrFN VariableNodes 
+        grfn_updated = map(self.ann_cast.get_grfn_var, node.top_interface_updated.values())
+        # combine initial and updated for inputs to loop top interface
+        inputs = list(grfn_initial) + list(grfn_updated)
+        # collect ouput GrFN VariableNodes
+        outputs = list(map(self.ann_cast.get_grfn_var, node.top_interface_out.values()))
+        self.add_grfn_edges(inputs, bot_interface, outputs)
+
+        # add interface node, updated variables, and output variables to subgraph
+        subgraph.nodes.append(bot_interface)
+        subgraph.nodes.extend(list(grfn_updated) + outputs)
+
+        # visit expr, then setup condition info
         self.visit(node.expr, subgraph)
+        self.create_condition_node(node.condition_in, node.condition_out, subgraph)
+
         self.visit_node_list(node.body, subgraph)
+
+        # build bot interface
+        bot_interface = self.create_interface_node()
+        self.network.add_node(bot_interface, **bot_interface.get_kwargs())
+        # collect input GrFN VariableNodes
+        inputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_in.values()))
+        # collect ouput GrFN VariableNodes
+        outputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_out.values()))
+        self.add_grfn_edges(inputs, bot_interface, outputs)
+
+        # bot interface includes input and bot interface
+        # the outputs need to be added to the parent subgraph
+        subgraph.nodes.extend(inputs)
+        subgraph.nodes.append(bot_interface)
+        parent.nodes.extend(outputs)
 
     @_visit.register
     def visit_model_break(self, node: AnnCastModelBreak, subgraph: GrFNSubgraph):
@@ -393,15 +447,15 @@ class ToGrfnPass:
         nodes = []
         occs = 0
         uid = str(uuid.uuid4())
+        # TODO: figure out naming scheme
         ns = "default-ns"
         scope = con_scope_to_str(node.con_scope)
-        basename = "COND"
+        basename = scope
         subgraph = GrFNSubgraph(uid, ns, scope, basename,
                                 occs, parent, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
 
-        # self.create_interface_node(node.top_interface_in, node.top_interface_out, subgraph)
         # build top interface
         top_interface = self.create_interface_node()
         self.network.add_node(top_interface, **top_interface.get_kwargs())
@@ -431,10 +485,7 @@ class ToGrfnPass:
         self.visit_node_list(node.body, subgraph)
         self.visit_node_list(node.orelse, subgraph)
         
-        # TODO: Change this, we could just store the condition var in the node
-        condition_fullid = list(node.condition_out.values())[0]
-        condition_grfn_id = self.ann_cast.fullid_to_grfn_id[condition_fullid]
-        condition_var = self.ann_cast.grfn_id_to_grfn_var[condition_grfn_id]
+        condition_var = node.condition_var
         self.create_decision_node(node.decision_in, node.decision_out, 
                                   condition_var, subgraph)
 
