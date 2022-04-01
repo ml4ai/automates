@@ -283,7 +283,7 @@ class ToGrfnPass:
     def visit_call(self, node: AnnCastCall, subgraph: GrFNSubgraph):
         # assert isinstance(node.func, AnnCastName)
         self.visit_node_list(node.arguments, subgraph)
-        for index, assignment in node.arg_assigments.items():
+        for index, assignment in node.arg_assignments.items():
             self.visit_grfn_assignment(assignment, subgraph)
 
         parent = subgraph
@@ -324,6 +324,9 @@ class ToGrfnPass:
         subgraph.nodes.append(top_interface)
         subgraph.nodes.extend(outputs)
 
+        if GENERATE_GRFN_2_2:
+            self.visit_function_def_copy(node.func_def_copy, subgraph)
+
         # build bot interface
         bot_interface = self.create_interface_node()
         self.network.add_node(bot_interface, **bot_interface.get_kwargs())
@@ -361,11 +364,35 @@ class ToGrfnPass:
     def visit_expr(self, node: AnnCastExpr, subgraph: GrFNSubgraph):
         self.visit(node.expr, subgraph)
 
-    @_visit.register
-    def visit_function_def(self, node: AnnCastFunctionDef, subgraph: GrFNSubgraph):
+    def visit_function_def_copy(self, node: AnnCastFunctionDef, subgraph: GrFNSubgraph):
         self.visit_node_list(node.func_args, subgraph)
         self.visit_node_list(node.body, subgraph)
-        # TODO: Interfaces nodes for a Function Def
+
+    @_visit.register
+    def visit_function_def(self, node: AnnCastFunctionDef, subgraph: GrFNSubgraph):
+        # for GrFN 2.2, we create function containers at call sites,
+        # so we skip all functions except "main"
+        if GENERATE_GRFN_2_2 and node.name.name !=  "main":
+            return
+
+        parent = subgraph
+        type = "FuncContainer"
+        border_color = GrFNSubgraph.get_border_color(type)
+        metadata = []
+        nodes = []
+        occs = 0
+        uid = str(uuid.uuid4())
+        ns = "default-ns"
+        scope = con_scope_to_str(node.con_scope)
+        basename = scope
+        subgraph = GrFNSubgraph(uid, ns, scope, basename,
+                                occs, parent, type, border_color, nodes, metadata)
+        self.subgraphs.add_node(subgraph)
+        self.subgraphs.add_edge(parent, subgraph)
+        self.visit_node_list(node.func_args, subgraph)
+        self.visit_node_list(node.body, subgraph)
+
+        # TODO for non GrFN 2.2 generation: add interfaces 
 
     @_visit.register
     def visit_list(self, node: AnnCastList, subgraph: GrFNSubgraph):

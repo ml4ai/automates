@@ -44,6 +44,7 @@ from automates.model_assembly.networks import (
     VariableNode
 )
 
+GENERATE_GRFN_2_2 = True
 
 # used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
 CON_STR_SEP = "."
@@ -91,6 +92,17 @@ def decision_in_to_str(str_start, decision):
         if_else_fullids.append(f" If: {ifid}; Else: {elseid}")
 
     return str_start + ", ".join(if_else_fullids)
+
+def is_literal_assignment(node):
+    """
+    Check if the node is a Number, Boolean, or String
+    This may need to updated later
+    """
+    if isinstance(node, AnnCastNumber) or isinstance(node, AnnCastBoolean) \
+        or isinstance(node, AnnCastString):
+        return True
+
+    return False
 
 def call_argument_name(node, arg_index: int) -> str:
     """
@@ -303,11 +315,16 @@ class AnnCastCall(AnnCastNode):
         self.out_ret_val = {}
         self.modified_globals = {} # Store when accumulating modified variables
 
+        # copied function def for GrFN 2.2
+        self.func_def_copy: typing.Optional[AnnCastFunctionDef] = None
+
+        # dict mapping argument index to created argument fullid
+        self.arg_index_to_fullid = {}
         # this dict maps argument positional index to GrfnAssignment's
         # Each GrfnAssignment stores the ASSIGN/LITERAL node, 
         # the inputs to the ASSIGN/LITERAL node, and the outputs to the ASSIGN/LITERAL node
         # In this case, the output will map the arguments fullid to its grfn_id
-        self.arg_assigments: typing.Dict[int, GrfnAssignment] = {}
+        self.arg_assignments: typing.Dict[int, GrfnAssignment] = {}
 
     def __str__(self):
         return Call.__str__(self)

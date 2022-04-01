@@ -178,6 +178,14 @@ class ContainerScopePass:
         node.func.con_scope = enclosing_con_scope
         self.visit_node_list(node.arguments, enclosing_con_scope, assign_lhs)
 
+        # make a copy of the associated function def for GrFN 2.2, and 
+        # visit this copy
+        if GENERATE_GRFN_2_2:
+            node.func_def_copy = copy.deepcopy(self.ann_cast.func_id_to_def[node.func.id])
+            calling_scope = enclosing_con_scope + [call_container_name(node)]
+            call_assign_lhs = False
+            self.visit_function_def(node.func_def_copy, calling_scope, call_assign_lhs)
+
     # TODO: What to do for classes about modified/accessed vars?
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef, enclosing_con_scope, assign_lhs):

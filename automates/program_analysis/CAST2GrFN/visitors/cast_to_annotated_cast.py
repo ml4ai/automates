@@ -154,8 +154,8 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
     @_visit.register
     def visit_function_def(self, node: FunctionDef):
         name = node.name
-        body = self.visit_node_list(node.body)
         args = self.visit_node_list(node.func_args)
+        body = self.visit_node_list(node.body)
         return AnnCastFunctionDef(name, args, body, node.source_refs)
         
     @_visit.register

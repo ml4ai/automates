@@ -73,18 +73,54 @@ class GrfnVarCreationPass:
         This creates a version zero of all of these variables that will
         be used on the top interface
         """
-        # union modified and accessed vars
-        used_vars = {**node.modified_vars, **node.accessed_vars}
         con_scopestr = con_scope_to_str(node.con_scope)
 
-        for id, var_name in used_vars.items():
+        for id, var_name in node.used_vars.items():
             # we introduce version 0 at the top of the container
-            version = 0
+            version = VAR_INIT_VERSION
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.ann_cast.store_grfn_var(fullid, grfn_var)
-            # TODO: move to variable version pass?
+
+            # TODO for non GrFN 2.2 Generation: move to variable version pass?
             node.top_interface_out[id] = fullid
+
+    def alias_copied_func_body_init_vers(self, node: AnnCastFunctionDef, call_con_scopestr: str):
+        """
+        Precondition: This should be called after visiting copied function body.
+        This is used for GrFN 2.2 generation.
+
+        Aliases `VAR_INIT_VERSION` version variables from the function body to
+        `VAR_INIT_VERSION` of calling container sccope.
+        """
+        con_scopestr = con_scope_to_str(node.con_scope)
+
+        # alias `VAR_INIT_VERSION` variables in call_con_scopestr
+        # to the `VAR_INIT_VERSION` version occuring the func body
+        version = VAR_INIT_VERSION
+        for id, var_name in node.modified_globals.items():
+            body_fullid = build_fullid(var_name, id, version, con_scopestr)
+            call_fullid = build_fullid(var_name, id, version, call_con_scopestr)
+            self.alias_grfn_vars(call_fullid, body_fullid)
+
+    def alias_copied_func_body_highest_vers(self, node: AnnCastFunctionDef, call_con_scopestr: str):
+        """
+        Precondition: This should be called after visiting copied function body.
+        This is used for GrFN 2.2 generation.
+
+        Aliases highest version variables from the function body to
+        `VAR_EXIT_VERSION` of calling container sccope.
+        """
+        con_scopestr = con_scope_to_str(node.con_scope)
+
+        # alias `VAR_EXIT_VERSION` variables in call_con_scopestr
+        # to the highest version occuring the func body
+        exit_version = VAR_EXIT_VERSION
+        for id, var_name in node.modified_globals.items():
+            body_version = node.body_highest_var_vers[id]
+            body_fullid = build_fullid(var_name, id, body_version, con_scopestr)
+            exit_fullid = build_fullid(var_name, id, exit_version, call_con_scopestr)
+            self.alias_grfn_vars(exit_fullid, body_fullid)
 
     def add_modified_vars_to_bot_interface(self, node: AnnCastFunctionDef):
         """
@@ -378,33 +414,13 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_call(self, node: AnnCastCall):
         assert isinstance(node.func, AnnCastName)
-        # Create new GrFN for return value for bot interface in and bot interface out
-        var_name = call_ret_val_name(node)
-        id = self.ann_cast.next_collapsed_id()
-        version = 0
-        con_scopestr = con_scope_to_str(node.func.con_scope)
-        call_con_scopestr = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
-        in_ret_val = create_grfn_var(var_name, id, version, call_con_scopestr)
-        in_fullid = build_fullid(var_name, id, version, call_con_scopestr)
-        self.ann_cast.store_grfn_var(in_fullid, in_ret_val)
-        out_ret_val = create_grfn_var(var_name, id, version, con_scopestr)
-        out_fullid = build_fullid(var_name, id, version, con_scopestr)
-        self.ann_cast.store_grfn_var(out_fullid, out_ret_val)
-
-        # store created fullid and grfn_id in node's ret_val
-        # TODO: also store analog associated FunctionDef? and link through interfaces?
-        node.out_ret_val[out_fullid] = out_ret_val.uid
-        node.in_ret_val[in_fullid] = in_ret_val.uid
-        # link ret values on bot interface
-        node.bot_interface_in[in_fullid] = in_ret_val.uid
-        node.bot_interface_out[out_fullid] = out_ret_val.uid
-
-        # TODO: decide whether we should do this
-        # If we copy FunctionDef container, we should make GrFN variables here for 
-        # this call of that function
-        # It may be as simple as creating variables for all used variables of the function,
-        # but the scope needs to be consistent with the call site location
         self.visit_node_list(node.arguments)
+
+        if GENERATE_GRFN_2_2:
+            call_con_scopestr = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
+            self.visit_function_def_copy(node.func_def_copy)
+            self.alias_copied_func_body_init_vers(node.func_def_copy, call_con_scopestr)
+            self.alias_copied_func_body_highest_vers(node.func_def_copy, call_con_scopestr)
 
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef):
@@ -417,6 +433,11 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_expr(self, node: AnnCastExpr):
         self.visit(node.expr)
+
+    def visit_function_def_copy(self, node: AnnCastFunctionDef):
+        self.visit_node_list(node.func_args)
+        self.visit_node_list(node.body)
+
 
     @_visit.register
     def visit_function_def(self, node: AnnCastFunctionDef):
