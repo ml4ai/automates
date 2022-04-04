@@ -93,9 +93,20 @@ class CASTToTokenCASTVisitor(CASTVisitor):
         the program to generate a tokenized CAST string.
         After the token CAST string is generated, it's written out alongside
         the variable and value maps."""
-        main_body = self.cast.nodes[0].body[-1]
-        token_string = self.visit(main_body)
+        #main_body = self.cast.nodes[0].body[-1]
+        #token_string = self.visit(main_body)
 
+        body = []
+        for b in self.cast.nodes[0].body:
+            if isinstance(b, FunctionDef):
+                body.append(b)
+
+        temp_string = ""
+        for func in body:
+            temp_string = temp_string + self.visit(func) + " "
+
+        token_string = temp_string.rstrip()
+        
         variable_map = self.dump_var_map()
         value_map = self.dump_val_map()
 
