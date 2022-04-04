@@ -320,6 +320,7 @@ class AnnCastCall(AnnCastNode):
 
         # dict mapping argument index to created argument fullid
         self.arg_index_to_fullid = {}
+        self.param_index_to_fullid = {}
         # this dict maps argument positional index to GrfnAssignment's
         # Each GrfnAssignment stores the ASSIGN/LITERAL node, 
         # the inputs to the ASSIGN/LITERAL node, and the outputs to the ASSIGN/LITERAL node

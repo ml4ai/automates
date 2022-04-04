@@ -85,7 +85,7 @@ class GrfnVarCreationPass:
             # TODO for non GrFN 2.2 Generation: move to variable version pass?
             node.top_interface_out[id] = fullid
 
-    def alias_copied_func_body_init_vers(self, node: AnnCastFunctionDef, call_con_scopestr: str):
+    def alias_copied_func_body_init_vers(self, node: AnnCastCall, call_con_scopestr: str):
         """
         Precondition: This should be called after visiting copied function body.
         This is used for GrFN 2.2 generation.
@@ -93,15 +93,26 @@ class GrfnVarCreationPass:
         Aliases `VAR_INIT_VERSION` version variables from the function body to
         `VAR_INIT_VERSION` of calling container sccope.
         """
-        con_scopestr = con_scope_to_str(node.con_scope)
+        func_def_copy = node.func_def_copy
+        call_con_scopestr = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
+        func_con_scopestr = con_scope_to_str(func_def_copy.con_scope)
 
         # alias `VAR_INIT_VERSION` variables in call_con_scopestr
         # to the `VAR_INIT_VERSION` version occuring the func body
         version = VAR_INIT_VERSION
-        for id, var_name in node.modified_globals.items():
-            body_fullid = build_fullid(var_name, id, version, con_scopestr)
+        for id, var_name in func_def_copy.modified_globals.items():
+            body_fullid = build_fullid(var_name, id, version, func_con_scopestr)
             call_fullid = build_fullid(var_name, id, version, call_con_scopestr)
             self.alias_grfn_vars(call_fullid, body_fullid)
+
+        for i, call_fullid in node.param_index_to_fullid.items():
+            var = func_def_copy.func_args[i]
+            assert(isinstance(var, AnnCastVar))
+            name = var.val
+            func_id = name.id
+            var_name = name.name
+            func_fullid = build_fullid(var_name, func_id, version, func_con_scopestr)
+            self.alias_grfn_vars(call_fullid, func_fullid)
 
     def alias_copied_func_body_highest_vers(self, node: AnnCastFunctionDef, call_con_scopestr: str):
         """
@@ -419,7 +430,7 @@ class GrfnVarCreationPass:
         if GENERATE_GRFN_2_2:
             call_con_scopestr = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
             self.visit_function_def_copy(node.func_def_copy)
-            self.alias_copied_func_body_init_vers(node.func_def_copy, call_con_scopestr)
+            self.alias_copied_func_body_init_vers(node, call_con_scopestr)
             self.alias_copied_func_body_highest_vers(node.func_def_copy, call_con_scopestr)
 
     @_visit.register

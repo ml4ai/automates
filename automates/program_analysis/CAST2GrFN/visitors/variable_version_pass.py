@@ -198,9 +198,7 @@ class VariableVersionPass:
             param_name = param.val.name
             param_con_scopestr = con_scope_to_str(node.func.con_scope + [call_con_name])
             # if we are generating GrFN 2.2, we would like the parameter to lie in the 
-            # copied function def container, so we need to adjust the `param_con_scopestr`
-            if GENERATE_GRFN_2_2:
-                param_con_scopestr = con_scope_to_str(node.func_def_copy.con_scope)
+            # copied function def container, we do this by aliasing versions during GrfnVarCreation pass
 
             # argument and parameter share id, and start with initial version
             id = self.ann_cast.next_collapsed_id()
@@ -210,13 +208,14 @@ class VariableVersionPass:
             arg_grfn_var = create_grfn_var(arg_name, id, version, arg_con_scopestr)
             arg_fullid = build_fullid(arg_name, id, version, arg_con_scopestr)
             self.ann_cast.store_grfn_var(arg_fullid, arg_grfn_var)
-
             # store arg_fullid
             node.arg_index_to_fullid[i] = arg_fullid
 
             param_grfn_var = create_grfn_var(param_name, id, version, param_con_scopestr)
             param_fullid = build_fullid(param_name, id, version, param_con_scopestr)
             self.ann_cast.store_grfn_var(param_fullid, param_grfn_var)
+            # store param_fullid
+            node.param_index_to_fullid[i] = param_fullid
 
             # link argument and parameter through top interface
             node.top_interface_in[id] = arg_fullid
@@ -241,10 +240,7 @@ class VariableVersionPass:
 
         # interior container scope
         call_con_scopestr = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
-        # if we are generating GrFN 2.2, we want the interior return value to lie within
-        # the copied function def container
-        if GENERATE_GRFN_2_2:
-            call_con_scopestr = con_scope_to_str(node.func_def_copy.con_scope)
+
         in_ret_val = create_grfn_var(var_name, id, version, call_con_scopestr)
         in_fullid = build_fullid(var_name, id, version, call_con_scopestr)
         self.ann_cast.store_grfn_var(in_fullid, in_ret_val)
@@ -260,8 +256,8 @@ class VariableVersionPass:
         node.out_ret_val[out_fullid] = out_ret_val.uid
         node.in_ret_val[in_fullid] = in_ret_val.uid
         # link ret values on bot interface
-        node.bot_interface_in[in_fullid] = in_ret_val.uid
-        node.bot_interface_out[out_fullid] = out_ret_val.uid
+        node.bot_interface_in[id] = in_fullid
+        node.bot_interface_out[id] = out_fullid
 
     def add_globals_to_call_interfaces(self, node: AnnCastCall):
         """
@@ -278,10 +274,13 @@ class VariableVersionPass:
         calling_scopestr = con_scope_to_str(node.func.con_scope)
         # TODO:  add globals attribute to AnnCastModule and potentially store 
         # globals modified by this function on an earlier pass
+        # TODO: modified globals is an attribute of the FunctionDef, but we are calculating
+        # this at each call site, move this code
         function_def = self.ann_cast.func_id_to_def[node.func.id]
         check_global = lambda var: self.is_var_in_con_scope(calling_scopestr, var[0])
         global_vars = dict(filter(check_global, function_def.modified_vars.items()))
         function_def.modified_globals = global_vars
+
         # add global variables to top_interface_in
         self.populate_interface(calling_scopestr, global_vars, node.top_interface_in)
         # increment global variable versions 
@@ -292,10 +291,10 @@ class VariableVersionPass:
         # add globals to interior interfaces
         # interior container scope
         call_con_scopestr = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
-        # if we are generating GrFN 2.2, we want the interior global value to lie within
-        # the copied function def container
+
         if GENERATE_GRFN_2_2:
-            call_con_scopestr = con_scope_to_str(node.func_def_copy.con_scope)
+            # add modified globals to copied function def
+            node.func_def_copy.modified_globals = global_vars
         # create globals for top_interface_out and bot interface in
         # by convention the top interface produces version VAR_INIT_VERSION variables
         # by convention, the bot interface in takes version VAR_EXIT_VERSION variables
@@ -414,12 +413,6 @@ class VariableVersionPass:
 
     @_visit.register
     def visit_function_def(self, node: AnnCastFunctionDef, assign_lhs: bool):
-        # increment versions of vars in previous scope that are modified by this container
-        prev_scopestr = con_scope_to_str(node.con_scope[:-1])
-        for var_id in node.modified_vars:
-            var_name = node.modified_vars[var_id]
-            self.incr_version_in_con_scope(prev_scopestr, var_id, var_name)
-
         # Initialize scope_to_highest_var_vers
         con_scopestr = con_scope_to_str(node.con_scope)
         # create versions 0 of any modified or accessed variables
