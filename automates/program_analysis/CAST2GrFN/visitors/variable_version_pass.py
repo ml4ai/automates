@@ -71,9 +71,6 @@ class VariableVersionPass:
 
         if id in self.con_scope_to_highest_var_vers[con_scopestr]:
             self.con_scope_to_highest_var_vers[con_scopestr][id] += 1
-            # we increment an additional time to leave space for version 1 (VAR_EXIT_VERSION)
-            if self.con_scope_to_highest_var_vers[con_scopestr][id] == VAR_EXIT_VERSION:
-                self.con_scope_to_highest_var_vers[con_scopestr][id] += 1
         # otherwise, add it as version VAR_INIT_VERSION
         else:
             self.con_scope_to_highest_var_vers[con_scopestr][id] = VAR_INIT_VERSION
