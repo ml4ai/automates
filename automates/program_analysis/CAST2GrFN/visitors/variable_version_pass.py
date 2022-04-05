@@ -250,8 +250,8 @@ class VariableVersionPass:
 
         # store created fullid and grfn_id in node's ret_val
         # TODO for non GrFN 2.2 generation: also store analog associated FunctionDef?
-        node.out_ret_val[out_fullid] = out_ret_val.uid
-        node.in_ret_val[in_fullid] = in_ret_val.uid
+        node.out_ret_val[id] = out_fullid
+        node.in_ret_val[id] = in_fullid
         # link ret values on bot interface
         node.bot_interface_in[id] = in_fullid
         node.bot_interface_out[id] = out_fullid

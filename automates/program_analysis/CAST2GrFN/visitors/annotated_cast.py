@@ -146,6 +146,22 @@ def build_fullid(var_name: str, id: int, version: int, con_scopestr: str):
     pieces = [var_name, str(id), str(version), con_scopestr]
     return CON_STR_SEP.join(pieces)
 
+def parse_fullid(fullid: str) -> typing.Dict:
+    """
+    Parses the fullid, returning a dict with mapping the strings
+      - "var_name"
+      - "id"
+      - "version"
+      - "con_scopestr"
+    to their respective values determined by the fullid
+    """
+    keys = ["var_name", "id", "version", "con_scopestr"]
+    values = fullid.split(CON_STR_SEP)
+
+    assert(len(keys) == len(values))
+
+    return dict(zip(keys, values))
+
 def create_grfn_literal_node(metadata: typing.List):
     """
     Creates a GrFN `LambdaNode` with type `LITERAL` and metadata `metadata`.
@@ -242,6 +258,12 @@ class AnnCast:
         self.fullid_to_grfn_id[fullid] = grfn_var.uid
         self.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
 
+    def grfn_var_exists(self, fullid: str):
+        """
+        Returns the whether the GrFN VariableNode associated with `fullid` has already been created
+        """
+        return fullid in self.fullid_to_grfn_id
+
     def get_grfn_var(self, fullid: str):
         """
         Returns the cached GrFN VariableNode associated with `fullid`
@@ -294,6 +316,9 @@ class AnnCastBoolean(AnnCastNode):
     def __str__(self):
         return Boolean.__str__(self)
 
+class AnnCastCallGrfnTwo(AnnCastNode):
+    pass
+
 class AnnCastCall(AnnCastNode):
     def __init__(self, func, arguments, source_refs):
         self.func: AnnCastName = func
@@ -309,11 +334,16 @@ class AnnCastCall(AnnCastNode):
         self.bot_interface_in = {}
         self.bot_interface_out = {}
 
+        # for top_interface_out
+        # mapping Name id to fullid
+        self.globals_accessed_before_mod = {}
+
         # for bot_interface
-        # ret_val should map fullid to grfn_id
+        # map Name id to fullid
         self.in_ret_val = {}
         self.out_ret_val = {}
         self.modified_globals = {} # Store when accumulating modified variables
+
 
         # copied function def for GrFN 2.2
         self.func_def_copy: typing.Optional[AnnCastFunctionDef] = None
@@ -365,11 +395,9 @@ class AnnCastFunctionDef(AnnCastNode):
         self.body = body
         self.source_refs = source_refs
 
-        # for bot_interface_in
-        # ret_val should map fullid to grfn_id
-        self.ret_val = {}
-        self.modified_globals = {} # Store when accumulating modified variables
-        # What about this? How does g1 get added to func2's imported_globals?
+        # TODO:
+        # How does this example work with interfaces? 
+        # How does g1 get added to func2's imported_globals?
         # int g1 = 1;
         # int func1() {
         #     func2();
@@ -382,6 +410,16 @@ class AnnCastFunctionDef(AnnCastNode):
         # int main() {
         #     func1();
         # }
+
+        # for bot_interface_in
+        # ret_val maps Name id to fullid
+        self.ret_val = {}
+        # mapping Name id to fullid
+        self.modified_globals = {} # Store when accumulating modified variables
+
+        # for top_interface_out
+        # mapping Name id to fullid
+        self.globals_accessed_before_mod = {}
 
         # dicts mapping a Name id to its string name
         # used for container interfaces

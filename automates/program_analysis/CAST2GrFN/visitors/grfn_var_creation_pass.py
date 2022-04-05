@@ -100,9 +100,14 @@ class GrfnVarCreationPass:
         # alias `VAR_INIT_VERSION` variables in call_con_scopestr
         # to the `VAR_INIT_VERSION` version occuring the func body
         version = VAR_INIT_VERSION
+        # TODO: we only want to alias globals which are accessed before modified
+        # we have added an atttribute for this, but need to populate it
         for id, var_name in func_def_copy.modified_globals.items():
             body_fullid = build_fullid(var_name, id, version, func_con_scopestr)
             call_fullid = build_fullid(var_name, id, version, call_con_scopestr)
+            # don't try to alias, if VAR_INIT_VERSION is never used in the body
+            if not self.ann_cast.grfn_var_exists(body_fullid):
+                continue
             self.alias_grfn_vars(call_fullid, body_fullid)
 
         for i, call_fullid in node.param_index_to_fullid.items():

@@ -79,8 +79,9 @@ class GrfnAssignmentPass:
     def visit_call(self, node: AnnCastCall, add_to: typing.Dict):
         assert isinstance(node.func, AnnCastName)
         # add ret_val to add_to dict
-        for fullid, grfn_id in node.out_ret_val.items():
-            add_to[fullid] = grfn_id
+        for id, fullid in node.out_ret_val.items():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            add_to[fullid] = grfn_var.uid
             
         # populate `arg_assignments` attribute of node
         for i, n in enumerate(node.arguments):
