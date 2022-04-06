@@ -156,6 +156,8 @@ class IdCollapsePass:
 
     @_visit.register
     def visit_module(self, node: AnnCastModule) -> Dict:
+        # we cache the module node in the AnnCast object
+        self.ann_cast.module_node = node
         self.visit_node_list(node.body)
 
     @_visit.register

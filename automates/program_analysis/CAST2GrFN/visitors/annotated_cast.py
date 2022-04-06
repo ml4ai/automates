@@ -104,26 +104,33 @@ def is_literal_assignment(node):
 
     return False
 
+def function_container_name(node) -> str:
+    """
+    Parameter: AnnCastNameNode
+    Returns function container name in the form "name#id"
+    """
+    return f"{node.name}-id{node.id}"
+
 def call_argument_name(node, arg_index: int) -> str:
     """
     Returns the call site argument name for argument with index `arg_index`
     Used for the AnnCastCall's top interface in
     """
-    return f"{node.func.name}-call{node.invocation_index}-arg{arg_index}"
+    return f"{function_container_name(node.func)}-call{node.invocation_index}-arg{arg_index}"
 
 def call_container_name(node) -> str:
     """
     Returns the call site container name
     Used for the AnnCastCall's top interface out and bot interface in
     """
-    return f"{node.func.name}-call{node.invocation_index}"
+    return f"{function_container_name(node.func)}-call{node.invocation_index}"
 
 def call_ret_val_name(node) -> str:
     """
     Returns the call site return value name
     Used for the AnnCastCall's bot interface out
     """
-    return f"{node.func.name}-call{node.invocation_index}-ret_val"
+    return f"{function_container_name(node.func)}-call{node.invocation_index}-ret_val"
 
 
 def ann_cast_name_to_fullid(node):
@@ -236,12 +243,23 @@ class AnnCast:
         self.nodes = ann_nodes
         # populated after IdCollapsePass, and used to give ids to GrFN condition variables
         self.collapsed_id_counter = 0
+        # dict mapping FunctionDef container scopestr to its id
+        self.func_con_scopestr_to_id = {}
         # dict mapping function IDs to their FunctionDef nodes.  
         self.func_id_to_def = {}
         self.grfn_id_to_grfn_var = {}
         # the fullid of a AnnCastName node is a string which includes its 
         # variable name, numerical id, version, and scope
         self.fullid_to_grfn_id = {}
+        # TODO: do we need to store multiple modules?
+        self.module_node = None
+
+    def is_global_var(self, id: int):
+        """
+        Check if id is in the used_variables attribute of the module node
+        """
+        return id in self.module_node.used_vars
+
 
     def next_collapsed_id(self):
         """
@@ -336,6 +354,7 @@ class AnnCastCall(AnnCastNode):
 
         # for top_interface_out
         # mapping Name id to fullid
+        # to determine this, we check if we store version 0 on any Name node
         self.globals_accessed_before_mod = {}
 
         # for bot_interface
@@ -414,12 +433,13 @@ class AnnCastFunctionDef(AnnCastNode):
         # for bot_interface_in
         # ret_val maps Name id to fullid
         self.ret_val = {}
+        # dicts for global variables
         # mapping Name id to fullid
-        self.modified_globals = {} # Store when accumulating modified variables
-
+        self.used_globals = {}
         # for top_interface_out
-        # mapping Name id to fullid
         self.globals_accessed_before_mod = {}
+        # for bot interface in
+        self.modified_globals = {} 
 
         # dicts mapping a Name id to its string name
         # used for container interfaces
@@ -591,6 +611,13 @@ class AnnCastModule(AnnCastNode):
         self.name = name
         self.body = body
         self.source_refs = source_refs
+
+        # dicts mapping a Name id to string name
+        # used for container interfaces
+        self.modified_vars: typing.Dict[int, str]
+        self.accessed_vars: typing.Dict[int, str]
+        self.used_vars: typing.Dict[int, str]
+        self.con_scope: typing.List
 
     def __str__(self):
         return Module.__str__(self)

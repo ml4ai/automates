@@ -75,26 +75,26 @@ class ContainerScopePass:
             used_vars = var_dict_to_str("  Used: ", data.accessed_vars)
             print(used_vars)
 
-            # For if expression container data, we add it to the
-            # expr_*_vars attributes of AnnCastModelIf node
+            # Note: for the ModelIf.Expr and Loop.Expr nodes,
+            # we put the ModelIf and Loop nodes respectively in
+            # `con_str_to_node`.
+            # We need to put the container data for the Expr nodes in
+            # the expr_*_vars attributes of their associated container nodes
+            # so we call `add_container_data_to_expr()`
             if_expr_suffix = CON_STR_SEP + IFEXPR
             if scopestr.endswith(if_expr_suffix):
-                # remove the final if expr suffix to obtain if container scope 
-                if_scopestr = re.sub(f"{if_expr_suffix}$", "", scopestr)
-                if_container = self.con_str_to_node[if_scopestr]
+                if_container = self.con_str_to_node[scopestr]
                 self.add_container_data_to_expr(if_container, data)
                 continue
 
-            # For loop expression container data, we add it to the
-            # expr_*_vars attributes of AnnCastLoop node
             loop_expr_suffix = CON_STR_SEP + LOOPEXPR
             if scopestr.endswith(loop_expr_suffix):
-                # remove the final if expr suffix to obtain if container scope 
-                loop_scopestr = re.sub(f"{loop_expr_suffix}$", "", scopestr)
-                loop_container = self.con_str_to_node[loop_scopestr]
+                loop_container = self.con_str_to_node[scopestr]
                 self.add_container_data_to_expr(loop_container, data)
                 continue
 
+            # otherwise, store container data, in the container nodes 
+            # *_vars attributes
             container = self.con_str_to_node[scopestr]
             container.accessed_vars = data.accessed_vars
             container.modified_vars = data.modified_vars
@@ -109,16 +109,8 @@ class ContainerScopePass:
         # initialize container data for this node
         self.con_str_to_con_data[con_scopestr] = ContainerData()
 
-        # Note: we do not cache the ModelIf.Expr or the Loop.Expr node, 
-        # since those nodes do not have fields to store variable info
-        # instead that info is stored in the ModelIf or Loop node itself
-        if_expr_suffix = CON_STR_SEP + IFEXPR
-        if not con_scopestr.endswith(if_expr_suffix):
-            self.con_str_to_node[con_scopestr] = node
-
-        loop_expr_suffix = CON_STR_SEP + LOOPEXPR
-        if not con_scopestr.endswith(loop_expr_suffix):
-            self.con_str_to_node[con_scopestr] = node
+        # map con_scopestr to passed in node
+        self.con_str_to_node[con_scopestr] = node
         
     def visit(
             self, node: AnnCastNode, base_func_scopestr: str, enclosing_con_scope: typing.List, assign_lhs: bool
@@ -215,12 +207,15 @@ class ContainerScopePass:
         self, node: AnnCastFunctionDef, base_func_scopestr, enclosing_con_scope, assign_lhs
     ):
         # Modify scope to include the function name
-        funcscope = enclosing_con_scope + [node.name.name]
+        funcscope = enclosing_con_scope + [function_container_name(node.name)]
 
         self.initialize_con_scope_data(funcscope, node)
         node.con_scope = funcscope
         # FunctionDef's reset the `base_func_scopestr`
         base_scopestr = con_scope_to_str(funcscope)
+
+        # Cache function container scopestr for use during Variable Version pass
+        self.ann_cast.func_con_scopestr_to_id[base_scopestr] = node.name.id
 
         # Each argument is a AnnCastVar node
         # Initialize each Name and visit to modify its scope
@@ -239,7 +234,8 @@ class ContainerScopePass:
         node.con_scope = loopscope
         # TODO: What if expr has side-effects?
         loopexprscope = loopscope + [LOOPEXPR]
-        # we store an additional ContainerData for the loop expression
+        # we store an additional ContainerData for the loop expression, but
+        # we store the Loop node in `self.con_str_to_node`         
         self.initialize_con_scope_data(loopexprscope, node)
         self.visit(node.expr, base_func_scopestr, loopexprscope, assign_lhs)
 
@@ -263,7 +259,8 @@ class ContainerScopePass:
 
         # TODO-what if the condition has a side-effect?
         ifexprscope = ifscope + [IFEXPR]
-        # we store an additional ContainerData for the if expression
+        # we store an additional ContainerData for the if expression, but
+        # we store the ModelIf node in `self.con_str_to_node`         
         self.initialize_con_scope_data(ifexprscope, node)
         self.visit(node.expr, base_func_scopestr, ifexprscope, assign_lhs)
 
@@ -279,11 +276,13 @@ class ContainerScopePass:
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, base_func_scopestr, enclosing_con_scope, assign_lhs):
-        # Container scope for the module will be called "module" for now
-        enclosing_con_scope = [MODULE_SCOPE]
+        module_con_scope = [MODULE_SCOPE]
+        node.con_scope = module_con_scope
         # modulde resets the `base_func_scopestr`
-        base_scopestr = con_scope_to_str(enclosing_con_scope)
-        self.visit_node_list(node.body, base_scopestr, enclosing_con_scope, assign_lhs)
+        base_scopestr = con_scope_to_str(module_con_scope)
+        # initialize container data for module which will store global variables
+        self.initialize_con_scope_data(module_con_scope, node)
+        self.visit_node_list(node.body, base_scopestr, module_con_scope, assign_lhs)
 
     @_visit.register
     def visit_name(self, node: AnnCastName, base_func_scopestr, enclosing_con_scope, assign_lhs):

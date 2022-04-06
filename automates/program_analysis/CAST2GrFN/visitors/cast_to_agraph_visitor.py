@@ -674,7 +674,10 @@ class CASTToAGraphVisitor(CASTVisitor):
         self.G.add_node(program_uuid, label="Program: " + node.name)
 
         module_uuid = uuid.uuid4()
-        self.G.add_node(module_uuid, label="Module: " + node.name)
+        modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
+        accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
+        module_label = f"Module: {node.name}\n{modified_vars_str}\n{accessed_vars_str}"
+        self.G.add_node(module_uuid, label=module_label)
         self.G.add_edge(program_uuid, module_uuid)
 
         body = self.visit_list(node.body)

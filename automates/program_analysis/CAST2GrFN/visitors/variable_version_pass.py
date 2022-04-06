@@ -25,14 +25,6 @@ class VariableVersionPass:
             # when visitor starts, assign_lhs is False
             self.visit(node, False)
 
-    def init_highest_var_vers_dict_module(self):
-        """
-        Create a defaultdict to track highest variable versions 
-        at "module" scope.  Since we do not know the variables in advance
-        like we do for other containers, we use a defaultdict
-        """
-        self.con_scope_to_highest_var_vers[MODULE_SCOPE] = defaultdict(int)
-
     def init_highest_var_vers_dict(self, con_scopestr, var_ids):
         """
         Initialize highest var version dict for scope `con_scopestr`
@@ -511,7 +503,9 @@ class VariableVersionPass:
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, assign_lhs: bool):
-        self.init_highest_var_vers_dict_module()
+        con_scopestr = con_scope_to_str(node.con_scope)
+        # create VAR_INIT_VERSION of any modified or accessed variables
+        self.init_highest_var_vers_dict(con_scopestr, node.used_vars.keys())
         self.visit_node_list(node.body, assign_lhs)
 
     @_visit.register
@@ -523,6 +517,18 @@ class VariableVersionPass:
             self.incr_version_in_con_scope(con_scopestr, node.id, node.name)
             print("after incr scope dict is",  self.con_scope_to_highest_var_vers[con_scopestr])
         node.version = self.get_highest_ver_in_con_scope(con_scopestr, node.id)
+        
+        # we determine the globals which are accessed before modification here,
+        # and store in the associated FunctionDef node
+        # to determine this, we check if this node's version is 0, 
+        # and if this Name node is a global variable 
+        if node.version == 0 and self.ann_cast.is_global_var(node.id):
+            # TODO: make this a function, and what about Module?
+            function_id = self.ann_cast.func_con_scopestr_to_id[con_scopestr]
+            func_node = self.ann_cast.func_id_to_def[function_id]
+            fullid = build_fullid(node.name, node.id, node.version, con_scopestr)
+            func_node.globals_accessed_before_mod[id] = fullid
+
 
     @_visit.register
     def visit_number(self, node: AnnCastNumber, assign_lhs: bool):
