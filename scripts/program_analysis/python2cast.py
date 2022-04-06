@@ -45,7 +45,7 @@ os.chdir(curr_path)
 
 # Parse the python program's AST and create the CAST
 contents = ast.parse(file_contents)
-C = convert.visit(contents, {})
+C = convert.visit(contents, {}, {})
 C.source_refs = [SourceRef(file_name, None, None, 1, line_count)]
 
 os.chdir(old_path)
