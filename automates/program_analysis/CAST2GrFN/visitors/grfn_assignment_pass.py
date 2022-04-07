@@ -76,6 +76,44 @@ class GrfnAssignmentPass:
         pass
 
     @_visit.register
+    def visit_call_grfn_2_2(self, node: AnnCastCallGrfn2_2, add_to: typing.Dict):
+        assert isinstance(node.func, AnnCastName)
+        # add ret_val to add_to dict
+        for id, fullid in node.out_ret_val.items():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            add_to[fullid] = grfn_var.uid
+            
+        # populate `arg_assignments` attribute of node
+        for i, n in enumerate(node.arguments):
+            # grab GrFN variable for argument
+            arg_fullid = node.arg_index_to_fullid[i]
+            arg_grfn_var = self.ann_cast.get_grfn_var(arg_fullid)
+            
+            # create GrfnAssignment based on assignment type
+            # TODO: add correct metadata for ASSIGN/LITERAL node
+            metadata = []
+            if is_literal_assignment(n):
+                arg_assignment = GrfnAssignment(create_grfn_literal_node(metadata), LambdaType.LITERAL)
+            else:
+                arg_assignment = GrfnAssignment(create_grfn_assign_node(metadata), LambdaType.ASSIGN)
+
+            # store argument as output to GrfnAssignment
+            arg_assignment.outputs[arg_fullid] = arg_grfn_var.uid
+            # populate GrfnAssignment inputs for arguments
+            self.visit(n, arg_assignment.inputs)
+            # store GrfnAssignment for this argument
+            node.arg_assignments[i] = arg_assignment
+
+        self.visit_function_def(node.func_def_copy, {})
+
+        # DEBUGGING
+        print(f"Call after processing arguments:")
+        for pos, grfn_assignment in node.arg_assignments.items():
+            print(f"     {pos} : {str(grfn_assignment)}")
+
+
+    # TODO: Update
+    @_visit.register
     def visit_call(self, node: AnnCastCall, add_to: typing.Dict):
         assert isinstance(node.func, AnnCastName)
         # add ret_val to add_to dict
@@ -104,8 +142,6 @@ class GrfnAssignmentPass:
             # store GrfnAssignment for this argument
             node.arg_assignments[i] = arg_assignment
 
-        if GENERATE_GRFN_2_2:
-            self.visit_function_def(node.func_def_copy, {})
 
         # DEBUGGING
         print(f"Call after processing arguments:")

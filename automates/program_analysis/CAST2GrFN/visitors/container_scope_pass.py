@@ -167,18 +167,24 @@ class ContainerScopePass:
         pass
 
     @_visit.register
-    def visit_call(self, node: AnnCastCall, base_func_scopestr, enclosing_con_scope, assign_lhs):
+    def visit_call_grfn_2_2(self, node: AnnCastCallGrfn2_2, base_func_scopestr, enclosing_con_scope, assign_lhs):
         assert isinstance(node.func, AnnCastName)
         node.func.con_scope = enclosing_con_scope
         self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
-        # make a copy of the associated function def for GrFN 2.2, and 
-        # visit this copy
-        if GENERATE_GRFN_2_2:
-            node.func_def_copy = copy.deepcopy(self.ann_cast.func_id_to_def[node.func.id])
-            calling_scope = enclosing_con_scope + [call_container_name(node)]
-            call_assign_lhs = False
-            self.visit_function_def(node.func_def_copy, base_func_scopestr, calling_scope, call_assign_lhs)
+        node.func_def_copy = copy.deepcopy(self.ann_cast.func_id_to_def[node.func.id])
+        # make a new id for the copy's Name node, and store in func_id_to_def
+        node.func_def_copy.name.id = self.ann_cast.next_collapsed_id()
+        self.ann_cast.func_id_to_def[node.func_def_copy.name.id] = node.func_def_copy
+        calling_scope = enclosing_con_scope + [call_container_name(node)]
+        call_assign_lhs = False
+        self.visit_function_def(node.func_def_copy, base_func_scopestr, calling_scope, call_assign_lhs)
+
+    @_visit.register
+    def visit_call(self, node: AnnCastCall, base_func_scopestr, enclosing_con_scope, assign_lhs):
+        assert isinstance(node.func, AnnCastName)
+        node.func.con_scope = enclosing_con_scope
+        self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
     # TODO: What to do for classes about modified/accessed vars?
     @_visit.register
@@ -288,9 +294,10 @@ class ContainerScopePass:
     def visit_name(self, node: AnnCastName, base_func_scopestr, enclosing_con_scope, assign_lhs):
         node.con_scope = enclosing_con_scope
 
-        # check every prefix of enclosing_con_scope which extends base_func_scopestr and build
-        # its associated scopestr
-        # add to container data if this is an already cached container string
+        # check every prefix of enclosing_con_scope and add this Name node
+        # to the associated container data if either
+        #  1. the container scopestr extends base_func_scopestr
+        #  2. this Name node is a global variable
         scopestr = ""
         for index, name in enumerate(enclosing_con_scope):
             # add separator between container scope component names
@@ -298,8 +305,10 @@ class ContainerScopePass:
                 scopestr += f"{CON_STR_SEP}"
             scopestr += f"{name}"
             
-            # skip scopestr's that do not extend base_func_scopestr
-            if not scopestr.startswith(base_func_scopestr):
+            # if this Name node is a global, or if the scopestr extends base_func_scopestr
+            # we will add the node to scopestr's container data
+            # otherwise, we skip it
+            if not (self.ann_cast.is_global_var(node.id) or scopestr.startswith(base_func_scopestr)):
                 continue
 
             # fill in container data if this is a cached container str
@@ -314,6 +323,12 @@ class ContainerScopePass:
                     con_data.accessed_vars[node.id] = node.name
                 # for any type of use, add to containers used_vars
                 con_data.used_vars[node.id] = node.name
+
+            # TODO: decide if there is a better solution, or atleast document this better
+            # we add global variables to modules used vars earlier
+            if scopestr == MODULE_SCOPE:
+                self.ann_cast.module_node.used_vars[node.id] = node.name
+                
 
     @_visit.register
     def visit_number(self, node: AnnCastNumber, base_func_scopestr, enclosing_con_scope, assign_lhs):

@@ -169,6 +169,12 @@ def parse_fullid(fullid: str) -> typing.Dict:
 
     return dict(zip(keys, values))
 
+def var_name_from_fullid(fullid: str) -> str:
+    """
+    Return the variable name for variable with fullid `fullid`
+    """
+    return parse_fullid(fullid)["var_name"]
+
 def create_grfn_literal_node(metadata: typing.List):
     """
     Creates a GrFN `LambdaNode` with type `LITERAL` and metadata `metadata`.
@@ -254,6 +260,15 @@ class AnnCast:
         # TODO: do we need to store multiple modules?
         self.module_node = None
 
+    def get_func_node_from_scopestr(self, con_scopestr: str):
+        """
+        Return the AnnCastFuncitonDef node for the container scope 
+        defined by `con_scopestr`
+        """
+        function_id = self.func_con_scopestr_to_id[con_scopestr]
+        return self.func_id_to_def[function_id]
+        
+
     def is_global_var(self, id: int):
         """
         Check if id is in the used_variables attribute of the module node
@@ -334,10 +349,7 @@ class AnnCastBoolean(AnnCastNode):
     def __str__(self):
         return Boolean.__str__(self)
 
-class AnnCastCallGrfnTwo(AnnCastNode):
-    pass
-
-class AnnCastCall(AnnCastNode):
+class AnnCastCallGrfn2_2(AnnCastNode):
     def __init__(self, func, arguments, source_refs):
         self.func: AnnCastName = func
         self.arguments = arguments
@@ -366,6 +378,44 @@ class AnnCastCall(AnnCastNode):
 
         # copied function def for GrFN 2.2
         self.func_def_copy: typing.Optional[AnnCastFunctionDef] = None
+
+        # dict mapping argument index to created argument fullid
+        self.arg_index_to_fullid = {}
+        self.param_index_to_fullid = {}
+        # this dict maps argument positional index to GrfnAssignment's
+        # Each GrfnAssignment stores the ASSIGN/LITERAL node, 
+        # the inputs to the ASSIGN/LITERAL node, and the outputs to the ASSIGN/LITERAL node
+        # In this case, the output will map the arguments fullid to its grfn_id
+        self.arg_assignments: typing.Dict[int, GrfnAssignment] = {}
+
+    def __str__(self):
+        return Call.__str__(self)
+
+class AnnCastCall(AnnCastNode):
+    def __init__(self, func, arguments, source_refs):
+        self.func: AnnCastName = func
+        self.arguments = arguments
+        self.source_refs = source_refs
+
+        # the index of this Call node over all invocations of this function
+        self.invocation_index: int 
+        
+        # dicts mapping a Name id to its fullid
+        self.top_interface_in = {}
+        self.top_interface_out = {}
+        self.bot_interface_in = {}
+        self.bot_interface_out = {}
+
+        # for top_interface_out
+        # mapping Name id to fullid
+        # to determine this, we check if we store version 0 on any Name node
+        self.globals_accessed_before_mod = {}
+
+        # for bot_interface
+        # map Name id to fullid
+        self.in_ret_val = {}
+        self.out_ret_val = {}
+        self.modified_globals = {} # Store when accumulating modified variables
 
         # dict mapping argument index to created argument fullid
         self.arg_index_to_fullid = {}
@@ -429,24 +479,24 @@ class AnnCastFunctionDef(AnnCastNode):
         # int main() {
         #     func1();
         # }
+        self.con_scope: typing.List
 
         # for bot_interface_in
         # ret_val maps Name id to fullid
         self.ret_val = {}
-        # dicts for global variables
-        # mapping Name id to fullid
-        self.used_globals = {}
-        # for top_interface_out
-        self.globals_accessed_before_mod = {}
-        # for bot interface in
-        self.modified_globals = {} 
 
         # dicts mapping a Name id to its string name
         # used for container interfaces
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
         self.used_vars: typing.Dict[id, str]
-        self.con_scope: typing.List
+        # dicts for global variables
+        # for top_interface_out
+        self.globals_accessed_before_mod = {}
+        # for bot interface in
+        self.modified_globals = {} 
+        # TODO: remove?
+        self.used_globals = {}
     
         # dicts mapping a Name id to its fullid
         self.top_interface_in = {}
@@ -614,9 +664,9 @@ class AnnCastModule(AnnCastNode):
 
         # dicts mapping a Name id to string name
         # used for container interfaces
-        self.modified_vars: typing.Dict[int, str]
-        self.accessed_vars: typing.Dict[int, str]
-        self.used_vars: typing.Dict[int, str]
+        self.modified_vars: typing.Dict[int, str] = {}
+        self.accessed_vars: typing.Dict[int, str] = {}
+        self.used_vars: typing.Dict[int, str] = {}
         self.con_scope: typing.List
 
     def __str__(self):

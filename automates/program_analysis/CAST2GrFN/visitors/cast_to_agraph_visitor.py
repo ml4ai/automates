@@ -242,6 +242,37 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
+    def _(self, node: AnnCastCallGrfn2_2):
+        """Visits Call (function call) nodes. We check to see
+        if we have arguments to the node and act accordingly.
+        Appending all the arguments of the function to this node,
+        if we have any. The node's UID is returned."""
+        func = self.visit(node.func)
+        args = []
+        if len(node.arguments) > 0:
+            args = self.visit_list(node.arguments)
+
+        node_uid = uuid.uuid4()
+        label = "CallGrfn2_2"
+        top_iface_in_vars_str = var_dict_to_str("Top In: ", node.top_interface_in)
+        bot_iface_out_vars_str = var_dict_to_str("Bot Out: ", node.bot_interface_out)
+        globals_in_str = var_dict_to_str("Globals In: ", node.func_def_copy.globals_accessed_before_mod)
+        globals_out_str = var_dict_to_str("Globals Out: ", node.func_def_copy.modified_globals)
+        label = f"{label}\n{top_iface_in_vars_str}\n{bot_iface_out_vars_str}"
+        label = f"{label}\n{globals_in_str}\n{globals_out_str}"
+        self.G.add_node(node_uid, label=label)
+        self.G.add_edge(node_uid, func)
+
+        args_uid = uuid.uuid4()
+        self.G.add_node(args_uid, label="Arguments")
+        self.G.add_edge(node_uid, args_uid)
+
+        for n in args:
+            self.G.add_edge(args_uid, n)
+
+        return node_uid
+
+    @visit.register
     def _(self, node: AnnCastCall):
         """Visits Call (function call) nodes. We check to see
         if we have arguments to the node and act accordingly.

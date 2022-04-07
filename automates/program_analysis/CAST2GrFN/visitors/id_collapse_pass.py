@@ -93,6 +93,15 @@ class IdCollapsePass:
         pass
 
     @_visit.register
+    def visit_call_grfn_2_2(self, node: AnnCastCallGrfn2_2):
+        assert isinstance(node.func, AnnCastName)
+        node.func.id = self.collapse_id(node.func.id)
+        node.invocation_index = self.next_function_invocation(node.func.id)
+
+        self.visit_node_list(node.arguments)
+
+
+    @_visit.register
     def visit_call(self, node: AnnCastCall):
         assert isinstance(node.func, AnnCastName)
         node.func.id = self.collapse_id(node.func.id)

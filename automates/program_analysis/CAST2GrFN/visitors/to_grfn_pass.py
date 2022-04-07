@@ -280,6 +280,79 @@ class ToGrfnPass:
         pass
 
     @_visit.register
+    def visit_call_grfn_2_2(self, node: AnnCastCallGrfn2_2, subgraph: GrFNSubgraph):
+        # assert isinstance(node.func, AnnCastName)
+        self.visit_node_list(node.arguments, subgraph)
+        for index, assignment in node.arg_assignments.items():
+            self.visit_grfn_assignment(assignment, subgraph)
+
+        parent = subgraph
+        # make a new subgraph for this If Container
+        type = "FuncContainer"
+        border_color = "purple"
+        metadata = []
+        nodes = []
+        occs = 0
+        uid = str(uuid.uuid4())
+        ns = "default-ns"
+        scope = con_scope_to_str(node.func.con_scope)
+        basename = call_container_name(node)
+        subgraph = GrFNSubgraph(uid, ns, scope, basename,
+                                occs, parent, type, border_color, nodes, metadata)
+        self.subgraphs.add_node(subgraph)
+        self.subgraphs.add_edge(parent, subgraph)
+
+        # build top interface
+        top_interface = self.create_interface_node()
+        self.network.add_node(top_interface, **top_interface.get_kwargs())
+        inputs = []
+        for var_id, fullid in node.top_interface_in.items():
+            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
+            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+            self.network.add_edge(grfn_var, top_interface)
+            inputs.append(grfn_var)
+
+        outputs = []
+        for var_id, fullid in node.top_interface_out.items():
+            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
+            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+            self.network.add_edge(top_interface, grfn_var)
+            outputs.append(grfn_var)
+
+        self.hyper_edges.append(HyperEdge(inputs, top_interface, outputs))
+        # container includes top_interface and top_interface outputs
+        subgraph.nodes.append(top_interface)
+        subgraph.nodes.extend(outputs)
+
+        self.visit_function_def_copy(node.func_def_copy, subgraph)
+
+        # build bot interface
+        bot_interface = self.create_interface_node()
+        self.network.add_node(bot_interface, **bot_interface.get_kwargs())
+        inputs = []
+        for var_id, fullid in node.bot_interface_in.items():
+            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
+            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+            self.network.add_edge(grfn_var, bot_interface)
+            inputs.append(grfn_var)
+
+        outputs = []
+        for var_id, fullid in node.bot_interface_out.items():
+            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
+            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+            self.network.add_edge(bot_interface, grfn_var)
+            outputs.append(grfn_var)
+
+        self.hyper_edges.append(HyperEdge(inputs, bot_interface, outputs))
+        # bot interface includes input and bot interface
+        # the outputs need to be added to the parent subgraph
+        subgraph.nodes.extend(inputs)
+        subgraph.nodes.append(bot_interface)
+        parent.nodes.extend(outputs)
+
+
+    # TODO: Update
+    @_visit.register    
     def visit_call(self, node: AnnCastCall, subgraph: GrFNSubgraph):
         # assert isinstance(node.func, AnnCastName)
         self.visit_node_list(node.arguments, subgraph)
