@@ -86,6 +86,7 @@ class VariableNode(GenericNode):
     object_ref: str = None
     value: Any = None
     input_value: Any = None
+    is_exit: bool = False
 
     def __hash__(self):
         return hash(self.uid)
@@ -138,12 +139,11 @@ class VariableNode(GenericNode):
         return str(self.identifier)
 
     def get_kwargs(self):
-        is_exit = self.identifier.var_name == "EXIT"
         return {
             "color": "crimson",
-            "fontcolor": "white" if is_exit else "black",
-            "fillcolor": "crimson" if is_exit else "white",
-            "style": "filled" if is_exit else "",
+            "fontcolor": "white" if self.is_exit else "black",
+            "fillcolor": "crimson" if self.is_exit else "white",
+            "style": "filled" if self.is_exit else "",
             "padding": 15,
             "label": self.get_label(),
         }

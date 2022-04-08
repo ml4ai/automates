@@ -33,7 +33,8 @@ class VariableVersionPass:
         """
         # TODO: Could we ever have a container with no modified or accessed variables?
         #       Maybe a debugging function that only prints?
-        assert(len(var_ids) > 0)
+        # Yes, if the module container
+        # assert(len(var_ids) > 0)
         self.con_scope_to_highest_var_vers[con_scopestr] = {}
         for id in var_ids:
             self.con_scope_to_highest_var_vers[con_scopestr][id] = 0
@@ -219,7 +220,7 @@ class VariableVersionPass:
         print(f"\ttop_interface_in = {node.top_interface_in}")
         print(f"\ttop_interface_out = {node.top_interface_out}")
 
-    def populate_call_bot_interface_with_ret_val(self, node: typing.Union[AnnCastCall, AnnCastCallGrfn2_2]):
+    def grfn_2_2_call_ret_val_creation(self, node: typing.Union[AnnCastCall, AnnCastCallGrfn2_2]):
         """
         Creates two GrFN variables for the Call's return value.
         One is in the interior of the container and links
@@ -253,6 +254,11 @@ class VariableVersionPass:
         # link ret values on bot interface
         node.bot_interface_in[id] = in_fullid
         node.bot_interface_out[id] = out_fullid
+
+        # also, store the created ret_val in the copied function def
+        # this is done so that we can assign to the ret val when
+        # parsing return statements
+        node.func_def_copy.in_ret_val[id] = in_fullid
 
     def add_globals_to_grfn_2_2_call_interfaces(self, node: AnnCastCallGrfn2_2):
         """
@@ -405,9 +411,9 @@ class VariableVersionPass:
         # top interface outputs: NamedParam0, NamedParam1, ...
         self.populate_call_top_interface_with_args_and_params(node)
 
-        # TODO: not every function call should have a return value
-        # add return value to bot interface out
-        self.populate_call_bot_interface_with_ret_val(node)
+        # add return value to bot interface out if function_copy has a ret_val
+        if node.func_def_copy.has_ret_val:
+            self.grfn_2_2_call_ret_val_creation(node)
 
         # we visit the FunctionDef copy first, so that we know
         # the global variables which are accessed before they are modified

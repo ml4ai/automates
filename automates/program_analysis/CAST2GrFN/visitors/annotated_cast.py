@@ -93,6 +93,21 @@ def decision_in_to_str(str_start, decision):
 
     return str_start + ", ".join(if_else_fullids)
 
+def make_cond_var_name(con_scopestr):
+    """
+    Make a condition variable name from the scope string `con_scopestr`
+    """
+    var_name = "".join(re.findall("if\d*\.",con_scopestr))
+    var_name = var_name.replace(".","_").replace("if","")
+    return "COND_" + var_name[:-1]
+
+def make_loop_exit_name(con_scopestr):
+    """
+    Makes a Loop exit variable to be used for GrFN condition node
+    """
+    # TODO: do we want any loop context in the name?
+    return "Exit"
+
 def is_literal_assignment(node):
     """
     Check if the node is a Number, Boolean, or String
@@ -231,6 +246,7 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
 class GrfnAssignment():  
         assignment_node: LambdaNode
         assignment_type: LambdaType
+        # inputs and outputs map fullid to GrFN Var uid
         inputs: typing.Dict[str, str] = field(default_factory=dict)
         outputs: typing.Dict[str, str] = field(default_factory=dict)
 
@@ -481,9 +497,17 @@ class AnnCastFunctionDef(AnnCastNode):
         # }
         self.con_scope: typing.List
 
-        # for bot_interface_in
-        # ret_val maps Name id to fullid
-        self.ret_val = {}
+        # For CAST coming from C, we determine if the function 
+        # has a return value by looking for a CAST Return node.
+        # We do this during the ContainerScopePass.
+        # TODO: What should be done with CAST coming from Python? 
+        # Every function returns something
+        # either None, or the explicit return value
+        self.has_ret_val: bool = False
+        # for bot_interface
+        # in_ret_val and out_ret_val map Name id to fullid
+        self.in_ret_val = {}
+        self.out_ret_val = {}
 
         # dicts mapping a Name id to its string name
         # used for container interfaces
@@ -652,6 +676,10 @@ class AnnCastModelReturn(AnnCastNode):
     def __init__(self, value, source_refs):
         self.value = value
         self.source_refs = source_refs
+        # cache the FunctionDef node that this return statement lies in
+        self.owning_func_def: typing.Optional[AnnCastFunctionDef] = None
+        # store GrfnAssignment for use in GrFN generation
+        self.grfn_assignment: typing.Optional[GrfnAssignment] = None
 
     def __str__(self):
         return ModelReturn.__str__(self)

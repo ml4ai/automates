@@ -195,7 +195,26 @@ class GrfnAssignmentPass:
 
     @_visit.register
     def visit_model_return(self, node: AnnCastModelReturn, add_to: typing.Dict):
-        self.visit(node.value, add_to)
+        # create the assignment LambdaNode for this return statement
+        # TODO: add correct metadata
+        metadata = []
+        if is_literal_assignment(node.value):
+            node.grfn_assignment = GrfnAssignment(create_grfn_literal_node(metadata), LambdaType.LITERAL)
+        else:
+            node.grfn_assignment = GrfnAssignment(create_grfn_assign_node(metadata), LambdaType.ASSIGN)
+            
+
+
+        self.visit(node.value, node.grfn_assignment.inputs)
+
+        for id, fullid in node.owning_func_def.in_ret_val.items():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.grfn_assignment.outputs[fullid] = grfn_var.uid
+
+        # DEBUGGING
+        print(f"GrFN RETURN with type {node.grfn_assignment.assignment_type} after visiting children:")
+        print(f"     grfn_assignment.inputs:  {node.grfn_assignment.inputs}")
+        print(f"     grfn_assignment.outputs: {node.grfn_assignment.outputs}")
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, add_to: typing.Dict):

@@ -278,6 +278,11 @@ class ContainerScopePass:
 
     @_visit.register
     def visit_return(self, node: AnnCastModelReturn, base_func_scopestr, enclosing_con_scope, assign_lhs):
+        # store the owning FunctionDef, and mark it as having a return value
+        function_def = self.ann_cast.get_func_node_from_scopestr(base_func_scopestr)
+        node.owning_func_def = function_def
+        node.owning_func_def.has_ret_val = True
+
         self.visit(node.value, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
     @_visit.register

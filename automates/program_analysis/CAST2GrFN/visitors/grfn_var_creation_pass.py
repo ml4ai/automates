@@ -42,13 +42,6 @@ class GrfnVarCreationPass:
     def visit_node_list(self, node_list: typing.List[AnnCastNode]):
         return [self.visit(node) for node in node_list]
 
-    def make_cond_var_name(self, con_scopestr):
-        """
-        Make a condition variable name from the scope string `con_scopestr`
-        """
-        var_name = "".join(re.findall("if\d*\.",con_scopestr))
-        var_name = var_name.replace(".","_").replace("if","")
-        return "COND_" + var_name[:-1]
 
     def get_grfn_var_for_name_node(self, node: AnnCastName):
         """
@@ -222,12 +215,14 @@ class GrfnVarCreationPass:
             node.condition_in[id] = fullid
 
         # build condition variable
-        cond_name = self.make_cond_var_name(loop_scopestr)
+        cond_name = make_loop_exit_name(loop_scopestr)
         # use new collapsed id
         cond_id = self.ann_cast.next_collapsed_id()
         cond_version = VAR_INIT_VERSION
         cond_fullid = build_fullid(cond_name, cond_id, cond_version, loop_scopestr)
         cond_var = create_grfn_var(cond_name, cond_id, cond_version, loop_scopestr)
+        # mark the node as an exit
+        cond_var.is_exit = True
         self.ann_cast.fullid_to_grfn_id[cond_fullid] = cond_var.uid
         self.ann_cast.grfn_id_to_grfn_var[cond_var.uid] = cond_var
 
@@ -254,7 +249,7 @@ class GrfnVarCreationPass:
             node.condition_in[id] = fullid
 
         # build condition variable
-        cond_name = self.make_cond_var_name(if_scopestr)
+        cond_name = make_cond_var_name(if_scopestr)
         # use new collapsed id
         cond_id = self.ann_cast.next_collapsed_id()
         cond_version = VAR_INIT_VERSION
