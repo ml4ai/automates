@@ -1,3 +1,6 @@
+# This script runs Ghidra with plugin to analyze binary, extract
+#   and dump the instructions for each Ghidra-identified function.
+
 import os
 import subprocess
 import pathlib
@@ -17,8 +20,10 @@ def run_ghidra(ghidra_root='', binary_root_dir='', binary_file='', working_root_
     os.chdir(working_root_dir)
     print(f'Working directory: {os.getcwd()}')
 
-    # the project name is required but this will be deleted after processing,
-    # so not super important
+    # Ghidra usese the project name to create a directory in which any associated
+    # files generated during analysis are stored.
+    # By including the '-deleteProject' option in the command list to Ghidra, this
+    # directory will be deleted once Ghidra-processing completes
     project_name = 'temp_ghidra_project'
     projects_dir = '.'  # same as current working directory (working_root_dir)
 
@@ -89,7 +94,7 @@ def main():
     parser.add_argument('-s', '--script_file',
                         help='specify specific Ghidra plugin script to run',
                         type=str,
-                        default='DumpInstructionsByFunction.py')
+                        default='DumpInstructionsByFunction.py')  # The default script
     parser.add_argument('-B', '--binary_root_dir',
                         help='specify the binaries root directory (relative to working directory root)',
                         type=str,
@@ -101,9 +106,11 @@ def main():
                         default='')
     args = parser.parse_args()
     if args.execute:
-        print(f'EXECUTE! {args.working_root_dir} {args.script_root_dir} {args.script_file} {args.binary_root_dir}')
+        print(f'EXECUTE! {args.working_root_dir} {args.script_root_dir} {args.script_file} '
+              f'{args.binary_root_dir}')
     else:
-        print(f'Running in TEST mode {args.working_root_dir} {args.script_root_dir} {args.script_file} {args.binary_root_dir}')
+        print(f'Running in TEST mode {args.working_root_dir} {args.script_root_dir} '
+              f'{args.script_file} {args.binary_root_dir}')
 
     # verify config.json exists
     if not os.path.isfile('config.json'):
@@ -134,6 +141,8 @@ def main():
 
 
 if __name__ == '__main__':
-    # python batch_ghidra_program_plugin.py -B ../examples_bin/Linux -b add_int_printf_03__Linux-5.11.0-37-generic-x86_64-with-glibc2.31__gcc-10.1.0
-    # python batch_ghidra_program_plugin.py -s EnumerateFunctions.py -W examples_ghidra_functions -B ../examples_bin/Darwin -e
     main()
+
+# ### Example command-line executions of this script.
+# python batch_ghidra_program_plugin.py -B ../examples_bin/Linux -b add_int_printf_03__Linux-5.11.0-37-generic-x86_64-with-glibc2.31__gcc-10.1.0
+# python batch_ghidra_program_plugin.py -s EnumerateFunctions.py -W examples_ghidra_functions -B ../examples_bin/Darwin -e

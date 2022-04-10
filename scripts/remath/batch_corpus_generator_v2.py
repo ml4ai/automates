@@ -218,6 +218,12 @@ def get_gcc_version(gcc_path):
 
 
 def try_compile(config: Config, src_filepath: str):
+    """
+    Attempts to compile binary from source using GCC with GCC-ast-dump plugin.
+    :param config:
+    :param src_filepath: C program source file path
+    :return:
+    """
     gcc_version, compiler_type = get_gcc_version(config.gcc)
     platform_name = platform.platform()
     binary_postfix = '__' + platform_name + '__' + gcc_version
@@ -226,7 +232,8 @@ def try_compile(config: Config, src_filepath: str):
 
     # print('try_compile() cwd:', os.getcwd())
 
-    command_list = [config.gcc, f'-fplugin={config.gcc_plugin_filepath}', '-C', '-x', 'c++', '-O0', src_filepath, '-o', dst_filepath]
+    command_list = [config.gcc, f'-fplugin={config.gcc_plugin_filepath}',
+                    '-C', '-x', 'c++', '-O0', src_filepath, '-o', dst_filepath]
     print(command_list)
 
     result = subprocess.run(command_list, stdout=subprocess.PIPE)

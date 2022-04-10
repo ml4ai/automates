@@ -4,7 +4,14 @@ import subprocess
 import argparse
 
 
-def compile_source_in_dir(bin_root_dir='', dst_root_dir=None, execute_p=False):
+def objdump_source_in_dir(bin_root_dir='', dst_root_dir=None, execute_p=False):
+    """
+    Execute objdump on a specified binary.
+    :param bin_root_dir: Root directory of the source binary
+    :param dst_root_dir: Rood directory to output objdump results
+    :param execute_p: Flag controlling whether to execute (True) command or run in test mode (False)
+    :return: List of any errors resulting from executing command.
+    """
     if execute_p:
         # create destination root directory if does not already exist
         pathlib.Path(dst_root_dir).mkdir(parents=True, exist_ok=True)
@@ -35,7 +42,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--execute',
-                        help='execute script (as opposed to running in test mosde)',
+                        help='execute script (as opposed to running in test mode)',
                         action='store_true', default=False)
     parser.add_argument('-b', '--bin_root_dir',
                         help='specify the binary root directory',
@@ -51,7 +58,7 @@ def main():
     else:
         print(f'Running in TEST mode {args.bin_root_dir} {args.dst_root_dir}')
 
-    errors = compile_source_in_dir(bin_root_dir=args.bin_root_dir,
+    errors = objdump_source_in_dir(bin_root_dir=args.bin_root_dir,
                                    dst_root_dir=args.dst_root_dir,
                                    execute_p=args.execute)
     for e in errors:

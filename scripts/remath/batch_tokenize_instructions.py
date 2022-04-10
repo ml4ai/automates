@@ -136,11 +136,11 @@ def parse_string_value_from_parsed_metadata(metadata):
         return None
 
 
-def parse_hex_float_value(hex, size):
+def parse_hex_float_value(hex_value, size):
     if size == 'dword':
-        return struct.unpack('!f', bytes.fromhex(hex))[0]
+        return struct.unpack('!f', bytes.fromhex(hex_value))[0]
     elif size == 'qword':
-        return struct.unpack('!d', bytes.fromhex(hex))[0]
+        return struct.unpack('!d', bytes.fromhex(hex_value))[0]
     else:
         raise Exception(f'ERROR parse_hex_float_value(): Unhandled size {size}')
 

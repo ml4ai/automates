@@ -1,3 +1,6 @@
+# NOTE: This script executes Ghidra and extracts and dumps Unrefined and Refined PCode
+# As of 2022-04-10: we are not yet using PCode, so this script is for exploratory purposes...
+
 import os
 import subprocess
 import pathlib
@@ -57,7 +60,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--execute',
-                        help='execute script (as opposed to running in test mosde)',
+                        help='execute script (as opposed to running in test mode)',
                         action='store_true', default=False)
     parser.add_argument('-w', '--working_root_dir',
                         help='specify the working directory root',
@@ -83,7 +86,6 @@ def main():
         return
 
     # get ghidra_path
-    ghidra_root = ''
     with open('config.json', 'r') as json_file:
         data = json.load(json_file)
         if 'ghidra' not in data:

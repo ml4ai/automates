@@ -1,4 +1,11 @@
-from binascii import hexlify
+# This Ghidra Plugin iterates through Ghidra-identified functions
+# and for each it extracts and writes the instructions.
+
+# uncomment if need to use hexlify
+# from binascii import hexlify
+
+# Import DisplayableEol - documented here:
+# https://class.malware.re/stuff/ghidra_docs/api/ghidra/app/util/DisplayableEol.html
 from ghidra.app.util import DisplayableEol
 
 PROGRAM_NAME = currentProgram.getName()

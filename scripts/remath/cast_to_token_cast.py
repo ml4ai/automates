@@ -12,11 +12,11 @@ def main():
 
     This program reads a JSON file that contains the CAST representation
     of a program, and generates a string that represents the tokenized CAST
-    in addition, a mapping of the variables to variable identifiers and a mapping
-    of values to value identifiers are generated.
+    in addition, a mapping of the variables to variable identifiers and a
+    mapping of values to value identifiers are generated.
 
-    One command-line argument is expected, namely the name of the JSON file that
-    contains the CAST data.
+    One command-line argument is expected, namely the name of the JSON file
+    that contains the CAST data.
     """
 
     # Open the CAST json and load it as a Python object
@@ -53,6 +53,7 @@ def main():
 
     token_file_name = f"{dir_name}/{f_name[last_slash_idx + 1 : file_ending_idx]}.tcast"
     V.tokenize(token_file_name)
-    
+
+
 if __name__ == "__main__":
     main()
