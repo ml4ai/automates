@@ -118,7 +118,6 @@ def main():
         return
 
     # get ghidra_path
-    ghidra_root = ''
     with open('config.json', 'r') as json_file:
         data = json.load(json_file)
         if 'ghidra_root' not in data:
