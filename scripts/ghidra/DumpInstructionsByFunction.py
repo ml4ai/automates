@@ -28,8 +28,9 @@ def write_instructions(code_units):
         deol = DisplayableEol(code_unit, True, True, True, True, 5, True, True)
         if deol.hasAutomatic():
             ac = deol.getAutomaticComment()
-            all_comments = deol.getComments()
-            FILE.write(' >>> {} >>> {}'.format(ac, all_comments))
+            # all_comments = deol.getComments()  # does not appear to be different from getAutomaticComments() ?
+            # FILE.write(' >>> {} >>> {}'.format(ac, all_comments))
+            FILE.write(' >>> {}'.format(ac))
 
         FILE.write('\n')
 
