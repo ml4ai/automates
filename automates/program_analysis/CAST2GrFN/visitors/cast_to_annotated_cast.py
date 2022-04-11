@@ -126,8 +126,6 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
         print(f"Call: type of arguments is {type(node.arguments)}")
         func = self.visit(node.func)
         arguments = self.visit_node_list(node.arguments)
-        if GENERATE_GRFN_2_2:
-            return AnnCastCallGrfn2_2(func, arguments, node.source_refs)
 
         return AnnCastCall(func, arguments, node.source_refs)
 

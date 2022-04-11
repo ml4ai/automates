@@ -241,8 +241,7 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         return node_uid
 
-    @visit.register
-    def _(self, node: AnnCastCallGrfn2_2):
+    def visit_call_grfn_2_2(self, node: AnnCastCall):
         """Visits Call (function call) nodes. We check to see
         if we have arguments to the node and act accordingly.
         Appending all the arguments of the function to this node,
@@ -278,6 +277,11 @@ class CASTToAGraphVisitor(CASTVisitor):
         if we have arguments to the node and act accordingly.
         Appending all the arguments of the function to this node,
         if we have any. The node's UID is returned."""
+
+        if node.is_grfn_2_2:
+            self.visit_call_grfn_2_2(node)
+            return
+
         func = self.visit(node.func)
         args = []
         if len(node.arguments) > 0:
@@ -286,8 +290,11 @@ class CASTToAGraphVisitor(CASTVisitor):
         node_uid = uuid.uuid4()
         label = "Call"
         top_iface_in_vars_str = var_dict_to_str("Top In: ", node.top_interface_in)
+        top_iface_out_vars_str = var_dict_to_str("Top Out: ", node.top_interface_out)
+        bot_iface_in_vars_str = var_dict_to_str("Bot In: ", node.bot_interface_in)
         bot_iface_out_vars_str = var_dict_to_str("Bot Out: ", node.bot_interface_out)
-        label = f"{label}\n{top_iface_in_vars_str}\n{bot_iface_out_vars_str}"
+        label = f"{label}\n{top_iface_in_vars_str}\n{top_iface_out_vars_str}"
+        label = f"{label}\n{bot_iface_in_vars_str}\n{bot_iface_out_vars_str}"
         self.G.add_node(node_uid, label=label)
         self.G.add_edge(node_uid, func)
 

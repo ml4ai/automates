@@ -78,7 +78,7 @@ class GrfnVarCreationPass:
             # TODO for non GrFN 2.2 Generation: move to variable version pass?
             node.top_interface_out[id] = fullid
 
-    def alias_copied_func_body_init_vers(self, node: AnnCastCallGrfn2_2, call_con_scopestr: str):
+    def alias_copied_func_body_init_vers(self, node: AnnCastCall, call_con_scopestr: str):
         """
         Precondition: This should be called after visiting copied function body.
         This is used for GrFN 2.2 generation.
@@ -422,8 +422,16 @@ class GrfnVarCreationPass:
     def visit_boolean(self, node: AnnCastBoolean):
         pass
 
+    # TODO: Update and decide how to do aliasing
     @_visit.register
-    def visit_call_grfn_2_2(self, node: AnnCastCallGrfn2_2):
+    def visit_call(self, node: AnnCastCall):
+        if node.is_grfn_2_2:
+            self.visit_call_grfn_2_2(node)
+            return
+
+        self.visit_node_list(node.arguments)
+
+    def visit_call_grfn_2_2(self, node: AnnCastCall):
         assert isinstance(node.func, AnnCastName)
         self.visit_node_list(node.arguments)
 
@@ -431,12 +439,6 @@ class GrfnVarCreationPass:
         self.visit_function_def_copy(node.func_def_copy)
         self.alias_copied_func_body_init_vers(node, call_con_scopestr)
         self.alias_copied_func_body_highest_vers(node.func_def_copy, call_con_scopestr)
-
-    # TODO: Update and decide how to do aliasing
-    @_visit.register
-    def visit_call(self, node: AnnCastCall):
-        assert isinstance(node.func, AnnCastName)
-        self.visit_node_list(node.arguments)
 
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef):

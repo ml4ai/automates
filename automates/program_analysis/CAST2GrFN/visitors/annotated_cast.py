@@ -1,5 +1,6 @@
 import uuid
 import typing
+import re
 from dataclasses import dataclass, field
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
@@ -132,6 +133,13 @@ def call_argument_name(node, arg_index: int) -> str:
     Used for the AnnCastCall's top interface in
     """
     return f"{function_container_name(node.func)}-call{node.invocation_index}-arg{arg_index}"
+
+def call_param_name(node, arg_index: int) -> str:
+    """
+    Returns the call site parameter name for argument with index `arg_index`
+    Used for the AnnCastCall's top interface in
+    """
+    return f"{function_container_name(node.func)}-call{node.invocation_index}-param{arg_index}"
 
 def call_container_name(node) -> str:
     """
@@ -365,7 +373,49 @@ class AnnCastBoolean(AnnCastNode):
     def __str__(self):
         return Boolean.__str__(self)
 
-class AnnCastCallGrfn2_2(AnnCastNode):
+# class AnnCastCallGrfn2_2(AnnCastNode):
+#     def __init__(self, func, arguments, source_refs):
+#         self.func: AnnCastName = func
+#         self.arguments = arguments
+#         self.source_refs = source_refs
+# 
+#         # the index of this Call node over all invocations of this function
+#         self.invocation_index: int 
+#         
+#         # dicts mapping a Name id to its fullid
+#         self.top_interface_in = {}
+#         self.top_interface_out = {}
+#         self.bot_interface_in = {}
+#         self.bot_interface_out = {}
+# 
+#         # for top_interface_out
+#         # mapping Name id to fullid
+#         # to determine this, we check if we store version 0 on any Name node
+#         self.globals_accessed_before_mod = {}
+# 
+#         # for bot_interface
+#         # map Name id to fullid
+#         self.in_ret_val = {}
+#         self.out_ret_val = {}
+#         self.modified_globals = {} # Store when accumulating modified variables
+# 
+# 
+#         # copied function def for GrFN 2.2
+#         self.func_def_copy: typing.Optional[AnnCastFunctionDef] = None
+# 
+#         # dict mapping argument index to created argument fullid
+#         self.arg_index_to_fullid = {}
+#         self.param_index_to_fullid = {}
+#         # this dict maps argument positional index to GrfnAssignment's
+#         # Each GrfnAssignment stores the ASSIGN/LITERAL node, 
+#         # the inputs to the ASSIGN/LITERAL node, and the outputs to the ASSIGN/LITERAL node
+#         # In this case, the output will map the arguments fullid to its grfn_id
+#         self.arg_assignments: typing.Dict[int, GrfnAssignment] = {}
+# 
+#     def __str__(self):
+#         return Call.__str__(self)
+
+class AnnCastCall(AnnCastNode):
     def __init__(self, func, arguments, source_refs):
         self.func: AnnCastName = func
         self.arguments = arguments
@@ -373,6 +423,7 @@ class AnnCastCallGrfn2_2(AnnCastNode):
 
         # the index of this Call node over all invocations of this function
         self.invocation_index: int 
+
         
         # dicts mapping a Name id to its fullid
         self.top_interface_in = {}
@@ -392,6 +443,9 @@ class AnnCastCallGrfn2_2(AnnCastNode):
         self.modified_globals = {} # Store when accumulating modified variables
 
 
+        # if this is a GrFN 2.2 Call, we will copy the associated FunctionDef
+        # to make the GrFN 2.2 container
+        self.is_grfn_2_2: bool = False
         # copied function def for GrFN 2.2
         self.func_def_copy: typing.Optional[AnnCastFunctionDef] = None
 
@@ -407,43 +461,6 @@ class AnnCastCallGrfn2_2(AnnCastNode):
     def __str__(self):
         return Call.__str__(self)
 
-class AnnCastCall(AnnCastNode):
-    def __init__(self, func, arguments, source_refs):
-        self.func: AnnCastName = func
-        self.arguments = arguments
-        self.source_refs = source_refs
-
-        # the index of this Call node over all invocations of this function
-        self.invocation_index: int 
-        
-        # dicts mapping a Name id to its fullid
-        self.top_interface_in = {}
-        self.top_interface_out = {}
-        self.bot_interface_in = {}
-        self.bot_interface_out = {}
-
-        # for top_interface_out
-        # mapping Name id to fullid
-        # to determine this, we check if we store version 0 on any Name node
-        self.globals_accessed_before_mod = {}
-
-        # for bot_interface
-        # map Name id to fullid
-        self.in_ret_val = {}
-        self.out_ret_val = {}
-        self.modified_globals = {} # Store when accumulating modified variables
-
-        # dict mapping argument index to created argument fullid
-        self.arg_index_to_fullid = {}
-        self.param_index_to_fullid = {}
-        # this dict maps argument positional index to GrfnAssignment's
-        # Each GrfnAssignment stores the ASSIGN/LITERAL node, 
-        # the inputs to the ASSIGN/LITERAL node, and the outputs to the ASSIGN/LITERAL node
-        # In this case, the output will map the arguments fullid to its grfn_id
-        self.arg_assignments: typing.Dict[int, GrfnAssignment] = {}
-
-    def __str__(self):
-        return Call.__str__(self)
 
 class AnnCastClassDef(AnnCastNode):
     def __init__(self, name, bases, func, fields, source_refs):

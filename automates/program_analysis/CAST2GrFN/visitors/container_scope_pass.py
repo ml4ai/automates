@@ -166,9 +166,23 @@ class ContainerScopePass:
     def visit_boolean(self, node: AnnCastBoolean, assign_lhs):
         pass
 
+
     @_visit.register
-    def visit_call_grfn_2_2(self, node: AnnCastCallGrfn2_2, base_func_scopestr, enclosing_con_scope, assign_lhs):
+    def visit_call(self, node: AnnCastCall, base_func_scopestr, enclosing_con_scope, assign_lhs):
         assert isinstance(node.func, AnnCastName)
+        # if we are trying to generate GrFN 2.2 and this call has an associated
+        # FunctionDef, make a GrFN 2.2 container for it
+        if GENERATE_GRFN_2_2 and node.func.id in self.ann_cast.func_id_to_def:
+            node.is_grfn_2_2 = True
+            self.visit_call_grfn_2_2(node, base_func_scopestr, enclosing_con_scope, assign_lhs)
+            return
+
+        node.func.con_scope = enclosing_con_scope
+        self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_lhs)
+
+    def visit_call_grfn_2_2(self, node: AnnCastCall, base_func_scopestr, enclosing_con_scope, assign_lhs):
+        assert isinstance(node.func, AnnCastName)
+
         node.func.con_scope = enclosing_con_scope
         self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
@@ -179,12 +193,6 @@ class ContainerScopePass:
         calling_scope = enclosing_con_scope + [call_container_name(node)]
         call_assign_lhs = False
         self.visit_function_def(node.func_def_copy, base_func_scopestr, calling_scope, call_assign_lhs)
-
-    @_visit.register
-    def visit_call(self, node: AnnCastCall, base_func_scopestr, enclosing_con_scope, assign_lhs):
-        assert isinstance(node.func, AnnCastName)
-        node.func.con_scope = enclosing_con_scope
-        self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
     # TODO: What to do for classes about modified/accessed vars?
     @_visit.register
