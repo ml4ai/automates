@@ -279,8 +279,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         if we have any. The node's UID is returned."""
 
         if node.is_grfn_2_2:
-            self.visit_call_grfn_2_2(node)
-            return
+            return self.visit_call_grfn_2_2(node)
 
         func = self.visit(node.func)
         args = []
@@ -714,7 +713,9 @@ class CASTToAGraphVisitor(CASTVisitor):
         module_uuid = uuid.uuid4()
         modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
         accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
+        used_vars_str = var_dict_to_str("Used: ", node.used_vars)
         module_label = f"Module: {node.name}\n{modified_vars_str}\n{accessed_vars_str}"
+        module_label = f"{module_label}\n{used_vars_str}"
         self.G.add_node(module_uuid, label=module_label)
         self.G.add_edge(program_uuid, module_uuid)
 

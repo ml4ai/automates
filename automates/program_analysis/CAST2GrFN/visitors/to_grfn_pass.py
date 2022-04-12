@@ -274,32 +274,34 @@ class ToGrfnPass:
         basename = call_container_name(node)
         subgraph = GrFNSubgraph(uid, ns, scope, basename,
                                 occs, parent, type, border_color, nodes, metadata)
+
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
 
-        # build top interface
-        top_interface = self.create_interface_node()
-        self.network.add_node(top_interface, **top_interface.get_kwargs())
-        inputs = []
-        for var_id, fullid in node.top_interface_in.items():
-            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
-            self.network.add_edge(grfn_var, top_interface)
-            inputs.append(grfn_var)
+        # build top interface if needed
+        if len(node.top_interface_in) > 0:
+            top_interface = self.create_interface_node()
+            self.network.add_node(top_interface, **top_interface.get_kwargs())
+            inputs = []
+            for var_id, fullid in node.top_interface_in.items():
+                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
+                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                self.network.add_edge(grfn_var, top_interface)
+                inputs.append(grfn_var)
 
-        outputs = []
-        for var_id, fullid in node.top_interface_out.items():
-            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
-            self.network.add_edge(top_interface, grfn_var)
-            outputs.append(grfn_var)
+            outputs = []
+            for var_id, fullid in node.top_interface_out.items():
+                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
+                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                self.network.add_edge(top_interface, grfn_var)
+                outputs.append(grfn_var)
 
-        self.hyper_edges.append(HyperEdge(inputs, top_interface, outputs))
-        # container includes top_interface and top_interface outputs
-        subgraph.nodes.append(top_interface)
-        subgraph.nodes.extend(outputs)
+            self.hyper_edges.append(HyperEdge(inputs, top_interface, outputs))
+            # container includes top_interface and top_interface outputs
+            subgraph.nodes.append(top_interface)
+            subgraph.nodes.extend(outputs)
 
-        # build bot interface
+        # build bot interface if needed
         # TODO: decide what to do by default with bot interface
         if len(node.bot_interface_in) > 0:
             bot_interface = self.create_interface_node()
@@ -324,7 +326,7 @@ class ToGrfnPass:
             subgraph.nodes.extend(inputs)
             subgraph.nodes.append(bot_interface)
             parent.nodes.extend(outputs)
-
+        
     def visit_call_grfn_2_2(self, node: AnnCastCall, subgraph: GrFNSubgraph):
         # assert isinstance(node.func, AnnCastName)
         self.visit_node_list(node.arguments, subgraph)
@@ -334,10 +336,10 @@ class ToGrfnPass:
         parent = subgraph
         # make a new subgraph for this If Container
         type = "FuncContainer"
-        border_color = "purple"
+        border_color = GrFNSubgraph.get_border_color(type)
         metadata = []
         nodes = []
-        occs = 0
+        occs = node.invocation_index
         uid = str(uuid.uuid4())
         ns = "default-ns"
         scope = con_scope_to_str(node.func.con_scope)
@@ -416,7 +418,7 @@ class ToGrfnPass:
     def visit_function_def(self, node: AnnCastFunctionDef, subgraph: GrFNSubgraph):
         # for GrFN 2.2, we create function containers at call sites,
         # so we skip all functions except "main"
-        if GENERATE_GRFN_2_2 and node.name.name !=  "main":
+        if GENERATE_GRFN_2_2 and not is_func_def_main(node):
             return
 
         parent = subgraph
@@ -431,12 +433,47 @@ class ToGrfnPass:
         basename = scope
         subgraph = GrFNSubgraph(uid, ns, scope, basename,
                                 occs, parent, type, border_color, nodes, metadata)
-        self.subgraphs.add_node(subgraph)
-        self.subgraphs.add_edge(parent, subgraph)
+
         self.visit_node_list(node.func_args, subgraph)
+
+        # build top interface if needed
+        if len(node.top_interface_in) > 0:
+            top_interface = self.create_interface_node()
+            self.network.add_node(top_interface, **top_interface.get_kwargs())
+            # collect input GrFN VariableNodes
+            inputs = list(map(self.ann_cast.get_grfn_var, node.top_interface_in.values()))
+            # collect output GrFN VariableNodes 
+            outputs = list(map(self.ann_cast.get_grfn_var, node.top_interface_out.values()))
+            self.add_grfn_edges(inputs, top_interface, outputs)
+
+            # add inputs to parent graph
+            parent.nodes.extend(inputs)
+            # add interface node and outputs to subraph
+            subgraph.nodes.append(top_interface)
+            subgraph.nodes.extend(outputs)
+
+        # visit body
         self.visit_node_list(node.body, subgraph)
 
-        # TODO for non GrFN 2.2 generation: add interfaces 
+        # build bot interface if needed
+        if len(node.bot_interface_in) > 0:
+            bot_interface = self.create_interface_node()
+            self.network.add_node(bot_interface, **bot_interface.get_kwargs())
+            # collect input GrFN VariableNodes
+            inputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_in.values()))
+            # collect output GrFN VariableNodes 
+            outputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_out.values()))
+            self.add_grfn_edges(inputs, bot_interface, outputs)
+
+            # add interface node and inputs to subraph
+            subgraph.nodes.append(bot_interface)
+            subgraph.nodes.extend(inputs)
+            # add outputs to parent graph
+            parent.nodes.extend(outputs)
+
+
+        self.subgraphs.add_node(subgraph)
+        self.subgraphs.add_edge(parent, subgraph)
 
     @_visit.register
     def visit_list(self, node: AnnCastList, subgraph: GrFNSubgraph):
@@ -463,8 +500,8 @@ class ToGrfnPass:
         self.subgraphs.add_edge(parent, subgraph)
 
         # build top interface
-        bot_interface = self.create_loop_top_interface()
-        self.network.add_node(bot_interface, **bot_interface.get_kwargs())
+        top_interface = self.create_loop_top_interface()
+        self.network.add_node(top_interface, **top_interface.get_kwargs())
         # collect initial GrFN VariableNodes
         grfn_initial = map(self.ann_cast.get_grfn_var, node.top_interface_initial.values())
         # collect updated GrFN VariableNodes 
@@ -473,10 +510,10 @@ class ToGrfnPass:
         inputs = list(grfn_initial) + list(grfn_updated)
         # collect ouput GrFN VariableNodes
         outputs = list(map(self.ann_cast.get_grfn_var, node.top_interface_out.values()))
-        self.add_grfn_edges(inputs, bot_interface, outputs)
+        self.add_grfn_edges(inputs, top_interface, outputs)
 
         # add interface node, updated variables, and output variables to subgraph
-        subgraph.nodes.append(bot_interface)
+        subgraph.nodes.append(top_interface)
         subgraph.nodes.extend(list(grfn_updated) + outputs)
 
         # visit expr, then setup condition info
@@ -499,6 +536,12 @@ class ToGrfnPass:
         subgraph.nodes.extend(inputs)
         subgraph.nodes.append(bot_interface)
         parent.nodes.extend(outputs)
+
+        # DEBUGGING
+        print(f"In Loop {scope}")
+        print(f"\t top_interface UUID = {top_interface.uid}")
+        print(f"\t bot_interface UUID = {bot_interface.uid}")
+
 
     @_visit.register
     def visit_model_break(self, node: AnnCastModelBreak, subgraph: GrFNSubgraph):
@@ -593,8 +636,8 @@ class ToGrfnPass:
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, subgraph: GrFNSubgraph):
-        type = "FuncContainer"
-        border_color = GrFNSubgraph.get_border_color(type)
+        type = "ModuleContainer"
+        border_color = "grey"
         metadata = []
         nodes = []
         occs = 0

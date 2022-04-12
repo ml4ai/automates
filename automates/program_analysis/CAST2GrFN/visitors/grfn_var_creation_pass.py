@@ -59,25 +59,6 @@ class GrfnVarCreationPass:
         """
         self.ann_cast.fullid_to_grfn_id[src_fullid] = self.ann_cast.fullid_to_grfn_id[tgt_fullid]
         
-    def create_grfn_vars_function_def(self, node: AnnCastFunctionDef):
-        """
-        Create GrFN `VariableNode`s for variables which are accessed
-        or modified by this FunctionDef container
-        This creates a version zero of all of these variables that will
-        be used on the top interface
-        """
-        con_scopestr = con_scope_to_str(node.con_scope)
-
-        for id, var_name in node.used_vars.items():
-            # we introduce version 0 at the top of the container
-            version = VAR_INIT_VERSION
-            grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
-            fullid = build_fullid(var_name, id, version, con_scopestr)
-            self.ann_cast.store_grfn_var(fullid, grfn_var)
-
-            # TODO for non GrFN 2.2 Generation: move to variable version pass?
-            node.top_interface_out[id] = fullid
-
     def alias_copied_func_body_init_vers(self, node: AnnCastCall, call_con_scopestr: str):
         """
         Precondition: This should be called after visiting copied function body.
@@ -130,17 +111,6 @@ class GrfnVarCreationPass:
             body_fullid = build_fullid(var_name, id, body_version, con_scopestr)
             exit_fullid = build_fullid(var_name, id, exit_version, call_con_scopestr)
             self.alias_grfn_vars(exit_fullid, body_fullid)
-
-    def add_modified_vars_to_bot_interface(self, node: AnnCastFunctionDef):
-        """
-        Add the highest version of the modified vars of this FunctionDef container
-        to its `bot_interface_in` variables
-        """
-        con_scopestr = con_scope_to_str(node.con_scope)
-        for id, var_name in node.modified_vars.items():
-            version = node.body_highest_var_vers[id]
-            fullid = build_fullid(var_name, id, version, con_scopestr)
-            node.bot_interface_in[id] = fullid
 
     def alias_if_expr_highest_vers(self, node: AnnCastModelIf):
         """
@@ -456,17 +426,10 @@ class GrfnVarCreationPass:
         self.visit_node_list(node.func_args)
         self.visit_node_list(node.body)
 
-
     @_visit.register
     def visit_function_def(self, node: AnnCastFunctionDef):
-        self.create_grfn_vars_function_def(node)
         self.visit_node_list(node.func_args)
         self.visit_node_list(node.body)
-        # TODO: move this to variable version pass?
-        self.add_modified_vars_to_bot_interface(node)
-        print("FunctionDef Interface vars")
-        print(f"    top_interface_out: {node.top_interface_out}")
-        print(f"    bot_interface_out: {node.bot_interface_out}")
 
     @_visit.register
     def visit_list(self, node: AnnCastList):

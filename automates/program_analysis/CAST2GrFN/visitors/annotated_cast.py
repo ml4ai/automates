@@ -64,6 +64,7 @@ VAR_INIT_VERSION = 0
 # TODO: better name for exit version?
 VAR_EXIT_VERSION = 1
 
+
 # the variable versions for loop interface are extended 
 # to include `LOOP_VAR_UPDATED_VERSION`
 # because the top loop interface has special semantics
@@ -126,6 +127,29 @@ def function_container_name(node) -> str:
     Returns function container name in the form "name#id"
     """
     return f"{node.name}-id{node.id}"
+
+def is_func_def_main(node) -> bool:
+    """
+    Parameter: AnnCastFuncitonDef
+    Checks if node is the FunctionDef for "main"
+    """
+    # TODO: this may need to be extended for Python
+    MAIN_FUNC_DEF_NAME = "main"
+    return node.name.name == MAIN_FUNC_DEF_NAME
+
+def func_def_argument_name(node, arg_index: int) -> str:
+    """
+    Returns the FunctionDef argument name for argument with index `arg_index`
+    Used for the AnnCastCall's top interface in
+    """
+    return f"{function_container_name(node.name)}-arg{arg_index}"
+
+def func_def_ret_val_name(node) -> str:
+    """
+    Returns the FunctionDef return value name
+    Used for the AnnCastCall's bot interface out
+    """
+    return f"{function_container_name(node.name)}-ret_val"
 
 def call_argument_name(node, arg_index: int) -> str:
     """
@@ -373,48 +397,6 @@ class AnnCastBoolean(AnnCastNode):
     def __str__(self):
         return Boolean.__str__(self)
 
-# class AnnCastCallGrfn2_2(AnnCastNode):
-#     def __init__(self, func, arguments, source_refs):
-#         self.func: AnnCastName = func
-#         self.arguments = arguments
-#         self.source_refs = source_refs
-# 
-#         # the index of this Call node over all invocations of this function
-#         self.invocation_index: int 
-#         
-#         # dicts mapping a Name id to its fullid
-#         self.top_interface_in = {}
-#         self.top_interface_out = {}
-#         self.bot_interface_in = {}
-#         self.bot_interface_out = {}
-# 
-#         # for top_interface_out
-#         # mapping Name id to fullid
-#         # to determine this, we check if we store version 0 on any Name node
-#         self.globals_accessed_before_mod = {}
-# 
-#         # for bot_interface
-#         # map Name id to fullid
-#         self.in_ret_val = {}
-#         self.out_ret_val = {}
-#         self.modified_globals = {} # Store when accumulating modified variables
-# 
-# 
-#         # copied function def for GrFN 2.2
-#         self.func_def_copy: typing.Optional[AnnCastFunctionDef] = None
-# 
-#         # dict mapping argument index to created argument fullid
-#         self.arg_index_to_fullid = {}
-#         self.param_index_to_fullid = {}
-#         # this dict maps argument positional index to GrfnAssignment's
-#         # Each GrfnAssignment stores the ASSIGN/LITERAL node, 
-#         # the inputs to the ASSIGN/LITERAL node, and the outputs to the ASSIGN/LITERAL node
-#         # In this case, the output will map the arguments fullid to its grfn_id
-#         self.arg_assignments: typing.Dict[int, GrfnAssignment] = {}
-# 
-#     def __str__(self):
-#         return Call.__str__(self)
-
 class AnnCastCall(AnnCastNode):
     def __init__(self, func, arguments, source_refs):
         self.func: AnnCastName = func
@@ -518,8 +500,8 @@ class AnnCastFunctionDef(AnnCastNode):
         # has a return value by looking for a CAST Return node.
         # We do this during the ContainerScopePass.
         # TODO: What should be done with CAST coming from Python? 
-        # Every function returns something
-        # either None, or the explicit return value
+        # In Python, every function retruns something, 
+        # either None or the explicit return value
         self.has_ret_val: bool = False
         # for bot_interface
         # in_ret_val and out_ret_val map Name id to fullid
@@ -528,9 +510,9 @@ class AnnCastFunctionDef(AnnCastNode):
 
         # dicts mapping a Name id to its string name
         # used for container interfaces
-        self.modified_vars: typing.Dict[id, str]
-        self.accessed_vars: typing.Dict[id, str]
-        self.used_vars: typing.Dict[id, str]
+        self.modified_vars: typing.Dict[int, str]
+        self.accessed_vars: typing.Dict[int, str]
+        self.used_vars: typing.Dict[int, str]
         # dicts for global variables
         # for top_interface_out
         self.globals_accessed_before_mod = {}
@@ -538,6 +520,10 @@ class AnnCastFunctionDef(AnnCastNode):
         self.modified_globals = {} 
         # TODO: remove?
         self.used_globals = {}
+
+        # dict mapping argument index to created argument fullid
+        self.arg_index_to_fullid = {}
+        self.param_index_to_fullid = {}
     
         # dicts mapping a Name id to its fullid
         self.top_interface_in = {}
@@ -546,7 +532,6 @@ class AnnCastFunctionDef(AnnCastNode):
         self.bot_interface_out = {}
 
         # dict mapping Name id to highest version at end of "block"
-        # TODO: What about using a default dict
         self.body_highest_var_vers = {}
 
     def __str__(self):
