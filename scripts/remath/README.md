@@ -29,7 +29,8 @@
 ## Ghidra binary analysis and instruction extraction
 
 - `batch_ghidra_program_plugin.py`
-Executes Ghidra with `DumpInstructionsByFunction.py` plugin. 
+Executes Ghidra with `DumpInstructionsByFunction.py` plugin (under 
+  `<automates/scripts/ghidra/>`). 
 Ghidra performs binary analysis, then plugin is executed: for each 
   Ghidra-identified function, extract the associated instructions (address, 
   instruction set, any interpreted values). The instructions per function 

@@ -43,6 +43,12 @@ EXAMPLE_INSTRUCTIONS_FILE = \
     'expr_v2_0236641__Linux-5.4.0-81-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
 
 
+# TODO
+X86_COMMONS_FUNCTIONS = (
+    ''
+)
+
+
 class BiMap:
     def __init__(self, base='v'):
         self.gensym = GenSym(base=base)
@@ -476,8 +482,8 @@ class InstructionSet:
         self.token_seq: List[str] = list()  # TODO currently being set by Function.tokenize()
         self.unique_tokens: Set[str] = set()
 
-        self.fn_by_address: Dict[str, Function] = dict()
-        self.fn_address_by_name: Dict[str, str] = dict()
+        self.fn_by_address: Dict[str, Function] = dict()  # <address:str> : <Function>
+        self.fn_address_by_name: Dict[str, str] = dict()  # <function_name:str> : <address:str>
 
     def print_token_seq(self):
         tokens_str = f'{self.token_seq}'
@@ -598,7 +604,9 @@ class TokenSet:
         print(f'Token val_other [{token_val_other_size}]: {self.token_val_other}')
 
 
-def extract_tokens_from_instr_file(token_set, _src_filepath, _dst_filepath, num=0,
+def extract_tokens_from_instr_file(_src_filepath: str, _dst_filepath: str,
+                                   token_set: TokenSet = TokenSet(),
+                                   num=0,
                                    execute_p=True, verbose_p=False):
     if not execute_p:
         print(f'{num} [TEST] tokenize {_src_filepath} -> {_dst_filepath}')
@@ -631,7 +639,7 @@ def batch_process(execute_p: bool,
         _dst_filepath = os.path.join(dst_dir, os.path.basename(_src_filepath))
         return os.path.splitext(_dst_filepath)[0] + '__tokens.txt'
 
-    if instructions_file != '':
+    if instructions_file != '':  # process single instructions file...
         src_filepath = os.path.join(instructions_root_dir, instructions_file)
         if not os.path.isfile(src_filepath):
             raise Exception(f'ERROR: File not found: {src_filepath}')
@@ -640,9 +648,9 @@ def batch_process(execute_p: bool,
         # print('src_filepath:', src_filepath)
         # print('dst_filepath:', dst_filepath)
 
-        extract_tokens_from_instr_file(token_set, src_filepath, dst_filepath)
+        extract_tokens_from_instr_file(src_filepath, dst_filepath, token_set)
 
-    else:
+    else:  # batch process all instructions in a directory...
         i = 0
         for subdir, dirs, files in os.walk(instructions_root_dir):
             for file in files:
@@ -650,7 +658,7 @@ def batch_process(execute_p: bool,
                 if src_filepath.endswith('-instructions.txt'):
                     dst_filepath = get_dst_filepath(src_filepath)
 
-                    extract_tokens_from_instr_file(token_set, src_filepath, dst_filepath,
+                    extract_tokens_from_instr_file(src_filepath, dst_filepath, token_set,
                                                    num=i, execute_p=execute_p,
                                                    verbose_p=execute_p)
                     i += 1
@@ -666,7 +674,7 @@ def batch_process(execute_p: bool,
             sys.stdout = original_stdout
 
 
-def main():
+def main_batch():
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--execute',
                         help='execute script (as opposed to running in test mode)',
@@ -704,7 +712,7 @@ def main():
 if __name__ == '__main__':
     # test_parse_metadata()
     # test_get_fn_name_from_parsed_metadata()
-    main()
+    main_batch()
 
 # Tests -- TODO: ceate actual unit tests...
 
