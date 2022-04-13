@@ -255,9 +255,13 @@ class VariableVersionPass:
         enclosing_scopestr = con_scope_to_str(enclosing_con_scope)
 
         # add globals to exterior interfaces
+        # TODO: if we only want globals which are accessed before modification in to come 
+        # into the top interface, then we need to rethink the top interface of Loop and ModelIf
+        # containers, since their top interfaces are all used variables
+        # top_interface_globals = node.globals_accessed_before_mod
         # add global variables to top_interface_in
-        # these are globals which are accessed before they are modified
-        top_interface_globals = node.globals_accessed_before_mod
+        # these are all used globals
+        top_interface_globals = node.used_globals
         self.populate_interface(enclosing_scopestr, top_interface_globals, node.top_interface_in)
         # the bot interface globals are all modified globals
         bot_interface_globals = node.modified_globals
@@ -308,8 +312,13 @@ class VariableVersionPass:
         # interior container scope
         func_scopestr = con_scope_to_str(node.con_scope)
 
-        # top interface globals are globals which are accessed before they are modified
-        top_interface_globals = node.globals_accessed_before_mod
+        # TODO: if we only want globals which are accessed before modification in to come 
+        # into the top interface, then we need to rethink the top interface of Loop and ModelIf
+        # containers, since their top interfaces are all used variables
+        # top_interface_globals = node.globals_accessed_before_mod
+        # add global variables to top_interface_in
+        # these are all used globals
+        top_interface_globals = node.used_globals
         # the bot interface globals are all modified globals
         bot_interface_globals = node.modified_globals
 
@@ -534,7 +543,10 @@ class VariableVersionPass:
           - Adds incoming global variable version to top_interface_in
           - Increments modified globals versions in enclosing scope
           - Adds incremented version to bot_interface_out
-          - Creates VAR_INIT_VERSION global variables and adds to top_interface_out
+          - Creates VAR_INIT_VERSION global variables in Call contianer scope and 
+            adds them to top_interface_out
+          - Creates VAR_INIT_VERSION global variables in copied FunctionDef scope and 
+            aliases them to their corresponding Call container scope globals
           - Creates VAR_EXIT_VERSION global variables and adds to bot_interface_in
         """
         # in the current scope, increment all versions of global variables
@@ -543,9 +555,13 @@ class VariableVersionPass:
         calling_scopestr = con_scope_to_str(node.func.con_scope)
 
         # add globals to exterior interfaces
+        # TODO: if we only want globals which are accessed before modification in to come 
+        # into the top interface, then we need to rethink the top interface of Loop and ModelIf
+        # containers, since their top interfaces are all used variables
+        # top_interface_globals = node.globals_accessed_before_mod
         # add global variables to top_interface_in
-        # these are globals which are accessed before they are modified
-        top_interface_globals = node.func_def_copy.globals_accessed_before_mod
+        # these are all used globals
+        top_interface_globals = node.func_def_copy.used_globals
         self.populate_interface(calling_scopestr, top_interface_globals, node.top_interface_in)
         # the bot interface globals are all modified globals
         bot_interface_globals = node.func_def_copy.modified_globals
@@ -557,15 +573,21 @@ class VariableVersionPass:
         # add globals to interior interfaces
         # interior container scope
         call_con_scopestr = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
+        copied_func_scopestr = con_scope_to_str(node.func_def_copy.con_scope)
         # create globals for top_interface_out and bot interface in
         # by convention the top interface produces version VAR_INIT_VERSION variables
         # by convention, the bot interface in takes version VAR_EXIT_VERSION variables
         for id, var_name in top_interface_globals.items():
             version = VAR_INIT_VERSION
-            init_fullid = build_fullid(var_name, id, version, call_con_scopestr)
-            init_global = create_grfn_var(var_name, id, version, call_con_scopestr)
-            self.ann_cast.store_grfn_var(init_fullid, init_global)
-            node.top_interface_out[id] = init_fullid
+            call_init_fullid = build_fullid(var_name, id, version, call_con_scopestr)
+            call_init_global = create_grfn_var(var_name, id, version, call_con_scopestr)
+            self.ann_cast.store_grfn_var(call_init_fullid, call_init_global)
+            node.top_interface_out[id] = call_init_fullid
+
+            func_copy_init_fullid = build_fullid(var_name, id, version, copied_func_scopestr)
+            func_copy_init_global = create_grfn_var(var_name, id, version, copied_func_scopestr)
+            self.ann_cast.store_grfn_var(func_copy_init_fullid, func_copy_init_global)
+            self.ann_cast.alias_grfn_vars(func_copy_init_fullid, call_init_fullid)
     
         for id, var_name in bot_interface_globals.items():
             version = VAR_EXIT_VERSION
@@ -574,7 +596,9 @@ class VariableVersionPass:
             self.ann_cast.store_grfn_var(exit_fullid, exit_global)
             node.bot_interface_in[id] = exit_fullid
 
-    # TODO: this needs to be updated
+    # TODO: this is unused, and code is not correct
+    # we need to split into two implementations, one for when we have the functionDef
+    # and one for when we don't have it
     def add_globals_to_call_interfaces(self, node: AnnCastCall):
         """
         Populates top and bot interface with global variables
@@ -590,9 +614,13 @@ class VariableVersionPass:
         calling_scopestr = con_scope_to_str(node.func.con_scope)
 
         # add globals to exterior interfaces
+        # TODO: if we only want globals which are accessed before modification in to come 
+        # into the top interface, then we need to rethink the top interface of Loop and ModelIf
+        # containers, since their top interfaces are all used variables
+        # top_interface_globals = node.globals_accessed_before_mod
         # add global variables to top_interface_in
-        # these are globals which are accessed before they are modified
-        top_interface_globals = node.func_def_copy.globals_accessed_before_mod
+        # these are all used globals
+        top_interface_globals = node.func_def_copy.used_globals
         self.populate_interface(calling_scopestr, top_interface_globals, node.top_interface_in)
         # the bot interface globals are all modified globals
         bot_interface_globals = node.func_def_copy.modified_globals
@@ -897,14 +925,41 @@ class VariableVersionPass:
         # are only needed to create interfaces, and the module does not currently have an interface
         
         if self.ann_cast.is_global_var(node.id) and con_scopestr != MODULE_SCOPE:
+            func_node = self.ann_cast.get_func_node_from_scopestr(node.base_func_scopestr)
+
             if node.version == VAR_INIT_VERSION:  # only occurs on RHS
-                func_node = self.ann_cast.get_func_node_from_scopestr(con_scopestr)
                 func_node.globals_accessed_before_mod[node.id] = node.name
             # if we are assigning to the global, then it is modified
             elif assign_lhs:
-                func_node = self.ann_cast.get_func_node_from_scopestr(con_scopestr)
                 func_node.modified_globals[node.id] = node.name
+            # no matter what, add to used_globals dict
+            func_node.used_globals[node.id] = node.name
 
+            # due to GrFN 2.2 FunctionDef copying, we need to also propagate up the
+            # globals accessed before modification and modified globals to 
+            # scopes higher than base_func_scopestr
+            if GENERATE_GRFN_2_2:
+                scopestr = ""
+                for index, name in enumerate(node.con_scope):
+                    # add separator between container scope component names
+                    if index != 0:
+                        scopestr += f"{CON_STR_SEP}"
+                    scopestr += f"{name}"
+
+                    # skip if scopestr is not a function scope
+                    if scopestr not in self.ann_cast.func_con_scopestr_to_id:
+                        continue
+
+                    # otherwise, add to correct globals tracking dict
+                    func_node = self.ann_cast.get_func_node_from_scopestr(scopestr)
+
+                    if node.version == VAR_INIT_VERSION:  # only occurs on RHS
+                        func_node.globals_accessed_before_mod[node.id] = node.name
+                    # if we are assigning to the global, then it is modified
+                    elif assign_lhs:
+                        func_node.modified_globals[node.id] = node.name
+                    # no matter what, add to used_globals dict
+                    func_node.used_globals[node.id] = node.name
 
     @_visit.register
     def visit_number(self, node: AnnCastNumber, assign_lhs: bool):

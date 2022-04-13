@@ -115,7 +115,9 @@ class CastToAnnotatedCastVisitor(CASTVisitor):
     @_visit.register
     def visit_boolean(self, node: Boolean):
         print(f"Boolean: type of boolean attribute is {type(node.boolean)}")
-        boolean = self.visit(node.boolean)
+        boolean = node.boolean
+        if boolean is not None:
+            boolean = self.visit(boolean)
         return AnnCastBoolean(boolean, node.source_refs)
 
     @_visit.register

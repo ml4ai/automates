@@ -75,6 +75,13 @@ VAR_EXIT_VERSION = 1
 # with other containers
 LOOP_VAR_UPDATED_VERSION = 2
 
+def union_dicts(dict1, dict2):
+    """
+    Combines the key value pairs of dict1 and dict2.
+    For collisions, don't assume which key-value pair will be chosen.
+    """
+    return {**dict1, **dict2}
+
 
 def con_scope_to_str(scope: typing.List):
     return CON_STR_SEP.join(scope)
@@ -352,6 +359,14 @@ class AnnCast:
         grfn_id = self.fullid_to_grfn_id[fullid]
         return self.grfn_id_to_grfn_var[grfn_id]
 
+    def alias_grfn_vars(self, src_fullid: str, tgt_fullid: str):
+        """
+        Put the GrFN id associated with `tgt_fullid` into dict `fullid_to_grfn_id` for key
+        `src_fullid` 
+        """
+        self.fullid_to_grfn_id[src_fullid] = self.fullid_to_grfn_id[tgt_fullid]
+    
+
 class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):
         self.incoming_vars = {}
@@ -417,6 +432,7 @@ class AnnCastCall(AnnCastNode):
         # mapping Name id to fullid
         # to determine this, we check if we store version 0 on any Name node
         self.globals_accessed_before_mod = {}
+        self.used_globals = {}
 
         # for bot_interface
         # map Name id to fullid
@@ -515,11 +531,12 @@ class AnnCastFunctionDef(AnnCastNode):
         self.used_vars: typing.Dict[int, str]
         # dicts for global variables
         # for top_interface_out
+        # mapping Name id to fullid
+        # to determine this, we check if we store version 0 on any Name node
         self.globals_accessed_before_mod = {}
+        self.used_globals = {}
         # for bot interface in
         self.modified_globals = {} 
-        # TODO: remove?
-        self.used_globals = {}
 
         # dict mapping argument index to created argument fullid
         self.arg_index_to_fullid = {}
@@ -562,12 +579,16 @@ class AnnCastLoop(AnnCastNode):
         self.body = body
         self.source_refs = source_refs
 
+        # Loop container scope
+        self.con_scope: typing.List
+        # Function scopestr this Loop node is "living" in 
+        self.base_func_scopestr: str = ""
+
         # dicts mapping a Name id to its string name
         # used for container interfaces
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
         self.used_vars: typing.Dict[id, str]
-        self.con_scope: typing.List
 
         # dicts mapping Name id to highest version at end of "block"
         self.expr_highest_var_vers = {}
@@ -634,12 +655,16 @@ class AnnCastModelIf(AnnCastNode):
         self.body = body
         self.orelse = orelse
 
+        # ModelIf container scope
+        self.con_scope: typing.List
+        # Function scopestr this ModelIf node is "living" in 
+        self.base_func_scopestr: str = ""
+
         # dicts mapping a Name id to string name
         # used for container interfaces
         self.modified_vars: typing.Dict[id, str]
         self.accessed_vars: typing.Dict[id, str]
         self.used_vars: typing.Dict[id, str]
-        self.con_scope: typing.List
         # dicts mapping a Name id to variable string name
         # for variables used in the if expr
         self.expr_accessed_vars = {}
@@ -710,6 +735,8 @@ class AnnCastName(AnnCastNode):
         self.source_refs = source_refs
         # container_scope is used to aid GrFN generation
         self.con_scope: typing.List = []
+        # Function scopestr this Name node is "living" in 
+        self.base_func_scopestr: str = ""
         # versions are bound to the cope of the variable
         self.version = None
         self.grfn_id = None

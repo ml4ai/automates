@@ -254,10 +254,13 @@ class CASTToAGraphVisitor(CASTVisitor):
         node_uid = uuid.uuid4()
         label = "CallGrfn2_2"
         top_iface_in_vars_str = var_dict_to_str("Top In: ", node.top_interface_in)
+        top_iface_out_vars_str = var_dict_to_str("Top Out: ", node.top_interface_out)
+        bot_iface_in_vars_str = var_dict_to_str("Bot In: ", node.bot_interface_in)
         bot_iface_out_vars_str = var_dict_to_str("Bot Out: ", node.bot_interface_out)
-        globals_in_str = var_dict_to_str("Globals In: ", node.func_def_copy.globals_accessed_before_mod)
+        globals_in_str = var_dict_to_str("Globals In: ", node.func_def_copy.used_globals)
         globals_out_str = var_dict_to_str("Globals Out: ", node.func_def_copy.modified_globals)
-        label = f"{label}\n{top_iface_in_vars_str}\n{bot_iface_out_vars_str}"
+        label = f"{label}\n{top_iface_in_vars_str}\n{top_iface_out_vars_str}"
+        label = f"{label}\n{bot_iface_in_vars_str}\n{bot_iface_out_vars_str}"
         label = f"{label}\n{globals_in_str}\n{globals_out_str}"
         self.G.add_node(node_uid, label=label)
         self.G.add_edge(node_uid, func)
@@ -430,7 +433,10 @@ class CASTToAGraphVisitor(CASTVisitor):
         modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
         accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
         highest_ver = var_dict_to_str("HiVer: ", node.body_highest_var_vers)
+        globals_in_str = var_dict_to_str("Globals In: ", node.used_globals)
+        globals_out_str = var_dict_to_str("Globals Out: ", node.modified_globals)
         func_label = f"Function: {node.name}\n{modified_vars_str}\n{accessed_vars_str}\n{highest_ver}"
+        func_label = f"{func_label}\n{globals_in_str}\n{globals_out_str}"
         self.G.add_node(node_uid, label=func_label)
         self.G.add_node(args_node, label="Arguments")
         self.G.add_node(body_node, label="Body")
@@ -463,7 +469,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         args_node = uuid.uuid4()
         body_node = uuid.uuid4()
 
-        self.G.add_node(node_uid, label="Function: " + node.name)
+        self.G.add_node(node_uid, label="Function: " + str(node.name))
         self.G.add_node(args_node, label="Arguments")
         self.G.add_node(body_node, label="Body")
 

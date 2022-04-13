@@ -163,7 +163,7 @@ class ContainerScopePass:
         self.visit(node.right, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
     @_visit.register
-    def visit_boolean(self, node: AnnCastBoolean, assign_lhs):
+    def visit_boolean(self, node: AnnCastBoolean, base_func_scopestr, enclosing_con_scope, assign_lhs):
         pass
 
 
@@ -243,6 +243,9 @@ class ContainerScopePass:
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, base_func_scopestr, enclosing_con_scope, assign_lhs):
+        # store the base_func_scopestr for this container
+        node.base_func_scopestr = base_func_scopestr
+
         loopscope = self.next_loop_scope(enclosing_con_scope)
         self.initialize_con_scope_data(loopscope, node)
         node.con_scope = loopscope
@@ -266,6 +269,8 @@ class ContainerScopePass:
 
     @_visit.register
     def visit_model_if(self, node: AnnCastModelIf, base_func_scopestr, enclosing_con_scope, assign_lhs):
+        # store the base_func_scopestr for this container
+        node.base_func_scopestr = base_func_scopestr
         # want orig enclosing
         ifscope = self.next_if_scope(enclosing_con_scope)
         self.initialize_con_scope_data(ifscope, node)
@@ -306,6 +311,7 @@ class ContainerScopePass:
     @_visit.register
     def visit_name(self, node: AnnCastName, base_func_scopestr, enclosing_con_scope, assign_lhs):
         node.con_scope = enclosing_con_scope
+        node.base_func_scopestr = base_func_scopestr
 
         # check every prefix of enclosing_con_scope and add this Name node
         # to the associated container data if either

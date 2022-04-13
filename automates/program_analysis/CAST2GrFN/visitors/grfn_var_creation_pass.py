@@ -52,12 +52,12 @@ class GrfnVarCreationPass:
         return self.ann_cast.grfn_id_to_grfn_var[self.ann_cast.fullid_to_grfn_id[fullid]]
 
 
-    def alias_grfn_vars(self, src_fullid: str, tgt_fullid: str):
-        """
-        Put the GrFN id associated with `tgt_fullid` into dict `fullid_to_grfn_id` for key
-        `src_fullid` 
-        """
-        self.ann_cast.fullid_to_grfn_id[src_fullid] = self.ann_cast.fullid_to_grfn_id[tgt_fullid]
+    # def alias_grfn_vars(self, src_fullid: str, tgt_fullid: str):
+    #     """
+    #     Put the GrFN id associated with `tgt_fullid` into dict `fullid_to_grfn_id` for key
+    #     `src_fullid` 
+    #     """
+    #     self.ann_cast.fullid_to_grfn_id[src_fullid] = self.ann_cast.fullid_to_grfn_id[tgt_fullid]
         
     def alias_copied_func_body_init_vers(self, node: AnnCastCall, call_con_scopestr: str):
         """
@@ -74,14 +74,17 @@ class GrfnVarCreationPass:
         # alias `VAR_INIT_VERSION` variables in call_con_scopestr
         # to the `VAR_INIT_VERSION` version occuring the func body
         version = VAR_INIT_VERSION
-        # we alias globals which are accessed before modified
-        for id, var_name in func_def_copy.globals_accessed_before_mod.items():
+        # NOTE: if we change to globals which are accessed before modification
+        #       this loop should be changed as well
+        # we alias globals which are used for the top interface
+        for id, var_name in func_def_copy.used_globals.items():
             body_fullid = build_fullid(var_name, id, version, func_con_scopestr)
             call_fullid = build_fullid(var_name, id, version, call_con_scopestr)
+            # TODO: do we want this?
             # don't try to alias, if VAR_INIT_VERSION is never used in the body
             # if not self.ann_cast.grfn_var_exists(body_fullid):
             #     continue
-            self.alias_grfn_vars(call_fullid, body_fullid)
+            self.ann_cast.alias_grfn_vars(call_fullid, body_fullid)
 
         # we also alias function parameters
         for i, call_fullid in node.param_index_to_fullid.items():
@@ -91,7 +94,7 @@ class GrfnVarCreationPass:
             func_id = name.id
             var_name = name.name
             func_fullid = build_fullid(var_name, func_id, version, func_con_scopestr)
-            self.alias_grfn_vars(call_fullid, func_fullid)
+            self.ann_cast.alias_grfn_vars(call_fullid, func_fullid)
 
     def alias_copied_func_body_highest_vers(self, node: AnnCastFunctionDef, call_con_scopestr: str):
         """
@@ -110,7 +113,7 @@ class GrfnVarCreationPass:
             body_version = node.body_highest_var_vers[id]
             body_fullid = build_fullid(var_name, id, body_version, con_scopestr)
             exit_fullid = build_fullid(var_name, id, exit_version, call_con_scopestr)
-            self.alias_grfn_vars(exit_fullid, body_fullid)
+            self.ann_cast.alias_grfn_vars(exit_fullid, body_fullid)
 
     def alias_if_expr_highest_vers(self, node: AnnCastModelIf):
         """
@@ -133,7 +136,7 @@ class GrfnVarCreationPass:
             for body in [IFBODY, ELSEBODY]:
                 body_scopestr = con_scopestr + CON_STR_SEP + body
                 body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
-                self.alias_grfn_vars(body_fullid, expr_fullid)
+                self.ann_cast.alias_grfn_vars(body_fullid, expr_fullid)
 
     def create_grfn_vars_model_if(self, node: AnnCastModelIf):
         """
@@ -158,7 +161,7 @@ class GrfnVarCreationPass:
             # alias VAR_INIT_VERSION expr variables
             expr_scopestr = con_scopestr + CON_STR_SEP + IFEXPR
             expr_fullid = build_fullid(var_name, id, version, expr_scopestr)
-            self.alias_grfn_vars(expr_fullid, fullid)
+            self.ann_cast.alias_grfn_vars(expr_fullid, fullid)
 
         # by convention, we introduce `VAR_EXIT_VERSION` for modified variables
         # to be used as the output of the Decision node, and input to bot interface
@@ -291,7 +294,7 @@ class GrfnVarCreationPass:
             expr_version = VAR_INIT_VERSION
             expr_scopestr = con_scopestr + CON_STR_SEP + LOOPEXPR
             expr_fullid = build_fullid(var_name, id, expr_version, expr_scopestr)
-            self.alias_grfn_vars(expr_fullid, fullid)
+            self.ann_cast.alias_grfn_vars(expr_fullid, fullid)
 
         # create version `LOOP_VAR_UPDATED_VERSION`  and `LOOP_VAR_EXIT_VERSION` 
         # for modified variables
@@ -323,12 +326,12 @@ class GrfnVarCreationPass:
             expr_fullid = build_fullid(var_name, id, expr_version, expr_scopestr)
             body_scopestr = con_scopestr + CON_STR_SEP + LOOPBODY
             body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
-            self.alias_grfn_vars(body_fullid, expr_fullid)
+            self.ann_cast.alias_grfn_vars(body_fullid, expr_fullid)
 
             if id in node.modified_vars:
                 exit_scopestr = con_scopestr
                 exit_fullid = build_fullid(var_name, id, exit_version, exit_scopestr)
-                self.alias_grfn_vars(exit_fullid, expr_fullid)
+                self.ann_cast.alias_grfn_vars(exit_fullid, expr_fullid)
 
     def alias_loop_body_highest_vers(self, node:AnnCastLoop):
         """
@@ -347,7 +350,7 @@ class GrfnVarCreationPass:
             body_scopestr = con_scopestr + CON_STR_SEP + LOOPBODY
             body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
             updated_fullid = build_fullid(var_name, id, updated_version, con_scopestr)
-            self.alias_grfn_vars(updated_fullid, body_fullid)
+            self.ann_cast.alias_grfn_vars(updated_fullid, body_fullid)
 
 
     def print_created_grfn_vars(self):
