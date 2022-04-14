@@ -49,6 +49,8 @@ GENERATE_GRFN_2_2 = True
 
 # used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
 CON_STR_SEP = "."
+# delimiter for fullids
+FULLID_SEP = ":"
 
 # TODO: do we need to add any other characters to ensure the name 
 # is an illegal identifier
@@ -74,6 +76,33 @@ VAR_EXIT_VERSION = 1
 # and bot_interface_in accepts `VAR_EXIT_VERSION` which is consistent
 # with other containers
 LOOP_VAR_UPDATED_VERSION = 2
+
+def cast_op_to_str(op):
+    op_map = {
+        "Pow": "^",
+        "Mult": "*",
+        "Add": "+",
+        "Sub": "-",
+        "Div": "/",
+        "Gt": ">",
+        "Gte": ">=",
+        "Lt": "<",
+        "Lte": "<=",
+        "Eq": "==",
+        "NotEq": "!=",
+        "BitXor": "^",
+        "BitAnd": "&",
+        "BitOr": "|",
+        "LShift": "<<",
+        "RShift": ">>",
+        "Not": "not ",
+        "Invert": "~",
+        "USub": "- ",
+        "And": "&&",
+        "Or": "||",
+        "Mod": "%",
+    }
+    return op_map[op] if op in op_map else None
 
 def union_dicts(dict1, dict2):
     """
@@ -196,7 +225,7 @@ def ann_cast_name_to_fullid(node):
     ContainerScopePass have completed
     """
     pieces = [node.name, str(node.id), str(node.version), con_scope_to_str(node.con_scope)]
-    return CON_STR_SEP.join(pieces)
+    return FULLID_SEP.join(pieces)
 
 def build_fullid(var_name: str, id: int, version: int, con_scopestr: str):
     """
@@ -205,7 +234,7 @@ def build_fullid(var_name: str, id: int, version: int, con_scopestr: str):
       'var_name.id.version.con_scopestr'
     """
     pieces = [var_name, str(id), str(version), con_scopestr]
-    return CON_STR_SEP.join(pieces)
+    return FULLID_SEP.join(pieces)
 
 def parse_fullid(fullid: str) -> typing.Dict:
     """
@@ -217,7 +246,9 @@ def parse_fullid(fullid: str) -> typing.Dict:
     to their respective values determined by the fullid
     """
     keys = ["var_name", "id", "version", "con_scopestr"]
-    values = fullid.split(CON_STR_SEP)
+    values = fullid.split(FULLID_SEP)
+    print(f"values = {values}")
+    print(f"keys = {keys}")
 
     assert(len(keys) == len(values))
 
@@ -288,6 +319,7 @@ class GrfnAssignment():
         # inputs and outputs map fullid to GrFN Var uid
         inputs: typing.Dict[str, str] = field(default_factory=dict)
         outputs: typing.Dict[str, str] = field(default_factory=dict)
+        lambda_expr: str = ""
 
 
 # class GrfnAssignment:
@@ -371,6 +403,7 @@ class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):
         self.incoming_vars = {}
         self.outgoing_vars = {}
+        self.expr_str: str = ""
         AstNode.__init__(self)
 
 class AnnCastAssignment(AnnCastNode):
@@ -382,6 +415,7 @@ class AnnCastAssignment(AnnCastNode):
         self.grfn_assignment: GrfnAssignment
 
 
+        super().__init__(self)
     def __str__(self):
         return Assignment.__str__(self)
 
@@ -391,6 +425,7 @@ class AnnCastAttribute(AnnCastNode):
         self.attr = attr
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return Attribute.__str__(self)
 
@@ -401,6 +436,7 @@ class AnnCastBinaryOp(AnnCastNode):
         self.right = right
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return BinaryOp.__str__(self)
 
@@ -409,6 +445,7 @@ class AnnCastBoolean(AnnCastNode):
         self.boolean = boolean
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return Boolean.__str__(self)
 
@@ -427,6 +464,9 @@ class AnnCastCall(AnnCastNode):
         self.top_interface_out = {}
         self.bot_interface_in = {}
         self.bot_interface_out = {}
+        # GrFN lambda expressions
+        self.top_interface_lambda: str
+        self.bot_interface_lambda: str
 
         # for top_interface_out
         # mapping Name id to fullid
@@ -456,6 +496,7 @@ class AnnCastCall(AnnCastNode):
         # In this case, the output will map the arguments fullid to its grfn_id
         self.arg_assignments: typing.Dict[int, GrfnAssignment] = {}
 
+        super().__init__(self)
     def __str__(self):
         return Call.__str__(self)
 
@@ -468,6 +509,7 @@ class AnnCastClassDef(AnnCastNode):
         self.fields = node.fields
         self.source_refs = node.source_refs
 
+        super().__init__(self)
     def __str__(self):
         return ClassDef.__str__(self)
 
@@ -477,6 +519,7 @@ class AnnCastDict(AnnCastNode):
         self.values = values
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return Dict.__str__(self)
 
@@ -485,6 +528,7 @@ class AnnCastExpr(AnnCastNode):
         self.expr = expr
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return Expr.__str__(self)
 
@@ -547,10 +591,16 @@ class AnnCastFunctionDef(AnnCastNode):
         self.top_interface_out = {}
         self.bot_interface_in = {}
         self.bot_interface_out = {}
+        # GrFN lambda expressions
+        self.top_interface_lambda: str
+        self.bot_interface_lambda: str
 
         # dict mapping Name id to highest version at end of "block"
         self.body_highest_var_vers = {}
 
+
+
+        super().__init__(self)
     def __str__(self):
         return FunctionDef.__str__(self)
 
@@ -559,6 +609,7 @@ class AnnCastList(AnnCastNode):
         self.values = values
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return List.__str__(self)
 
@@ -570,6 +621,7 @@ class AnnCastClassDef(AnnCastNode):
         self.fields = fields
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return ClassDef.__str__(self)
 
@@ -616,21 +668,13 @@ class AnnCastLoop(AnnCastNode):
         # TODO: decide type of exit
         self.exit = None
 
-        # TODO: Might delete below attributes
-        # Dicts mapping strings to Names
-        self.loop_body_variables = {}
-        self.entry_variables = {}
-
-        # Entry and Exit condition variables
-        # used at the top decision to determin `entry_variables`
-        self.entry_condition_variables = {}
-
-        # used at the bottom decision to determin `exit_variables`
-        # NOTE: depending on how Decision nodes are handled in GrFN, this
-        # condition variable may not be necessary
-        self.exit_condition_var = None
+        # GrFN lambda expressions
+        self.top_interface_lambda: str
+        self.bot_interface_lambda: str
+        self.condition_lambda: str
 
 
+        super().__init__(self)
     def __str__(self):
         return Loop.__str__(self)
 
@@ -639,6 +683,7 @@ class AnnCastModelBreak(AnnCastNode):
     def __init__(self, source_refs):
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return ModelBreak.__str__(self)
 
@@ -646,6 +691,7 @@ class AnnCastModelContinue(AnnCastNode):
     def __init__(self, node:ModelContinue):
         self.source_refs = node.source_refs
 
+        super().__init__(self)
     def __str__(self):
         return ModelContinue.__str__(self)
 
@@ -688,14 +734,17 @@ class AnnCastModelIf(AnnCastNode):
         # GrFN VarialeNode for the condition node
         self.condition_var = None
 
+        # GrFN lambda expressions
+        self.top_interface_lambda: str
+        self.bot_interface_lambda: str
+        self.condition_lambda: str
+        self.decision_lambda: str
+
+
         self.source_refs = source_refs
-
-        # TODO: Maybe delete
-        self.updated_vars_if_branch = {}
-        self.updated_vars_else_branch = {}
-
         
 
+        super().__init__(self)
     def __str__(self):
         return ModelIf.__str__(self)
 
@@ -708,6 +757,7 @@ class AnnCastModelReturn(AnnCastNode):
         # store GrfnAssignment for use in GrFN generation
         self.grfn_assignment: typing.Optional[GrfnAssignment] = None
 
+        super().__init__(self)
     def __str__(self):
         return ModelReturn.__str__(self)
 
@@ -724,6 +774,7 @@ class AnnCastModule(AnnCastNode):
         self.used_vars: typing.Dict[int, str] = {}
         self.con_scope: typing.List
 
+        super().__init__(self)
     def __str__(self):
         return Module.__str__(self)
 
@@ -741,6 +792,7 @@ class AnnCastName(AnnCastNode):
         self.version = None
         self.grfn_id = None
 
+        super().__init__(self)
     def __str__(self):
         return Name.__str__(self)
 
@@ -750,6 +802,7 @@ class AnnCastNumber(AnnCastNode):
         self.number = number
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return Number.__str__(self)
 
@@ -758,6 +811,7 @@ class AnnCastSet(AnnCastNode):
         self.values = values
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return Set.__str__(self)
 
@@ -766,6 +820,7 @@ class AnnCastString(AnnCastNode):
         self.string = string
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return String.__str__(self)
 
@@ -775,6 +830,7 @@ class AnnCastSubscript(AnnCastNode):
         self.slice = node.slice
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return Subscript.__str__(self)
 
@@ -783,6 +839,7 @@ class AnnCastTuple(AnnCastNode):
         self.values = values
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return Tuple.__str__(self)
 
@@ -792,6 +849,7 @@ class AnnCastUnaryOp(AnnCastNode):
         self.value = value
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return UnaryOp.__str__(self)
 
@@ -801,6 +859,7 @@ class AnnCastVar(AnnCastNode):
         self.type = type
         self.source_refs = source_refs
 
+        super().__init__(self)
     def __str__(self):
         return Var.__str__(self)
 

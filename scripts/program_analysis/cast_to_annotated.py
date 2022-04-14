@@ -11,6 +11,7 @@ from automates.program_analysis.CAST2GrFN.visitors.container_scope_pass import C
 from automates.program_analysis.CAST2GrFN.visitors.variable_version_pass import VariableVersionPass
 from automates.program_analysis.CAST2GrFN.visitors.incoming_outgoing_pass import IncomingOutgoingPass
 from automates.program_analysis.CAST2GrFN.visitors.grfn_var_creation_pass import GrfnVarCreationPass
+from automates.program_analysis.CAST2GrFN.visitors.lambda_expression_pass import LambdaExpressionPass
 from automates.program_analysis.CAST2GrFN.visitors.to_grfn_pass import ToGrfnPass
 from automates.program_analysis.CAST2GrFN.visitors.grfn_assignment_pass import GrfnAssignmentPass
 
@@ -55,6 +56,9 @@ def main():
 
     print("\nCalling GrfnAssignmentPass-------------------")
     GrfnAssignmentPass(annotated_cast)
+
+    print("\nCalling LambdaExpressionPass-------------------")
+    LambdaExpressionPass(annotated_cast)
 
 
     print("\nCalling ToGrfnPass-------------------")
