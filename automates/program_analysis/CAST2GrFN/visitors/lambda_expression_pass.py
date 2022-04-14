@@ -14,6 +14,17 @@ def lambda_for_grfn_assignment(grfn_assignment: GrfnAssignment, lambda_body: str
 
     return lambda_expr
 
+def lambda_for_condition(condition_in: typing.Dict, lambda_body: str) -> str:
+    var_names = map(var_name_from_fullid, condition_in.values())
+
+    param_str = ", ".join(var_names)
+    lambda_expr = f"lambda {param_str}: {lambda_body}"
+
+    # Debugging:
+    print(f"LambdExpr: {lambda_expr}")
+   
+    return lambda_expr
+
 def lambda_for_decision(condition_fullid: str, decision_in: typing.Dict) -> str:
     """
     Lambdas for decision nodes chooses betweeen IFBODY and ELSEBODY variables from
@@ -23,23 +34,26 @@ def lambda_for_decision(condition_fullid: str, decision_in: typing.Dict) -> str:
 
     lambda_body = ""
 
-    # TODO: if body and else body versions also need to be parameters to the lambda
+    # if body and else body versions also need to be parameters to the lambda
     # and the variables names need to be modified e.g. appending if and else
     # e.g lambda cond, x_if, x_else, y_if, y_else: (x_if, y_if) if cond else (x_else, y_else)
+    print(f"decision_in dict:")
+    for key,val in decision_in.items():
+        print(f"{key} : {val}")
     if_names = []
     else_names = []
     for dec in decision_in.values():
         if_fullid = dec[IFBODY]
-        if_names.append(var_name_from_fullid(if_fullid))
+        if_names.append(var_name_from_fullid(if_fullid) + "_if")
         else_fullid = dec[ELSEBODY]
-        else_names.append(var_name_from_fullid(else_fullid))
+        else_names.append(var_name_from_fullid(else_fullid) + "_else")
 
     if_names_str = ", ".join(if_names)
     else_names_str = ", ".join(else_names)
-
+   
     lambda_body = f"({if_names_str}) if {cond_name} else ({else_names_str})"
 
-    lambda_expr = f"lambda {cond_name}: {lambda_body}"  
+    lambda_expr = f"lambda {cond_name}, {if_names_str}, {else_names_str}: {lambda_body}"  
 
     # Debugging:
     print(f"LambdExpr: {lambda_expr}")
@@ -192,11 +206,14 @@ class LambdaExpressionPass:
 
     @_visit.register
     def visit_model_if(self, node: AnnCastModelIf) -> str:
-        # TODO: make condition lambda
-        # self.visit(node.expr)
+        # make condition lambda
+        expr_str = self.visit(node.expr)
+        node.condition_lambda = lambda_for_condition(node.condition_in, expr_str)
+
         self.visit_node_list(node.body)
         self.visit_node_list(node.orelse)
 
+        # make decision lambda
         cond_fullid = list(node.condition_out.values())[0]
         node.decision_lambda = lambda_for_decision(cond_fullid, node.decision_in)
         return node.expr_str

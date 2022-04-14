@@ -654,7 +654,7 @@ class AnnCastLoop(AnnCastNode):
 
         # dicts mapping a Name id to its fullid
         # initial versions for the top interface come from enclosing scope
-        # updated version for the top interface are versions 
+        # updated versions for the top interface are versions 
         # at the bottom of the loop after one or more executions of the loop
         self.top_interface_initial = {}
         self.top_interface_updated = {}
@@ -663,7 +663,7 @@ class AnnCastLoop(AnnCastNode):
         self.bot_interface_out = {}
         self.condition_in = {}
         self.condition_out = {}
-        # GrFN VarialeNode for the condition node
+        # GrFN VariableNode for the condition node
         self.condition_var = None
         # TODO: decide type of exit
         self.exit = None
@@ -731,7 +731,7 @@ class AnnCastModelIf(AnnCastNode):
         self.condition_out = {}
         self.decision_in = {}
         self.decision_out = {}
-        # GrFN VarialeNode for the condition node
+        # GrFN VariableNode for the condition node
         self.condition_var = None
 
         # GrFN lambda expressions

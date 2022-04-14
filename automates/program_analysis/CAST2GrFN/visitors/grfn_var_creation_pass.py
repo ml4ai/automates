@@ -275,7 +275,7 @@ class GrfnVarCreationPass:
         or modified by this Loop container.  This does the following:
             - creates a version VAR_INIT_VERSION GrFN variable for all used variables. 
               These GrFN variables will be produced by the `top_interface_out`.
-              Furthermore, they aliased with loop expr init version variables.
+              Furthermore, they are aliased with loop expr init version variables.
             - creates a version LOOP_VAR_UPDATED_VERSION GrFN variable for all modified variables. 
               These GrFN variables are used for `top_interface_updated`.
             - creates a version VAR_EXIT_VERSION GrFN variable for all modified variables
