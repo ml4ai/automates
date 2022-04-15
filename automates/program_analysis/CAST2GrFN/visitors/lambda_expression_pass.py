@@ -79,11 +79,20 @@ def lambda_for_interface(interface_in: typing.Dict) -> str:
 
     return lambda_expr
 
-def lambda_for_loop_top_interface(interface_in: typing.Dict) -> str:
+def lambda_for_loop_top_interface(top_interface_initial: typing.Dict, top_interface_updated: typing.Dict) -> str:
     """
-    Lambdas for loop top interface  chooses between initial and updated version
+    Lambda for loop top interface chooses between initial and updated version
     of variables 
     """
+
+    print(f"top_interface_initial dict:")
+    for key,val in top_interface_initial.items():
+        print(f"{key} : {val}")
+    
+    print(f"top_interface_updated dict:")
+    for key,val in top_interface_updated.items():
+        print(f"{key} : {val}")
+
     lambda_expr = None
 
     # Debugging:
@@ -91,7 +100,16 @@ def lambda_for_loop_top_interface(interface_in: typing.Dict) -> str:
 
     return lambda_expr
 
+def lambda_for_loop_condition(condition_in, lambda_body):
+    var_names = map(var_name_from_fullid, condition_in.values())
 
+    param_str = ", ".join(var_names)
+    lambda_expr = f"lambda {param_str}: {lambda_body}"
+
+    # Debugging:
+    print(f"LambdExpr: {lambda_expr}")
+   
+    return lambda_expr
 
 class LambdaExpressionPass:
     def __init__(self, ann_cast: AnnCast):
@@ -194,6 +212,26 @@ class LambdaExpressionPass:
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop) -> str:
+        
+        node.top_interface_lambda = lambda_for_loop_top_interface(node.top_interface_initial, 
+                                                                 node.top_interface_updated)
+        loop_expr = self.visit(node.expr)
+        # TODO: needs to be what comes out of the LTI out
+        node.condition_lambda = lambda_for_loop_condition(node.top_interface_initial,loop_expr)
+
+
+        body_expr = self.visit_node_list(node.body)
+        #node.bot_interface_lambda = lambda_for_loop_cond_interface(node.bot_interface_in)
+        
+        # DEBUGGING
+        print(f"Loop ")
+        print(f"\t Loop Expression:")
+        print(f"\t\t{node.condition_lambda}")
+        print(f"\t Body Expressions:")
+        for e in body_expr:
+            print(f"\t\t{e}")
+
+        # What to return?  Loops don't have a resulting value.
         return node.expr_str
 
     @_visit.register
