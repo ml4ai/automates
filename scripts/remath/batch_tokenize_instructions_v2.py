@@ -17,6 +17,7 @@ Follows the hierarchical nature of the program
 import argparse
 import pathlib
 import os
+import re
 from typing import List, Any, Dict
 from collections import OrderedDict
 
@@ -100,7 +101,17 @@ def parse_fn_name_from_parsed_metadata(parsed_metadata: List):
 
 def parse_string_value_from_parsed_metadata(metadata):
     if len(metadata) == 3 and metadata[0] == ':array' and metadata[1] == 'java.lang.String':
-        return ':string', metadata[2]
+        val = metadata[2]
+        # format it if it has answer in it in a nice way
+        match = re.search('.*Answer', val)
+        if match:
+            # remove = character
+            val = re.sub('= ', '', val)
+            # remove " characters
+            val = re.sub('"', '', val)
+            # remove any number of \ and n characters
+            val = re.sub(r'\\*n', '', val)
+        return ':string', val
     else:
         return None
 
@@ -143,6 +154,53 @@ def parse_hex_value(value):
     return ':interpreted_hex', value, result
 
 
+def param_or_local(memory_address: str) -> str:
+    """
+    take the memory address and find out if the memory address is used for parameter passing
+    or for local variable
+    return: "param" or "local"
+    """
+    if re.search('.*RBP \+ 0x.*', memory_address):
+        return "param"
+    else:
+        return "local"
+
+
+class FunctionTokens:
+    """
+    global key - value pair for a program: give unique labels to each function in the program called from main
+    create an instance of function tokens in the program and pass it to each function so that it can modify it
+    """
+
+    def __init__(self):
+        """
+        ordered dict to keep track of function name to labels
+        """
+        self.counter = 0
+        self.name_to_label = OrderedDict()
+
+    def add_function_token(self, fn_name: str):
+        if fn_name in self.name_to_label:
+            return self.name_to_label[fn_name]
+        label = '_f' + str(self.counter)
+        self.name_to_label[fn_name] = label
+        self.counter += 1
+        return label
+
+    def get_label(self, fn_name):
+        return self.name_to_label[fn_name]
+
+
+class Register:
+    """
+    Register classe: represents a register and its properties
+    """
+
+    def __init__(self, name):
+        self.name = name
+        self.defined_before = False
+
+
 class Stack:
     """
     class Stack: used to implement call stack of functions called from main function
@@ -171,14 +229,14 @@ class Tokens:
     class that represents key-value pair for different tokens (value, param, address)
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, base: str):
         """
         name of token: value, param, address
         counter: start value for each token
         token_to_elm: ordered dict for token to element
         """
         self.name = name
-        self.base = "_" + name.lower()[0]
+        self.base = base
         self.counter = 0
         # key value pair from key to value
         self.token_to_elm: Dict[str, str] = OrderedDict()
@@ -228,6 +286,8 @@ class Program:
         self.name_to_address: Dict[str, str] = dict()
         # initialize it's call stack of functions being called from it's main function
         self.stack = Stack()
+        # each program has global FunctionToken to give unique labels to all the functions called from main
+        self.function_tokens = FunctionTokens()
 
     def update_name(self, name):
         self.name = name
@@ -264,12 +324,22 @@ class Function:
         self.instructions: List[Instruction] = list()
         # list of tokens to be used for NMT
         self.tokens_nmt = list()
-        # each function has key-value pairs for value tokens, param tokens, and address tokens
-        self.value_tokens = Tokens("value")
-        self.param_tokens = Tokens("param")
-        self.address_tokens = Tokens("address")
+        # each function has key-value pairs for value tokens, param tokens, and memory_address
+        # and instruction_address tokens
+        self.value_tokens = Tokens(name="value", base='_v')
+        self.param_tokens = Tokens(name="param", base='_p')
+        self.memory_address_tokens = Tokens(name="memory_address", base='_m')
+        self.instruction_address_tokens = Tokens(name="instruction_address", base='_a')
         # list of functions called by this function
         self.called_fns = []
+        # The function has parameters: which are passed either through the registers or throuhg the
+        # stack: if passed through stack, they have [RBP + positive_offset] while local variables have
+        # [RBP + negative_offset]
+        # keep track of registers used for passing arguments: if they are used (are in dest) before any
+        # values are moved to them first: they are parameters
+        # registers used to pass the parameters
+        self.param_registers = {'EDI': Register('EDI'), 'ESI': Register('ESI'), 'EDX': Register('EDX'),
+                                'ECX': Register('ECX'), 'R8D': Register('R8D'), 'R9D': Register('R9D')}
 
     def add_lines(self, lines):
         """
@@ -277,9 +347,11 @@ class Function:
         """
         self.lines.extend(lines)
 
-    def tokenize_function(self):
+    def tokenize_function(self, function_tokens):
         """
         convert the raw lines (self.lines) into Instruction
+        function_token: global FunctionToken instance of a program to give unique labels to each function in the
+        instructions.txt file
         and call tokenize instructions that tokenizes them and updates tokens_nmt
         also return a list of functions called by this function
         """
@@ -305,21 +377,53 @@ class Function:
             nmt_tokens_instruction = list()
             # keep track of current function name: to find if it's printf or not
             current_fn_name = ''
-            for instruction_token in instruction_tokens:
+            for index, instruction_token in enumerate(instruction_tokens):
                 token_type, token = instruction_token
-                if token_type == "value":
+                if token_type == "instruction_address":
+                    key = self.instruction_address_tokens.add_token(token)
+                    nmt_tokens_instruction.append(key)
+                elif token_type == "value":
                     key = self.value_tokens.add_token(token)
                     nmt_tokens_instruction.append(key)
-                elif token_type == "address":
-                    key = self.address_tokens.add_token(token)
-                    nmt_tokens_instruction.append(key)
+                elif token_type == "memory_address":
+                    # memory address can be either param token or address token
+                    # based on offset from RBP
+                    # check if the memory location is a param or a local variable
+                    # instruction_address, opcode, dst_register, src_mem_location
+                    if index == 3:
+                        address_type = param_or_local(token)
+                        # address_type is either param or local
+                        if address_type == "param":
+                            key = self.param_tokens.add_token(token)
+                            nmt_tokens_instruction.append(key)
+                        else:
+                            key = self.memory_address_tokens.add_token(token)
+                            nmt_tokens_instruction.append(key)
+                    else:
+                        key = self.memory_address_tokens.add_token(token)
+                        nmt_tokens_instruction.append(key)
                 elif token_type == 'function_name':
                     current_fn_name = token
-                    nmt_tokens_instruction.append(token)
+                    if current_fn_name != 'printf':
+                        label = function_tokens.add_function_token(current_fn_name)
+                        nmt_tokens_instruction.append(label)
+                    else:
+                        nmt_tokens_instruction.append(current_fn_name)
                 elif token_type == 'function_address':
                     if current_fn_name != 'printf':
                         # append the address only without 0x
                         functions_called.append(token[2:])
+                elif token_type == "register":
+                    # instruction_tokens: [address, opcode, dst, src]
+                    # index 3: represents that the register is in src location
+                    # not on the dst location
+                    if index == 3 and token in self.param_registers:
+                        if not self.param_registers[token].defined_before:
+                            key = self.param_tokens.add_token(token)
+                            nmt_tokens_instruction.append(key)
+                            self.param_registers[token].defined_before = True
+                    else:
+                        nmt_tokens_instruction.append(token)
                 else:
                     nmt_tokens_instruction.append(token)
 
@@ -389,14 +493,14 @@ class Instruction:
 
             elif 'ptr' in operand:
                 # matches opcode reg *ptr* (with and without metadata)
-                tokens.append(("address", operand))
+                tokens.append(("memory_address", operand))
 
             elif operand.startswith('[') and operand.endswith(']'):
                 # matches opcode reg [address_calculation]
-                tokens.append(("address", operand))
+                tokens.append(("memory_address", operand))
 
             else:
-                tokens.append(("reg", operand))
+                tokens.append(("register", operand))
 
         return tokens
 
@@ -420,6 +524,7 @@ class Instruction:
         # tuple[1]: actual token
         instruction_tokens = list()
         opcode, operands, metadata = self.opcode, self.operands, self.metadata
+        instruction_tokens.append(("instruction_address", self.address))
         instruction_tokens.append(("opcode", opcode))
         if self.metadata:
             self.parsed_metadata = parse_metadata(self.metadata)
@@ -480,21 +585,29 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str):
         tokenized_functions.append(function)
         # tokenize will tokenize the function and return list of other functions(addresses)
         # that are being called by that function
-        fn_list = function.tokenize_function()
+        fn_list = function.tokenize_function(program.function_tokens)
         for fn_addr in fn_list:
             fn = program.functions[fn_addr]
             program.stack.push(fn)
 
     with open(_dst_filepath, 'w') as write_file:
         for function in tokenized_functions:
+            if function.name != 'main':
+                write_file.write(f'function_label: {program.function_tokens.get_label(function.name)}\n')
             write_file.write(f'function_name: {function.name}\n')
             write_file.write(str(function.tokens_nmt))
             write_file.write('\n\n')
-            write_file.write('value\n')
+            write_file.write('instruction address tokens\n')
+            write_file.write(str(function.instruction_address_tokens))
+            write_file.write('\n\n')
+            write_file.write('param tokens\n')
+            write_file.write(str(function.param_tokens))
+            write_file.write('\n\n')
+            write_file.write('value tokens\n')
             write_file.write(str(function.value_tokens))
-            write_file.write('\n')
-            write_file.write('address\n')
-            write_file.write(str(function.address_tokens))
+            write_file.write('\n\n')
+            write_file.write('memory address tokens\n')
+            write_file.write(str(function.memory_address_tokens))
             write_file.write(f"\n\n")
 
 
