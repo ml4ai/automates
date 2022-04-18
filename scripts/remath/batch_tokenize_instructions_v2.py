@@ -7,24 +7,29 @@ Follows the hierarchical nature of the program
 1] program: object representation of instructions.txt file
 2] program has multiple functions
 3] function has metadata and multiple instructions
-4] each instruction has opcode and operands
+4] each instruction has opcode, operands and optionally metadata
 5] each function has key-value pairs for:
     value tokens - local variables
     param tokens - function parameters / arguments
-    address tokens - address (memory address / registers)
+    address tokens - jump address
+    memory tokens - memory address
+    global function tokens - unique label for functions being called from main0
+The tokenize function for a program calls the tokenize function for all of it's functions being called
+from it's main function: each function in turn calls the tokenize function for its each instruction
+instruction class tokenizes each instruction based on opcode, operands and metadata
 """
 
 import argparse
 import pathlib
 import os
 import re
-from typing import List, Any, Dict
+from typing import List, Dict, Tuple, Union
 from collections import OrderedDict
 import struct
 
 
 # util functions for tokenization
-def parse_unicode_string_list(ustr: str):
+def parse_unicode_string_list(ustr: str) -> List[str]:
     """
     extract unicode string literal from given unicode string
     """
@@ -41,7 +46,7 @@ def parse_unicode_string_list(ustr: str):
     return chunks
 
 
-def parse_metadata(metadata: str):
+def parse_metadata(metadata: str) -> List[str]:
     """
     parse metadata for each instruction (if any)
     returns: parsed metadata for array and unparsed metadata for others
@@ -60,7 +65,7 @@ def parse_metadata(metadata: str):
         return [':unparsed', metadata]
 
 
-def parse_instruction_line(line):
+def parse_instruction_line(line) -> Tuple[str, List[str], str]:
     """
     parse each instruction line into opcode, operands, and metadata
     return opcode, operands, metadata
@@ -83,7 +88,7 @@ def parse_instruction_line(line):
     return opcode, operands, metadata
 
 
-def parse_fn_name_from_parsed_metadata(parsed_metadata: List):
+def parse_fn_name_from_parsed_metadata(parsed_metadata: List[str]) -> Tuple[str, str]:
     if parsed_metadata[0] == ':array' and len(parsed_metadata) == 3:
         target_string = parsed_metadata[2]
         if '(' in target_string:
@@ -100,7 +105,7 @@ def parse_fn_name_from_parsed_metadata(parsed_metadata: List):
                         f"parsed_metadata: {parsed_metadata}")
 
 
-def parse_hex_float_value(hex_value, size):
+def parse_hex_float_value(hex_value: str, size: str) -> str:
     # TODO I think we need to handle other types
     # TODO I think we need to be sure about the endianness
     if size == 'dword':
@@ -111,7 +116,8 @@ def parse_hex_float_value(hex_value, size):
         raise Exception(f'ERROR parse_hex_float_value(): Unhandled size {size}')
 
 
-def get_info_from_parsed_metadata(parsed_metadata, size=None):
+def get_info_from_parsed_metadata(parsed_metadata: List[str], size=None) -> \
+        Union[Tuple[str, str, str], Tuple[str, str]]:
     # interpreted hex float
     if len(parsed_metadata) == 3 and parsed_metadata[2].startswith('= ') and parsed_metadata[2][-1] == 'h':
         hex_str = parsed_metadata[2][2:-1]
@@ -133,7 +139,7 @@ def get_info_from_parsed_metadata(parsed_metadata, size=None):
         raise Exception(f"Unable to handle this parsed metadata: {parsed_metadata}")
 
 
-def parse_hex_value(value):
+def parse_hex_value(value: str) -> Tuple[str, str, int]:
     """
     translate hex to decimal using 2's complement
     translate hex value ---------> binary -------------> decimal
@@ -199,7 +205,7 @@ class FunctionTokens:
         self.counter = 0
         self.name_to_label = OrderedDict()
 
-    def add_function_token(self, fn_name: str):
+    def add_function_token(self, fn_name: str) -> str:
         if fn_name in self.name_to_label:
             return self.name_to_label[fn_name]
         label = '_f' + str(self.counter)
@@ -207,7 +213,7 @@ class FunctionTokens:
         self.counter += 1
         return label
 
-    def get_label(self, fn_name):
+    def get_label(self, fn_name: str) -> str:
         return self.name_to_label[fn_name]
 
 
@@ -263,7 +269,7 @@ class Tokens:
         # reverse dictionary of self.elm_to_token: for efficient search to find if elm exists already
         self.elm_to_token: Dict[str, str] = dict()
 
-    def add_token(self, elm):
+    def add_token(self, elm: str) -> str:
         """
         elm: element to add to the token dict
         return: the key to which the elm was assigned to or the previous key if
@@ -281,7 +287,7 @@ class Tokens:
         self.counter += 1
         return key
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         string representaton of the key value pairs
         to write them to a __tokens.txt file
@@ -314,10 +320,10 @@ class Program:
                            'JL', 'JNGE', 'JGE', 'JNL', 'JLE', 'JNG', 'JG', 'JNLE', 'JP',
                            'JPE', 'JNP', 'JPO', 'JCXZ', 'JECXZ', 'JRCXZ']
 
-    def update_name(self, name):
+    def update_name(self, name: str) -> None:
         self.name = name
 
-    def add_function(self, function):
+    def add_function(self, function: "Function") -> None:
         if function.address in self.functions:
             raise Exception(f"[ERROR]: function with address: {function.address} already exists!")
         self.functions[function.address] = function
@@ -325,7 +331,7 @@ class Program:
         if function.name not in self.name_to_address:
             self.name_to_address[function.name] = function.address
 
-    def get_function_by_name(self, name):
+    def get_function_by_name(self, name: str) -> "Function":
         if name not in self.name_to_address:
             raise Exception(f"[ERROR]: unable to find function with name: {name}")
         address = self.name_to_address[name]
@@ -338,7 +344,7 @@ class Function:
     Program has multiple functions
     """
 
-    def __init__(self, address, name, min_address, max_address):
+    def __init__(self, address: str, name: str, min_address: str, max_address: str):
         self.name: str = name
         self.address: str = address
         self.min_address: str = min_address
@@ -347,8 +353,10 @@ class Function:
         self.lines: List[str] = list()
         # tokenized version of lines: List of instructions
         self.instructions: List[Instruction] = list()
-        # list of tokens to be used for NMT
+        # list of tokens to be used for NMT: no <sep> tag
         self.tokens_nmt = list()
+        # list of tokens to be used for NMT: with <sep> tag
+        self.tokens_nmt_space = list()
         # each function has key-value pairs for value tokens, param tokens, and memory_address
         # and instruction_address tokens [for jump targets]
         self.value_tokens = Tokens(name="value", base='_v')
@@ -371,15 +379,20 @@ class Function:
         self.jump_targets = []
 
         # each function has nmt_tokens: each nmt_token is associated with an instruction_address
+        # track address for each token: no <sep> token
         self.token_sequence_address = []
+        # track address for each token: with <sep> token: for <sep> token: put the next address
+        self.token_sequence_address_space = []
 
-    def add_lines(self, lines):
+    def add_lines(self, lines: List[str]) -> None:
         """
         add raw lines for the given function
         """
         self.lines.extend(lines)
 
-    def instruction_address_handler(self, token, address, nmt_tokens_instruction, nmt_sequence_address):
+    def instruction_address_handler(self, token: str, address: str,
+                                    nmt_tokens_instruction: List[str],
+                                    nmt_sequence_address: List[str]) -> None:
         """
         handles adding instruction address to required token fields and updates them
         also updates nmt token list and nmt address sequence list
@@ -396,7 +409,9 @@ class Function:
             # address for _a#
             nmt_sequence_address.append(address)
 
-    def jump_address_handler(self, token, address, nmt_tokens_instruction, nmt_sequence_address):
+    def jump_address_handler(self, token: str, address: str,
+                             nmt_tokens_instruction: List[str],
+                             nmt_sequence_address: List[str]) -> None:
         """
         handles adding jump address to required token fields and updates them
         also updates nmt token list and nmt address sequence list
@@ -406,7 +421,9 @@ class Function:
         nmt_tokens_instruction.append(key)
         nmt_sequence_address.append(address)
 
-    def value_handler(self, token, address, nmt_tokens_instruction, nmt_sequence_address):
+    def value_handler(self, token: str, address: str,
+                      nmt_tokens_instruction: List[str],
+                      nmt_sequence_address: List[str]) -> None:
         """
         handles adding jump values to required token fields and updates them
         also updates nmt token list and nmt address sequence list
@@ -415,7 +432,9 @@ class Function:
         nmt_tokens_instruction.append(key)
         nmt_sequence_address.append(address)
 
-    def memory_address_handler(self, token, address, index, nmt_tokens_instruction, nmt_sequence_address):
+    def memory_address_handler(self, token: str, address: str, index: int,
+                               nmt_tokens_instruction: List[str],
+                               nmt_sequence_address: List[str]) -> None:
         """
         handles adding jump values to required token fields and updates them
         also updates nmt token list and nmt address sequence list
@@ -441,8 +460,10 @@ class Function:
             nmt_sequence_address.append(address)
 
     @staticmethod
-    def function_name_handler(current_fn_name, address, function_tokens, nmt_tokens_instruction,
-                              nmt_sequence_address):
+    def function_name_handler(current_fn_name: str, address: str,
+                              function_tokens: "FunctionTokens",
+                              nmt_tokens_instruction: List[str],
+                              nmt_sequence_address: List[str]) -> None:
         """
         handles adding jump values to required token fields and updates them
         also updates nmt token list and nmt address sequence list
@@ -455,7 +476,9 @@ class Function:
             nmt_tokens_instruction.append(current_fn_name)
             nmt_sequence_address.append(address)
 
-    def register_handler(self, token, address, index, nmt_tokens_instruction, nmt_sequence_address):
+    def register_handler(self, token: str, address: str, index: int,
+                         nmt_tokens_instruction: List[str],
+                         nmt_sequence_address: List[str]) -> None:
         """
         handles adding jump values to required token fields and updates them
         also updates nmt token list and nmt address sequence list
@@ -476,7 +499,7 @@ class Function:
         if index == 2 and token in self.param_registers:
             self.param_registers[token].defined_before = True
 
-    def tokenize_function(self, function_tokens, jump_flags):
+    def tokenize_function(self, function_tokens: "FunctionTokens", jump_flags: List[str]) -> List[str]:
         """
         convert the raw lines (self.lines) into Instruction
         function_token: global FunctionToken instance of a program to give unique labels to each function in the
@@ -507,7 +530,7 @@ class Function:
                 if token_type == 'jump_address':
                     self.jump_targets.append(token)
 
-        for instruction in self.instructions:
+        for instruction_index, instruction in enumerate(self.instructions):
             # list of tokens for nmt for each instruction
             nmt_tokens_instruction = list()
             # list of address for each token: each time we append tokens
@@ -553,8 +576,19 @@ class Function:
             # add the tokens of a line (instructon) to tokens_nmt
             self.tokens_nmt.extend(nmt_tokens_instruction)
             self.token_sequence_address.extend(nmt_sequence_address)
+            # add the tokens of a line (instruction) to tokens_nmt
+            # add the <sep> tag for separating instructions
+            if instruction_index > 0:
+                self.tokens_nmt_space.append('<sep>')
+                self.tokens_nmt_space.extend(nmt_tokens_instruction)
+                self.token_sequence_address_space.append(instruction.address)
+                self.token_sequence_address_space.extend(nmt_sequence_address)
+            else:
+                self.tokens_nmt_space.extend(nmt_tokens_instruction)
+                self.token_sequence_address_space.extend(nmt_sequence_address)
 
         assert len(self.tokens_nmt) == len(self.token_sequence_address)
+        assert len(self.tokens_nmt_space) == len(self.token_sequence_address_space)
         return functions_called
 
 
@@ -564,7 +598,7 @@ class Instruction:
     Function has multiple instructions
     """
 
-    def __init__(self, address, opcode, operands, metadata):
+    def __init__(self, address: str, opcode: str, operands: List[str], metadata: str):
         """
         each instruction has address [in memory], and tuple (opcode, operands)
         some instructions have metadata
@@ -572,13 +606,13 @@ class Instruction:
         """
         self.address: str = address
         self.opcode: str = opcode
-        self.operands: List[Any] = operands
-        self.metadata = metadata
+        self.operands: List[str] = operands
+        self.metadata: str = metadata
         self.parsed_metadata = []
         # tokenized version of me
         self.tokenized = []
 
-    def tokenize_function_call_instruction(self):
+    def tokenize_function_call_instruction(self) -> List[Tuple[str, str]]:
         """
         tokenize operands for function call (with metadata / no metadata)
         returns a list of tuples
@@ -599,7 +633,7 @@ class Instruction:
 
         return return_list
 
-    def tokenize_jump_instruction(self):
+    def tokenize_jump_instruction(self) -> List[Tuple[str, str]]:
         """
         tokenize jump instruction: we don't want to convert the hex operand into decimal
         instead we want to return it as a jump address
@@ -607,7 +641,7 @@ class Instruction:
         assert len(self.operands) == 1
         return [("jump_address", self.operands[0])]
 
-    def tokenize_normal_instruction(self):
+    def tokenize_normal_instruction(self) -> List[Tuple[str, str]]:
         """
         tokenize normal operands (with metadata / no metadata)
         """
@@ -651,7 +685,7 @@ class Instruction:
 
         return tokens
 
-    def tokenize_instruction(self, jump_flags):
+    def tokenize_instruction(self, jump_flags: List[str]) -> None:
         """
         determine the type of instruction and tokenize it accordingly
         currently follows the following format for tokenizing
@@ -680,7 +714,7 @@ class Instruction:
         self.tokenized.extend(tokens)
 
 
-def process_file(file_path: str):
+def process_file(file_path: str) -> "Program":
     """
     extract metadata and functions from given source file (instructions.txt)
     """
@@ -714,7 +748,7 @@ def process_file(file_path: str):
     return program
 
 
-def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str):
+def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
     """
     Extract tokens from the source file (*instructions.txt) and saves them to the destination file
     (*instructions__tokens.txt)
@@ -737,17 +771,30 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str):
             fn = program.functions[fn_addr]
             program.stack.push(fn)
 
+    # collect some stats about the program and dump them to the end of __tokens.txt file
+
     with open(_dst_filepath, 'w') as write_file:
         for function in tokenized_functions:
             if function.name != 'main':
                 write_file.write(f'function_label: {program.function_tokens.get_label(function.name)}\n')
             write_file.write(f'function_name: {function.name}\n')
-            write_file.write(f'NMT input sequence\n')
+
+            # token sequence and sequence address without <sep>
+            write_file.write(f'NMT input sequence: no <sep> token\n')
             write_file.write(str(function.tokens_nmt))
             write_file.write('\n\n')
-            write_file.write('token sequence address\n')
+            write_file.write('token sequence address: no <sep> token\n')
             write_file.write(str(function.token_sequence_address))
             write_file.write('\n\n')
+
+            # token sequence and sequence address with <sep>
+            write_file.write(f'NMT input sequence: with <sep> token\n')
+            write_file.write(str(function.tokens_nmt_space))
+            write_file.write('\n\n')
+            write_file.write('token sequence address: with <sep> token\n')
+            write_file.write(str(function.token_sequence_address_space))
+            write_file.write('\n\n')
+
             write_file.write('address tokens\n')
             write_file.write(str(function.jump_address_tokens))
             write_file.write('\n\n')
@@ -764,7 +811,7 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str):
 
 def batch_process(instructions_root_dir: str,
                   dst_dir: str,
-                  instructions_file: str = ''):
+                  instructions_file: str = '') -> None:
     def get_dst_filepath(_src_filepath):
         _dst_filepath = os.path.join(dst_dir, os.path.basename(_src_filepath))
         return os.path.splitext(_dst_filepath)[0] + '__tokens.txt'
@@ -785,7 +832,7 @@ def batch_process(instructions_root_dir: str,
                     extract_tokens_and_save(src_filepath, dst_filepath)
 
 
-def main_batch():
+def main_batch() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('-I', '--instructions_root_dir',
                         help='specify the instructions root directory; required',
