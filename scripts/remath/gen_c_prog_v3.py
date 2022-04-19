@@ -1,10 +1,19 @@
-import os
-from pathlib import Path
+# import os
+# from pathlib import Path
 import random
-from typing import Sequence, List, Dict, Tuple
+from typing import Union, Sequence, Set, List, Dict, Tuple
 from dataclasses import dataclass
 
 """
+Version 3
+
+Supports
+() expression trees
+    () unary, binary operators
+    () functions 
+() functions
+() globals
+
 ASSUMPTIONS / OBSERVATIONS:
 (1) Not using 'long double' type for now
     Doing so leads to binary handling of long double data that Ghidra 
@@ -18,12 +27,11 @@ ASSUMPTIONS / OBSERVATIONS:
         See: expr_00.c
 """
 
-
 # random.seed(a=6)
-
 
 # https://codeforwin.org/2017/08/list-data-types-c-programming.html
 # https://www.geeksforgeeks.org/c-data-types/
+
 
 # -----------------------------------------------------------------------------
 # VarGen - generate variable names
@@ -109,16 +117,21 @@ MAP_TYPECAT_TO_TYPE = \
     {'ANY': ('int', 'long', 'long long',
              'float', 'double'),  # 'long double'
      'REAL_FLOATING': ('float', 'double'),  # 'long double'
+     'DOUBLE': ('double',),
      'NON_FLOAT': ('int', 'long', 'long long'),
      'INT': ('int',)}
 TYPES = MAP_TYPECAT_TO_TYPE['ANY']
 TYPECATS = tuple(MAP_TYPECAT_TO_TYPE.keys())
 
 
-def sample_literal(t):
-    if t in MAP_TYPECAT_TO_TYPE['REAL_FLOATING']:
+def sample_literal(t, _map=None):
+    if _map is None:
+        _map = MAP_TYPECAT_TO_TYPE
+    if 'REAL_FLOATING' in _map and t in _map['REAL_FLOATING']:
         return random.uniform(-10, 10)
-    elif t in MAP_TYPECAT_TO_TYPE['NON_FLOAT']:
+    elif 'DOUBLE' in _map and t in _map['DOUBLE']:
+        return random.uniform(-10, 10)
+    elif 'NON_FLOAT' in _map and t in _map['NON_FLOAT']:
         return random.randint(-100, 100)
     else:
         raise Exception(f"ERROR sample_literal():\n"
@@ -131,8 +144,10 @@ with 0 being lowest priority and 2 being highest.
 """
 TYPE_PRIORITY = \
     {'ANY': 0,
-     'NON_FLOAT': 1,
-     'INT': 2}
+     'REAL_FLOATING': 1,
+     'DOUBLE': 2,
+     'NON_FLOAT': 3,
+     'INT': 4}
 
 
 def get_type_priority(t: str) -> int:
@@ -178,55 +193,75 @@ TYPE_STRING_FORMAT = \
 
 
 # -----------------------------------------------------------------------------
-# Operators
+# Operator Definitions
 # -----------------------------------------------------------------------------
 
-# Assumptions:
-# (1) All are binary operators
-# (2) All typing is in terms of typecats
-# Format of type information: (<return_type>, <arg1_type>, <arg2_type>)
-MAP_OP_TO_TYPECATS = \
-    {'+': ('ANY', 'ANY', 'ANY'),
-     '-': ('ANY', 'ANY', 'ANY'),
-     '*': ('ANY', 'ANY', 'ANY'),
-     '/': ('ANY', 'ANY', 'ANY'),
+# Definitions of operator categories
+# Each category is a dictionary that that maps:
+#   <operator_string_name> : ( <type_signature>, <syntax>, optional: <include_library> )
+#   <type_signature> := Tuple[ <return_type>, <arg1_type>, <arg2_type>, ... ]
+#     NOTE: These type specifications are expressed as TYPECATS
+#   <syntax> := 'INFIX' | 'PREFIX'
+#     'INFIX' : <arg1> OP <arg2>
+#     'PREFIX' : OP(<arg1>...)
+#   <include_library> := String for the entire include line
+# When <include_library> is not included, then assumed natively available.
 
-     # --------- operators below this line are not supported by dynamic analysis
-     '%': ('INT', 'INT', 'INT'),
 
-     # bitwise logical operators
-     '&': ('NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT'),  # bitwise AND
-     '|': ('NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT'),  # bitwise inclusive OR
-     '^': ('NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT')   # bitwise exclusive OR
+OP_ARITHMETIC = \
+    {'+': (('ANY', 'ANY', 'ANY'), 'INFIX', None),
+     '-': (('ANY', 'ANY', 'ANY'), 'INFIX', None),
+     '*': (('ANY', 'ANY', 'ANY'), 'INFIX', None),
+     '/': (('ANY', 'ANY', 'ANY'), 'INFIX', None),
      }
 
-# TODO: Add relational operators  # all BINARY : ('INT', 'ANY', 'ANY')
-# ==
-# !=
-# >
-# <
-# >=
-# <=
+# NOTE: Not supported by dynamic analysis
+OP_ARITHMETIC_MOD = \
+    {'%': (('INT', 'INT', 'INT'), 'INFIX', None), }
 
-# TODO: Add logical operators
-# !  : ('INT', 'INT')  # UNARY
-# && : ('INT', 'INT', 'INT')  # BINARY
-# || : ('INT', 'INT', 'INT')   # BINARY
+# NOTE: Not supported by dynamic analysis
+OP_BITWISE_LOGICAL = \
+    {'&': (('NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT'), 'INFIX', None),  # bitwise AND
+     '|': (('NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT'), 'INFIX', None),  # bitwise inclusive OR
+     '^': (('NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT'), 'INFIX', None),  # bitwise exclusive OR
+     }
 
-# TODO: Add math.h functions supported by dynamic analysis:
-#   #include <math.h>
-# sqrt : ('double', 'double') : double sqrt(double x);  # UNARY
-# sin : ('double', 'double') : double sin(double x);    # UNARY
+OP_RELATIONS = \
+    {'==': (('INT', 'ANY', 'ANY'), 'INFIX', None),
+     '!=': (('INT', 'ANY', 'ANY'), 'INFIX', None),
+     '>': (('INT', 'ANY', 'ANY'), 'INFIX', None),
+     '<': (('INT', 'ANY', 'ANY'), 'INFIX', None),
+     '>=': (('INT', 'ANY', 'ANY'), 'INFIX', None),
+     '<=': (('INT', 'ANY', 'ANY'), 'INFIX', None),
+    }
 
-# TODO: Add stdlib.h functions supported by dynamic analysis:
-#   #include <stdlib.h>
-# abs : ('ANY', 'ANY') : any_type abs (any_type);  # UNARY
-# min(x, y) : ('ANY', 'ANY', 'ANY') : any_type min (any_type a, any_type b);  # BINARY
-# max(x, y) : ('ANY', 'ANY', 'ANY') : any_type max (any_type a, any_type b);  # BINARY
+# logical operators
+# https://stackoverflow.com/questions/39730583/return-value-of-a-boolean-expression-in-c
+OP_LOGICAL = \
+    {'!': (('INT', 'INT'), 'PREFIX', None),  # UNARY
+     '&&': (('INT', 'INT', 'INT'), 'INFIX', None),  # BINARY
+     '||': (('INT', 'INT', 'INT'), 'INFIX', None),  # BINARY
+    }
 
+# definitions for functions from math.h
+OP_MATH_H = \
+    {'sqrt': (('ANY', 'ANY'), 'PREFIX', '#include <math.h>'),  # double sqrt(double x);
+     'sin': (('ANY', 'ANY'), 'PREFIX', '#include <math.h>'),  # double sin(double x);
+     }   # double sin(double x);
+
+# Definitions for functions from stdlib.h
+OP_STDLIB_H = \
+    {'abs': (('ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type abs (any_type);
+     'min': (('ANY', 'ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type min (any_type a, any_type b);
+     'max': (('ANY', 'ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type max (any_type a, any_type b);
+     }
+
+
+# NOTE: type inspection warns that OP_MATH_H has a different value type signature
+OP_DEFINITIONS = OP_ARITHMETIC | OP_MATH_H | OP_STDLIB_H
 
 # Sequence of operators
-OPS = tuple(MAP_OP_TO_TYPECATS.keys())
+OPS = tuple(OP_DEFINITIONS.keys())
 
 
 def collect_ops_compatible_with_types():
@@ -240,7 +275,7 @@ def collect_ops_compatible_with_types():
 
     # Build map of types to ops
     for t in TYPES:
-        for op, args in MAP_OP_TO_TYPECATS.items():
+        for op, (args, syntax, include) in OP_DEFINITIONS.items():
             return_type = args[0]
             if return_type in TYPECATS and t in MAP_TYPECAT_TO_TYPE[return_type]:
                 add(t, op)
@@ -269,12 +304,18 @@ MAP_RETURN_TYPE_TO_OPS = collect_ops_compatible_with_types()
 
 
 # import sys
-# print("MAP_RETURN_TYPE_TO_OPS")
-# print(MAP_RETURN_TYPE_TO_OPS)
-# print("MAP_OP_TO_TYPECATS")
-# print(MAP_OP_TO_TYPECATS)
+# print("TYPES")
+# print(TYPES)
+# print("TYPECATS")
+# print(TYPECATS)
 # print("MAP_TYPECAT_TO_TYPE")
 # print(MAP_TYPECAT_TO_TYPE)
+# print("OP_DEFINITIONS")
+# print(OP_DEFINITIONS)
+# print("OPS")
+# print(OPS)
+# print("MAP_RETURN_TYPE_TO_OPS")
+# print(MAP_RETURN_TYPE_TO_OPS)
 # sys.exit()
 
 
@@ -312,7 +353,7 @@ def sample_uniform_operator(op_set: Sequence[str]) -> Tuple[str, str, Tuple[str]
     :return: (<operator>, <return_type>, list of <argument_type>)
     """
     op = random.choice(op_set)
-    args = MAP_OP_TO_TYPECATS[op]
+    args = OP_DEFINITIONS[op]
     return op, args[0], args[1:]
 
 
@@ -321,596 +362,250 @@ def sample_uniform_operator(op_set: Sequence[str]) -> Tuple[str, str, Tuple[str]
 # -----------------------------------------------------------------------------
 
 @dataclass
-class SampleParameters:
-    # Range of number of expressions
-    min_expressions: int
-    max_expressions: int
-    # Range of number of operators in expression
-    min_ops: int  # minimum operations per expression
-    max_ops: int  # maximum operations per expression
-
-    # Probability of assigning an expression variable to an unassigned index in an expression
-    p_assign_expr_var: float
-    # A "var_literal_assignment" is a variable that is declared and assigned a literal.
-    # This is the probability of assigning a var_literal_assignment to
-    #   an unassigned index in an expression
-    p_var_literal_assignment: float
-
-
-EXAMPLE_PARAMS = \
-    SampleParameters(min_expressions=1, max_expressions=6,
-                     min_ops=1, max_ops=6,
-                     p_assign_expr_var=0.2,
-                     p_var_literal_assignment=0.2)
-
-
-# -----------------------------------------------------------------------------
-#
-# -----------------------------------------------------------------------------
-
-class ExprSeqSampleStats:
-    def __init__(self, expr_seq_sample: "ExprSeqSample" = None):
-        self.num_expressions = 0
-        self.num_operators = 0
-        self.num_vars = 0
-        self.num_inline_literals = 0
-        self.num_var_literal_assignments = 0
-        if expr_seq_sample:
-            self.get_stats(expr_seq_sample)
-
-    def get_stats(self, expr_seq_sample):
-        num_ops = 0
-        num_inline_literals = 0
-        num_var_literal_assignments = 0
-        for expr in expr_seq_sample.expressions.values():
-            num_ops += expr.num_ops
-            num_var_literal_assignments += len(expr.var_literal_assignments)
-            for value in expr.value_assignments.values():
-                if not expr_seq_sample.var_gen.is_var(value):
-                    num_inline_literals += 1
-        self.num_expressions = len(expr_seq_sample.expressions)
-        self.num_operators = num_ops
-        self.num_vars = expr_seq_sample.var_gen.var_counter
-        self.num_inline_literals = num_inline_literals
-        self.num_var_literal_assignments = num_var_literal_assignments
-
-    def add_from(self, esss: "ExprSeqSampleStats"):
-        self.num_expressions = esss.num_expressions
-        self.num_operators = esss.num_operators
-        self.num_vars = esss.num_vars
-        self.num_inline_literals = esss.num_inline_literals
-        self.num_var_literal_assignments = esss.num_var_literal_assignments
-
-    def to_string(self):
-        return f'num_expressions, {self.num_expressions}\n' \
-               f'num_operators, {self.num_operators}\n' \
-               f'num_vars, {self.num_vars}\n' \
-               f'num_inline_literals, {self.num_inline_literals}\n' \
-               f'num_var_literal_assignments, {self.num_var_literal_assignments}'
-
-
-class ExprSeqSample:
+class GeneratorConfig:
     """
-    A Sequence of Expression Trees.
+    Version 3 Program Generation configuration
+    Params defined as tuples represent range of <min>, <max>
     """
-    def __init__(self, params: SampleParameters, var_gen: VarGen):
-        self.params: SampleParameters = params  # The generation process parameters
-        self.var_gen: VarGen = var_gen  # The variable (gensym) generator
-        # map of expr_index [int] to an expression [ExprTreeSample]
-        # The indices of the expressions are in reverse order of how they
-        #   appear in the final generated code:
-        #     0 is the root (final) expression, and higher indices are
-        #     "earlier" in the sequence
-        self.expressions: Dict[int, ExprTreeSample] = dict()
-        # map of expr_index [int] to the variable its return value is
-        #   assigned to [str]
-        self.expr_var: Dict[int, str] = dict()
-        # map of variable to the list of indices in an expr that it has
-        #   been assigned to: <var_name> : list of (<expr_index>, <var_index>)
-        self.expr_index_var_assignments: Dict[str, List[Tuple[int, int]]] = dict()
-
-    def add_var_to_expr_index_var_assignments(self, variable: str, expr_index: int, var_index: int):
-        """
-        When a variable is assigned to a new variable-index in an expression,
-          add that variable and its variable-index to the expr_index_var_assignments
-        :param variable:
-        :param expr_index:
-        :param var_index:
-        :return:
-        """
-        if variable in self.expr_index_var_assignments:
-            self.expr_index_var_assignments[variable].append((expr_index, var_index))
-        else:
-            self.expr_index_var_assignments[variable] = [ (expr_index, var_index) ]
-
-    def collect_unassigned_expr_vars(self) -> List[Tuple[int, int, str]]:  # Dict[str, List[Tuple[int, int]]]:
-        """
-        For each expression in the expression sequence:
-          Collect the variable indices (and their types) that have not yet been
-          assigned to variables.
-        :return: List of Tuples: (<expression_index>, <variable_index>, <variable_type>)
-        """
-        unassigned_expr_vars: List[Tuple[int, int, str]] = list()  # Dict[str, List[Tuple[int, int]]] = dict()
-        for expr_idx, expr in self.expressions.items():
-            for var_type, var_idx in expr.get_unassigned_types():
-                unassigned_expr_vars.append((expr_idx, var_idx, var_type))
-        return unassigned_expr_vars
-
-    def collect_expr_vars_by_typecats(self, start_index: int) -> Dict[str, List[str]]:
-        """
-        Starting with expression at the start_index and moving up:
-          Collect the return variables associated with the expression return type
-        :param start_index: The index of the expression to start the collection from
-        :return:
-        """
-        map_typecat_to_var: Dict[str, List[str]] = dict()
-        for expr_idx in range(start_index, len(self.expressions)):
-            expr_return_type = self.expressions[expr_idx].index_type[0]  # the return type of the expression
-            if expr_return_type in map_typecat_to_var:
-                map_typecat_to_var[expr_return_type].append(self.expr_var[expr_idx])
-            else:
-                map_typecat_to_var[expr_return_type] = [self.expr_var[expr_idx]]
-        return map_typecat_to_var
-
-    def sample(self, verbose_p=False):
-        """
-        Sample an expression sequence.
-        :param verbose_p:
-        :return:
-        """
-        # sample how many expressions there are
-        num_expressions = random.randint(self.params.min_expressions, self.params.max_expressions)
-        if verbose_p:
-            print(f'- ExprSeqSample.sample() : num_expressions={num_expressions}')
-        # the final target type category; starts out least restrictive: 'ANY'
-        target_typecat = 'ANY'
-        next_var = self.var_gen.get_name()  # get variable that expression will be assigned to
-        for i in range(num_expressions):
-            if verbose_p:
-                print(f'-- expression {i}')
-            # sample how many operators there are in an expression tree
-            num_ops = random.randint(self.params.min_ops, self.params.max_ops)
-            # sample the expression tree (given the number of operations)
-            expr = ExprTreeSample(num_ops=num_ops, init_typecat=target_typecat)
-            self.expressions[i] = expr
-            self.expr_var[i] = next_var
-            expr.sample(verbose_p=verbose_p)
-
-            # ensure current expression is referred to by at least one of
-            #   the previously-generated (i.e., *later* in the expression sequence)
-            #   expressions
-            if i < num_expressions - 1:
-                unassigned_expr_vars = self.collect_unassigned_expr_vars()
-                # sample an unassigned var out of all of the unassigned vars in all of the expressions
-                expr_idx, var_idx, var_typecat = random.choice(unassigned_expr_vars)
-                expr_with_unassigned_var = self.expressions[expr_idx]
-                # generate the next var name that will be set as the expr_with_unassigned_var's
-                #   and be the assigned the next expr
-                next_var = self.var_gen.get_name()
-                # set the next_var as the value of the var_idx
-                # remove the var_idx from the expr_with_unassigned_var's unassigned_indices
-                #expr_with_unassigned_var.value_assignments[var_idx] = next_var
-                #expr_with_unassigned_var.unassigned_indices.remove(var_idx)
-                expr_with_unassigned_var.assign_value(var_idx, next_var)
-                # record the (expr_index, var_index) to which a var has been assigned
-                self.add_var_to_expr_index_var_assignments(next_var, expr_idx, var_idx)
-                # the new target_typecat is the typecat of the var we're setting
-                target_typecat = var_typecat
-
-    def reuse_exprs_for_vars(self, verbose_p=False):
-        for expr_idx in range(0, len(self.expressions) - 1):
-            current_expr = self.expressions[expr_idx]
-            map_typecat_to_var = self.collect_expr_vars_by_typecats(start_index=expr_idx + 1)
-            unassigned_indices = sorted(list(current_expr.unassigned_indices))
-            for unassigned_index in unassigned_indices:
-                current_expr_unassigned_index_type = current_expr.index_type[unassigned_index]
-                if current_expr_unassigned_index_type in map_typecat_to_var:
-                    # possibly assign unassigned_index to var
-                    if random.random() < self.params.p_assign_expr_var:
-                        var = random.choice(map_typecat_to_var[current_expr_unassigned_index_type])
-                        current_expr.assign_value(unassigned_index, var)
-                        # record the (expr_index, var_index) to which a var has been assigned
-                        self.add_var_to_expr_index_var_assignments(var, expr_idx, unassigned_index)
-                        if verbose_p:
-                            print(f'>>> reuse_exprs_for_vars(): Assigning expr={expr_idx} index={unassigned_index} to {var}')
-
-    def backward_propagate_ground_type_choices(self):
-        """
-        Iterate from the last expression in expression sequence to the first,
-          to ensure proper propagation of ground_types, ensuring any ground-Types
-          of expr variables (i.e., the ground_types associated with an experssion
-          return type) are assigned before backward-propagating the ground_type
-          for the expression that has the variable in one of its indices.
-        :return:
-        """
-        for expr_index in reversed(range(len(self.expressions))):
-            expr = self.expressions[expr_index]
-            expr.backward_propagate_ground_type_choices(0)
-
-            # now assign ground_type of expr return value to all expressions with indices
-            # that have been assigned an expr variable
-            expr_var = self.expr_var[expr_index]
-            expr_var_type = expr.index_type[0]  # get the type of the root index (the return of expr)
-            if expr_var in self.expr_index_var_assignments:
-                for assigned_expr_idx, var_idx in self.expr_index_var_assignments[expr_var]:
-                    assigned_expr = self.expressions[assigned_expr_idx]
-                    assigned_expr.index_type[var_idx] = expr_var_type
-
-    def assign_var_literal_assignments(self):
-        for expr_index in range(len(self.expressions)):
-            self.expressions[expr_index].assign_var_literal_assignments(self)
-
-    def assign_literals(self):
-        for expr_index in range(len(self.expressions)):
-            self.expressions[expr_index].assign_literals()
-
-    def to_expression_str_list(self):
-        lines = list()
-        for expr_index in reversed(range(len(self.expressions))):
-            expr = self.expressions[expr_index]
-            var_name = self.expr_var[expr_index]
-            lines += expr.to_infix_expression_str_list(var_name)
-            # lines.append(f'{self.expressions[expr_index].index_type[0]} {self.expr_var[expr_index]} '
-            #              f'= {self.expressions[expr_index].to_infix_expression()};')
-        return lines
-
-    # TODO: Possible approach to just printing expression block
-    def to_expression_block_str(self, indent_num=0, tab_spaces=4):
-        progn = list()
-        indent = ' ' * indent_num * tab_spaces
-        for line in self.to_expression_str_list():
-            progn.append(f'{indent}{line}')
-        return '\n'.join(progn)
-
-    def to_program_str(self):
-        progn = list()
-        # if includes:
-        #     for inc in includes:
-        #         progn.append(inc)
-        progn.append('#include <stdio.h>')
-        progn.append('int main() {')
-        for line in self.to_expression_str_list():
-            progn.append(f'    {line}')
-        return_type = self.expressions[0].index_type[0]
-        format_str = TYPE_STRING_FORMAT[return_type]
-        progn.append(f'    printf("Answer: %{format_str}\\n", x0);')
-        progn.append('    return 0;')
-        progn.append('}')
-        return '\n'.join(progn)
-
-    def print(self, header=None):
-        if header:
-            print(f'{header}')
-        print(f'params: {self.params}')
-        for expr_idx, expr in self.expressions.items():
-            expr.print(header=f'-- Expression {expr_idx} assigned to var {self.expr_var[expr_idx]}')
-
-    def backward_propagate_ground_type_choices_DEBUG(self):
-        expr_idx = 4
-        expr = self.expressions[expr_idx]
-        expr.backward_propagate_ground_type_choices(0)
-        expr.print(header=f'-- Expression {expr_idx} assigned to var {self.expr_var[expr_idx]}')
-
-        expr_var = self.expr_var[expr_idx]
-        expr_var_type = expr.index_type[0]
-        if expr_var in self.expr_index_var_assignments:
-            for assigned_expr_idx, var_idx in self.expr_index_var_assignments[expr_var]:
-                print(f'>>> setting expr={assigned_expr_idx} var_idx={var_idx} to --> {expr_var_type}')
-                assigned_expr = self.expressions[assigned_expr_idx]
-                assigned_expr.index_type[var_idx] = expr_var_type
-                assigned_expr.print(header=f'---- {assigned_expr_idx}')
-        print('<<<<<<< DONE')
+    map_typecat_to_type: Dict[str, Tuple]
+    main_cli: bool   # whether main fn includes argc, argv
+    num_globals: Tuple[int, int]
+    prob_global_set: float            # probability that each global gets set in each fn
+    num_functions: Tuple[int, int]    # number of functions
+    num_function_arguments: Tuple[int, int]  # number of function arguments
+    allow_recursive_function_calls: bool     # flag for whether to allow recursive calls
+    num_expressions: Tuple[int, int]  # number of expressions per block
+    num_operators: Tuple[int, int]    # number of operators per expression
 
 
-# -----------------------------------------------------------------------------
-#
-# -----------------------------------------------------------------------------
-
-class ExprTreeSample:
-    """
-    An Expression Tree.
-    """
-    def __init__(self, num_ops: int, init_typecat='ANY'):
-        self.num_ops = num_ops
-        self.last_index = 0                    # The highest index (used to support incremental generation/expansion)
-        self.unassigned_indices = {0}          # Set of [int] representing indices that have not yet been assigned
-        self.op_indices = set()                # Set of [int] representing indices of operators
-        self.index_op = dict()                 # map of index [int] to op [str]
-        self.index_type = {0: init_typecat}    # map of index [int] to type [str]
-        self.index_children = dict()           # map of index [int] to list of next indices [List[int]]
-        self.value_assignments = dict()        # map of index [int] to values (literals, variables)
-        self.var_literal_assignments = list()  # List[Tuple[str<var_name>, str<type>, <literal_val>]]
-
-    def create_var_literal_assignment(self, expr_seq_sample: ExprSeqSample, arg_var_assignment_index):
-        var_name = expr_seq_sample.var_gen.get_name()
-        var_type = self.index_type[arg_var_assignment_index]
-        literal_value = sample_literal(var_type)
-        self.var_literal_assignments.append((var_name, var_type, literal_value))
-        self.assign_value(arg_var_assignment_index, var_name)
-
-    def assign_var_literal_assignments(self, expr_seq_sample: ExprSeqSample):
-        """
-        A var_literal_assignment is a separate line that declares a var
-        and assigns a value.
-        This fn does the following:
-            For each operator
-                Gather all unassigned indices that are args to the operator
-                Assign at least one var_literal_assignment to a randomly chosen assignment.
-                For each remaining unassigned indices
-                    Assign remaining unassigned indices var_literal_assignment.
-        :return:
-        """
-        # TODO
-        for op_index in self.op_indices:
-            # gather indices of unassigned arguments
-            unassigned_op_args = set()
-            for arg_index in self.index_children[op_index]:
-                if arg_index in self.unassigned_indices:
-                    unassigned_op_args.add(arg_index)
-
-            # if more than one, choose one and assign a var_literal_assignment
-            if len(unassigned_op_args) > 1:
-                arg_var_assignment_index = random.choice(list(unassigned_op_args))
-                unassigned_op_args.remove(arg_var_assignment_index)
-                self.create_var_literal_assignment(expr_seq_sample, arg_var_assignment_index)
-
-            # for remaining unassigned indices, for each choose whether to assign var_literal_assignment
-            for arg_index in unassigned_op_args:
-                if random.random() < expr_seq_sample.params.p_var_literal_assignment:
-                    self.create_var_literal_assignment(expr_seq_sample, arg_index)
-
-    def get_var_literal_assignments(self) -> List:
-        lines = list()
-        # shuffle the order that var_literal_assignments seq is visited
-        indices = list(range(len(self.var_literal_assignments)))
-        random.shuffle(indices)
-        for idx in indices:
-            var_name, var_type, literal_val = self.var_literal_assignments[idx]
-            lines.append(f'{var_type} {var_name} = {literal_val};')
-        return lines
-
-    def to_infix_expression_str_list(self, var_name) -> List:
-        lines = self.get_var_literal_assignments()
-        var_type = self.index_type[0]
-        lines.append(f'{var_type} {var_name} = {self.to_infix_expression()};')
-        return lines
-
-    def get_unassigned_types(self) -> List[Tuple[str, int]]:
-        return [(self.index_type[index], index) for index in sorted(list(self.unassigned_indices))]
-
-    def sample(self, verbose_p=False):
-        for i in range(self.num_ops):
-            idx = random.choice(sorted(list(self.unassigned_indices)))
-            return_type = self.index_type[idx]
-            op, _, arg_types = sample_uniform_operator(MAP_RETURN_TYPE_TO_OPS[return_type])
-            # NOTE:
-            #   immediately contract types
-            #   (rather than calling forward_propagate_type_constraints
-            #   after tree constructed)
-            contracted_arg_types = contract_list_to_target_type(return_type, arg_types)
-            self.add_op_at(index=idx, op=op, arg_types=contracted_arg_types)
-        if verbose_p:
-            self.print(header=f'---- ExprTreeSample.sample() 0: num_ops={self.num_ops}')
-        # self.forward_propagate_type_constraints(0)
-        # if verbose_p:
-        #     self.print(header=f'---- ExprTreeSample.sample() 1: forward_propagate_constraints')
-        # self.backward_propagate_ground_type_choices(0)
-        # if verbose_p:
-        #     self.print(header=f'---- ExprTreeSample.sample() 2: backward_propagate_ground_type_choices')
-
-    def add_op_at(self, index: int, op: str, arg_types: Tuple, verbose_p=False):  # return_type: str,
-        if verbose_p:
-            print(f'add_op_at(index={index}, op={op}, args={arg_types})')  # return_type={return_type},
-        new_indices = list(range(self.last_index + 1, self.last_index + len(arg_types) + 1))
-        self.last_index += len(arg_types)
-        self.unassigned_indices |= set(new_indices)
-        self.unassigned_indices.remove(index)
-        self.op_indices.add(index)
-        self.index_op[index] = op
-        # self.index_type[index] = return_type
-        for idx, arg_type in zip(new_indices, arg_types):
-            self.index_type[idx] = arg_type
-        self.index_children[index] = new_indices
-
-    def assign_value(self, index, value):
-        if index not in sorted(list(self.unassigned_indices)):
-            raise Exception(f'ERROR ExprTreeSample.assign_value():\n'
-                            f'Attempting to assign value {value} to index {index} '
-                            f'not in unassigned:\n{self.unassigned_indices}')
-        elif index in self.value_assignments:
-            raise Exception(f'ERROR ExprTreeSampleassign_value():\n'
-                            f'Attempting to assign value {value} to index {index} '
-                            f'already assigned to {self.value_assignments[index]}')
-        else:
-            self.value_assignments[index] = value
-            self.unassigned_indices.remove(index)
-
-    # NOTE: deprecating: now doing this per new sample
-    #       in self.sample
-    #           right after sample_uniform_operator, now calling contracted_arg_types
-    #           to propagate parent constraints forward...
-    # def contract_child_type_by_index(self, parent_idx, child_idx):
-    #     parent_priority = get_type_priority(self.index_type[parent_idx])
-    #     child_priority = get_type_priority(self.index_type[child_idx])
-    #     if parent_priority > child_priority:
-    #         return self.index_type[parent_idx]
-    #     else:
-    #         return self.index_type[child_idx]
-    #
-    # def forward_propagate_type_constraints(self, parent_index):
-    #     if parent_index in self.index_children:
-    #         for child_index in self.index_children[parent_index]:
-    #             self.index_type[child_index] = self.contract_child_type_by_index(parent_index, child_index)
-    #             self.forward_propagate_type_constraints(child_index)
-
-    def get_return_ground_type(self, op: str, arg_types: List[str]) -> str:
-        """
-        Given list of specific ground_types, select the appropriate cast type.
-        TODO: Currently the assumption is that we select the return ground_type
-            based on comparing the cast precedence the ground_types of the op
-            arguments within the context of the op return typecat,
-            so only using op to get the op return typecat;
-            In the future, may allow for departure from this scheme per operator
-        :param op: operator
-        :param arg_types: list of specific ground_types provided as args to op
-        :return: ground_type for the op return value
-        """
-        return_typecat = MAP_OP_TO_TYPECATS[op][0]
-        return_types = MAP_TYPECAT_TO_TYPE[return_typecat]
-        # print(f'>>>> DEBUG return_typecat={return_typecat}, return_types={return_types}, arg_types={arg_types}')
-        cast_priority = max([return_types.index(arg_type) for arg_type in arg_types])
-        return return_types[cast_priority]
-
-    def backward_propagate_ground_type_choices(self, index):
-        if index in sorted(list(self.unassigned_indices)):
-            chosen_type = random.choice(MAP_TYPECAT_TO_TYPE[self.index_type[index]])
-            self.index_type[index] = chosen_type
-            return chosen_type
-        elif index in self.value_assignments:
-            # print(f'>>>> DEBUG backward_propagate_ground_type_choices: ASSIGNED {index} {self.index_type[index]} {self.value_assignments[index]}')
-            return self.index_type[index]
-        else:
-            arg_ground_types = [self.backward_propagate_ground_type_choices(child_idx)
-                                for child_idx in self.index_children[index]]
-            # print(f'>>> index={index} self.index_children[index]={self.index_children[index]}')
-            return_ground_type = self.get_return_ground_type(self.index_op[index], arg_ground_types)
-            self.index_type[index] = return_ground_type
-            return return_ground_type
-
-    def assign_literals(self):
-        for index in sorted(list(self.unassigned_indices)):
-            t = self.index_type[index]
-            self.assign_value(index, sample_literal(t))
-
-    def to_prefix_expression(self, index=0):
-        if index in self.value_assignments:
-            return f'{self.value_assignments[index]}'
-        else:
-            expr = ['(', self.index_op[index]]
-            for child_index in self.index_children[index]:
-                expr.append(self.to_prefix_expression(child_index))
-            expr.append(')')
-            return ' '.join(expr)
-
-    def to_infix_expression(self, index=0):
-        if index in self.value_assignments:
-            return f'{self.value_assignments[index]}'
-        else:
-            return f'({self.to_infix_expression(self.index_children[index][0])} ' \
-                   f'{self.index_op[index]} ' \
-                   f'{self.to_infix_expression(self.index_children[index][1])})'
-
-    def print(self, header=None):
-        if header:
-            print(f'{header}')
-        print(f'num_ops:            {self.num_ops}')
-        print(f'last_index:         {self.last_index}')
-        print(f'unassigned_indices: {self.unassigned_indices}')
-        print(f'op_indices:         {self.op_indices}')
-        print(f'index_op:           {self.index_op}')
-        print(f'index_type:         {self.index_type}')
-        print(f'index_children:     {self.index_children}')
-        print(f'value_assignments:  {self.value_assignments}')
+CONFIG_1 = GeneratorConfig(
+    map_typecat_to_type=MAP_TYPECAT_TO_TYPE,
+    main_cli=True,
+    num_globals=(4, 4),
+    prob_global_set=0.8,
+    num_functions=(2, 2),
+    num_function_arguments=(8, 8),
+    allow_recursive_function_calls=True,
+    num_expressions=(4, 4),
+    num_operators=(4, 4)
+)
 
 
 """
-def test_expr_tree_sample_1():
-    num_ops = 5  # TODO: make this a random variable
-    expr = ExprTreeSample(num_ops=num_ops)
+TODO 
+() Think through when functions should be called: 
+    only after defined, 
+    OR anyone can call anyone :
+        First define signatures, add to OP_DEFINITIONS, then expressions can call them.
+        BUT, then need to ensure no disconnected calling networks
+            - could do post-processing to ensure any function calls could then be traced back to main.
 
-    # 0, 1, 2
-    print('-- 0')
-    expr.add_op_at(index=0, op='op1', return_type='op1.NON_FLOAT', arg_types=('op1.NON_FLOAT1', 'op1.NON_FLOAT2'),
-                   verbose_p=True)
-    expr.print()
-    # 3, 4
-    print('-- 1')
-    expr.add_op_at(index=2, op='op2', return_type='op2.int', arg_types=('op2.int1', 'op2.int2'), verbose_p=True)
-    expr.print()
-    # 5, 6
-    print('-- 2')
-    expr.add_op_at(index=3, op='op3', return_type='op3.int', arg_types=('op3.int1', 'op3.int2'), verbose_p=True)
-    expr.print()
-    # 7, 8
-    print('-- 3')
-    expr.add_op_at(index=1, op='op4', return_type='op4.long', arg_types=('op4.int1', 'op4.long2'), verbose_p=True)
-    expr.print()
+Globals 1 - create signature
+    GeneratorConfig.num_globals
+    generate global names
+    types initially ANY
+    initially no literal assignments
+    add each global to var set that can be accessed
+Functions 1 - create signature
+    GeneratorConfig.num_functions
+    generate function name
+    sample number of arguments: GeneratorConfig.num_function_arguments
+    return type and argument types all initially ANY
+    sample globals: for each global, determine whether *set*
+        acc'd to: GeneratorConfig.prob_global_set
+        record fn-name in
+    add new fn to OP_DEFINITIONS
+Functions 2 - fill out body
+    create expressions
+    TODO: When sampling operations, possibly too sparse; maybe post-process to ensure
+Main 1
+    Generate expressions
+        
+    Between each expression, check whether to set global
+
+Do final pass: 
+
+if Variable gets set, then don't need to 
+do not access a global before it is set
 """
 
 
-def sample_expr_tree_debug(num_ops):
-    expr = ExprTreeSample(num_ops=num_ops)
-    expr.sample()
-    expr.print(header='\n-- 0: sample')
-    expr.backward_propagate_ground_type_choices(0)
-    expr.print(header='\n-- 1: backward_propagate_ground_type_choices')
-    expr.assign_literals()
-    expr.print(header='\n-- 2: assign literals')
-    print(expr.to_prefix_expression(0))
-    print(expr.to_infix_expression(0))
+class VariableDecl:
+    """
+    Declaration of a Variable with an optional literal assignment
+    """
+    def __init__(self, name: str, var_type: str,
+                 var_value: Union[str, None] = None,
+                 var_type_ptr: Union[str, None] = None,
+                 var_type_arr: bool = False):
+        self.name = name
+        self.var_type = var_type
+        self.var_type_ptr = var_type_ptr
+        self.var_type_arr = var_type_arr
+        self.var_value = var_value
+        self.accessed: Set[str] = set()  # names of fns (including main) that access the global
+        self.set: Set[str] = set()  # names of fns (including main) that set the global
+
+    def __repr__(self):
+        name = self.name
+        if self.var_type_ptr:
+            name = f'{self.var_type_ptr}{name}'
+        if self.var_type_arr:
+            name = f'{name}[]'
+        if self.var_type_ptr:
+            return f'<VarDecl {self.var_type} {name} = {self.var_value}>'
+        else:
+            return f'<VarDecl {self.var_type} {name} = {self.var_value}>'
+
+    def to_c_string(self):
+        name = self.name
+        if self.var_type_ptr:
+            name = f'{self.var_type_ptr}{name}'
+        if self.var_type_arr:
+            name = f'{name}[]'
+        if self.var_value:
+            return f'{self.var_type} {name} = {self.var_value}'
+        else:
+            return f'{self.var_type} {name}'
+
+
+class BlockSpec:
+    def __init__(self):
+        pass
+
+    def pprint(self):
+        pass
+
+
+class FunctionSpec:
+    """
+    Specification of a function
+    """
+    def __init__(self, name: str, args: Union[List[VariableDecl], None],
+                 return_type: str, body: BlockSpec = None,
+                 local_vargen: VarGen = None):
+        self.name = name
+        if local_vargen is None:
+            self.local_vargen = VarGen('x')
+        else:
+            self.local_vargen = local_vargen
+        self.args = args
+        self.return_type = return_type
+        self.body = body
+        self.called_by: Set[str] = set()  #
+
+    def to_c_string_signature(self):
+        arg_string = ''
+        if self.args is not None:
+            arg_string = ', '.join([arg.to_c_string() for arg in self.args])
+        return f'{self.return_type} {self.name}({arg_string})'
+
+    def pprint(self):
+        if self.body:
+            print(self.to_c_string_signature())
+            self.body.pprint()
+        else:
+            print(self.to_c_string_signature())
+
+
+class ProgramSpec:
+    """
+    Specification of a Program
+    """
+    def __init__(self, params: GeneratorConfig,
+                 globals_vargen=None, function_name_vargen=None):
+        self.params = params
+        self.headers: Set[str] = set()
+        self.num_globals = 0
+        self.globals_vargen: VarGen = globals_vargen
+        self.globals = dict()
+        self.function_name_vargen: VarGen = function_name_vargen
+        self.num_functions = 0
+        self.functions: Dict[str, FunctionSpec] = dict()
+        # self.expressions: Dict[int, ExprTreeSample] = dict()
+
+    def sample_program_parameters_from_params(self):
+        """
+        Based on the GeneratorConfig parameters,
+          sample the number of program-level components:
+            number of globals
+            number of functions
+        :return:
+        """
+        self.num_globals = random.randint(self.params.num_globals[0], self.params.num_globals[1])
+        if self.num_globals > 0 and self.globals_vargen is None:
+            self.globals_vargen = VarGen('g')
+        self.num_functions = random.randint(self.params.num_functions[0], self.params.num_functions[1])
+        if self.num_functions > 0 and self.function_name_vargen is None:
+            self.function_name_vargen = VarGen('fn')
+
+    def sample_globals(self):
+        for gidx in range(self.num_globals):
+            var_name = self.globals_vargen.get_name()
+            var_type = 'ANY'
+            self.globals[var_name] = VariableDecl(name=var_name, var_type=var_type)
+
+    def sample_function_signatures(self):
+        # create main function
+        args = None
+        if self.params.main_cli:
+            args = [VariableDecl(name='argc', var_type='int'),
+                    VariableDecl(name='argv', var_type='char', var_type_ptr='*', var_type_arr=True)]
+        self.functions['main'] = FunctionSpec(
+            name='main',
+            args=args,
+            return_type='int'
+        )
+        # create other functions
+        for fidx in range(self.num_functions):
+            fun_name = self.function_name_vargen.get_name()
+            num_args = random.randint(self.params.num_function_arguments[0],
+                                      self.params.num_function_arguments[1])
+            args = list()
+            if num_args > 0:
+                arg_name_vargen = VarGen('p')
+                for aidx in range(num_args):
+                    # TODO need to eventually generalize to allow for pointers
+                    arg_name = arg_name_vargen.get_name()
+                    args.append(VariableDecl(name=arg_name, var_type='ALL'))
+            fn_spec = FunctionSpec(
+                name=fun_name,
+                args=args,
+                return_type='ANY'
+            )
+            self.functions[fun_name] = fn_spec
+
+    def sample(self):
+        """
+        Top-level driver for sampling a program based on GeneratorConfig parameters.
+        :return:
+        """
+        self.sample_program_parameters_from_params()
+        self.sample_globals()
+        self.sample_function_signatures()
+
+    def pprint(self):
+        print('ProgramSpec:')
+        print(f'  globals={self.num_globals}, functions={self.num_functions}')
+        print(f'  globals: {self.globals.items()}')
+        for fn_spec in self.functions.values():
+            fn_spec.pprint()
 
 
 # -----------------------------------------------------------------------------
-#
+# Main
 # -----------------------------------------------------------------------------
-
-def sample_program_str():
-    var_gen = VarGen()
-    expr_seq = ExprSeqSample(params=EXAMPLE_PARAMS, var_gen=var_gen)
-    expr_seq.sample(verbose_p=False)
-    expr_seq.reuse_exprs_for_vars(verbose_p=False)
-
-    # expr_seq.print(header='\n -------- Expressions before backward_propagate:')
-    # print(f'expr_seq.expr_index_var_assignments: {expr_seq.expr_index_var_assignments}')
-    expr_seq.backward_propagate_ground_type_choices()
-
-    # expr_seq.print(header='\n -------- Expression seq dump before assigning var_literal_assignments:')
-    expr_seq.assign_var_literal_assignments()
-
-    # TODO: reuse some literal variables
-
-    # expr_seq.print(header='\n -------- Expression seq dump before assigning literals:')
-
-    # finally, inline assign literals to all remaining unassigned indices
-    expr_seq.assign_literals()
-
-    # expr_seq.print(header='\n -------- Final Expressions:')
-
-    return expr_seq.to_program_str(), expr_seq
-
-
-def gen_prog(filepath: str):
-    prog_str, expr_seq = sample_program_str()
-    with open(filepath, 'w') as fout:
-        fout.write(prog_str)
-    return prog_str, expr_seq
-
-
-def gen_prog_batch(n=1, root_dir='', base_name='expr_', verbose_p=False):
-    # Don't allow if directory already exists: exist_ok=False
-    Path(root_dir).mkdir(parents=True, exist_ok=False)
-    for i in range(n):
-        sig_digits = len(str(n))
-        num_str = f'{i}'.zfill(sig_digits)
-        filename = f'{base_name}{num_str}.c'
-        filepath = os.path.join(root_dir, filename)
-        if verbose_p:
-            print(f'[{i}] generating program {filepath}')
-        gen_prog(filepath)
-
 
 def main():
-    prog_str, expr_seq = sample_program_str()
-    print(prog_str)
+    prog = ProgramSpec(params=CONFIG_1)
+    prog.sample()
+    prog.pprint()
 
-    print('\nStats:')
-    stats = ExprSeqSampleStats(expr_seq)
-    print(stats.to_string())
 
+# -----------------------------------------------------------------------------
+# Top level
+# -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
     main()
-    # sample_expr_tree(8)
-    # test_expr_tree_sample_1()
-    # main()
-    # print(collections.Counter([sample_uniform_operator() for i in range(100000)]))
+
