@@ -26,6 +26,8 @@ from automates.model_assembly.networks import (
     VariableNode
 )
 
+from automates.model_assembly.sandbox import load_lambda_function
+
 def grfn_subgraph(uid, namespace, scope, basename, occurences, parent, type, nodes):
     pass
 
@@ -61,15 +63,17 @@ class ToGrfnPass:
         grfn = GroundedFunctionNetwork(grfn_uid, identifier, timestamp, 
                                         self.network, self.hyper_edges, self.subgraphs,
                                         type_defs, metadata)
+        grfn.to_json_file("AnnCast-to-GrFN.json")
+
         A = grfn.to_AGraph()
         A.draw("AnnCast-to-GrFN.pdf", prog="dot")
 
 
-    def create_interface_node(self):
+    def create_interface_node(self, lambda_expr):
         # TODO: correct values for thes
         lambda_uuid = str(uuid.uuid4())
-        lambda_str = ""
-        lambda_func = lambda: None
+        lambda_str = lambda_expr
+        lambda_func = load_lambda_function(lambda_str)
         lambda_metadata = []
         lambda_type = LambdaType.INTERFACE
 
@@ -78,11 +82,11 @@ class ToGrfnPass:
 
         return interface_node
 
-    def create_loop_top_interface(self):
+    def create_loop_top_interface(self, lambda_expr):
         # TODO: correct values for these
         lambda_uuid = str(uuid.uuid4())
-        lambda_str = ""
-        lambda_func = lambda: None
+        lambda_str = lambda_expr
+        lambda_func = load_lambda_function(lambda_str)
         lambda_metadata = []
         lambda_type = LambdaType.LOOP_TOP_INTERFACE
 
@@ -110,11 +114,11 @@ class ToGrfnPass:
         # add HyperEdges to GrFN
         self.hyper_edges.append(HyperEdge(inputs, lambda_node, outputs))
 
-    def create_condition_node(self, condition_in, condition_out, subgraph: GrFNSubgraph):
+    def create_condition_node(self, condition_in, condition_out, lambda_expr,  subgraph: GrFNSubgraph):
         # TODO: correct values for these
         lambda_uuid = str(uuid.uuid4())
-        lambda_str = ""
-        lambda_func = lambda: None
+        lambda_str = lambda_expr
+        lambda_func = load_lambda_function(lambda_str)
         lambda_metadata = []
         lambda_type = LambdaType.CONDITION
 
@@ -140,11 +144,11 @@ class ToGrfnPass:
         subgraph.nodes.append(condition_node)
         subgraph.nodes.extend(outputs)
 
-    def create_decision_node(self, decision_in, decision_out, condition_var, subgraph: GrFNSubgraph):
+    def create_decision_node(self, decision_in, decision_out, condition_var, lambda_expr, subgraph: GrFNSubgraph):
         # TODO: correct values for these
         lambda_uuid = str(uuid.uuid4())
-        lambda_str = ""
-        lambda_func = lambda: None
+        lambda_str = lambda_expr
+        lambda_func = load_lambda_function(lambda_str)
         lambda_metadata = []
         lambda_type = LambdaType.DECISION
 
@@ -184,6 +188,11 @@ class ToGrfnPass:
 
     def visit_grfn_assignment(self, grfn_assignment: GrfnAssignment, subgraph: GrFNSubgraph):
         assignment_node = grfn_assignment.assignment_node
+        # update func_str and function for assignment node
+        assignment_node.func_str = grfn_assignment.lambda_expr
+        assignment_node.function = load_lambda_function(assignment_node.func_str)
+
+        # TODO: simplify adding edges
         self.network.add_node(assignment_node, **assignment_node.get_kwargs())
         # accumulate created nodes to add to subgraph
         subgraph_nodes = [assignment_node]
@@ -267,20 +276,21 @@ class ToGrfnPass:
         border_color = "purple"
         metadata = []
         nodes = []
+        parent_str = parent.uid if parent is not None else None
         occs = 0
         uid = str(uuid.uuid4())
         ns = "default-ns"
         scope = con_scope_to_str(node.func.con_scope)
         basename = call_container_name(node)
         subgraph = GrFNSubgraph(uid, ns, scope, basename,
-                                occs, parent, type, border_color, nodes, metadata)
+                                occs, parent_str, type, border_color, nodes, metadata)
 
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
 
         # build top interface if needed
         if len(node.top_interface_in) > 0:
-            top_interface = self.create_interface_node()
+            top_interface = self.create_interface_node(node.top_interface_lambda)
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             inputs = []
             for var_id, fullid in node.top_interface_in.items():
@@ -304,7 +314,7 @@ class ToGrfnPass:
         # build bot interface if needed
         # TODO: decide what to do by default with bot interface
         if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node()
+            bot_interface = self.create_interface_node(node.bot_interface_lambda)
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             inputs = []
             for var_id, fullid in node.bot_interface_in.items():
@@ -339,18 +349,19 @@ class ToGrfnPass:
         border_color = GrFNSubgraph.get_border_color(type)
         metadata = []
         nodes = []
+        parent_str = parent.uid if parent is not None else None
         occs = node.invocation_index
         uid = str(uuid.uuid4())
         ns = "default-ns"
         scope = con_scope_to_str(node.func.con_scope)
         basename = call_container_name(node)
         subgraph = GrFNSubgraph(uid, ns, scope, basename,
-                                occs, parent, type, border_color, nodes, metadata)
+                                occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
 
         # build top interface
-        top_interface = self.create_interface_node()
+        top_interface = self.create_interface_node(node.top_interface_lambda)
         self.network.add_node(top_interface, **top_interface.get_kwargs())
         inputs = []
         for fullid in node.top_interface_in.values():
@@ -374,7 +385,7 @@ class ToGrfnPass:
         self.visit_function_def_copy(node.func_def_copy, subgraph)
 
         # build bot interface
-        bot_interface = self.create_interface_node()
+        bot_interface = self.create_interface_node(node.bot_interface_lambda)
         self.network.add_node(bot_interface, **bot_interface.get_kwargs())
         inputs = []
         for fullid in node.bot_interface_in.values():
@@ -426,19 +437,20 @@ class ToGrfnPass:
         border_color = GrFNSubgraph.get_border_color(type)
         metadata = []
         nodes = []
+        parent_str = parent.uid if parent is not None else None
         occs = 0
         uid = str(uuid.uuid4())
         ns = "default-ns"
         scope = con_scope_to_str(node.con_scope)
         basename = scope
         subgraph = GrFNSubgraph(uid, ns, scope, basename,
-                                occs, parent, type, border_color, nodes, metadata)
+                                occs, parent_str, type, border_color, nodes, metadata)
 
         self.visit_node_list(node.func_args, subgraph)
 
         # build top interface if needed
         if len(node.top_interface_in) > 0:
-            top_interface = self.create_interface_node()
+            top_interface = self.create_interface_node(node.top_interface_lambda)
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             # collect input GrFN VariableNodes
             inputs = list(map(self.ann_cast.get_grfn_var, node.top_interface_in.values()))
@@ -457,7 +469,7 @@ class ToGrfnPass:
 
         # build bot interface if needed
         if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node()
+            bot_interface = self.create_interface_node(node.bot_interface_lambda)
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             # collect input GrFN VariableNodes
             inputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_in.values()))
@@ -487,6 +499,7 @@ class ToGrfnPass:
         border_color = GrFNSubgraph.get_border_color(type)
         metadata = []
         nodes = []
+        parent_str = parent.uid if parent is not None else None
         occs = 0
         uid = str(uuid.uuid4())
         # TODO: figure out naming scheme
@@ -495,7 +508,7 @@ class ToGrfnPass:
         basename = scope
         # TODO: decide if parent needs to be a str or not
         subgraph = GrFNLoopSubgraph(uid, ns, scope, basename,
-                                occs, parent, type, border_color, nodes, metadata)
+                                occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
 
@@ -518,12 +531,12 @@ class ToGrfnPass:
 
         # visit expr, then setup condition info
         self.visit(node.expr, subgraph)
-        self.create_condition_node(node.condition_in, node.condition_out, subgraph)
+        self.create_condition_node(node.condition_in, node.condition_out, node.condition_lambda, subgraph)
 
         self.visit_node_list(node.body, subgraph)
 
         # build bot interface
-        bot_interface = self.create_interface_node()
+        bot_interface = self.create_interface_node(node.bot_interface_lambda)
         self.network.add_node(bot_interface, **bot_interface.get_kwargs())
         # collect input GrFN VariableNodes
         inputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_in.values()))
@@ -559,6 +572,7 @@ class ToGrfnPass:
         border_color = GrFNSubgraph.get_border_color(type)
         metadata = []
         nodes = []
+        parent_str = parent.uid if parent is not None else None
         occs = 0
         uid = str(uuid.uuid4())
         # TODO: figure out naming scheme
@@ -566,12 +580,12 @@ class ToGrfnPass:
         scope = con_scope_to_str(node.con_scope)
         basename = scope
         subgraph = GrFNSubgraph(uid, ns, scope, basename,
-                                occs, parent, type, border_color, nodes, metadata)
+                                occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
 
         # build top interface
-        top_interface = self.create_interface_node()
+        top_interface = self.create_interface_node(node.top_interface_lambda)
         self.network.add_node(top_interface, **top_interface.get_kwargs())
         inputs = []
         for var_id, fullid in node.top_interface_in.items():
@@ -594,14 +608,14 @@ class ToGrfnPass:
 
         # visit expr, then setup condition info
         self.visit(node.expr, subgraph)
-        self.create_condition_node(node.condition_in, node.condition_out, subgraph)
+        self.create_condition_node(node.condition_in, node.condition_out, node.condition_lambda, subgraph)
 
         self.visit_node_list(node.body, subgraph)
         self.visit_node_list(node.orelse, subgraph)
         
         condition_var = node.condition_var
         self.create_decision_node(node.decision_in, node.decision_out, 
-                                  condition_var, subgraph)
+                                  condition_var, node.decision_lambda, subgraph)
 
         # self.create_interface_node(node.bot_interface_in, node.bot_interface_out, subgraph)
         # build bot interface
@@ -641,13 +655,13 @@ class ToGrfnPass:
         metadata = []
         nodes = []
         occs = 0
-        parent = None
+        parent_str = None
         uid = str(uuid.uuid4())
         ns = "default-ns"
         scope = "module"
         basename = "module"
         subgraph = GrFNSubgraph(uid, ns, scope, basename,
-                                occs, parent, type, border_color, nodes, metadata)
+                                occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
 
         self.visit_node_list(node.body, subgraph)

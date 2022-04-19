@@ -9,9 +9,6 @@ def lambda_for_grfn_assignment(grfn_assignment: GrfnAssignment, lambda_body: str
     param_str = ", ".join(var_names)
     lambda_expr = f"lambda {param_str}: {lambda_body}"  
 
-    # Debugging:
-    print(f"LambdExpr: {lambda_expr}")
-
     return lambda_expr
 
 def lambda_for_condition(condition_in: typing.Dict, lambda_body: str) -> str:
@@ -20,26 +17,20 @@ def lambda_for_condition(condition_in: typing.Dict, lambda_body: str) -> str:
     param_str = ", ".join(var_names)
     lambda_expr = f"lambda {param_str}: {lambda_body}"
 
-    # Debugging:
-    print(f"LambdExpr: {lambda_expr}")
-   
     return lambda_expr
 
 def lambda_for_decision(condition_fullid: str, decision_in: typing.Dict) -> str:
     """
     Lambdas for decision nodes chooses betweeen IFBODY and ELSEBODY variables from
     interface_in based on condition_in
+
+    The lambda has for the form:
+        lambda x_if, y_if, x_else, y_else: (x_if, y_if) if COND else (x_else, y_else)
     """
     cond_name = var_name_from_fullid(condition_fullid)
 
     lambda_body = ""
 
-    # if body and else body versions also need to be parameters to the lambda
-    # and the variables names need to be modified e.g. appending if and else
-    # e.g lambda cond, x_if, x_else, y_if, y_else: (x_if, y_if) if cond else (x_else, y_else)
-    print(f"decision_in dict:")
-    for key,val in decision_in.items():
-        print(f"{key} : {val}")
     if_names = []
     else_names = []
     for dec in decision_in.values():
@@ -55,9 +46,6 @@ def lambda_for_decision(condition_fullid: str, decision_in: typing.Dict) -> str:
 
     lambda_expr = f"lambda {cond_name}, {if_names_str}, {else_names_str}: {lambda_body}"  
 
-    # Debugging:
-    print(f"LambdExpr: {lambda_expr}")
-
     return lambda_expr
 
 
@@ -72,10 +60,7 @@ def lambda_for_interface(interface_in: typing.Dict) -> str:
     var_names = map(get_name, interface_in.values())
     param_str = ", ".join(var_names)
 
-    lambda_expr = f"lambda {param_str}: {param_str}"  
-
-    # Debugging:
-    print(f"LambdExpr: {lambda_expr}")
+    lambda_expr = f"lambda {param_str}: ({param_str})"  
 
     return lambda_expr
 
@@ -83,20 +68,41 @@ def lambda_for_loop_top_interface(top_interface_initial: typing.Dict, top_interf
     """
     Lambda for loop top interface chooses between initial and updated version
     of variables 
+
+    LoopTopInterfaces are special LambdaNode's which store state on whether we have executed the 
+    body of the loop at least once.  
+    The returned lambda str has the form
+    lambda use_initial, x_init, y_init, x_update, y_update: (x_init, y_init) if use_initial else (x_update, y_update)
+    The `use_initial` value comes from the internal state of the LoopTopInterface during execution.
     """
 
-    print(f"top_interface_initial dict:")
-    for key,val in top_interface_initial.items():
-        print(f"{key} : {val}")
-    
-    print(f"top_interface_updated dict:")
-    for key,val in top_interface_updated.items():
-        print(f"{key} : {val}")
+    init_name = lambda fullid: var_name_from_fullid(fullid) + "_init"
+    init_names = map(init_name, top_interface_initial.values())
+    updt_name = lambda fullid: var_name_from_fullid(fullid) + "_update"
+    updt_names = map(updt_name, top_interface_updated.values())
 
-    lambda_expr = None
+    # NOTE: the lengths of top_interface_initial and top_interface_updated may not be the same
+    # in some loops, you always use the initial value of a variable because it is never modified
+    # to model this, for those variables which have no updated version, 
+    # we add the "init" variable to the "update" variable group of the lambda expression
+    non_updated_keys = set(top_interface_initial.keys()).difference(top_interface_updated.keys())
+    non_updated_vars = {k : top_interface_initial[k] for k in non_updated_keys}
 
-    # Debugging:
-    print(f"LambdExpr: {lambda_expr}")
+    # use "init" var names for non updates variables
+    non_updt_names = map(init_name, non_updated_vars.values())
+    # extend updt_names to include non updated variables
+    updt_names = list(updt_names) + list(non_updt_names)
+
+    # now, the lengths of init group and update group should match
+    assert(len(updt_names) == len(top_interface_initial))
+
+    use_initial_str = "use_initial"
+    init_names_str = ", ".join(init_names)
+    updt_names_str = ", ".join(updt_names)
+
+    lambda_body = f"({init_names_str}) if {use_initial_str} else ({updt_names_str})"
+
+    lambda_expr = f"lambda {use_initial_str}, {init_names_str}, {updt_names_str}: {lambda_body}"  
 
     return lambda_expr
 
@@ -105,9 +111,6 @@ def lambda_for_loop_condition(condition_in, lambda_body):
 
     param_str = ", ".join(var_names)
     lambda_expr = f"lambda {param_str}: {lambda_body}"
-
-    # Debugging:
-    print(f"LambdExpr: {lambda_expr}")
    
     return lambda_expr
 
@@ -172,8 +175,54 @@ class LambdaExpressionPass:
             node.expr_str = str(node.boolean)
         return node.expr_str
 
+    def visit_call_grfn_2_2(self, node: AnnCastCall):
+        # example for argument lambda expression
+        #   Call: func(x + 3, y * 2)
+        # GrfnAssignment with index 0 corresponds to the assignment arg_0 = x + 3
+        # the lambda for this assigment looks like
+        #  lambda x : x + 3
+        # for the lambda body, we need to visit the Call nodes arguments
+        for i, grfn_assignment in node.arg_assignments.items():
+            lambda_body = self.visit(node.arguments[i])
+            grfn_assignment.lambda_expr = lambda_for_grfn_assignment(grfn_assignment, lambda_body)
+
+        # top interface lambda
+        node.top_interface_lambda = lambda_for_interface(node.top_interface_in)
+
+        # build lamba expressions for function def copy body
+        body_expr = self.visit_function_def_copy(node.func_def_copy)
+
+        # bot interface lambda
+        node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
+
+
+        # DEBUGGING
+        print(f"Call GrFN 2.2 {node.func.name}")
+        print(f"\t Args Expressions:")
+        for arg in node.arg_assignments.values():
+            print(f"\t\t{arg.lambda_expr}")
+        print(f"\t Top Interface:")
+        print(f"\t\t{node.top_interface_lambda}")
+        print(f"FunctionDefCopy {node.func_def_copy.name.name}")
+        print(f"\t Body Expressions:")
+        for e in body_expr:
+            print(f"\t\t{e}")
+        print(f"\t Bot Interface:")
+        print(f"\t\t{node.bot_interface_lambda}")
+
+
     @_visit.register
     def visit_call(self, node: AnnCastCall) -> str:
+        if node.is_grfn_2_2:
+            self.visit_call_grfn_2_2(node)
+            if node.func_def_copy.has_ret_val:
+                assert(len(node.out_ret_val) == 1)
+                ret_val_fullid = list(node.out_ret_val.values())[0]
+                node.expr_str = var_name_from_fullid(ret_val_fullid)
+            return node.expr_str
+
+        # TODO: Non GrFN 2.2 calls
+
         return node.expr_str
 
     @_visit.register
@@ -189,47 +238,61 @@ class LambdaExpressionPass:
         node.expr_str = self.visit(node.expr)
         return node.expr_str
 
+    def visit_function_def_copy(self, node: AnnCastFunctionDef) -> typing.List:
+        body_expr = self.visit_node_list(node.body)
+        return body_expr
+
     @_visit.register
     def visit_function_def(self, node: AnnCastFunctionDef) -> str:
         node.top_interface_lambda = lambda_for_interface(node.top_interface_in)
-        args_expr = self.visit_node_list(node.func_args)
+        # NOTE: we do not visit node.func_args because those parameters are 
+        # includes in the outputs of the top interface
         body_expr = self.visit_node_list(node.body)
         node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
         
         # DEBUGGING
         print(f"FunctionDef {node.name.name}")
-        print(f"\t Args Expressions:")
-        for e in args_expr:
-            print(f"\t\t{e}")
+        print(f"\t Top Interface:")
+        print(f"\t\t{node.top_interface_lambda}")
         print(f"\t Body Expressions:")
         for e in body_expr:
             print(f"\t\t{e}")
+        print(f"\t Bot Interface:")
+        print(f"\t\t{node.bot_interface_lambda}")
         return node.expr_str
 
     @_visit.register
     def visit_list(self, node: AnnCastList) -> str:
+        node.expr_str = "list()"
         return node.expr_str
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop) -> str:
         
+        # top interface lambda
         node.top_interface_lambda = lambda_for_loop_top_interface(node.top_interface_initial, 
                                                                  node.top_interface_updated)
+
+        # condition lambda
         loop_expr = self.visit(node.expr)
-        # TODO: needs to be what comes out of the LTI out
-        node.condition_lambda = lambda_for_loop_condition(node.top_interface_initial,loop_expr)
+        node.condition_lambda = lambda_for_loop_condition(node.condition_in, loop_expr)
 
 
         body_expr = self.visit_node_list(node.body)
-        #node.bot_interface_lambda = lambda_for_loop_cond_interface(node.bot_interface_in)
+
+        node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
         
         # DEBUGGING
         print(f"Loop ")
+        print(f"\t Loop Top Interface:")
+        print(f"\t\t{node.top_interface_lambda}")
         print(f"\t Loop Expression:")
         print(f"\t\t{node.condition_lambda}")
         print(f"\t Body Expressions:")
         for e in body_expr:
             print(f"\t\t{e}")
+        print(f"\t Loop Bot Interface:")
+        print(f"\t\t{node.bot_interface_lambda}")
 
         # What to return?  Loops don't have a resulting value.
         return node.expr_str
@@ -244,16 +307,39 @@ class LambdaExpressionPass:
 
     @_visit.register
     def visit_model_if(self, node: AnnCastModelIf) -> str:
+        # top interface lambda
+        node.top_interface_lambda = lambda_for_interface(node.top_interface_in)
+
         # make condition lambda
         expr_str = self.visit(node.expr)
         node.condition_lambda = lambda_for_condition(node.condition_in, expr_str)
 
-        self.visit_node_list(node.body)
-        self.visit_node_list(node.orelse)
+        body_expr = self.visit_node_list(node.body)
+        or_else_expr = self.visit_node_list(node.orelse)
 
         # make decision lambda
         cond_fullid = list(node.condition_out.values())[0]
         node.decision_lambda = lambda_for_decision(cond_fullid, node.decision_in)
+
+        # bot interface lambda
+        node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
+
+        # DEBUGGING
+        print(f"If ")
+        print(f"\t If Top Interface:")
+        print(f"\t\t{node.top_interface_lambda}")
+        print(f"\t If Expression:")
+        print(f"\t\t{node.condition_lambda}")
+        print(f"\t Body Expressions:")
+        for e in body_expr:
+            print(f"\t\t{e}")
+        print(f"\t OrElse Expressions:")
+        for e in or_else_expr:
+            print(f"\t\t{e}")
+        print(f"\t If Decision Lambda:")
+        print(f"\t\t{node.decision_lambda}")
+        print(f"\t If Bot Interface:")
+        print(f"\t\t{node.bot_interface_lambda}")
         return node.expr_str
 
     @_visit.register
@@ -269,7 +355,14 @@ class LambdaExpressionPass:
 
     @_visit.register
     def visit_module(self, node: AnnCastModule) -> str:
-        self.visit_node_list(node.body)
+        body_expr = self.visit_node_list(node.body)
+
+        # DEBUGGING
+        print(f"Module")
+        print(f"\t Body Expressions:")
+        for e in body_expr:
+            print(f"\t\t{e}")
+
         return node.expr_str
 
     @_visit.register

@@ -157,12 +157,6 @@ def is_literal_assignment(node):
 
     return False
 
-def function_container_name(node) -> str:
-    """
-    Parameter: AnnCastNameNode
-    Returns function container name in the form "name#id"
-    """
-    return f"{node.name}-id{node.id}"
 
 def is_func_def_main(node) -> bool:
     """
@@ -173,47 +167,54 @@ def is_func_def_main(node) -> bool:
     MAIN_FUNC_DEF_NAME = "main"
     return node.name.name == MAIN_FUNC_DEF_NAME
 
+def function_container_name(node) -> str:
+    """
+    Parameter: AnnCastNameNode
+    Returns function container name in the form "name#id"
+    """
+    return f"{node.name}_id{node.id}"
+
 def func_def_argument_name(node, arg_index: int) -> str:
     """
     Returns the FunctionDef argument name for argument with index `arg_index`
     Used for the AnnCastCall's top interface in
     """
-    return f"{function_container_name(node.name)}-arg{arg_index}"
+    return f"{function_container_name(node.name)}_arg{arg_index}"
 
 def func_def_ret_val_name(node) -> str:
     """
     Returns the FunctionDef return value name
     Used for the AnnCastCall's bot interface out
     """
-    return f"{function_container_name(node.name)}-ret_val"
+    return f"{function_container_name(node.name)}_ret_val"
 
 def call_argument_name(node, arg_index: int) -> str:
     """
     Returns the call site argument name for argument with index `arg_index`
     Used for the AnnCastCall's top interface in
     """
-    return f"{function_container_name(node.func)}-call{node.invocation_index}-arg{arg_index}"
+    return f"{function_container_name(node.func)}_call{node.invocation_index}_arg{arg_index}"
 
 def call_param_name(node, arg_index: int) -> str:
     """
     Returns the call site parameter name for argument with index `arg_index`
     Used for the AnnCastCall's top interface in
     """
-    return f"{function_container_name(node.func)}-call{node.invocation_index}-param{arg_index}"
+    return f"{function_container_name(node.func)}_call{node.invocation_index}_param{arg_index}"
 
 def call_container_name(node) -> str:
     """
     Returns the call site container name
     Used for the AnnCastCall's top interface out and bot interface in
     """
-    return f"{function_container_name(node.func)}-call{node.invocation_index}"
+    return f"{function_container_name(node.func)}_call{node.invocation_index}"
 
 def call_ret_val_name(node) -> str:
     """
     Returns the call site return value name
     Used for the AnnCastCall's bot interface out
     """
-    return f"{function_container_name(node.func)}-call{node.invocation_index}-ret_val"
+    return f"{function_container_name(node.func)}_call{node.invocation_index}_ret_val"
 
 
 def ann_cast_name_to_fullid(node):
@@ -247,8 +248,6 @@ def parse_fullid(fullid: str) -> typing.Dict:
     """
     keys = ["var_name", "id", "version", "con_scopestr"]
     values = fullid.split(FULLID_SEP)
-    print(f"values = {values}")
-    print(f"keys = {keys}")
 
     assert(len(keys) == len(values))
 

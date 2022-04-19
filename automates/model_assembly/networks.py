@@ -264,7 +264,6 @@ class LambdaNode(GenericNode):
         except Exception as e:
             raise GrFNExecutionException(e)
 
-    # TODO: add logic for LOOP_TOP_INTERFACE type
     def parse_result(self, values, res):
         if (
             self.func_type == LambdaType.INTERFACE
@@ -338,6 +337,9 @@ class LambdaNode(GenericNode):
             "lambda": self.func_str,
             "metadata": [m.to_dict() for m in self.metadata],
         }
+
+    # TODO: make a subclass of LambdaNode for LoopTopInterface which includes
+    # a use_initial boolean attribute and overwrite the parse_result() method
 
 
 @dataclass
