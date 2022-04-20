@@ -35,7 +35,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
-from automates.model_assembly.metadata import LambdaType
+from automates.model_assembly.metadata import LambdaType, TypedMetadata, CodeSpanReference
 from automates.model_assembly.structures import (
     VariableIdentifier,
 )
@@ -103,6 +103,56 @@ def cast_op_to_str(op):
         "Mod": "%",
     }
     return op_map[op] if op in op_map else None
+
+# Metadata functions
+def source_ref_dict(source_ref: SourceRef):
+    # We want the following fields in the GrFN Metadata
+    # line_begin=source_ref.row_start,
+    # line_end=source_ref.row_end,
+    # col_start=source_ref.col_start,
+    # col_end=source_ref.col_end,
+    to_return = dict()
+    to_return["line_begin"] = source_ref.row_start
+    to_return["line_end"] = source_ref.row_end
+    to_return["col_start"] = source_ref.col_start
+    to_return["col_end"] = source_ref.col_end
+    return to_return
+
+def generate_from_source_metadata(from_source: bool, reason: str):
+    return TypedMetadata.from_data(
+        {
+            "type": "FROM_SOURCE",
+            "provenance": {
+                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                "timestamp": datetime.now(),
+            },
+            "from_source": str(from_source),
+            "creation_reason": reason,
+        }
+    )
+
+def create_lambda_node_metadata(source_refs):
+    """
+    source_refs is either None or a List of SourceRefs
+    This is what the spec for CAST implements
+    """
+    src_ref_dict = {}
+    file_ref = ""
+    if source_refs:
+        # TODO: decide which element of source_refs we want to use
+        src_ref = source_refs[0]
+        src_ref_dict = source_ref_dict(src_ref)
+        file_ref = src_ref.source_file_name
+
+    code_span_data = {
+        "source_ref": src_ref_dict,
+        "file_uid": file_ref,
+        "code_type": "block",
+    }
+    metadata = [CodeSpanReference.from_air_data(code_span_data)]
+
+    return metadata
+# End Metadata functions
 
 def union_dicts(dict1, dict2):
     """
@@ -311,6 +361,8 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
     return VariableNode(uid, identifier, metadata)
 
 
+
+
 @dataclass
 class GrfnAssignment():  
         assignment_node: LambdaNode
@@ -400,13 +452,14 @@ class AnnCast:
 
 class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):
+        super().__init__(self)
         self.incoming_vars = {}
         self.outgoing_vars = {}
         self.expr_str: str = ""
-        AstNode.__init__(self)
 
 class AnnCastAssignment(AnnCastNode):
     def __init__(self, left, right, source_refs ):
+        super().__init__(self)
         self.left = left
         self.right = right
         self.source_refs = source_refs
@@ -414,42 +467,46 @@ class AnnCastAssignment(AnnCastNode):
         self.grfn_assignment: GrfnAssignment
 
 
-        super().__init__(self)
+        
     def __str__(self):
         return Assignment.__str__(self)
 
 class AnnCastAttribute(AnnCastNode):
     def __init__(self, value, attr, source_refs):
+        super().__init__(self)
         self.value = value
         self.attr = attr
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return Attribute.__str__(self)
 
 class AnnCastBinaryOp(AnnCastNode):
     def __init__(self, op, left, right, source_refs):
+        super().__init__(self)
         self.op = op
         self.left = left
         self.right = right
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return BinaryOp.__str__(self)
 
 class AnnCastBoolean(AnnCastNode):
     def __init__(self, boolean, source_refs):
+        super().__init__(self)
         self.boolean = boolean
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return Boolean.__str__(self)
 
 class AnnCastCall(AnnCastNode):
     def __init__(self, func, arguments, source_refs):
+        super().__init__(self)
         self.func: AnnCastName = func
         self.arguments = arguments
         self.source_refs = source_refs
@@ -486,6 +543,11 @@ class AnnCastCall(AnnCastNode):
         # copied function def for GrFN 2.2
         self.func_def_copy: typing.Optional[AnnCastFunctionDef] = None
 
+        # keep track of whether the Call has an associated FunctionDef
+        # TODO: update this during a pass
+        self.has_func_def: bool = False
+        self.has_ret_val: bool = True
+
         # dict mapping argument index to created argument fullid
         self.arg_index_to_fullid = {}
         self.param_index_to_fullid = {}
@@ -495,44 +557,48 @@ class AnnCastCall(AnnCastNode):
         # In this case, the output will map the arguments fullid to its grfn_id
         self.arg_assignments: typing.Dict[int, GrfnAssignment] = {}
 
-        super().__init__(self)
+        
     def __str__(self):
         return Call.__str__(self)
 
 
 class AnnCastClassDef(AnnCastNode):
     def __init__(self, name, bases, func, fields, source_refs):
+        super().__init__(self)
         self.name = node.name
         self.bases = node.bases
         self.func = node.func
         self.fields = node.fields
         self.source_refs = node.source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return ClassDef.__str__(self)
 
 class AnnCastDict(AnnCastNode):
     def __init__(self, keys, values, source_refs):
+        super().__init__(self)
         self.keys = keys
         self.values = values
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return Dict.__str__(self)
 
 class AnnCastExpr(AnnCastNode):
     def __init__(self, expr, source_refs):
+        super().__init__(self)
         self.expr = expr
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return Expr.__str__(self)
 
 class AnnCastFunctionDef(AnnCastNode):
     def __init__(self, name, func_args, body, source_refs):
+        super().__init__(self)
         self.name = name
         self.func_args = func_args
         self.body = body
@@ -599,33 +665,36 @@ class AnnCastFunctionDef(AnnCastNode):
 
 
 
-        super().__init__(self)
+        
     def __str__(self):
         return FunctionDef.__str__(self)
 
 class AnnCastList(AnnCastNode):
     def __init__(self, values, source_refs):
+        super().__init__(self)
         self.values = values
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return List.__str__(self)
 
 class AnnCastClassDef(AnnCastNode):
     def __init__(self, name, bases, funcs, fields, source_refs):
+        super().__init__(self)
         self.name = name
         self.bases = bases
         self.funcs = funcs
         self.fields = fields
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return ClassDef.__str__(self)
 
 class AnnCastLoop(AnnCastNode):
     def __init__(self, expr, body, source_refs):
+        super().__init__(self)
         self.expr = expr
         self.body = body
         self.source_refs = source_refs
@@ -673,29 +742,32 @@ class AnnCastLoop(AnnCastNode):
         self.condition_lambda: str
 
 
-        super().__init__(self)
+        
     def __str__(self):
         return Loop.__str__(self)
 
 
 class AnnCastModelBreak(AnnCastNode):
     def __init__(self, source_refs):
+        super().__init__(self)
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return ModelBreak.__str__(self)
 
 class AnnCastModelContinue(AnnCastNode):
     def __init__(self, node:ModelContinue):
+        super().__init__(self)
         self.source_refs = node.source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return ModelContinue.__str__(self)
 
 class AnnCastModelIf(AnnCastNode):
     def __init__(self, expr, body, orelse, source_refs):
+        super().__init__(self)
         self.expr = expr
         self.body = body
         self.orelse = orelse
@@ -743,12 +815,13 @@ class AnnCastModelIf(AnnCastNode):
         self.source_refs = source_refs
         
 
-        super().__init__(self)
+        
     def __str__(self):
         return ModelIf.__str__(self)
 
 class AnnCastModelReturn(AnnCastNode):
     def __init__(self, value, source_refs):
+        super().__init__(self)
         self.value = value
         self.source_refs = source_refs
         # cache the FunctionDef node that this return statement lies in
@@ -756,12 +829,13 @@ class AnnCastModelReturn(AnnCastNode):
         # store GrfnAssignment for use in GrFN generation
         self.grfn_assignment: typing.Optional[GrfnAssignment] = None
 
-        super().__init__(self)
+        
     def __str__(self):
         return ModelReturn.__str__(self)
 
 class AnnCastModule(AnnCastNode):
     def __init__(self, name, body, source_refs):
+        super().__init__(self)
         self.name = name
         self.body = body
         self.source_refs = source_refs
@@ -773,13 +847,14 @@ class AnnCastModule(AnnCastNode):
         self.used_vars: typing.Dict[int, str] = {}
         self.con_scope: typing.List
 
-        super().__init__(self)
+        
     def __str__(self):
         return Module.__str__(self)
 
 
 class AnnCastName(AnnCastNode):
     def __init__(self, name, id, source_refs):
+        super().__init__(self)
         self.name = name
         self.id = id
         self.source_refs = source_refs
@@ -791,74 +866,81 @@ class AnnCastName(AnnCastNode):
         self.version = None
         self.grfn_id = None
 
-        super().__init__(self)
+        
     def __str__(self):
         return Name.__str__(self)
 
 
 class AnnCastNumber(AnnCastNode):
     def __init__(self, number, source_refs):
+        super().__init__(self)
         self.number = number
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return Number.__str__(self)
 
 class AnnCastSet(AnnCastNode):
     def __init__(self, values, source_refs):
+        super().__init__(self)
         self.values = values
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return Set.__str__(self)
 
 class AnnCastString(AnnCastNode):
     def __init__(self, string, source_refs):
+        super().__init__(self)
         self.string = string
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return String.__str__(self)
 
 class AnnCastSubscript(AnnCastNode):
     def __init__(self, value, slice, source_refs):
+        super().__init__(self)
         self.value = node.value
         self.slice = node.slice
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return Subscript.__str__(self)
 
 class AnnCastTuple(AnnCastNode):
     def __init__(self, values, source_refs):
+        super().__init__(self)
         self.values = values
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return Tuple.__str__(self)
 
 class AnnCastUnaryOp(AnnCastNode):
     def __init__(self, op, value, source_refs):
+        super().__init__(self)
         self.op = op
         self.value = value
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return UnaryOp.__str__(self)
 
 class AnnCastVar(AnnCastNode):
     def __init__(self, val, type, source_refs):
+        super().__init__(self)
         self.val = val
         self.type = type
         self.source_refs = source_refs
 
-        super().__init__(self)
+        
     def __str__(self):
         return Var.__str__(self)
 

@@ -720,7 +720,8 @@ class VariableVersionPass:
 
         # add return value to bot interface out
         # TODO: Can we infer if it has a return value?
-        self.populate_call_bot_interface_with_ret_val(node)
+        if node.has_ret_val:
+            self.populate_call_bot_interface_with_ret_val(node)
         # self.add_globals_to_call_interfaces(node)
 
 

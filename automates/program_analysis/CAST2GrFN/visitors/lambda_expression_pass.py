@@ -1,4 +1,5 @@
 import typing
+import re
 from functools import singledispatchmethod
 
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
@@ -90,17 +91,19 @@ def lambda_for_loop_top_interface(top_interface_initial: typing.Dict, top_interf
 
     # use "init" var names for non updates variables
     non_updt_names = map(init_name, non_updated_vars.values())
-    # extend updt_names to include non updated variables
-    updt_names = list(updt_names) + list(non_updt_names)
+    # extend returned updated names to include non updated variables
+    updt_names = list(updt_names)
+    return_updt_names = updt_names + list(non_updt_names)
 
     # now, the lengths of init group and update group should match
-    assert(len(updt_names) == len(top_interface_initial))
+    assert(len(return_updt_names) == len(top_interface_initial))
 
     use_initial_str = "use_initial"
     init_names_str = ", ".join(init_names)
     updt_names_str = ", ".join(updt_names)
+    return_updt_names_str = ", ".join(return_updt_names)
 
-    lambda_body = f"({init_names_str}) if {use_initial_str} else ({updt_names_str})"
+    lambda_body = f"({init_names_str}) if {use_initial_str} else ({return_updt_names_str})"
 
     lambda_expr = f"lambda {use_initial_str}, {init_names_str}, {updt_names_str}: {lambda_body}"  
 
@@ -171,7 +174,16 @@ class LambdaExpressionPass:
 
     @_visit.register
     def visit_boolean(self, node: AnnCastBoolean) -> str:
-        if node.boolean is not None:
+        # TODO: Currently, when parsing a declaration statement like
+        #   `bool b;`
+        # gcc_ast_to_cast makes a CAST node assignment and assigns "None" to `b`
+        # This assignment does not make sense.  The underlying issue is that there are no
+        # declaration nodes in CAST.
+        # We aren't 100% sure what value to assign to this boolean for the lambda expression,
+        # so for now, we just assign None to it
+        if node.boolean is None:
+            node.expr_str = "None"
+        else:
             node.expr_str = str(node.boolean)
         return node.expr_str
 
@@ -210,6 +222,32 @@ class LambdaExpressionPass:
         print(f"\t Bot Interface:")
         print(f"\t\t{node.bot_interface_lambda}")
 
+    def visit_call_no_func_def(self, node: AnnCastCall):
+        # example for argument lambda expression
+        #   Call: func(x + 3, y * 2)
+        # GrfnAssignment with index 0 corresponds to the assignment arg_0 = x + 3
+        # the lambda for this assigment looks like
+        #  lambda x : x + 3
+        # for the lambda body, we need to visit the Call nodes arguments
+        for i, grfn_assignment in node.arg_assignments.items():
+            lambda_body = self.visit(node.arguments[i])
+            grfn_assignment.lambda_expr = lambda_for_grfn_assignment(grfn_assignment, lambda_body)
+
+        # top interface lambda
+        node.top_interface_lambda = lambda_for_interface(node.top_interface_in)
+
+        # bot interface lambda
+        node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
+
+        # DEBUGGING
+        print(f"Call No FuncDef{node.func.name}")
+        print(f"\t Args Expressions:")
+        for arg in node.arg_assignments.values():
+            print(f"\t\t{arg.lambda_expr}")
+        print(f"\t Top Interface:")
+        print(f"\t\t{node.top_interface_lambda}")
+        print(f"\t Bot Interface:")
+        print(f"\t\t{node.bot_interface_lambda}")
 
     @_visit.register
     def visit_call(self, node: AnnCastCall) -> str:
@@ -219,10 +257,18 @@ class LambdaExpressionPass:
                 assert(len(node.out_ret_val) == 1)
                 ret_val_fullid = list(node.out_ret_val.values())[0]
                 node.expr_str = var_name_from_fullid(ret_val_fullid)
-            return node.expr_str
+        
+        # TODO: new functions for case when we have the function def for the non-grfn 2.2 call
+        elif node.has_func_def:
+            pass
 
-        # TODO: Non GrFN 2.2 calls
-
+        else:
+            self.visit_call_no_func_def(node)
+            if node.has_ret_val:
+                assert(len(node.out_ret_val) == 1)
+                ret_val_fullid = list(node.out_ret_val.values())[0]
+                node.expr_str = var_name_from_fullid(ret_val_fullid)
+        
         return node.expr_str
 
     @_visit.register
@@ -381,6 +427,9 @@ class LambdaExpressionPass:
 
     @_visit.register
     def visit_string(self, node: AnnCastString) -> str:
+        # return a multiline string, since the string may 
+        # contain \n
+        node.expr_str = f'"""{str(node.string)}"""'
         return node.expr_str
 
     @_visit.register

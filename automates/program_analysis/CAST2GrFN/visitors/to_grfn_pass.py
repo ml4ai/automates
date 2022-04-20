@@ -70,6 +70,8 @@ class ToGrfnPass:
 
 
     def create_interface_node(self, lambda_expr):
+        # we should never create an interface node if we have an empty lambda expr
+        assert(len(lambda_expr) > 0)
         # TODO: correct values for thes
         lambda_uuid = str(uuid.uuid4())
         lambda_str = lambda_expr
@@ -83,6 +85,8 @@ class ToGrfnPass:
         return interface_node
 
     def create_loop_top_interface(self, lambda_expr):
+        # we should never create an interface node if we have an empty lambda expr
+        assert(len(lambda_expr) > 0)
         # TODO: correct values for these
         lambda_uuid = str(uuid.uuid4())
         lambda_str = lambda_expr
@@ -513,7 +517,7 @@ class ToGrfnPass:
         self.subgraphs.add_edge(parent, subgraph)
 
         # build top interface
-        top_interface = self.create_loop_top_interface()
+        top_interface = self.create_loop_top_interface(node.top_interface_lambda)
         self.network.add_node(top_interface, **top_interface.get_kwargs())
         # collect initial GrFN VariableNodes
         grfn_initial = map(self.ann_cast.get_grfn_var, node.top_interface_initial.values())
@@ -619,7 +623,7 @@ class ToGrfnPass:
 
         # self.create_interface_node(node.bot_interface_in, node.bot_interface_out, subgraph)
         # build bot interface
-        bot_interface = self.create_interface_node()
+        bot_interface = self.create_interface_node(node.bot_interface_lambda)
         self.network.add_node(bot_interface, **bot_interface.get_kwargs())
         inputs = []
         for var_id, fullid in node.bot_interface_in.items():

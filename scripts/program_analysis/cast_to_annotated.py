@@ -47,12 +47,12 @@ def main():
 
     V2 = CASTToAGraphVisitor(annotated_cast)
 
-    f_name = "con_scop-AnnCAST"
-    pdf_file_name = f"{f_name}.pdf"
-    V2.to_pdf(pdf_file_name)
-
     print("\nCalling GrfnVarCreationPass-------------------")
     GrfnVarCreationPass(annotated_cast)
+
+    pdf_file_name = f"{f_name}-AnnCast.pdf"
+    V2.to_pdf(pdf_file_name)
+
 
     print("\nCalling GrfnAssignmentPass-------------------")
     GrfnAssignmentPass(annotated_cast)

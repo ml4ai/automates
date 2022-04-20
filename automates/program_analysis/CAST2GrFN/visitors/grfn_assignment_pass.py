@@ -43,8 +43,7 @@ class GrfnAssignmentPass:
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment, add_to: typing.Dict):
         # create the LambdaNode
-        # TODO: add correct metadata
-        metadata = []
+        metadata = create_lambda_node_metadata(node.source_refs)
         if is_literal_assignment(node.right):
             node.grfn_assignment = GrfnAssignment(create_grfn_literal_node(metadata), LambdaType.LITERAL)
         else:
@@ -94,8 +93,7 @@ class GrfnAssignmentPass:
             arg_grfn_var = self.ann_cast.get_grfn_var(arg_fullid)
             
             # create GrfnAssignment based on assignment type
-            # TODO: add correct metadata for ASSIGN/LITERAL node
-            metadata = []
+            metadata = create_lambda_node_metadata(node.source_refs)
             if is_literal_assignment(n):
                 arg_assignment = GrfnAssignment(create_grfn_literal_node(metadata), LambdaType.LITERAL)
             else:
@@ -128,8 +126,7 @@ class GrfnAssignmentPass:
             arg_grfn_var = self.ann_cast.get_grfn_var(arg_fullid)
             
             # create GrfnAssignment based on assignment type
-            # TODO: add correct metadata for ASSIGN/LITERAL node
-            metadata = []
+            metadata = create_lambda_node_metadata(node.source_refs)
             if is_literal_assignment(n):
                 arg_assignment = GrfnAssignment(create_grfn_literal_node(metadata), LambdaType.LITERAL)
             else:
@@ -199,8 +196,7 @@ class GrfnAssignmentPass:
     @_visit.register
     def visit_model_return(self, node: AnnCastModelReturn, add_to: typing.Dict):
         # create the assignment LambdaNode for this return statement
-        # TODO: add correct metadata
-        metadata = []
+        metadata = create_lambda_node_metadata(node.source_refs)
         if is_literal_assignment(node.value):
             node.grfn_assignment = GrfnAssignment(create_grfn_literal_node(metadata), LambdaType.LITERAL)
         else:
