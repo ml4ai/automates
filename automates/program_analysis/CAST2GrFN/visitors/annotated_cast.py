@@ -1,6 +1,8 @@
 import uuid
 import typing
 import re
+import sys
+from datetime import datetime
 from dataclasses import dataclass, field
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
@@ -35,7 +37,9 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
-from automates.model_assembly.metadata import LambdaType, TypedMetadata, CodeSpanReference
+from automates.model_assembly.metadata import (
+        LambdaType, TypedMetadata, CodeSpanReference, Domain, ProvenanceData
+        )
 from automates.model_assembly.structures import (
     VariableIdentifier,
 )
@@ -118,9 +122,64 @@ def source_ref_dict(source_ref: SourceRef):
     to_return["col_end"] = source_ref.col_end
     return to_return
 
+def combine_source_refs(source_refs: typing.List[SourceRef]):
+    """
+    From a list of SourceRefs return a single SourceRef with 
+    row and column range covering all row/column ranges from the list
+    """
+    row_start = sys.maxsize
+    row_end = -1
+    col_start = sys.maxsize
+    col_end = -1
+    source_file_name = None
+
+    for src_ref in source_refs:
+        if src_ref.row_start is not None and src_ref.row_start < row_start:
+            row_start = src_ref.row_start
+        if src_ref.row_end is not None and src_ref.row_end > row_end:
+            row_end = src_ref.row_end
+        if src_ref.col_start is not None and src_ref.col_start < col_start:
+            col_start = src_ref.col_start
+        if src_ref.col_end is not None and src_ref.col_end > col_end:
+            col_end = src_ref.col_end
+        if src_ref.source_file_name is not None:
+            assert(source_file_name is None or source_file_name == src_ref.source_file_name)
+            source_file_name = src_ref.source_file_name
+
+
+    # use None instead of providing incorrect data
+    row_start = None if row_start in [-1, sys.maxsize] else row_start
+    row_end = None if row_end in [-1, sys.maxsize] else row_end
+    col_start = None if col_start in [-1, sys.maxsize] else col_start
+    col_end = None if col_end in [-1, sys.maxsize] else col_end
+
+    # due to incomplete source ref data, it is possible
+    # to combine source refs and end up in a situation where we no longer have a valid
+    # range i.e. row_end < row_start.  
+    # if we run into this, we swap them
+    if row_end is not None and row_start is not None and row_end < row_start:
+        row_end, row_start = row_start, row_end
+    if col_end is not None and col_start is not None and col_end < col_start:
+        col_end, col_start = col_start, col_end
+
+    return SourceRef(source_file_name, col_start, col_end, row_start, row_end)
+
+def generate_domain_metadata():
+    # TODO: this needs to be updated
+    data = dict()
+    data["type"] = "domain"
+    data["provenance"] = ProvenanceData.from_data({
+                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                "timestamp": datetime.now(),
+                })
+    data["data_type"] = "integer"
+    data["measurement_scale"] = "discrete"
+    data["elements"] = []
+
+    return Domain.from_data(data=data)
+
 def generate_from_source_metadata(from_source: bool, reason: str):
-    return TypedMetadata.from_data(
-        {
+    data = {
             "type": "FROM_SOURCE",
             "provenance": {
                 "method": "PROGRAM_ANALYSIS_PIPELINE",
@@ -129,7 +188,20 @@ def generate_from_source_metadata(from_source: bool, reason: str):
             "from_source": str(from_source),
             "creation_reason": reason,
         }
-    )
+    return TypedMetadata.from_data(data=data)
+
+def create_variable_node_span_metadata():
+# TODO: this needs to be updated
+# what is a reasonable src reference for variable nodes?
+    file_ref = ""
+    src_ref =  ""
+    code_span_data = {
+        "source_ref": src_ref,
+        "file_uid": file_ref,
+        "code_type": "identifier",
+    }
+    return CodeSpanReference.from_air_data(code_span_data)
+
 
 def create_lambda_node_metadata(source_refs):
     """
@@ -152,6 +224,62 @@ def create_lambda_node_metadata(source_refs):
     metadata = [CodeSpanReference.from_air_data(code_span_data)]
 
     return metadata
+
+@dataclass
+class GrfnContainerSrcRef:
+    """
+    Used to track the line begin, line end, and source file for ModelIf and Loop
+    Containers.  This data will eventually be added to the containers metadata
+    """
+    line_begin: typing.Optional[int]
+    line_end: typing.Optional[int]
+    source_file_name: typing.Optional[str]
+
+def create_container_metadata(grfn_src_ref: GrfnContainerSrcRef):
+    src_ref_dict = {}
+    src_ref_dict["line_begin"] = grfn_src_ref.line_begin
+    src_ref_dict["line_end"] = grfn_src_ref.line_end
+
+    code_span_data = {
+        "source_ref": src_ref_dict,
+        "file_uid": grfn_src_ref.source_file_name,
+        "code_type": "block",
+    }
+    metadata = [CodeSpanReference.from_air_data(code_span_data)]
+
+    return metadata
+
+def combine_grfn_con_src_refs(source_refs: typing.List[GrfnContainerSrcRef]):
+    """
+    From a list of GrfnContainerSrcRef return a single GrfnContainerSrcRef with 
+    line range covering all line ranges from the list
+    """
+    line_begin = sys.maxsize
+    line_end = -1
+    source_file_name = None
+
+    for src_ref in source_refs:
+        if src_ref.line_begin is not None and src_ref.line_begin < line_begin:
+            line_begin = src_ref.line_begin
+        if src_ref.line_end is not None and src_ref.line_end > line_end:
+            line_end = src_ref.line_end
+        if src_ref.source_file_name is not None:
+            source_file_name = src_ref.source_file_name
+
+    # use None instead of providing incorrect data
+    line_begin = None if line_begin in [-1, sys.maxsize] else line_begin
+    line_end = None if line_end in [-1, sys.maxsize] else line_end
+
+    # due to incomplete source ref data, it is possible
+    # to combine source refs and end up in a situation where we no longer have a valid
+    # range i.e. line_end < line_begin.  
+    # if we run into this, we swap them
+    if line_end is not None and line_begin is not None and line_end < line_begin:
+        line_end, line_begin = line_begin, line_end
+
+
+    return GrfnContainerSrcRef(line_begin, line_end, source_file_name)
+
 # End Metadata functions
 
 def union_dicts(dict1, dict2):
@@ -356,8 +484,18 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
     # TODO: change to using UUIDs?
     # uid = GenericNode.create_node_id()
     uid = build_fullid(var_name, id, version, con_scopestr)
-    # TODO: fill in metadata
-    metadata = []
+    # TODO: this is copied from C2AVarialble.to_AIR
+    # note sure if we need to use it
+    domain = {
+        "type": "type",  # TODO what is this field?
+        "mutable": False,  # TODO probably only mutable if object/list/dict type
+        "name": "Number",  # TODO probably only mutable if object/list/dict type
+    }
+    from_source_mdata = generate_from_source_metadata(True, "UNKNOWN")
+    span_mdata = create_variable_node_span_metadata()
+    domain_mdata = generate_domain_metadata()
+
+    metadata = [domain_mdata, from_source_mdata, span_mdata]
     return VariableNode(uid, identifier, metadata)
 
 
@@ -557,6 +695,9 @@ class AnnCastCall(AnnCastNode):
         # In this case, the output will map the arguments fullid to its grfn_id
         self.arg_assignments: typing.Dict[int, GrfnAssignment] = {}
 
+        # metadata attributes
+        self.grfn_con_src_ref: GrfnContainerSrcRef
+
         
     def __str__(self):
         return Call.__str__(self)
@@ -663,7 +804,8 @@ class AnnCastFunctionDef(AnnCastNode):
         # dict mapping Name id to highest version at end of "block"
         self.body_highest_var_vers = {}
 
-
+        # metadata attributes
+        self.grfn_con_src_ref: GrfnContainerSrcRef
 
         
     def __str__(self):
@@ -740,6 +882,8 @@ class AnnCastLoop(AnnCastNode):
         self.top_interface_lambda: str
         self.bot_interface_lambda: str
         self.condition_lambda: str
+        # metadata attributes
+        self.grfn_con_src_ref: GrfnContainerSrcRef
 
 
         
@@ -771,6 +915,7 @@ class AnnCastModelIf(AnnCastNode):
         self.expr = expr
         self.body = body
         self.orelse = orelse
+        self.source_refs = source_refs
 
         # ModelIf container scope
         self.con_scope: typing.List
@@ -811,10 +956,8 @@ class AnnCastModelIf(AnnCastNode):
         self.condition_lambda: str
         self.decision_lambda: str
 
-
-        self.source_refs = source_refs
-        
-
+        # metadata attributes
+        self.grfn_con_src_ref: GrfnContainerSrcRef
         
     def __str__(self):
         return ModelIf.__str__(self)
@@ -847,6 +990,8 @@ class AnnCastModule(AnnCastNode):
         self.used_vars: typing.Dict[int, str] = {}
         self.con_scope: typing.List
 
+        # metadata attributes
+        self.grfn_con_src_ref: GrfnContainerSrcRef
         
     def __str__(self):
         return Module.__str__(self)

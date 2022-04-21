@@ -50,7 +50,11 @@ def main():
     print("\nCalling GrfnVarCreationPass-------------------")
     GrfnVarCreationPass(annotated_cast)
 
+    # TODO: make filename creation more resilient
+    f_name = f_name.split("/")[-1]
+    f_name = f_name.replace("--CAST.json", "")
     pdf_file_name = f"{f_name}-AnnCast.pdf"
+    print("AnnCast file name", pdf_file_name)
     V2.to_pdf(pdf_file_name)
 
 

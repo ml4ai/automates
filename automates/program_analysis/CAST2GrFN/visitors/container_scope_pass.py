@@ -43,6 +43,7 @@ class ContainerScopePass:
 
         # add cached container data to container nodes
         self.add_container_data_to_nodes()
+        print("Done")
 
     def next_if_scope(self, enclosing_con_scope):
         scopestr = con_scope_to_str(enclosing_con_scope)
@@ -100,6 +101,9 @@ class ContainerScopePass:
             container.modified_vars = data.modified_vars
             container.used_vars = data.used_vars
 
+            # DEBUGGING:
+            print(container.grfn_con_src_ref)
+
     def initialize_con_scope_data(self, con_scope: typing.List, node):
         """
         Create an empty `ContainterData` in `self.con_str_to_con_data`
@@ -121,12 +125,25 @@ class ContainerScopePass:
         last_dot = class_name.rfind(".")
         class_name = class_name[last_dot + 1 : -2]
         print(f"\nProcessing node type {class_name}")
-        return self._visit(node, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        children_src_ref = self._visit(node, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        if children_src_ref is None:
+            children_src_ref = GrfnContainerSrcRef(None, None, None)
+
+        # to keep determine GrfnContainerSrcRef for enclosing containers
+        # each node we visit returns None or a GrfnContainerSrcRef with data copied from the nodes
+        # source_refs attribute
+        grfn_src_ref = GrfnContainerSrcRef(None, None, None)
+        if node.source_refs is not None:
+            src_ref = combine_source_refs(node.source_refs)
+            grfn_src_ref = GrfnContainerSrcRef(line_begin=src_ref.row_start, line_end=src_ref.row_end,
+                                               source_file_name=src_ref.source_file_name)
+
+        return combine_grfn_con_src_refs([children_src_ref, grfn_src_ref])
 
     @singledispatchmethod
     def _visit(
             self, node: AnnCastNode, base_func_scopestr: str, enclosing_con_scope: typing.List, assign_lhs: bool
-    ) -> typing.Dict:
+    ):
         """
         Visit each AnnCastNode
         Parameters:
@@ -139,16 +156,19 @@ class ContainerScopePass:
     def visit_node_list(
         self, node_list: typing.List[AnnCastNode], base_func_scopestr, enclosing_con_scope, assign_lhs
     ):
-        return [self.visit(node, base_func_scopestr, enclosing_con_scope, assign_lhs) for node in node_list]
+        grfn_src_refs = [self.visit(node, base_func_scopestr, enclosing_con_scope, assign_lhs) for node in node_list]
+        return combine_grfn_con_src_refs(grfn_src_refs)
 
     @_visit.register
     def visit_assignment(
         self, node: AnnCastAssignment, base_func_scopestr, enclosing_con_scope, assign_lhs
     ):
         # TODO: what if the rhs has side-effects
-        self.visit(node.right, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        right_src_ref = self.visit(node.right, base_func_scopestr, enclosing_con_scope, assign_lhs)
         assert isinstance(node.left, AnnCastVar)
-        self.visit(node.left, base_func_scopestr, enclosing_con_scope, True)
+        left_src_ref = self.visit(node.left, base_func_scopestr, enclosing_con_scope, True)
+
+        return combine_grfn_con_src_refs([right_src_ref, left_src_ref])
 
     @_visit.register
     def visit_attribute(self, node: AnnCastAttribute, base_func_scopestr, enclosing_con_scope, assign_lhs):
@@ -157,10 +177,11 @@ class ContainerScopePass:
     @_visit.register
     def visit_binary_op(self, node: AnnCastBinaryOp, base_func_scopestr, enclosing_con_scope, assign_lhs):
         # visit LHS first
-        self.visit(node.left, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        left_src_ref = self.visit(node.left, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
         # visit RHS second
-        self.visit(node.right, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        right_src_ref = self.visit(node.right, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        return combine_grfn_con_src_refs([right_src_ref, left_src_ref])
 
     @_visit.register
     def visit_boolean(self, node: AnnCastBoolean, base_func_scopestr, enclosing_con_scope, assign_lhs):
@@ -174,17 +195,27 @@ class ContainerScopePass:
         # FunctionDef, make a GrFN 2.2 container for it
         if GENERATE_GRFN_2_2 and node.func.id in self.ann_cast.func_id_to_def:
             node.is_grfn_2_2 = True
-            self.visit_call_grfn_2_2(node, base_func_scopestr, enclosing_con_scope, assign_lhs)
-            return
+            return self.visit_call_grfn_2_2(node, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        
+        #  for non GrFN 2.2 generation, we store a GrfnContainerSrcRef for the Call
+        # store GrfnContainerSrcRef for this function def
+        grfn_src_ref = GrfnContainerSrcRef(None, None, None)
+        if node.source_refs is not None:
+            src_ref = combine_source_refs(node.source_refs)
+            grfn_src_ref = GrfnContainerSrcRef(line_begin=src_ref.row_start, line_end=src_ref.row_end,
+                                               source_file_name=src_ref.source_file_name)
+        node.grfn_con_src_ref = grfn_src_ref
 
         node.func.con_scope = enclosing_con_scope
-        self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        # For a call, we do not care about the arguments source refs
+        return self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
     def visit_call_grfn_2_2(self, node: AnnCastCall, base_func_scopestr, enclosing_con_scope, assign_lhs):
         assert isinstance(node.func, AnnCastName)
 
         node.func.con_scope = enclosing_con_scope
-        self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        # the children GrFN source ref for the call node is the src ref of the call's arguments
+        args_src_ref = self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
         node.func_def_copy = copy.deepcopy(self.ann_cast.func_id_to_def[node.func.id])
         # make a new id for the copy's Name node, and store in func_id_to_def
@@ -193,6 +224,8 @@ class ContainerScopePass:
         calling_scope = enclosing_con_scope + [call_container_name(node)]
         call_assign_lhs = False
         self.visit_function_def(node.func_def_copy, base_func_scopestr, calling_scope, call_assign_lhs)
+
+        return args_src_ref
 
     # TODO: What to do for classes about modified/accessed vars?
     @_visit.register
@@ -204,9 +237,11 @@ class ContainerScopePass:
         # node.funcs is a list of Vars
         # ClassDef's reset the `base_func_scopestr`
         base_scopestr = con_scope_to_str(classscope)
-        self.visit_node_list(node.funcs, base_scopestr, classscope, assign_lhs)
+        funcs_src_ref = self.visit_node_list(node.funcs, base_scopestr, classscope, assign_lhs)
         # node.fields is a list of Vars
-        self.visit_node_list(node.fields, base_scopestr, classscope, assign_lhs)
+        fields_src_ref = self.visit_node_list(node.fields, base_scopestr, classscope, assign_lhs)
+
+        return combine_grfn_con_src_refs([funcs_src_ref, fields_src_ref])
 
     @_visit.register
     def visit_dict(self, node: AnnCastDict, assign_lhs):
@@ -214,12 +249,20 @@ class ContainerScopePass:
 
     @_visit.register
     def visit_expr(self, node: AnnCastExpr, base_func_scopestr, enclosing_con_scope, assign_lhs):
-        self.visit(node.expr, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        return self.visit(node.expr, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
     @_visit.register
     def visit_function_def(
         self, node: AnnCastFunctionDef, base_func_scopestr, enclosing_con_scope, assign_lhs
     ):
+        # store GrfnContainerSrcRef for this function def
+        grfn_src_ref = GrfnContainerSrcRef(None, None, None)
+        if node.source_refs is not None:
+            src_ref = combine_source_refs(node.source_refs)
+            grfn_src_ref = GrfnContainerSrcRef(line_begin=src_ref.row_start, line_end=src_ref.row_end,
+                                               source_file_name=src_ref.source_file_name)
+        node.grfn_con_src_ref = grfn_src_ref
+
         # Modify scope to include the function name
         funcscope = enclosing_con_scope + [function_container_name(node.name)]
 
@@ -233,13 +276,16 @@ class ContainerScopePass:
 
         # Each argument is a AnnCastVar node
         # Initialize each Name and visit to modify its scope
-        self.visit_node_list(node.func_args, base_scopestr, funcscope, assign_lhs)
+        args_src_ref = self.visit_node_list(node.func_args, base_scopestr, funcscope, assign_lhs)
 
-        self.visit_node_list(node.body, base_scopestr, funcscope, assign_lhs)
+        body_src_ref = self.visit_node_list(node.body, base_scopestr, funcscope, assign_lhs)
+
+        # return children GrfnContainerSrcRef
+        return combine_grfn_con_src_refs([args_src_ref, body_src_ref])
 
     @_visit.register
     def visit_list(self, node: AnnCastList, base_func_scopestr, enclosing_con_scope, assign_lhs):
-        self.visit_node_list(node.values, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        return self.visit_node_list(node.values, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, base_func_scopestr, enclosing_con_scope, assign_lhs):
@@ -254,10 +300,15 @@ class ContainerScopePass:
         # we store an additional ContainerData for the loop expression, but
         # we store the Loop node in `self.con_str_to_node`         
         self.initialize_con_scope_data(loopexprscope, node)
-        self.visit(node.expr, base_func_scopestr, loopexprscope, assign_lhs)
+        expr_src_ref = self.visit(node.expr, base_func_scopestr, loopexprscope, assign_lhs)
 
         loopbodyscope = loopscope + [LOOPBODY]
-        self.visit_node_list(node.body, base_func_scopestr, loopbodyscope, assign_lhs)
+        body_src_ref = self.visit_node_list(node.body, base_func_scopestr, loopbodyscope, assign_lhs)
+
+        # store GrfnContainerSrcRef for this loop
+        node.grfn_con_src_ref = combine_grfn_con_src_refs([expr_src_ref, body_src_ref])
+        # return the children GrfnContainerSrcRef
+        return node.grfn_con_src_ref
 
     @_visit.register
     def visit_model_break(self, node: AnnCastModelBreak, assign_lhs):
@@ -281,13 +332,18 @@ class ContainerScopePass:
         # we store an additional ContainerData for the if expression, but
         # we store the ModelIf node in `self.con_str_to_node`         
         self.initialize_con_scope_data(ifexprscope, node)
-        self.visit(node.expr, base_func_scopestr, ifexprscope, assign_lhs)
+        expr_src_ref = self.visit(node.expr, base_func_scopestr, ifexprscope, assign_lhs)
 
         ifbodyscope = ifscope + [IFBODY]
-        self.visit_node_list(node.body, base_func_scopestr, ifbodyscope, assign_lhs)
+        body_src_ref = self.visit_node_list(node.body, base_func_scopestr, ifbodyscope, assign_lhs)
 
         orelsebodyscope = ifscope + [ELSEBODY]
-        self.visit_node_list(node.orelse, base_func_scopestr, orelsebodyscope, assign_lhs)
+        orelse_src_ref = self.visit_node_list(node.orelse, base_func_scopestr, orelsebodyscope, assign_lhs)
+
+        # store GrfnContainerSrcRef for this loop
+        node.grfn_con_src_ref = combine_grfn_con_src_refs([expr_src_ref, body_src_ref, orelse_src_ref])
+        # return the children GrfnContainerSrcRef
+        return node.grfn_con_src_ref
 
     @_visit.register
     def visit_return(self, node: AnnCastModelReturn, base_func_scopestr, enclosing_con_scope, assign_lhs):
@@ -296,7 +352,7 @@ class ContainerScopePass:
         node.owning_func_def = function_def
         node.owning_func_def.has_ret_val = True
 
-        self.visit(node.value, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        return self.visit(node.value, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, base_func_scopestr, enclosing_con_scope, assign_lhs):
@@ -306,7 +362,12 @@ class ContainerScopePass:
         base_scopestr = con_scope_to_str(module_con_scope)
         # initialize container data for module which will store global variables
         self.initialize_con_scope_data(module_con_scope, node)
-        self.visit_node_list(node.body, base_scopestr, module_con_scope, assign_lhs)
+        body_src_ref = self.visit_node_list(node.body, base_scopestr, module_con_scope, assign_lhs)
+
+        # store GrfnContainerSrcRef for the module
+        node.grfn_con_src_ref = body_src_ref
+        # return the children GrfnContainerSrcRef
+        return node.grfn_con_src_ref
 
     @_visit.register
     def visit_name(self, node: AnnCastName, base_func_scopestr, enclosing_con_scope, assign_lhs):
@@ -371,8 +432,8 @@ class ContainerScopePass:
 
     @_visit.register
     def visit_unary_op(self, node: AnnCastUnaryOp, base_func_scopestr, enclosing_con_scope, assign_lhs):
-        self.visit(node.value, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        return self.visit(node.value, base_func_scopestr, enclosing_con_scope, assign_lhs)
 
     @_visit.register
     def visit_var(self, node: AnnCastVar, base_func_scopestr, enclosing_con_scope, assign_lhs):
-        self.visit(node.val, base_func_scopestr, enclosing_con_scope, assign_lhs)
+        return self.visit(node.val, base_func_scopestr, enclosing_con_scope, assign_lhs)

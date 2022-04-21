@@ -276,9 +276,9 @@ class ToGrfnPass:
 
         parent = subgraph
         # make a new subgraph for this If Container
-        type = "CondContainer"
+        type = "CallContainer"
         border_color = "purple"
-        metadata = []
+        metadata = create_container_metadata(node.grfn_con_src_ref)
         nodes = []
         parent_str = parent.uid if parent is not None else None
         occs = 0
@@ -351,7 +351,7 @@ class ToGrfnPass:
         # make a new subgraph for this If Container
         type = "FuncContainer"
         border_color = GrFNSubgraph.get_border_color(type)
-        metadata = []
+        metadata = create_container_metadata(node.func_def_copy.grfn_con_src_ref)
         nodes = []
         parent_str = parent.uid if parent is not None else None
         occs = node.invocation_index
@@ -439,7 +439,7 @@ class ToGrfnPass:
         parent = subgraph
         type = "FuncContainer"
         border_color = GrFNSubgraph.get_border_color(type)
-        metadata = []
+        metadata = create_container_metadata(node.grfn_con_src_ref)
         nodes = []
         parent_str = parent.uid if parent is not None else None
         occs = 0
@@ -501,7 +501,7 @@ class ToGrfnPass:
         # make a new subgraph for this If Container
         type = "LoopContainer"
         border_color = GrFNSubgraph.get_border_color(type)
-        metadata = []
+        metadata = create_container_metadata(node.grfn_con_src_ref)
         nodes = []
         parent_str = parent.uid if parent is not None else None
         occs = 0
@@ -574,7 +574,7 @@ class ToGrfnPass:
         # make a new subgraph for this If Container
         type = "CondContainer"
         border_color = GrFNSubgraph.get_border_color(type)
-        metadata = []
+        metadata = create_container_metadata(node.grfn_con_src_ref)
         nodes = []
         parent_str = parent.uid if parent is not None else None
         occs = 0
@@ -656,7 +656,7 @@ class ToGrfnPass:
     def visit_module(self, node: AnnCastModule, subgraph: GrFNSubgraph):
         type = "ModuleContainer"
         border_color = "grey"
-        metadata = []
+        metadata = create_container_metadata(node.grfn_con_src_ref)
         nodes = []
         occs = 0
         parent_str = None
