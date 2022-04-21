@@ -1,3 +1,4 @@
+from enum import unique
 from typing import Type, Union
 import ast
 import os 
@@ -6,6 +7,8 @@ import sys
 from functools import singledispatchmethod
 
 from numpy import isin
+from pandas import concat
+from zmq import PROTOCOL_ERROR_ZMTP_MECHANISM_MISMATCH
 
 from automates.utils.misc import uuid
 from scripts.program_analysis.astpp import parseprint
@@ -58,6 +61,38 @@ def merge_dicts(prev_scope, curr_scope):
         if k not in curr_scope.keys():
             curr_scope[k] = prev_scope[k]
 
+def construct_unique_name(attr_name, var_name):
+    """Constructs strings in the form of 
+    "attribute.var"
+    where 'attribute' is either
+        - the name of a module
+        - an object    
+
+    Returns:
+        string: A string representing a unique name
+
+    """
+    return f"{attr_name}.{var_name}"
+
+
+def get_node_name(ast_node):
+    if isinstance(ast_node, ast.Assign):
+        return ast_node[0].id
+    elif isinstance(ast_node, ast.Attribute):
+        return ""
+    elif isinstance(ast_node, Assignment):
+        # to_add[0].left.val.name
+        if isinstance(ast_node.left, Subscript):
+            return ast_node.left.value.name
+        else:
+            return ast_node.left.val.name
+    elif isinstance(ast_node, Subscript):
+        raise TypeError(f"Type {ast_node} not supported")
+    #elif isinstance(ast_node, Subscript):
+     #   return "" 
+    else:
+        raise TypeError(f"Type {type(ast_node)} not supported")
+
 
 class PyASTToCAST():
     """Class PyASTToCast
@@ -106,7 +141,7 @@ class PyASTToCAST():
 
         self.aliases = {}
         self.visited = set()
-        self.filenames = [file_name]
+        self.filenames = [file_name.split(".")[0]]
         self.classes = {}
         self.var_count = 0
         self.global_identifier_dict = {}
@@ -116,13 +151,46 @@ class PyASTToCAST():
     def insert_next_id(self, scope_dict: Dict, dict_key: str):
         """ Given a scope_dictionary and a variable name as a key, 
         we insert a new key_value pair for the scope dictionary
+        The ID that we inserted gets returned because some visitors
+        need the ID for some additional work. In the cases where the returned
+        ID isn't needed it gets ignored.
 
         Args:
             scope_dict (Dict): _description_
             dict_key (str): _description_
         """
-        scope_dict[dict_key] = self.id_count
+        new_id_to_insert = self.id_count
+        scope_dict[dict_key] = new_id_to_insert
         self.id_count += 1
+        return new_id_to_insert
+
+    def insert_alias(self, original: String, alias: String):
+        """ Inserts an alias into a dictionary that keeps track of aliases for 
+            names that are aliased. For example, the following import
+            import numpy as np
+            np is an alias for the original name numpy
+
+        Args:
+            original (String): The original name that is being aliased
+            alias    (String): The alias of the original name
+        """
+        # TODO
+        pass
+
+    def check_alias(self, name: String):
+        """ Given a python string that represents a name, 
+            this function checks to see if that name is an alias
+            for a different name, and returns it if it is indeed an alias.
+            Otherwise, the original name is returned.
+        """
+        if name in self.aliases:
+            return self.aliases[name]
+        else:
+            return name
+
+
+
+
 
     @singledispatchmethod
     def visit(self, node: AstNode, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -150,7 +218,7 @@ class PyASTToCAST():
             r_visit = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)
             left.extend(l_visit)
             right.extend(r_visit)
-        elif len(node.targets) > 1: # x = y = z = ... {Expression}
+        elif len(node.targets) > 1: # x = y = z = ... {Expression} (multiple expressions)
             left.extend(self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict))
             node.targets = node.targets[1:]
             right.extend(self.visit(node, prev_scope_id_dict, curr_scope_id_dict))
@@ -158,11 +226,18 @@ class PyASTToCAST():
             raise ValueError(f"Unexpected number of targets for node: {len(node.targets)}")
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-
-        return [Assignment(left[0], right[0], source_refs=ref)]
+        
+        if isinstance(node.value, ast.DictComp):
+            
+            to_ret = []
+            to_ret.extend(right)
+            
+            return [Assignment(left[0], None, source_refs=ref)]
+        else:
+            return [Assignment(left[0], right[0], source_refs=ref)]
 
     @visit.register
-    def visit_Attribute(self, node: ast.Attribute, prev_scope_id_dict: Dict):
+    def visit_Attribute(self, node: ast.Attribute, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """Visits a PyAST Attribute node, which is used when accessing
         the attribute of a class. Whether it's a field or method of a class.
 
@@ -173,16 +248,96 @@ class PyASTToCAST():
             Attribute: A CAST Attribute node representing an Attribute access
         """
 
-        curr_scope_id_dict = {}
+
+        # TODO: ALIASING ALIASING ALIASING
+
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
-        merge_dicts(prev_scope_id_dict, curr_scope_id_dict)
-        value = self.visit(node.value, curr_scope_id_dict)
+        # node.value.id gets us module name (string)
+        # node.attr gets us attribute we're accessing (string)
+        # helper(node.attr) -> "module_name".node.attr
+
         
-        # TODO: Is this the correct id? 
-        attr = Name(node.attr, id=curr_scope_id_dict[node.attr], source_refs=ref)
+        curr = node.value
+        
+        print("---------------------------------")
+        print(f"prev_scope:   {prev_scope_id_dict}")
+        print(f"curr_scope:   {curr_scope_id_dict}")
+        print(f"global_scope: {self.global_identifier_dict}")
+        print("---------------------------------")
+        
+
+
+        # foo.bar.x, foo.bar().x, etc..
+        # (multiple layers of attributes)
+        if isinstance(curr, ast.Attribute):
+            # Construct the name that corresponds to this attribute
+            # that is, x.y.z.w, w is the attribute and x.y.z is the name
+            temp = curr
+            name_list = []
+            while isinstance(temp, ast.Attribute):
+                name_list.insert(0,temp.attr)
+                temp = temp.value       
+            if isinstance(temp, ast.Name):
+                name_list.insert(0, temp.id)
+
+            unique_name = ".".join(name_list)
+
+            print(f"UN: {unique_name}")
+
+            if isinstance(curr.ctx,ast.Load):
+                if unique_name not in curr_scope_id_dict:
+                    if unique_name in prev_scope_id_dict:
+                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
+                    else:
+                        if unique_name not in self.global_identifier_dict:
+                            self.insert_next_id(self.global_identifier_dict, unique_name)
+                        curr_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
+                
+            if isinstance(curr.ctx,ast.Store):
+                if unique_name not in curr_scope_id_dict:
+                    if unique_name in prev_scope_id_dict:
+                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
+                    else:
+                        self.insert_next_id(curr_scope_id_dict, unique_name)
+
+
+        # foo.x, foo.bar(), etc...
+        # (one single layer of attribute)
+        if isinstance(curr, ast.Name):
+            unique_name = construct_unique_name(curr.id, node.attr)
+        
+            if isinstance(curr.ctx,ast.Load):
+                if unique_name not in curr_scope_id_dict:
+                    if unique_name in prev_scope_id_dict:
+                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
+                    else:
+                        if unique_name not in self.global_identifier_dict: # added for random.seed not exising, and other modules like that. in other words for functions in modules that we don't have visibility for. 
+                            self.insert_next_id(self.global_identifier_dict, unique_name)
+                        curr_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
+                
+            if isinstance(curr.ctx,ast.Store):
+                if unique_name not in curr_scope_id_dict:
+                    if unique_name in prev_scope_id_dict:
+                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
+                    else:
+                        self.insert_next_id(curr_scope_id_dict, unique_name)
+
+        value = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)
+        
+        # If the attribute we're checking isn't in the current scope
+        # We look to the enclosing scope
+        # if node.attr not in curr_scope_id_dict:
+        #    pass
+
+        attr = Name(node.attr, id=curr_scope_id_dict[unique_name], source_refs=ref)
+
+        # module_name : has an ID
+        # attr to a module: has an ID
+        # don't do just 'y', do 'module_name.y' <- whats its ID? I think it's the attr's ID
 
         return [Attribute(value[0], attr, source_refs=ref)]
+                        # module2   y (really module2.y)
 
     @visit.register
     def visit_AugAssign(self, node:ast.AugAssign, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -374,7 +529,7 @@ class PyASTToCAST():
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         if isinstance(node.func,ast.Attribute):
-            res = self.visit(node.func, prev_scope_id_dict)
+            res = self.visit(node.func, prev_scope_id_dict, curr_scope_id_dict)
             return [Call(res[0], args, source_refs=ref)]
         else:
             # In the case we're calling a function that doesn't have an identifier already
@@ -394,7 +549,7 @@ class PyASTToCAST():
             return [Call(Name(node.func.id, id=prev_scope_id_dict[node.func.id], source_refs=ref), args, source_refs=ref)]
 
     @visit.register
-    def visit_ClassDef(self, node: ast.ClassDef, prev_scope_id_dict: Dict):
+    def visit_ClassDef(self, node: ast.ClassDef, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """Visits a PyAST ClassDef node, which is used to define user classes.
         Acquiring the fields of the class involves going through the __init__
         function and seeing if the attributes are associated with the self
@@ -576,7 +731,7 @@ class PyASTToCAST():
         return [Expr(val[0],source_refs=ref)]
 
     @visit.register
-    def visit_For(self, node: ast.For, prev_scope_id_dict: Dict):
+    def visit_For(self, node: ast.For, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """Visits a PyAST For node, which represents Python for loops.
         A For loop is different than a While loop, in that we need to do a
         conversion such that the resulting CAST Loop appropriately captures a
@@ -591,99 +746,126 @@ class PyASTToCAST():
                   loops and While loops.
         """
 
-        curr_scope_id_dict = {}
         
-        # Loops can use variables outside of their scope, so we merge the scopes before doing anything
+        target = self.visit(node.target, prev_scope_id_dict, curr_scope_id_dict)[0]
+        iterable = self.visit(node.iter, prev_scope_id_dict, curr_scope_id_dict)[0]
+
+        # The body of a loop contains its own scope (it can create variables only it can see and can use 
+        # variables from its enclosing scope) so we copy the current scope and merge scopes
+        # to create the enclosing scope for the loop body
+        curr_scope_copy = copy.deepcopy(curr_scope_id_dict)
         merge_dicts(prev_scope_id_dict, curr_scope_id_dict)
+        loop_scope_id_dict = {}
 
-        target = self.visit(node.target, curr_scope_id_dict)[0]
-        iterable = self.visit(node.iter, curr_scope_id_dict)[0]
-
+        # When we pass in scopes, we pass what's currently in the previous scope along with 
+        # the curr scope which would consist of the loop variables (node.target) and the item
+        # we loop over (iter) though the second one shouldn't ever be accessed
         body = []
+        print(curr_scope_id_dict)
         for piece in (node.body + node.orelse):
-            body.extend(self.visit(piece, curr_scope_id_dict))
+            body.extend(self.visit(piece, curr_scope_id_dict, loop_scope_id_dict))
+        print(loop_scope_id_dict)
+
+        # Once we're out of the loop body we can copy the current scope back
+        curr_scope_id_dict = copy.deepcopy(curr_scope_copy)
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        count_var_name = f"generated_index_{self.var_count}"
-        list_name = f"generated_list_{self.var_count}"
+        count_var_name = f"generated-index-{self.var_count}"
+        list_name = f"generated-list-{self.var_count}"
         self.var_count += 1
 
         # TODO: Mark these as variables that were generated by this script at some point
-        count_var_id = self.id_count
-        self.id_count += 1
-        curr_scope_id_dict[count_var_name] = count_var_id 
+        # (^ This was a really old request, not sure if it's still needed at this point)
+        count_var_id = self.insert_next_id(curr_scope_id_dict, count_var_name)
 
-        list_var_id = self.id_count
-        self.id_count += 1
-        curr_scope_id_dict[list_name] = list_var_id 
+        list_var_id = self.insert_next_id(curr_scope_id_dict, list_name)
+
+        list_id = -1
+        if "list" not in self.global_identifier_dict.keys():
+            list_id = self.insert_next_id(self.global_identifier_dict, "list")
+        else:
+            list_id = self.global_identifier_dict["list"]
+
+        # Built-ins: "list", "len" 
+        len_id = -1
+        if "len" not in self.global_identifier_dict.keys():
+            len_id = self.insert_next_id(self.global_identifier_dict, "len")
+        else:
+            len_id = self.global_identifier_dict["len"]
 
         count_var = Assignment(Var(Name(name=count_var_name, id=count_var_id, source_refs=ref), "float", source_refs=ref), Number(0, source_refs=ref), source_refs=ref)
-        list_var = Assignment(Var(Name(name=list_name, id=list_var_id, source_refs=ref), "list", source_refs=ref), Call(Name(name="list", id=-1,source_refs=ref),[iterable],source_refs=ref), source_refs=ref)
+        list_var = Assignment(Var(Name(name=list_name, id=list_var_id, source_refs=ref), "list", source_refs=ref), 
+                    Call(Name(name="list", id=list_id, source_refs=ref),[iterable],source_refs=ref), source_refs=ref)
 
         loop_cond = BinaryOp(
             BinaryOperator.LT,
             Name(name=count_var_name, id=count_var_id, source_refs=ref),
-            Call(Name(name="len", id=-1, source_refs=ref), [Name(name=list_name,id=list_var_id,source_refs=ref)], source_refs=ref),
+            Call(Name(name="len", id=len_id, source_refs=ref), [Name(name=list_name,id=list_var_id,source_refs=ref)], source_refs=ref),
             source_refs=ref
         )
 
-        if isinstance(node.iter,ast.Call):
+        if isinstance(node.iter,ast.Call):   # For function calls like range(), list(), etc...
             if isinstance(node.target,ast.Tuple):
                 loop_assign = [Assignment(
-                    Tuple([Var(type="float",val=Name(f"{node.val.name}_",source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
-                    Subscript(Name(name=list_name, id=list_var_id, source_refs=ref),Name(name=count_var_name,source_refs=ref),source_refs=ref),
+                    Tuple([Var(type="float",val=Name(name=f"{node.val.name}_",id=-1,source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
+                    Subscript(Name(name=list_name, id=list_var_id, source_refs=ref), 
+                    Name(name=count_var_name, id=count_var_id, source_refs=ref),source_refs=ref),
                     source_refs=ref
                 ),
                 Assignment(
                     target,
-                    Tuple([Var(type="float",val=Name(f"{node.val.name}_",source_refs=ref),source_refs=ref) for node in target.values], source_refs=ref),
+                    Tuple([Var(type="float",val=Name(name=f"{node.val.name}_",id=-1,source_refs=ref),source_refs=ref) for node in target.values], source_refs=ref),
                     source_refs=ref
                 )]
             else:
                 loop_assign = [Assignment(
-                    Var(Name(node.target.id,source_refs=ref), "float", source_refs=ref),
-                    Subscript(Name(list_name, source_refs=ref), Name(count_var_name, source_refs=ref),source_refs=ref),
+                    Var(Name(name=node.target.id,id=curr_scope_id_dict[node.target.id],source_refs=ref), "float", source_refs=ref),
+                    Subscript(Name(name=list_name,id=list_var_id,source_refs=ref), 
+                    Name(name=count_var_name,id=count_var_id,source_refs=ref),source_refs=ref),
                     source_refs=ref
                 )]
-        elif isinstance(node.iter,ast.Attribute):
+        elif isinstance(node.iter,ast.Attribute): # For attributes like x.foo_list, x.foo(), etc
             if isinstance(node.target,ast.Tuple):
                 loop_assign = [Assignment(
-                    Tuple([Var(type="float",val=Name(f"{node.val.name}_",source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
-                    Subscript(Name(node.iter.id,source_refs=ref), Name(count_var_name,source_refs=ref),source_refs=ref),
+                    Tuple([Var(type="float",val=Name(f"{node.val.name}_",id=-1,source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
+                    Subscript(Name(name=node.iter.id,id=curr_scope_id_dict[node.iter.id],source_refs=ref), 
+                    Name(count_var_name,source_refs=ref),source_refs=ref),
                     source_refs=ref
                 ),
                 Assignment(
                     target,
-                    Tuple([Var(type="float",val=Name(f"{node.val.name}_",source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
+                    Tuple([Var(type="float",val=Name(name=f"{node.val.name}_",id=-1,source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
                     source_refs=ref
                 )]
             else:
                 loop_assign = [Assignment(
-                    Var(Name(node.target.id, source_refs=ref), "float", source_refs=ref),
-                    Subscript(Name(list_name, source_refs=ref), Name(count_var_name, source_refs=ref), source_refs=ref),
+                    Var(Name(name=node.target.id, id=curr_scope_id_dict[node.target.id], source_refs=ref), "float", source_refs=ref),
+                    Subscript(Name(name=list_name, id=list_var_id, source_refs=ref), 
+                    Name(name=count_var_name, id=count_var_id, source_refs=ref), source_refs=ref),
                     source_refs=ref
                 )]
         else:
             if isinstance(node.target,ast.Tuple):
                 loop_assign = [Assignment(
-                    Tuple([Var(type="float",val=Name(f"{node.val.name}_",source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
-                    Subscript(Name(node.iter.id,source_refs=ref), Name(count_var_name,source_refs=ref),source_refs=ref),
+                    Tuple([Var(type="float", val=Name(name=f"{node.val.name}_", id=-1, source_refs=ref), source_refs=ref) for node in target.values],source_refs=ref),
+                    Subscript(Name(name=node.iter.id, id=curr_scope_id_dict[node.iter.id], source_refs=ref), 
+                    Name(name=count_var_name, id=count_var_id, source_refs=ref), source_refs=ref),
                     source_refs=ref
                 ),
                 Assignment(
                     target,
-                    Tuple([Var(type="float",val=Name(f"{node.val.name}_",source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
+                    Tuple([Var(type="float", val=Name(name=f"{node.val.name}_", id=-1, source_refs=ref), source_refs=ref) for node in target.values],source_refs=ref),
                     source_refs=ref
                 )]
             else:
                 loop_assign = [Assignment(
-                    Var(Name(node.target.id, source_refs=ref), "float", source_refs=ref),
-                    Subscript(Name(list_name, source_refs=ref), Name(count_var_name, source_refs=ref), source_refs=ref),
+                    Var(Name(name=node.target.id, id=curr_scope_id_dict[node.target.id], source_refs=ref), "float", source_refs=ref),
+                    Subscript(Name(name=list_name, id=list_var_id, source_refs=ref), Name(name=count_var_name, id=count_var_id, source_refs=ref), source_refs=ref),
                     source_refs=ref
                 )]
         loop_increment = [Assignment(
-            Var(Name(count_var_name, source_refs=ref), "float", source_refs=ref),
-            BinaryOp(BinaryOperator.ADD, Name(count_var_name, source_refs=ref), Number(1, source_refs=ref), source_refs=ref),
+            Var(Name(name=count_var_name, id=count_var_id, source_refs=ref), "float", source_refs=ref),
+            BinaryOp(BinaryOperator.ADD, Name(name=count_var_name, id=count_var_id, source_refs=ref), Number(1, source_refs=ref), source_refs=ref),
             source_refs=ref
         )]
 
@@ -711,7 +893,9 @@ class PyASTToCAST():
         curr_scope_id_dict = {}
         if len(node.args.args) > 0:
             for arg in node.args.args:
+                #unique_name = construct_unique_name(self.filenames[-1], arg.arg)
                 self.insert_next_id(curr_scope_id_dict, arg.arg)
+                #self.insert_next_id(curr_scope_id_dict, unique_name)
                 args.append(Var(Name(arg.arg,id=curr_scope_id_dict[arg.arg],source_refs=[SourceRef(self.filenames[-1], arg.col_offset, arg.end_col_offset, arg.lineno, arg.end_lineno)]), 
                 "float", # TODO: Correct typing instead of just 'float'
                 source_refs=[SourceRef(self.filenames[-1], arg.col_offset, arg.end_col_offset, arg.lineno, arg.end_lineno)]))
@@ -756,7 +940,17 @@ class PyASTToCAST():
         # since none of the variables within here should exist outside of here..?
         # TODO: this might need to be different, since Python variables can exist outside of a scope?? 
         prev_scope_id_dict = copy.deepcopy(prev_scope_id_dict_copy)
-        return [FunctionDef(Name(node.name,prev_scope_id_dict[node.name]), args, body, source_refs=ref)]
+        
+        # Global level functions have their module names appended to them, we make sure
+        # we have the correct name depending on whether or not we're visiting a global
+        # level function or a function enclosed within another function
+        if node.name in prev_scope_id_dict.keys():
+            return [FunctionDef(Name(node.name,prev_scope_id_dict[node.name]), args, body, source_refs=ref)]
+        else:
+            unique_name = construct_unique_name(self.filenames[-1], node.name) 
+            return [FunctionDef(Name(node.name,prev_scope_id_dict[unique_name]), args, body, source_refs=ref)]
+
+
 
     @visit.register
     def visit_Lambda(self, node: ast.Lambda, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -792,7 +986,7 @@ class PyASTToCAST():
         return [FunctionDef("LAMBDA", args, body, source_refs=ref)]
 
     @visit.register
-    def visit_ListComp(self, node: ast.ListComp, prev_scope_id_dict: Dict):
+    def visit_ListComp(self, node: ast.ListComp, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """Visits a PyAST ListComp node, which are used for Python list comprehensions.
         List comprehensions generate a list from some generator expression.
 
@@ -827,13 +1021,50 @@ class PyASTToCAST():
             else:
                 outer_loop = ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),iter=first_gen.iter,body=[node.elt],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
 
-        visit_loop = self.visit(outer_loop, prev_scope_id_dict)
+        visit_loop = self.visit(outer_loop, prev_scope_id_dict, curr_scope_id_dict)
 
         #TODO: Multiple generators, if statements
         while i < len(generators):    
             i += 1
 
         return visit_loop
+
+    @visit.register
+    def visit_DictComp(self, node: ast.DictComp, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
+        ref = [self.filenames[-1], node.col_offset, node.end_col_offset, node.lineno, node.end_lineno]
+        
+
+        # node (ast.DictCompt)
+        #  key       - what makes the keys 
+        #  value     - what makes the valuedds
+        #  generators - list of 'comprehension' nodes 
+        
+        generators = node.generators
+        first_gen = generators[0] 
+
+        temp_dict_name = f"dict_temp%"
+        temp_assign = ast.Assign(targets=[ast.Name(id=temp_dict_name,ctx=ast.Store(),col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])], 
+                                 value=ast.Dict(keys=[], values=[], col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
+                                 type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+        loop = None
+        if isinstance(first_gen.iter, ast.Call):
+            loop_body = [ast.Assign(targets=[node.key],
+                                    value=node.value,
+                                    type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+                        ]
+            loop = ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                    iter=first_gen.iter.func,
+                                    body=loop_body,orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+
+        temp_cast = self.visit(temp_assign, prev_scope_id_dict, curr_scope_id_dict)
+        loop_cast = self.visit(loop, prev_scope_id_dict, curr_scope_id_dict)
+
+        to_ret = []
+        to_ret.extend(temp_cast)
+        to_ret.extend(loop_cast)
+
+        print(to_ret)
+        return to_ret
 
 
     @visit.register
@@ -883,7 +1114,8 @@ class PyASTToCAST():
         """
 
         for v in node.names:
-            curr_scope_id_dict[v] = self.global_identifier_dict[v]   
+            unique_name = construct_unique_name(self.filenames[-1],v)
+            curr_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]   
         return []
 
     @visit.register
@@ -904,7 +1136,7 @@ class PyASTToCAST():
         return [ModelIf(node_test[0], node_body, node_orelse, source_refs=ref)]
 
     @visit.register
-    def visit_Import(self, node:ast.Import, prev_scope_id_dict: Dict):
+    def visit_Import(self, node:ast.Import, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """Visits a PyAST Import node, which is used for importing libraries
         that are used in programs. In particular, it's imports in the form of
         'import X', where X is some library.
@@ -923,26 +1155,39 @@ class PyASTToCAST():
         name = alias.name
         path = f"./{name.replace('.','/')}.py"
 
+        # module1.x, module2.x
+        # {module1: {x: 1}, module2: {x: 4}}
 
+        # For cases like 'import module as something_else'
+        # We note the alias that the import uses for this module
         if alias.asname is not None:
             self.aliases[alias.asname] = name
             name = alias.asname
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        
+        # If we find the file by searching the path, then this is a user-imported module
         if os.path.isfile(path):
-            true_name = self.aliases[name] if name in self.aliases else name
-            if true_name in self.visited:
-                return [Module(name=true_name,body=[],source_refs=ref)]
+            true_module_name = self.aliases[name] if name in self.aliases else name
+            if true_module_name in self.visited:
+                return [Module(name=true_module_name,body=[],source_refs=ref)]
             else:
                 file_contents = open(path).read()
-                self.visited.add(true_name)
-                return self.visit(ast.parse(file_contents), {})
+                self.filenames.append(true_module_name)
+                self.visited.add(true_module_name)
+                
+                self.insert_next_id(self.global_identifier_dict, true_module_name)
+
+                to_ret = self.visit(ast.parse(file_contents), {}, {})
+                self.filenames.pop()
+                return to_ret
         else:
+            self.insert_next_id(self.global_identifier_dict, name)
             return [Module(name=name,body=[],source_refs=ref)]
 
 
     @visit.register
-    def visit_ImportFrom(self, node:ast.ImportFrom, prev_scope_id_dict: Dict):
+    def visit_ImportFrom(self, node:ast.ImportFrom, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """Visits a PyAST ImportFrom node, which is used for importing libraries
         that are used in programs. In particular, it's imports in the form of
         'import X', where X is some library.
@@ -990,12 +1235,12 @@ class PyASTToCAST():
 
                     visited_funcs = []
                     for f in funcs:
-                        visited_funcs.extend(self.visit(f, {}))
+                        visited_funcs.extend(self.visit(f, {}, {}))
                     
                     self.filenames.pop()
                     return visited_funcs
                 else: # Importing the entire file
-                    full_file = self.visit(contents, {})
+                    full_file = self.visit(contents, {}, {})
                     self.filenames.pop()
                     return full_file
         else:
@@ -1044,19 +1289,36 @@ class PyASTToCAST():
         for piece in node.body:
             # Defer visiting function defs until all global vars are processed
             if isinstance(piece, ast.FunctionDef):
-                self.insert_next_id(curr_scope_id_dict, piece.name)
-                prev_scope_id_dict[piece.name] = curr_scope_id_dict[piece.name]
+                unique_name = construct_unique_name(self.filenames[-1],piece.name)
+                self.insert_next_id(curr_scope_id_dict, unique_name)
+                prev_scope_id_dict[unique_name] = curr_scope_id_dict[unique_name]
                 funcs.append(piece)
                 continue
 
             to_add = self.visit(piece, prev_scope_id_dict, curr_scope_id_dict)
+
+            # Global variables (which come about from assignments at the module level)
+            # need to have their identifier names set correctly so they can be
+            # accessed appropriately later on
+            # We check if we just visited an assign and fix its key/value pair in the dictionary
+            # So instead of 
+            #   "var_name" -> ID
+            # It becomes
+            #   "module_name.var_name" -> ID
+            # in the dictionary
+            if isinstance(piece, ast.Assign):
+                var_name = get_node_name(to_add[0])
+
+                temp_id = curr_scope_id_dict[var_name]
+                del curr_scope_id_dict[var_name]
+                unique_name = construct_unique_name(self.filenames[-1], var_name)
+                curr_scope_id_dict[unique_name] = temp_id
 
             if isinstance(to_add,Module):
                 body.extend([to_add])
             else:
                 body.extend(to_add)
 
-        # Set all the global variables and function names that we've visited
         merge_dicts(curr_scope_id_dict, self.global_identifier_dict)
         merge_dicts(prev_scope_id_dict, curr_scope_id_dict)
 
@@ -1083,6 +1345,8 @@ class PyASTToCAST():
         # TODO: Typing so it's not hardcoded to floats
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
+        #unique_name = construct_unique_name(self.filenames[-1], node.id)
+
         if isinstance(node.ctx,ast.Load):
             if node.id in self.aliases: 
                 return [Name(self.aliases[node.id], id=-1, source_refs=ref)]
@@ -1091,7 +1355,20 @@ class PyASTToCAST():
                 if node.id in prev_scope_id_dict:
                     curr_scope_id_dict[node.id] = prev_scope_id_dict[node.id]
                 else:
-                    curr_scope_id_dict[node.id] = self.global_identifier_dict[node.id]
+                    unique_name = construct_unique_name(self.filenames[-1], node.id)
+                    
+                    # We can have the very odd case where a variable is used in a function before 
+                    # it even exists. To my knowledge this happens in one scenario:
+                    # - A global variable, call it z, is used in a function
+                    # - Before that function is called in Python code, that global variable
+                    #   z is set by another module/another piece of code as a global
+                    #   (i.e. by doing module_name.z = a value)
+                    # It's not something that is very common (or good) to do, but regardless
+                    # we'll catch it here just in case.
+                    if unique_name not in self.global_identifier_dict.keys():
+                        self.insert_next_id(self.global_identifier_dict, unique_name)
+
+                    curr_scope_id_dict[node.id] = self.global_identifier_dict[unique_name]
             
             return [Name(node.id, id=curr_scope_id_dict[node.id], source_refs=ref)]
             
@@ -1099,11 +1376,20 @@ class PyASTToCAST():
             if node.id in self.aliases: 
                 return [Var(Name(self.aliases[node.id], id=-1, source_refs=ref), "float", source_refs=ref)]
 
-            if node.id in curr_scope_id_dict:
-                return [Var(Name(node.id, id=curr_scope_id_dict[node.id],source_refs=ref), "float", source_refs=ref)]
-            else:
-                self.insert_next_id(curr_scope_id_dict, node.id)
-                return [Var(Name(node.id, id=curr_scope_id_dict[node.id],source_refs=ref), "float", source_refs=ref)]
+            #if node.id in curr_scope_id_dict:
+             #   return [Var(Name(node.id, id=curr_scope_id_dict[node.id],source_refs=ref), "float", source_refs=ref)]
+            
+            if node.id not in curr_scope_id_dict:
+                if node.id in prev_scope_id_dict:
+                    curr_scope_id_dict[node.id] = prev_scope_id_dict[node.id]
+                else:
+                    self.insert_next_id(curr_scope_id_dict,node.id)
+
+            return [Var(Name(node.id, id=curr_scope_id_dict[node.id],source_refs=ref), "float", source_refs=ref)]
+
+            #else:
+            #    self.insert_next_id(curr_scope_id_dict, node.id)
+            #    return [Var(Name(node.id, id=curr_scope_id_dict[node.id],source_refs=ref), "float", source_refs=ref)]
 
         if isinstance(node.ctx,ast.Del):
             # TODO: At some point..
@@ -1189,7 +1475,7 @@ class PyASTToCAST():
             return [Set([], source_refs=ref)]
 
     @visit.register
-    def visit_Subscript(self, node: ast.Subscript, prev_scope_id_dict: Dict):
+    def visit_Subscript(self, node: ast.Subscript, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """Visits a PyAST Subscript node, which represents subscripting into
         a list in Python. A Subscript is either a Slice (i.e. x[0:2]), an 
         Extended slice (i.e. x[0:2, 3]), or a constant (i.e. x[3]). 
@@ -1206,7 +1492,7 @@ class PyASTToCAST():
             Subscript: A CAST Subscript node
         """
 
-        value = self.visit(node.value, prev_scope_id_dict)[0]
+        value = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)[0]
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
         # 'Visit' the slice 
@@ -1216,12 +1502,12 @@ class PyASTToCAST():
 
         if isinstance(slc,ast.Slice):
             if slc.lower is not None:
-                lower = self.visit(slc.lower, prev_scope_id_dict)[0]
+                lower = self.visit(slc.lower, prev_scope_id_dict, curr_scope_id_dict)[0]
             else:
                 lower = Number(0, source_refs=ref)
             
             if slc.upper is not None:
-                upper = self.visit(slc.upper, prev_scope_id_dict)[0]
+                upper = self.visit(slc.upper, prev_scope_id_dict, curr_scope_id_dict)[0]
             else:
                 if isinstance(node.value,ast.Call):
                     if isinstance(node.value.func,ast.Attribute):
@@ -1234,7 +1520,7 @@ class PyASTToCAST():
                     upper = Call(Name("len", source_refs=ref), [Name(node.value.id, source_refs=ref)], source_refs=ref)
 
             if slc.step is not None:
-                step = self.visit(slc.step, prev_scope_id_dict)[0]
+                step = self.visit(slc.step, prev_scope_id_dict, curr_scope_id_dict)[0]
             else:
                 step = Number(1, source_refs=ref)
 
@@ -1323,12 +1609,12 @@ class PyASTToCAST():
                     # the slice bounds to the new temp list 
                     # Append the cast and temp list accordingly
                     if dim.lower is not None:
-                        lower = self.visit(dim.lower, prev_scope_id_dict)[0]
+                        lower = self.visit(dim.lower, prev_scope_id_dict, curr_scope_id_dict)[0]
                     else:
                         lower = Number(0, source_refs=ref)
                     
                     if dim.upper is not None:
-                        upper = self.visit(dim.upper, prev_scope_id_dict)[0]
+                        upper = self.visit(dim.upper, prev_scope_id_dict, curr_scope_id_dict)[0]
                     else:
                         if isinstance(node.value,ast.Call):
                             if isinstance(node.value.func,ast.Attribute):
@@ -1341,7 +1627,7 @@ class PyASTToCAST():
                             upper = Call(Name("len", source_refs=ref), [Name(node.value.id, source_refs=ref)], source_refs=ref)
 
                     if dim.step is not None:
-                        step = self.visit(dim.step, prev_scope_id_dict)[0]
+                        step = self.visit(dim.step, prev_scope_id_dict, curr_scope_id_dict)[0]
                     else:
                         step = Number(1, source_refs=ref)
 
@@ -1377,7 +1663,7 @@ class PyASTToCAST():
                     # and copies the elements according to the index number
                     # Append that new temp list and its corresponding CAST 
                     # to our result 
-                    curr_dim = self.visit(dim, prev_scope_id_dict)[0]
+                    curr_dim = self.visit(dim, prev_scope_id_dict, curr_scope_id_dict)[0]
 
                     loop_cond = BinaryOp(
                         BinaryOperator.LT,
@@ -1406,7 +1692,7 @@ class PyASTToCAST():
 
             return result
         else:
-            sl = self.visit(slc, prev_scope_id_dict)
+            sl = self.visit(slc, prev_scope_id_dict, curr_scope_id_dict)
 
         return [Subscript(value, sl[0], source_refs=ref)]
 
@@ -1464,7 +1750,7 @@ class PyASTToCAST():
         return body
 
     @visit.register
-    def visit_While(self, node: ast.While, prev_scope_id_dict: Dict, curr_scope_id_dict):
+    def visit_While(self, node: ast.While, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """Visits a PyAST While node, which represents a while loop.
 
         Args:
@@ -1477,10 +1763,16 @@ class PyASTToCAST():
 
         test = self.visit(node.test, prev_scope_id_dict, curr_scope_id_dict)[0]
 
+        # Loops have their own enclosing scopes
+        curr_scope_copy = copy.deepcopy(curr_scope_id_dict)
+        merge_dicts(prev_scope_id_dict, curr_scope_id_dict)
+        loop_body_scope = {}
         body = []
         for piece in (node.body + node.orelse):
-            to_add = self.visit(piece, prev_scope_id_dict, curr_scope_id_dict)
+            to_add = self.visit(piece, curr_scope_id_dict, loop_body_scope)
             body.extend(to_add)
+        
+        curr_scope_id_dict = copy.deepcopy(curr_scope_copy)
         
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         return [Loop(expr=test, body=body, source_refs=ref)]
