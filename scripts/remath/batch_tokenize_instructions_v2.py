@@ -125,15 +125,13 @@ def get_info_from_parsed_metadata(parsed_metadata: List[str], size=None) -> \
     # string
     elif len(parsed_metadata) == 3 and parsed_metadata[0] == ':array' and parsed_metadata[1] == 'java.lang.String':
         val = parsed_metadata[2]
-        # format it if it has answer in it in a nice way
-        match = re.search('.*Answer', val)
-        if match:
-            # remove = character
-            val = re.sub('= ', '', val)
-            # remove " characters
-            val = re.sub('"', '', val)
-            # remove any 1 or more \ followed by n
-            val = re.sub(r'\\+n', '', val)
+        # format strings in a nice way
+        # remove = character if any
+        val = re.sub('= ', '', val)
+        # remove " characters if any
+        val = re.sub('"', '', val)
+        # remove any 1 or more \ followed by n
+        val = re.sub(r'\\+n', '', val)
         return ':string', val
     else:
         raise Exception(f"Unable to handle this parsed metadata: {parsed_metadata}")
@@ -354,16 +352,16 @@ class Function:
         # tokenized version of lines: List of instructions
         self.instructions: List[Instruction] = list()
         # list of tokens to be used for NMT: no <sep> tag
-        self.tokens_nmt = list()
+        self.token_sequence = list()
         # list of tokens to be used for NMT: with <sep> tag
-        self.tokens_nmt_space = list()
+        self.token_sequence_sep = list()
         # each function has key-value pairs for value tokens, param tokens, and memory_address
         # and instruction_address tokens [for jump targets]
-        self.value_tokens = Tokens(name="value", base='_v')
-        self.param_tokens = Tokens(name="param", base='_p')
-        self.memory_address_tokens = Tokens(name="memory_address", base='_m')
+        self.value_tokens_map = Tokens(name="value", base='_v')
+        self.param_tokens_map = Tokens(name="param", base='_p')
+        self.memory_address_tokens_map = Tokens(name="memory_address", base='_m')
         # also tokenize the jmp [conditional/unconditional] targets
-        self.jump_address_tokens = Tokens(name="jump_address", base='_a')
+        self.jump_address_tokens_map = Tokens(name="jump_address", base='_a')
         # list of functions called by this function
         self.called_fns = []
         # The function has parameters: which are passed either through the registers or throuhg the
@@ -380,9 +378,9 @@ class Function:
 
         # each function has nmt_tokens: each nmt_token is associated with an instruction_address
         # track address for each token: no <sep> token
-        self.token_sequence_address = []
+        self.address_sequence = []
         # track address for each token: with <sep> token: for <sep> token: put the next address
-        self.token_sequence_address_space = []
+        self.address_sequence_sep = []
 
     def add_lines(self, lines: List[str]) -> None:
         """
@@ -400,7 +398,7 @@ class Function:
         # add instruction_address to the nmt_tokens if only it's the
         # target of the conditional and unconditional jump
         if token in self.jump_targets:
-            key = self.jump_address_tokens.add_token(token)
+            key = self.jump_address_tokens_map.add_token(token)
             # because it's a jump target append 'TAG' token
             nmt_tokens_instruction.append('TAG')
             nmt_tokens_instruction.append(key)
@@ -417,7 +415,7 @@ class Function:
         also updates nmt token list and nmt address sequence list
         """
         # replace jmp 0xabcd => jmp _a0
-        key = self.jump_address_tokens.add_token(token)
+        key = self.jump_address_tokens_map.add_token(token)
         nmt_tokens_instruction.append(key)
         nmt_sequence_address.append(address)
 
@@ -428,7 +426,7 @@ class Function:
         handles adding jump values to required token fields and updates them
         also updates nmt token list and nmt address sequence list
         """
-        key = self.value_tokens.add_token(token)
+        key = self.value_tokens_map.add_token(token)
         nmt_tokens_instruction.append(key)
         nmt_sequence_address.append(address)
 
@@ -447,15 +445,15 @@ class Function:
             address_type = param_or_local(token)
             # address_type is either param or local
             if address_type == "param":
-                key = self.param_tokens.add_token(token)
+                key = self.param_tokens_map.add_token(token)
                 nmt_tokens_instruction.append(key)
                 nmt_sequence_address.append(address)
             else:
-                key = self.memory_address_tokens.add_token(token)
+                key = self.memory_address_tokens_map.add_token(token)
                 nmt_tokens_instruction.append(key)
                 nmt_sequence_address.append(address)
         else:
-            key = self.memory_address_tokens.add_token(token)
+            key = self.memory_address_tokens_map.add_token(token)
             nmt_tokens_instruction.append(key)
             nmt_sequence_address.append(address)
 
@@ -488,7 +486,7 @@ class Function:
         """
         if index == 3 and token in self.param_registers:
             if not self.param_registers[token].defined_before:
-                key = self.param_tokens.add_token(token)
+                key = self.param_tokens_map.add_token(token)
                 nmt_tokens_instruction.append(key)
                 nmt_sequence_address.append(address)
                 self.param_registers[token].defined_before = True
@@ -574,21 +572,23 @@ class Function:
                     nmt_sequence_address.append(instruction.address)
 
             # add the tokens of a line (instructon) to tokens_nmt
-            self.tokens_nmt.extend(nmt_tokens_instruction)
-            self.token_sequence_address.extend(nmt_sequence_address)
+            # add to the token_sequence and address_sequence no <sep>
+            self.token_sequence.extend(nmt_tokens_instruction)
+            self.address_sequence.extend(nmt_sequence_address)
             # add the tokens of a line (instruction) to tokens_nmt
             # add the <sep> tag for separating instructions
             if instruction_index > 0:
-                self.tokens_nmt_space.append('<sep>')
-                self.tokens_nmt_space.extend(nmt_tokens_instruction)
-                self.token_sequence_address_space.append(instruction.address)
-                self.token_sequence_address_space.extend(nmt_sequence_address)
-            else:
-                self.tokens_nmt_space.extend(nmt_tokens_instruction)
-                self.token_sequence_address_space.extend(nmt_sequence_address)
+                # add <sep> token
+                self.token_sequence_sep.append('<sep>')
+                # add address for <sep> token
+                self.address_sequence_sep.append(instruction.address)
 
-        assert len(self.tokens_nmt) == len(self.token_sequence_address)
-        assert len(self.tokens_nmt_space) == len(self.token_sequence_address_space)
+            # add token_sequence and address_sequence with <sep>
+            self.token_sequence_sep.extend(nmt_tokens_instruction)
+            self.address_sequence_sep.extend(nmt_sequence_address)
+
+        assert len(self.token_sequence) == len(self.address_sequence)
+        assert len(self.token_sequence_sep) == len(self.address_sequence_sep)
         return functions_called
 
 
@@ -775,37 +775,37 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
 
     with open(_dst_filepath, 'w') as write_file:
         for function in tokenized_functions:
+            write_file.write(f'function_name: {function.name}\n')
             if function.name != 'main':
                 write_file.write(f'function_label: {program.function_tokens.get_label(function.name)}\n')
-            write_file.write(f'function_name: {function.name}\n')
 
             # token sequence and sequence address without <sep>
-            write_file.write(f'NMT input sequence: no <sep> token\n')
-            write_file.write(str(function.tokens_nmt))
+            write_file.write(f'token_sequence\n')
+            write_file.write(str(function.token_sequence))
             write_file.write('\n\n')
-            write_file.write('token sequence address: no <sep> token\n')
-            write_file.write(str(function.token_sequence_address))
+            write_file.write('address_sequence\n')
+            write_file.write(str(function.address_sequence))
             write_file.write('\n\n')
 
             # token sequence and sequence address with <sep>
-            write_file.write(f'NMT input sequence: with <sep> token\n')
-            write_file.write(str(function.tokens_nmt_space))
+            write_file.write(f'token_sequence_sep\n')
+            write_file.write(str(function.token_sequence_sep))
             write_file.write('\n\n')
-            write_file.write('token sequence address: with <sep> token\n')
-            write_file.write(str(function.token_sequence_address_space))
+            write_file.write('address_sequence_sep\n')
+            write_file.write(str(function.address_sequence_sep))
             write_file.write('\n\n')
 
-            write_file.write('address tokens\n')
-            write_file.write(str(function.jump_address_tokens))
+            write_file.write('address_tokens_map\n')
+            write_file.write(str(function.jump_address_tokens_map))
             write_file.write('\n\n')
-            write_file.write('param tokens\n')
-            write_file.write(str(function.param_tokens))
+            write_file.write('param_tokens_map\n')
+            write_file.write(str(function.param_tokens_map))
             write_file.write('\n\n')
-            write_file.write('value tokens\n')
-            write_file.write(str(function.value_tokens))
+            write_file.write('value_tokens_map\n')
+            write_file.write(str(function.value_tokens_map))
             write_file.write('\n\n')
-            write_file.write('memory address tokens\n')
-            write_file.write(str(function.memory_address_tokens))
+            write_file.write('memory_address_tokens_map\n')
+            write_file.write(str(function.memory_address_tokens_map))
             write_file.write(f"\n\n")
 
 
