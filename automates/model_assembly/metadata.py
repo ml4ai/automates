@@ -140,11 +140,14 @@ class LambdaType(AutoMATESBaseEnum):
     EXTRACT = auto()
     PACK = auto()
     OPERATOR = auto()
+    LOOP_TOP_INTERFACE = auto()
 
     def __str__(self):
         return str(self.name)
 
     def shortname(self):
+        if (self == LambdaType.LOOP_TOP_INTERFACE):
+            return "LTI"
         return self.__str__()[0]
 
     @classmethod
@@ -163,6 +166,8 @@ class LambdaType(AutoMATESBaseEnum):
             return cls.PACK
         elif type_str == "extract":
             return cls.EXTRACT
+        elif type_str == "loop_top_interface":
+            return cls.LOOP_TOP_INTERFACE
         else:
             raise ValueError(f"Unrecognized lambda type name: {type_str}")
 

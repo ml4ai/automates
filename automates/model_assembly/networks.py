@@ -778,6 +778,10 @@ class GrFNSubgraph:
             return "forestgreen"
         elif type_str == "LoopContainer":
             return "navyblue"
+        elif type_str == "ModuleContainer":
+            return "grey"
+        elif type_str == "CallContainer":
+            return "purple"
         else:
             raise TypeError(f"Unrecognized subgraph type: {type_str}")
 
