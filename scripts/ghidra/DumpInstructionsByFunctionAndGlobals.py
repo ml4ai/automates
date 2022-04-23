@@ -19,7 +19,7 @@ PROGRAM_NAME = currentProgram.getName()
 
 with open(PROGRAM_NAME + "-instructions.txt", "w") as write_file:
     write_file.write('>>> FILE_START: {}\n'.format(currentProgram.getName()))
-    write_file.write(f'>>> GLOBALS: {str(address_globbal_variables)}')
+    write_file.write('>>> GLOBALS: {}\n'.format(str(address_globbal_variables)))
 
     LISTING = currentProgram.getListing()
     FM = currentProgram.getFunctionManager()
