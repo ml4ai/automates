@@ -315,6 +315,9 @@ class Program:
         # information to the function and function updates global_tokens_map
         self.global_tokens_map = Tokens(name="globals", base='_g')
 
+        # list of library functions: so that we don't try to tokenize them
+        self.library_functions = ['printf']
+
     def update_name(self, name: str) -> None:
         self.name = name
 
@@ -469,13 +472,9 @@ class Function:
         handles adding jump values to required token fields and updates them
         also updates nmt token list and nmt address sequence list
         """
-        if current_fn_name != 'printf':
-            label = function_tokens_map.add_token(current_fn_name)
-            nmt_tokens_instruction.append(label)
-            nmt_sequence_address.append(address)
-        else:
-            nmt_tokens_instruction.append(current_fn_name)
-            nmt_sequence_address.append(address)
+        label = function_tokens_map.add_token(current_fn_name)
+        nmt_tokens_instruction.append(label)
+        nmt_sequence_address.append(address)
 
     def register_handler(self, token: str, address: str, index: int,
                          nmt_tokens_instruction: List[str],
@@ -539,7 +538,6 @@ class Function:
             # we need to append the address
             nmt_sequence_address = list()
             # keep track of current function name: to find if it's printf or not
-            current_fn_name = ''
             for index, instruction_token in enumerate(instruction.tokenized):
                 token_type, token = instruction_token
                 if token_type == "instruction_address":
@@ -559,14 +557,12 @@ class Function:
                                                 nmt_tokens_instruction,
                                                 nmt_sequence_address)
                 elif token_type == 'function_name':
-                    current_fn_name = token
-                    self.function_name_handler(current_fn_name, instruction.address,
+                    self.function_name_handler(token, instruction.address,
                                                function_tokens_map,
                                                nmt_tokens_instruction,
                                                nmt_sequence_address)
                 elif token_type == 'function_address':
-                    if current_fn_name != 'printf':
-                        functions_called.append(token)
+                    functions_called.append(token)
                 elif token_type == "register":
                     self.register_handler(token, instruction.address, index,
                                           nmt_tokens_instruction,
@@ -791,7 +787,9 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
                                              program.globals, program.global_tokens_map)
         for fn_addr in fn_list:
             fn = program.functions[fn_addr]
-            program.stack.push(fn)
+            # do not push library functions
+            if fn.name not in program.library_functions:
+                program.stack.push(fn)
 
     # collect some stats about the program and dump them to the end of __tokens.txt file
 
