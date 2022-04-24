@@ -24,7 +24,7 @@ import ast
 import pathlib
 import os
 import re
-from typing import List, Dict, Tuple, Union
+from typing import List, Dict, Tuple, Union, Any
 from collections import OrderedDict
 import struct
 
@@ -107,35 +107,14 @@ def parse_fn_name_from_parsed_metadata(parsed_metadata: List[str]) -> Tuple[str,
 
 
 def parse_hex_float_value(hex_value: str, size: str) -> str:
-    # TODO I think we need to handle other types
-    # TODO I think we need to be sure about the endianness
+    # TODO: we need to handle other types
+    # TODO: we need to be sure about the endianness
     if size == 'dword':
         return struct.unpack('!f', bytes.fromhex(hex_value))[0]
     elif size == 'qword':
         return struct.unpack('!d', bytes.fromhex(hex_value))[0]
     else:
         raise Exception(f'ERROR parse_hex_float_value(): Unhandled size {size}')
-
-
-def get_info_from_parsed_metadata(parsed_metadata: List[str], size=None) -> \
-        Union[Tuple[str, str, str], Tuple[str, str]]:
-    # interpreted hex float
-    if len(parsed_metadata) == 3 and parsed_metadata[2].startswith('= ') and parsed_metadata[2][-1] == 'h':
-        hex_str = parsed_metadata[2][2:-1]
-        return ':interpreted_hex_float', hex_str, parse_hex_float_value(hex_str, size)
-    # string
-    elif len(parsed_metadata) == 3 and parsed_metadata[0] == ':array' and parsed_metadata[1] == 'java.lang.String':
-        val = parsed_metadata[2]
-        # format strings in a nice way
-        # remove = character if any
-        val = re.sub('= ', '', val)
-        # remove " characters if any
-        val = re.sub('"', '', val)
-        # remove any 1 or more \ followed by n
-        val = re.sub(r'\\+n', '', val)
-        return ':string', val
-    else:
-        raise Exception(f"Unable to handle this parsed metadata: {parsed_metadata}")
 
 
 def parse_hex_value(value: str) -> Tuple[str, str, int]:
@@ -616,6 +595,52 @@ class Instruction:
         # tokenized version of me
         self.tokenized = []
 
+    def get_info_from_string(self):
+        """
+        extract information from string format
+        """
+        val = self.parsed_metadata[2]
+        # format strings in a nice way
+        # remove = character if any
+        val = re.sub('= ', '', val)
+        # remove " characters if any
+        val = re.sub('"', '', val)
+        # remove any 1 or more \ followed by n
+        val = re.sub(r'\\+n', '', val)
+        # uninitialized globals have '??' in their string representation
+        if '??' in val:
+            return ':string', 'not initialized'
+        else:
+            return ':string', val
+
+    def get_info_from_hex(self, size):
+        # check if floating point registers present in the operands
+        uses_floating_point_register = False
+        for operand in self.operands:
+            if 'XMM' in operand:
+                uses_floating_point_register = True
+        if uses_floating_point_register:
+            hex_str = self.parsed_metadata[2][2:-1]
+            return ':interpreted_hex_float', hex_str, parse_hex_float_value(hex_str, size)
+        else:
+            hex_str = self.parsed_metadata[2][2:-1]
+            # remove leading zeros and add '0x'
+            hex_str = '0x' + hex_str.lstrip("0")
+            return parse_hex_value(hex_str)
+
+    def get_info_from_parsed_metadata(self, size=None) -> \
+            Union[Tuple[str, str, str], Tuple[str, str], Tuple[str, str, int]]:
+        # interpreted hex float
+        if len(self.parsed_metadata) == 3 and self.parsed_metadata[2].startswith('= ') and \
+                self.parsed_metadata[2][-1] == 'h':
+            return self.get_info_from_hex(size)
+        # string
+        elif len(self.parsed_metadata) == 3 and self.parsed_metadata[0] == ':array' and \
+                self.parsed_metadata[1] == 'java.lang.String':
+            return self.get_info_from_string()
+        else:
+            raise Exception(f"Unable to handle this parsed metadata: {self.parsed_metadata}")
+
     def tokenize_function_call_instruction(self) -> List[Tuple[str, str]]:
         """
         tokenize operands for function call (with metadata / no metadata)
@@ -645,7 +670,93 @@ class Instruction:
         assert len(self.operands) == 1
         return [("jump_address", self.operands[0])]
 
-    def tokenize_normal_instruction(self, global_addresses: List[str]) -> List[Tuple[str, str]]:
+    def value_token_handler(self, operand: str, tokens) -> None:
+        """
+        handle instruction that starts with 0x or -0x
+        """
+        if self.parsed_metadata:
+            # matches following sample
+            # opcode reg, 0xnum
+            # metadata: [':array', 'java.lang.String', '= "Answer: %g\\\\n"']
+            parsed_value = self.get_info_from_parsed_metadata()
+            tokens.append(("value", parsed_value))
+        else:
+            # matches the following sample
+            # opcode reg, 0xnum && (no metadata)
+            value = parse_hex_value(operand)
+            tokens.append(("value", value))
+
+    def global_token_handler(self, operand, tokens):
+        """
+        find if memory address is global memory address and handle it
+        """
+        size = operand.split(' ')[0]
+        parsed_value = self.get_info_from_parsed_metadata(size)
+        tokens.append(("global", parsed_value))
+
+    @staticmethod
+    def check_global(operand, global_addresses):
+        """
+        check if memory address is a global
+        return True if global mem address else False
+        """
+        match = re.search(r'\[.*', operand)
+        address = match.group(0)[1:-1]
+        if address in global_addresses:
+            return True
+        else:
+            return False
+
+    def normal_memory_ptr_token_handler(self, operand, tokens):
+        """
+        normal memory access [not global] with ptr in it
+        """
+        # matches opcode reg *ptr* (with and without metadata)
+        if self.parsed_metadata:
+            # get size directive
+            size = operand.split(' ')[0]
+            parsed_value = self.get_info_from_parsed_metadata(size)
+            tokens.append(("value", parsed_value))
+        else:
+            tokens.append(("memory_address", operand))
+
+    def normal_memory_token_handler(self, operand, tokens):
+        """
+        normal memory access [not global] no ptr in it
+        """
+        # matches opcode reg [address_calculation]
+        # sometimes has reg [address] metadata that has Answer: %d
+        if self.parsed_metadata:
+            parsed_value = self.get_info_from_parsed_metadata()
+            tokens.append(("value", parsed_value))
+        else:
+            tokens.append(("memory_address", operand))
+
+    def memory_address_ptr_handler(self, operand: str, global_addresses, tokens) -> None:
+        """
+        handle instruction [memory access] that has ptr in it
+        """
+        is_global = self.check_global(operand, global_addresses)
+        if is_global:
+            # global variable treat differently
+            self.global_token_handler(operand, tokens)
+        else:
+            # normal memory access with ptr in it
+            self.normal_memory_ptr_token_handler(operand, tokens)
+
+    def memory_address_handler(self, operand, global_addresses, tokens):
+        """
+        handle instruction [memory access] but not ptr in it
+        """
+        is_global = self.check_global(operand, global_addresses)
+        if is_global:
+            # global variable treat differently
+            self.global_token_handler(operand, tokens)
+        else:
+            # normal memory access with ptr in it
+            self.normal_memory_token_handler(operand, tokens)
+
+    def tokenize_normal_instruction(self, global_addresses: List[str]) -> List[Tuple[str, Any]]:
         """
         tokenize normal operands (with metadata / no metadata)
         """
@@ -653,49 +764,16 @@ class Instruction:
         for operand in self.operands:
             # value tokens
             if operand.startswith('0x') or operand.startswith('-0x'):
-                if self.parsed_metadata:
-                    # matches following sample
-                    # opcode reg, 0xnum
-                    # metadata: [':array', 'java.lang.String', '= "Answer: %g\\\\n"']
-                    parsed_value = get_info_from_parsed_metadata(self.parsed_metadata)
-                    tokens.append(("value", parsed_value))
-                else:
-                    # matches the following sample
-                    # opcode reg, 0xnum && (no metadata)
-                    value = parse_hex_value(operand)
-                    tokens.append(("value", value))
-
+                self.value_token_handler(operand, tokens)
+            # memory access tokens with ptr in instruction
             elif 'ptr' in operand:
-                # handle globals first
-                # get address from 'dword ptr [...]' pattern
-                match = re.search(r'\[.*\]', operand)
-                address = match.group(0)[1:-1]
-                if address in global_addresses:
-                    size = operand.split(' ')[0]
-                    parsed_value = get_info_from_parsed_metadata(self.parsed_metadata, size)
-                    tokens.append(("global", parsed_value))
-                else:
-                    # matches opcode reg *ptr* (with and without metadata)
-                    if self.parsed_metadata:
-                        # get size directive
-                        size = operand.split(' ')[0]
-                        parsed_value = get_info_from_parsed_metadata(self.parsed_metadata, size)
-                        tokens.append(("value", parsed_value))
-                    else:
-                        tokens.append(("memory_address", operand))
-
+                self.memory_address_ptr_handler(operand, global_addresses, tokens)
+            # memory access tokens without ptr in instruction
             elif operand.startswith('[') and operand.endswith(']'):
-                # matches opcode reg [address_calculation]
-                # sometimes has reg [address] metadata that has Answer: %d
-                if self.parsed_metadata:
-                    parsed_value = get_info_from_parsed_metadata(self.parsed_metadata)
-                    tokens.append(("value", parsed_value))
-                else:
-                    tokens.append(("memory_address", operand))
-
+                self.memory_address_handler(operand, global_addresses, tokens)
+            # remaining: registers
             else:
                 tokens.append(("register", operand))
-
         return tokens
 
     def tokenize_instruction(self, jump_flags: List[str], global_addresses: List[str]) -> None:
