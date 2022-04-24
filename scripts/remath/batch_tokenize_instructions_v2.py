@@ -673,21 +673,20 @@ class Instruction:
                 # handle globals first
                 # get address from 'dword ptr [...]' pattern
                 match = re.search(r'\[.*\]', operand)
-                if match:
-                    address = match.group(0)[1:-1]
-                    if address in global_addresses:
-                        size = operand.split(' ')[0]
-                        parsed_value = get_info_from_parsed_metadata(self.parsed_metadata, size)
-                        tokens.append(("global", parsed_value))
-                    continue
-                # matches opcode reg *ptr* (with and without metadata)
-                if self.parsed_metadata:
-                    # get size directive
+                address = match.group(0)[1:-1]
+                if address in global_addresses:
                     size = operand.split(' ')[0]
                     parsed_value = get_info_from_parsed_metadata(self.parsed_metadata, size)
-                    tokens.append(("value", parsed_value))
+                    tokens.append(("global", parsed_value))
                 else:
-                    tokens.append(("memory_address", operand))
+                    # matches opcode reg *ptr* (with and without metadata)
+                    if self.parsed_metadata:
+                        # get size directive
+                        size = operand.split(' ')[0]
+                        parsed_value = get_info_from_parsed_metadata(self.parsed_metadata, size)
+                        tokens.append(("value", parsed_value))
+                    else:
+                        tokens.append(("memory_address", operand))
 
             elif operand.startswith('[') and operand.endswith(']'):
                 # matches opcode reg [address_calculation]
