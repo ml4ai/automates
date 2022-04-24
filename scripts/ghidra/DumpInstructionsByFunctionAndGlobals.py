@@ -13,7 +13,7 @@ symbols = symbolManager.getSymbols(namespaceManager.getGlobalNamespace())
 
 for symbol in symbols:
     if symbol.getSymbolType() == symbolType.LABEL:
-        address_globbal_variables.append(symbol.getAddress())
+        address_globbal_variables.append('0x' + str(symbol.getAddress()))
 
 PROGRAM_NAME = currentProgram.getName()
 

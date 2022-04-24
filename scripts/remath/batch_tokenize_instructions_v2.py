@@ -20,6 +20,7 @@ instruction class tokenizes each instruction based on opcode, operands and metad
 """
 
 import argparse
+import ast
 import pathlib
 import os
 import re
@@ -190,31 +191,6 @@ def param_or_local(memory_address: str) -> str:
         return "local"
 
 
-class FunctionTokens:
-    """
-    global key - value pair for a program: give unique labels to each function in the program called from main
-    create an instance of function tokens in the program and pass it to each function so that it can modify it
-    """
-
-    def __init__(self):
-        """
-        ordered dict to keep track of function name to labels
-        """
-        self.counter = 0
-        self.name_to_label = OrderedDict()
-
-    def add_function_token(self, fn_name: str) -> str:
-        if fn_name in self.name_to_label:
-            return self.name_to_label[fn_name]
-        label = '_f' + str(self.counter)
-        self.name_to_label[fn_name] = label
-        self.counter += 1
-        return label
-
-    def get_label(self, fn_name: str) -> str:
-        return self.name_to_label[fn_name]
-
-
 class Register:
     """
     Register classe: represents a register and its properties
@@ -285,6 +261,15 @@ class Tokens:
         self.counter += 1
         return key
 
+    def get_key(self, elm: str):
+        """
+        get key for elements already in the token
+        """
+        if elm in self.elm_to_token:
+            return self.elm_to_token[elm]
+        else:
+            raise Exception(f'Unable to find element {elm} in the tokenmap: {self.name}')
+
     def __str__(self) -> str:
         """
         string representaton of the key value pairs
@@ -310,13 +295,25 @@ class Program:
         self.name_to_address: Dict[str, str] = dict()
         # initialize it's call stack of functions being called from it's main function
         self.stack = Stack()
-        # each program has global FunctionToken to give unique labels to all the functions called from main
-        self.function_tokens = FunctionTokens()
+        # each program has global function_tokens_map to give unique labels to all the
+        # functions called from main: updated from function.tokenize()
+        self.function_tokens_map = Tokens(name="function", base="_f")
         # keep track of jump [conditional/unconditional] flags
         self.jump_flags = ['JMP', 'JO', 'JNO', 'JS', 'JNS', 'JE', 'JZ', 'JNE', 'JNZ', 'JB',
                            'JNAE', 'JC', 'JNB', 'JAE', 'JNC', 'JBE', 'JNA', 'JA', 'JNBE',
                            'JL', 'JNGE', 'JGE', 'JNL', 'JLE', 'JNG', 'JG', 'JNLE', 'JP',
                            'JPE', 'JNP', 'JPO', 'JCXZ', 'JECXZ', 'JRCXZ']
+
+        # list of global addresses
+        # this will be used by each instruction to determine if each address is either global or not
+        # and return appropriate information to the function which will do the update to the
+        # global_tokens_map
+        self.globals = []
+        # global tokens map: key-value pair for global tokens
+        # note this is being updated by a function.tokenize(): when it tokenizes each
+        # instruction and determines that the address is a global address, it returns appropriate
+        # information to the function and function updates global_tokens_map
+        self.global_tokens_map = Tokens(name="globals", base='_g')
 
     def update_name(self, name: str) -> None:
         self.name = name
@@ -334,6 +331,12 @@ class Program:
             raise Exception(f"[ERROR]: unable to find function with name: {name}")
         address = self.name_to_address[name]
         return self.functions[address]
+
+    def add_globals(self, global_addresses):
+        """
+        add list of global addresses to the current program
+        """
+        self.globals.extend(global_addresses)
 
 
 class Function:
@@ -459,7 +462,7 @@ class Function:
 
     @staticmethod
     def function_name_handler(current_fn_name: str, address: str,
-                              function_tokens: "FunctionTokens",
+                              function_tokens_map: "Tokens",
                               nmt_tokens_instruction: List[str],
                               nmt_sequence_address: List[str]) -> None:
         """
@@ -467,7 +470,7 @@ class Function:
         also updates nmt token list and nmt address sequence list
         """
         if current_fn_name != 'printf':
-            label = function_tokens.add_function_token(current_fn_name)
+            label = function_tokens_map.add_token(current_fn_name)
             nmt_tokens_instruction.append(label)
             nmt_sequence_address.append(address)
         else:
@@ -497,7 +500,8 @@ class Function:
         if index == 2 and token in self.param_registers:
             self.param_registers[token].defined_before = True
 
-    def tokenize_function(self, function_tokens: "FunctionTokens", jump_flags: List[str]) -> List[str]:
+    def tokenize_function(self, function_tokens_map: "Tokens", jump_flags: List[str],
+                          global_addresses: List[str], global_tokens_map: "Tokens") -> List[str]:
         """
         convert the raw lines (self.lines) into Instruction
         function_token: global FunctionToken instance of a program to give unique labels to each function in the
@@ -519,7 +523,7 @@ class Function:
             # each instruction needs to be tokenized according to it's type
             # call instruction.tokenize() that detects the type and tokenizes accordingly
             # this will also update the tokenized list for that instruction
-            instruction.tokenize_instruction(jump_flags)
+            instruction.tokenize_instruction(jump_flags, global_addresses)
 
         # find jump targets and update the jump_targets list
         # jump tags
@@ -557,7 +561,7 @@ class Function:
                 elif token_type == 'function_name':
                     current_fn_name = token
                     self.function_name_handler(current_fn_name, instruction.address,
-                                               function_tokens,
+                                               function_tokens_map,
                                                nmt_tokens_instruction,
                                                nmt_sequence_address)
                 elif token_type == 'function_address':
@@ -567,6 +571,10 @@ class Function:
                     self.register_handler(token, instruction.address, index,
                                           nmt_tokens_instruction,
                                           nmt_sequence_address)
+                elif token_type == "global":
+                    key = global_tokens_map.add_token(token)
+                    nmt_tokens_instruction.append(key)
+                    nmt_sequence_address.append(instruction.address)
                 else:
                     nmt_tokens_instruction.append(token)
                     nmt_sequence_address.append(instruction.address)
@@ -641,7 +649,7 @@ class Instruction:
         assert len(self.operands) == 1
         return [("jump_address", self.operands[0])]
 
-    def tokenize_normal_instruction(self) -> List[Tuple[str, str]]:
+    def tokenize_normal_instruction(self, global_addresses: List[str]) -> List[Tuple[str, str]]:
         """
         tokenize normal operands (with metadata / no metadata)
         """
@@ -662,6 +670,16 @@ class Instruction:
                     tokens.append(("value", value))
 
             elif 'ptr' in operand:
+                # handle globals first
+                # get address from 'dword ptr [...]' pattern
+                match = re.search(r'\[.*\]', operand)
+                if match:
+                    address = match.group(0)[1:-1]
+                    if address in global_addresses:
+                        size = operand.split(' ')[0]
+                        parsed_value = get_info_from_parsed_metadata(self.parsed_metadata, size)
+                        tokens.append(("global", parsed_value))
+                    continue
                 # matches opcode reg *ptr* (with and without metadata)
                 if self.parsed_metadata:
                     # get size directive
@@ -685,7 +703,7 @@ class Instruction:
 
         return tokens
 
-    def tokenize_instruction(self, jump_flags: List[str]) -> None:
+    def tokenize_instruction(self, jump_flags: List[str], global_addresses: List[str]) -> None:
         """
         determine the type of instruction and tokenize it accordingly
         currently follows the following format for tokenizing
@@ -709,7 +727,7 @@ class Instruction:
         elif self.opcode in jump_flags:
             tokens = self.tokenize_jump_instruction()
         else:
-            tokens = self.tokenize_normal_instruction()
+            tokens = self.tokenize_normal_instruction(global_addresses)
 
         self.tokenized.extend(tokens)
 
@@ -727,6 +745,10 @@ def process_file(file_path: str) -> "Program":
             if line.startswith('>>> FILE_START'):
                 name = line.split(':')[1].strip()
                 program.update_name(name)
+            elif line.startswith('>>> GLOBALS'):
+                global_addresses = line.split(':')[-1].strip()
+                global_addresses = ast.literal_eval(global_addresses)
+                program.add_globals(global_addresses)
             elif line.startswith('>>> FUNCTION_START'):
                 inside_function = True
                 function_address, function_name = line.split(':')[1].strip().split()
@@ -766,7 +788,8 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
         tokenized_functions.append(function)
         # tokenize will tokenize the function and return list of other functions(addresses)
         # that are being called by that function
-        fn_list = function.tokenize_function(program.function_tokens, program.jump_flags)
+        fn_list = function.tokenize_function(program.function_tokens_map, program.jump_flags,
+                                             program.globals, program.global_tokens_map)
         for fn_addr in fn_list:
             fn = program.functions[fn_addr]
             program.stack.push(fn)
@@ -774,10 +797,20 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
     # collect some stats about the program and dump them to the end of __tokens.txt file
 
     with open(_dst_filepath, 'w') as write_file:
+        # write global information about program
+        write_file.write(f'function_tokens_map\n')
+        write_file.write(str(program.function_tokens_map))
+        write_file.write('\n\n')
+
+        # write globals
+        write_file.write(f'global_tokens_map\n')
+        write_file.write(str(program.global_tokens_map))
+        write_file.write('\n\n')
+
         for function in tokenized_functions:
             write_file.write(f'function_name: {function.name}\n')
             if function.name != 'main':
-                write_file.write(f'function_label: {program.function_tokens.get_label(function.name)}\n')
+                write_file.write(f'function_label: {program.function_tokens_map.get_key(function.name)}\n')
 
             # token sequence and sequence address without <sep>
             write_file.write(f'token_sequence\n')
