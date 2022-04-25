@@ -228,11 +228,15 @@ class PyASTToCAST():
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         
         if isinstance(node.value, ast.DictComp):
-            
             to_ret = []
             to_ret.extend(right)
-            
-            return [Assignment(left[0], None, source_refs=ref)]
+            to_ret.extend([Assignment(left[0], Name(name="dict_temp%",id=curr_scope_id_dict["dict_temp%"]), source_refs=ref)]) 
+            return to_ret
+        if isinstance(node.value, ast.ListComp):
+            to_ret = []
+            to_ret.extend(right)
+            to_ret.extend([Assignment(left[0], Name(name="list_temp%",id=curr_scope_id_dict["list_temp%"]), source_refs=ref)]) 
+            return to_ret
         else:
             return [Assignment(left[0], right[0], source_refs=ref)]
 
@@ -983,7 +987,8 @@ class PyASTToCAST():
         body = self.visit(node.body, prev_scope_id_dict, curr_scope_id_dict)
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        return [FunctionDef("LAMBDA", args, body, source_refs=ref)]
+        # TODO: add an ID for lambda name
+        return [FunctionDef(Name("LAMBDA",id=-1), args, body, source_refs=ref)]
 
     @visit.register
     def visit_ListComp(self, node: ast.ListComp, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -997,6 +1002,51 @@ class PyASTToCAST():
             Loop: 
         """
 
+        ref = [self.filenames[-1], node.col_offset, node.end_col_offset, node.lineno, node.end_lineno]
+
+        generators = node.generators
+        first_gen = generators[0] 
+
+        temp_dict_name = f"list_temp%"
+        temp_assign = ast.Assign(targets=[ast.Name(id=temp_dict_name,ctx=ast.Store(),col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])], 
+                                 value=ast.List(elts=[], col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
+                                 type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+        loop = None
+        if isinstance(first_gen.iter, ast.Call):
+            """
+            loop_body = [ast.Assign(targets=[ast.Subscript(value=ast.Name(id="list_temp%", ctx=ast.Load(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                                           slice=node.elt,
+                                                           ctx=ast.Store(),
+                                                           col_offset=ref[1],
+                                                           end_col_offset=ref[2],
+                                                           lineno=ref[3],
+                                                           end_lineno=ref[4]
+                                                           )],
+                                    value=node.elt,
+                                    type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+                        ]
+            """
+            loop_body = [ast.Expr(value=ast.Call(
+                        func=ast.Attribute(value=ast.Name(id='list_temp%', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), attr='append', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
+                        args=[node.elt],
+                        keywords=[], col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]
+                        ), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+            ]
+            loop = ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                    iter=first_gen.iter.func,
+                                    body=loop_body,orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+
+        temp_cast = self.visit(temp_assign, prev_scope_id_dict, curr_scope_id_dict)
+        loop_cast = self.visit(loop, prev_scope_id_dict, curr_scope_id_dict)
+
+        to_ret = []
+        to_ret.extend(temp_cast)
+        to_ret.extend(loop_cast)
+
+        return to_ret
+
+
+        """
         generators = node.generators
 
         first_gen = generators[0]
@@ -1028,6 +1078,7 @@ class PyASTToCAST():
             i += 1
 
         return visit_loop
+        """
 
     @visit.register
     def visit_DictComp(self, node: ast.DictComp, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -1048,7 +1099,15 @@ class PyASTToCAST():
                                  type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
         loop = None
         if isinstance(first_gen.iter, ast.Call):
-            loop_body = [ast.Assign(targets=[node.key],
+            loop_body = [ast.Assign(targets=[ast.Subscript(value=ast.Name(id="dict_temp%", ctx=ast.Load(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                                           slice=node.key,
+                                                           #slice=ast.Index(value=node.key, ctx=ast.Load()),
+                                                           ctx=ast.Store(),
+                                                           col_offset=ref[1],
+                                                           end_col_offset=ref[2],
+                                                           lineno=ref[3],
+                                                           end_lineno=ref[4]
+                                                           )],
                                     value=node.value,
                                     type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
                         ]
@@ -1063,7 +1122,6 @@ class PyASTToCAST():
         to_ret.extend(temp_cast)
         to_ret.extend(loop_cast)
 
-        print(to_ret)
         return to_ret
 
 
@@ -1123,6 +1181,10 @@ class PyASTToCAST():
         """Visits a PyAST IfExp node, which is Python's ternary operator.
         The node gets translated into a CAST ModelIf node by visiting all its parts,
         since IfExp behaves like an If statement.
+
+        # TODO: Rethink how this is done to better reflect
+         - ternary for assignments
+         - ternary in function call arguments
 
         Args:
             node (ast.IfExp): [description]
