@@ -14,17 +14,22 @@ from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 class IdCollapsePass:
     def __init__(self, ann_cast: AnnCast):
         self.ann_cast = ann_cast
+        # cache Call nodes so after visiting we can determine which Call's have associated
+        # FunctionDefs
+        # this dict maps call container name to the AnnCastCall node
+        self.cached_call_nodes: typing.Dict[str, AnnCastCall] = {}
         # during the pass, we collpase Name ids to a range starting from zero
         self.old_id_to_collapsed_id = {}
         # this tracks what collapsed ids we have used so far
-        print("In IdCollapsePass")
         self.collapsed_id_counter = 0
         # dict mapping collapsed function id to number of invocations
         # used to populate `invocation_index` of AnnCastCall nodes
         self.func_invocation_counter = defaultdict(int)
         for node in self.ann_cast.nodes:
-            self.visit(node)
+            at_module_scope = False
+            self.visit(node, at_module_scope)
         self.nodes = self.ann_cast.nodes
+        self.determine_function_defs_for_calls()
         self.store_highest_id()
 
     def store_highest_id(self):
@@ -50,144 +55,162 @@ class IdCollapsePass:
 
         return index
 
-    def visit(self, node: AnnCastNode):
+    def determine_function_defs_for_calls(self):
+        for call_name, call in self.cached_call_nodes.items():
+            func_id = call.func.id
+            call.has_func_def = self.ann_cast.func_def_exists(func_id)
+            
+            # DEBUGGING:
+            print(f"{call_name} has FunctionDef: {call.has_func_def}")
+
+    def visit(self, node: AnnCastNode, at_module_scope):
         # type(node) is a string which looks like
         # "class '<path.to.class.ClassName>'"
         class_name = str(type(node))
         last_dot = class_name.rfind(".")
         class_name = class_name[last_dot + 1 : -2]
         print(f"\nProcessing node type {class_name}")
-        return self._visit(node)
+        return self._visit(node, at_module_scope)
 
-    def visit_node_list(self, node_list: typing.List[AnnCastNode]):
-        return [self.visit(node) for node in node_list]
+    def visit_node_list(self, node_list: typing.List[AnnCastNode], at_module_scope):
+        return [self.visit(node, at_module_scope) for node in node_list]
 
     @singledispatchmethod
-    def _visit(self, node: AnnCastNode) -> Dict:
+    def _visit(self, node: AnnCastNode, at_module_scope):
         """
         Visit each AnnCastNode, collapsing AnnCastName ids along the way
         """
         raise Exception(f"Unimplemented AST node of type: {type(node)}")
 
     @_visit.register
-    def visit_assignment(self, node: AnnCastAssignment):
-        self.visit(node.right)
+    def visit_assignment(self, node: AnnCastAssignment, at_module_scope):
+        self.visit(node.right, at_module_scope)
         assert isinstance(node.left, AnnCastVar)
-        self.visit(node.left)
+        self.visit(node.left, at_module_scope)
 
     @_visit.register
-    def visit_attribute(self, node: AnnCastAttribute):
-        value = self.visit(node.value)
-        attr = self.visit(node.attr)
+    def visit_attribute(self, node: AnnCastAttribute, at_module_scope):
+        value = self.visit(node.value, at_module_scope)
+        attr = self.visit(node.attr, at_module_scope)
 
     @_visit.register
-    def visit_binary_op(self, node: AnnCastBinaryOp):
+    def visit_binary_op(self, node: AnnCastBinaryOp, at_module_scope):
         # visit LHS first
-        self.visit(node.left)
+        self.visit(node.left, at_module_scope)
 
         # visit RHS second
-        self.visit(node.right)
+        self.visit(node.right, at_module_scope)
 
     @_visit.register
-    def visit_boolean(self, node: AnnCastBoolean):
+    def visit_boolean(self, node: AnnCastBoolean, at_module_scope):
         pass
 
     @_visit.register
-    def visit_call(self, node: AnnCastCall):
+    def visit_call(self, node: AnnCastCall, at_module_scope):
         assert isinstance(node.func, AnnCastName)
         node.func.id = self.collapse_id(node.func.id)
         node.invocation_index = self.next_function_invocation(node.func.id)
+            
+        # cache Call node to later determine if this Call has a FunctionDef
+        call_name = call_container_name(node)
+        self.cached_call_nodes[call_name] = node
 
-        self.visit_node_list(node.arguments)
+        self.visit_node_list(node.arguments, at_module_scope)
 
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef):
+    def visit_class_def(self, node: AnnCastClassDef, at_module_scope):
+        at_module_scope = False
         # Each func is an AnnCastVar node
-        self.visit_node_list(node.funcs)
+        self.visit_node_list(node.funcs, at_module_scope)
 
         # Each field (attribute) is an AnnCastVar node
-        self.visit_node_list(node.fields)
+        self.visit_node_list(node.fields, at_module_scope)
 
     @_visit.register
-    def visit_dict(self, node: AnnCastDict):
+    def visit_dict(self, node: AnnCastDict, at_module_scope):
         pass
 
     @_visit.register
-    def visit_expr(self, node: AnnCastExpr):
-        self.visit(node.expr)
+    def visit_expr(self, node: AnnCastExpr, at_module_scope):
+        self.visit(node.expr, at_module_scope)
 
     @_visit.register
-    def visit_function_def(self, node: AnnCastFunctionDef):
+    def visit_function_def(self, node: AnnCastFunctionDef, at_module_scope):
         # collapse the function id
         node.name.id = self.collapse_id(node.name.id)
         self.ann_cast.func_id_to_def[node.name.id] = node
-        # Each argument is a AnnCastVar node
-        # Initialize each Name and add to input_variables
-        self.visit_node_list(node.func_args)
 
-        self.visit_node_list(node.body)
-
-    @_visit.register
-    def visit_list(self, node: AnnCastList):
-        self.visit_node_list(node.values)
+        at_module_scope = False
+        self.visit_node_list(node.func_args, at_module_scope)
+        self.visit_node_list(node.body, at_module_scope)
 
     @_visit.register
-    def visit_loop(self, node: AnnCastLoop):
-        self.visit(node.expr)
-        self.visit_node_list(node.body)
+    def visit_list(self, node: AnnCastList, at_module_scope):
+        self.visit_node_list(node.values, at_module_scope)
 
     @_visit.register
-    def visit_model_break(self, node: AnnCastModelBreak):
+    def visit_loop(self, node: AnnCastLoop, at_module_scope):
+        self.visit(node.expr, at_module_scope)
+        self.visit_node_list(node.body, at_module_scope)
+
+    @_visit.register
+    def visit_model_break(self, node: AnnCastModelBreak, at_module_scope):
         pass
 
     @_visit.register
-    def visit_model_continue(self, node: AnnCastModelContinue):
+    def visit_model_continue(self, node: AnnCastModelContinue, at_module_scope):
         pass
 
     @_visit.register
-    def visit_model_if(self, node: AnnCastModelIf):
-        self.visit(node.expr)
-        self.visit_node_list(node.body)
-        self.visit_node_list(node.orelse)
+    def visit_model_if(self, node: AnnCastModelIf, at_module_scope):
+        self.visit(node.expr, at_module_scope)
+        self.visit_node_list(node.body, at_module_scope)
+        self.visit_node_list(node.orelse, at_module_scope)
 
     @_visit.register
-    def visit_return(self, node: AnnCastModelReturn):
-        self.visit(node.value)
+    def visit_return(self, node: AnnCastModelReturn, at_module_scope):
+        self.visit(node.value, at_module_scope)
 
     @_visit.register
-    def visit_module(self, node: AnnCastModule) -> Dict:
+    def visit_module(self, node: AnnCastModule, at_module_scope):
         # we cache the module node in the AnnCast object
         self.ann_cast.module_node = node
-        self.visit_node_list(node.body)
+        at_module_scope = True
+        self.visit_node_list(node.body, at_module_scope)
 
     @_visit.register
-    def visit_name(self, node: AnnCastName):
+    def visit_name(self, node: AnnCastName, at_module_scope):
         node.id = self.collapse_id(node.id)
 
+        # we consider name nodes at the module scope to be globals
+        # and store them in the `used_vars` attribute of the module_node
+        if at_module_scope:
+            self.ann_cast.module_node.used_vars[node.id] = node.name
+
     @_visit.register
-    def visit_number(self, node: AnnCastNumber):
+    def visit_number(self, node: AnnCastNumber, at_module_scope):
         pass
 
     @_visit.register
-    def visit_set(self, node: AnnCastSet):
+    def visit_set(self, node: AnnCastSet, at_module_scope):
         pass
 
     @_visit.register
-    def visit_string(self, node: AnnCastString):
+    def visit_string(self, node: AnnCastString, at_module_scope):
         pass
 
     @_visit.register
-    def visit_subscript(self, node: AnnCastSubscript):
+    def visit_subscript(self, node: AnnCastSubscript, at_module_scope):
         pass
 
     @_visit.register
-    def visit_tuple(self, node: AnnCastTuple):
+    def visit_tuple(self, node: AnnCastTuple, at_module_scope):
         pass
 
     @_visit.register
-    def visit_unaryop(self, node: AnnCastUnaryOp):
-        self.visit(node.value)
+    def visit_unaryop(self, node: AnnCastUnaryOp, at_module_scope):
+        self.visit(node.value, at_module_scope)
 
     @_visit.register
-    def visit_var(self, node: AnnCastVar):
-        self.visit(node.val)
+    def visit_var(self, node: AnnCastVar, at_module_scope):
+        self.visit(node.val, at_module_scope)

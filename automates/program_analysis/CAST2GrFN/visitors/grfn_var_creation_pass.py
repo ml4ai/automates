@@ -77,7 +77,7 @@ class GrfnVarCreationPass:
         # NOTE: if we change to globals which are accessed before modification
         #       this loop should be changed as well
         # we alias globals which are used for the top interface
-        for id, var_name in func_def_copy.used_globals.items():
+        for id, var_name in node.top_interface_globals.items():
             body_fullid = build_fullid(var_name, id, version, func_con_scopestr)
             call_fullid = build_fullid(var_name, id, version, call_con_scopestr)
             # TODO: do we want this?
@@ -125,10 +125,10 @@ class GrfnVarCreationPass:
         """
         con_scopestr = con_scope_to_str(node.con_scope)
 
-        # alias all used_vars in if body and else body to the 
+        # alias all top_interface_vars in if body and else body to the 
         # highest version GrFN variable from if-expr
         body_version = VAR_INIT_VERSION
-        for id, var_name in node.used_vars.items():
+        for id, var_name in node.top_interface_vars.items():
             expr_version = node.expr_highest_var_vers[id]
             expr_scopestr = con_scopestr + CON_STR_SEP + IFEXPR
             expr_fullid = build_fullid(var_name, id, expr_version, expr_scopestr)
@@ -152,7 +152,7 @@ class GrfnVarCreationPass:
         con_scopestr = con_scope_to_str(node.con_scope)
 
         # by convention, we introduce version `VAR_INIT_VERSION` at the top of the container
-        for id, var_name in node.used_vars.items():
+        for id, var_name in node.top_interface_vars.items():
             version = VAR_INIT_VERSION
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
@@ -284,7 +284,7 @@ class GrfnVarCreationPass:
         con_scopestr = con_scope_to_str(node.con_scope)
 
         # create version `VAR_INIT_VERSION` for used variables
-        for id, var_name in node.used_vars.items():
+        for id, var_name in node.top_interface_vars.items():
             version = VAR_INIT_VERSION
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
@@ -314,13 +314,13 @@ class GrfnVarCreationPass:
         """
         con_scopestr = con_scope_to_str(node.con_scope)
 
-        # alias intial body version for used_vars to the 
+        # alias intial body version for top_interface_vars to the 
         # highest version GrFN variable from loop-expr
         # if the variable is modified, also alias 
         # exit version to highest version from loop-expr
         body_version = VAR_INIT_VERSION
         exit_version = VAR_EXIT_VERSION
-        for id, var_name in node.used_vars.items():
+        for id, var_name in node.top_interface_vars.items():
             expr_version = node.expr_highest_var_vers[id]
             expr_scopestr = con_scopestr + CON_STR_SEP + LOOPEXPR
             expr_fullid = build_fullid(var_name, id, expr_version, expr_scopestr)

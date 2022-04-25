@@ -431,11 +431,11 @@ class CASTToAGraphVisitor(CASTVisitor):
         body_node = uuid.uuid4()
 
         modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
-        accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
+        vars_accessed_before_mod_str = var_dict_to_str("Accessed: ", node.vars_accessed_before_mod)
         highest_ver = var_dict_to_str("HiVer: ", node.body_highest_var_vers)
         globals_in_str = var_dict_to_str("Globals In: ", node.used_globals)
         globals_out_str = var_dict_to_str("Globals Out: ", node.modified_globals)
-        func_label = f"Function: {node.name}\n{modified_vars_str}\n{accessed_vars_str}\n{highest_ver}"
+        func_label = f"Function: {node.name}\n{modified_vars_str}\n{vars_accessed_before_mod_str}\n{highest_ver}"
         func_label = f"{func_label}\n{globals_in_str}\n{globals_out_str}"
         self.G.add_node(node_uid, label=func_label)
         self.G.add_node(args_node, label="Arguments")
@@ -550,13 +550,13 @@ class CASTToAGraphVisitor(CASTVisitor):
         body_uid = uuid.uuid4()
 
         modified_vars = var_dict_to_str("Modified: ", node.modified_vars)
-        accessed_vars = var_dict_to_str("Accessed: ", node.accessed_vars)
+        vars_accessed_before_mod = var_dict_to_str("Accessed: ", node.vars_accessed_before_mod)
         top_iface_init_vars = interface_to_str("Top Init: ", node.top_interface_initial)
         top_iface_updt_vars = interface_to_str("Top Updt: ", node.top_interface_updated)
         top_iface_out_vars = interface_to_str("Top Out: ", node.top_interface_out)
         bot_iface_in_vars = interface_to_str("Bot In: ", node.bot_interface_in)
         bot_iface_out_vars = interface_to_str("Bot Out: ", node.bot_interface_out)
-        loop_label = f"Loop\n{modified_vars}\n{accessed_vars}"
+        loop_label = f"Loop\n{modified_vars}\n{vars_accessed_before_mod}"
         loop_label = f"{loop_label}\n{top_iface_init_vars}\n{top_iface_updt_vars}\n{top_iface_out_vars}"
         loop_label = f"{loop_label}\n{bot_iface_in_vars}\n{bot_iface_out_vars}"
         self.G.add_node(node_uid, label=loop_label)
@@ -644,7 +644,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         test_uid = uuid.uuid4()
 
         modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
-        accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
+        vars_accessed_before_mod_str = var_dict_to_str("Accessed: ", node.vars_accessed_before_mod)
         # top inteface
         top_iface_in_vars_str = interface_to_str("Top In: ", node.top_interface_in)
         top_iface_out_vars_str = interface_to_str("Top Out: ", node.top_interface_out)
@@ -657,7 +657,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         # bot interface
         bot_iface_in_vars_str = interface_to_str("Bot In: ", node.bot_interface_in)
         bot_iface_out_vars_str = interface_to_str("Bot Out: ", node.bot_interface_out)
-        if_label = f"If\n{modified_vars_str}\n{accessed_vars_str}"
+        if_label = f"If\n{modified_vars_str}\n{vars_accessed_before_mod_str}"
         if_label = f"{if_label}\n{top_iface_in_vars_str}\n{top_iface_out_vars_str}"
         if_label = f"{if_label}\n{condition_in}\n{condition_out}"
         if_label = f"{if_label}\n{decision_in}\n{decision_out}"
@@ -718,9 +718,9 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         module_uuid = uuid.uuid4()
         modified_vars_str = var_dict_to_str("Modified: ", node.modified_vars)
-        accessed_vars_str = var_dict_to_str("Accessed: ", node.accessed_vars)
+        vars_accessed_before_mod_str = var_dict_to_str("Accessed: ", node.vars_accessed_before_mod)
         used_vars_str = var_dict_to_str("Used: ", node.used_vars)
-        module_label = f"Module: {node.name}\n{modified_vars_str}\n{accessed_vars_str}"
+        module_label = f"Module: {node.name}\n{modified_vars_str}\n{vars_accessed_before_mod_str}"
         module_label = f"{module_label}\n{used_vars_str}"
         self.G.add_node(module_uuid, label=module_label)
         self.G.add_edge(program_uuid, module_uuid)
