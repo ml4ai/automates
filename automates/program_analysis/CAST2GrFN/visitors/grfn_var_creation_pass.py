@@ -496,6 +496,13 @@ class GrfnVarCreationPass:
         # now, store the grfn_id in the nane node
         node.grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
 
+        # store metdata for GrFN var associated to this Name node
+        grfn_var = self.ann_cast.get_grfn_var(fullid)
+
+        span_mdata = generate_variable_node_span_metadata(node.source_refs)
+        from_source_mdata = generate_from_source_metadata(from_source=True, reason="Unknown")
+        add_metadata_to_grfn_var(grfn_var, from_source_mdata, span_mdata) 
+
     @_visit.register
     def visit_number(self, node: AnnCastNumber):
         pass

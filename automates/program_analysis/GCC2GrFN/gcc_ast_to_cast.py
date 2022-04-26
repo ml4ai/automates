@@ -220,7 +220,7 @@ class GCC2CAST:
         source_refs = self.get_source_refs(variable)
 
         var_node = Var(
-            val=Name(name=name, id=id),
+            val=Name(name=name, id=id, source_refs=source_refs),
             type=cast_type,
             source_refs=source_refs,
         )
@@ -270,6 +270,7 @@ class GCC2CAST:
             name = value["name"]
             name = name.replace(".", "_")
             id = value["id"]
+            # TODO: add in source_refs to returned Name
             return Name(name=name, id=id)
 
     def parse_operand(self, operand):
@@ -286,7 +287,9 @@ class GCC2CAST:
                 name = operand["name"]
                 name = name.replace(".", "_")
                 id = operand["id"]
-                return Name(name=name, id=id)
+                source_refs = self.get_source_refs(operand)
+                print(f"parse_operand: Name: source_refs = {source_refs}")
+                return Name(name=name, id=id, source_refs=source_refs)
             elif "id" in operand:
                 return self.variables_ids_to_expression[operand["id"]]
         elif code == "addr_expr":
@@ -391,7 +394,8 @@ class GCC2CAST:
                 name = lhs["name"]
                 name = name.replace(".", "_")
                 id = lhs["id"]
-                assign_var = Var(val=Name(name=name,id=id), type=cast_type)
+                source_refs = self.get_source_refs(lhs)
+                assign_var = Var(val=Name(name=name,id=id, source_refs=source_refs), type=cast_type, source_refs=source_refs)
             elif "id" in lhs:
                 assign_var = self.variables_ids_to_expression[lhs["id"]]
 
@@ -447,7 +451,8 @@ class GCC2CAST:
                     name = operands[0]["name"].replace(".", "_")
                     name = name.replace(".", "_")
                     id = operands[0]["id"]
-                    assign_value = Name(name=name,id=id)
+                    source_refs = self.get_source_refs(operands[0])
+                    assign_value = Name(name=name,id=id, source_refs=source_refs)
                 # When do we have an id but no name
                 # Do we need to track the numerical id in this situation?
                 elif "id" in operands[0]:

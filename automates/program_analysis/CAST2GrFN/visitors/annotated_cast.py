@@ -38,7 +38,8 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 )
 
 from automates.model_assembly.metadata import (
-        LambdaType, TypedMetadata, CodeSpanReference, Domain, ProvenanceData
+        LambdaType, TypedMetadata, CodeSpanReference, Domain, ProvenanceData, 
+        VariableFromSource, MetadataMethod
         )
 from automates.model_assembly.structures import (
     VariableIdentifier,
@@ -179,29 +180,54 @@ def generate_domain_metadata():
     return Domain.from_data(data=data)
 
 def generate_from_source_metadata(from_source: bool, reason: str):
+    provenance = ProvenanceData(
+        MetadataMethod.PROGRAM_ANALYSIS_PIPELINE,
+        ProvenanceData.get_dt_timestamp()
+    )
     data = {
             "type": "FROM_SOURCE",
-            "provenance": {
-                "method": "PROGRAM_ANALYSIS_PIPELINE",
-                "timestamp": datetime.now(),
-            },
+            "provenance": provenance,
             "from_source": str(from_source),
             "creation_reason": reason,
         }
-    return TypedMetadata.from_data(data=data)
+    return VariableFromSource.from_data(data=data)
 
-def create_variable_node_span_metadata():
-# TODO: this needs to be updated
-# what is a reasonable src reference for variable nodes?
+def generate_variable_node_span_metadata(source_refs):
+    src_ref_dict = {}
     file_ref = ""
-    src_ref =  ""
+    if source_refs:
+        # TODO: decide which element of source_refs we want to use
+        src_ref = source_refs[0]
+        src_ref_dict = source_ref_dict(src_ref)
+        file_ref = src_ref.source_file_name
+
     code_span_data = {
-        "source_ref": src_ref,
+        "source_ref": src_ref_dict,
         "file_uid": file_ref,
         "code_type": "identifier",
     }
     return CodeSpanReference.from_air_data(code_span_data)
 
+def add_metadata_to_grfn_var(grfn_var, from_source_mdata=None, span_mdata=None, domain_mdata=None):
+    if from_source_mdata is None:
+        from_source_mdata = generate_from_source_metadata(True, "UNKNOWN")
+
+    if span_mdata is None:
+        source_refs = [SourceRef(None, None, None, None, None)]
+        span_mdata = generate_variable_node_span_metadata(source_refs)
+
+    if domain_mdata is None:
+        # TODO: this is copied from C2AVarialble.to_AIR
+        # note sure if we need to use it
+        domain = {
+            "type": "type",  # TODO what is this field?
+            "mutable": False,  # TODO probably only mutable if object/list/dict type
+            "name": "Number",  # TODO probably only mutable if object/list/dict type
+        }
+        domain_mdata = generate_domain_metadata()
+
+    new_metadata = [from_source_mdata, domain_mdata, span_mdata]
+    grfn_var.metadata = new_metadata
 
 def create_lambda_node_metadata(source_refs):
     """
@@ -484,18 +510,9 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
     # TODO: change to using UUIDs?
     # uid = GenericNode.create_node_id()
     uid = build_fullid(var_name, id, version, con_scopestr)
-    # TODO: this is copied from C2AVarialble.to_AIR
-    # note sure if we need to use it
-    domain = {
-        "type": "type",  # TODO what is this field?
-        "mutable": False,  # TODO probably only mutable if object/list/dict type
-        "name": "Number",  # TODO probably only mutable if object/list/dict type
-    }
-    from_source_mdata = generate_from_source_metadata(True, "UNKNOWN")
-    span_mdata = create_variable_node_span_metadata()
-    domain_mdata = generate_domain_metadata()
-
-    metadata = [domain_mdata, from_source_mdata, span_mdata]
+    
+    # this will be filled out later
+    metadata = []
     return VariableNode(uid, identifier, metadata)
 
 

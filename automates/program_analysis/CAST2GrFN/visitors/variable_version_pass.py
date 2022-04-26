@@ -961,6 +961,7 @@ class VariableVersionPass:
         con_scopestr = con_scope_to_str(node.con_scope)
         if assign_lhs:
             self.incr_version_in_con_scope(con_scopestr, node.id, node.name)
+
         node.version = self.get_highest_ver_in_con_scope(con_scopestr, node.id)
 
         # we determine the globals which are either modified or accessed before modification here,
