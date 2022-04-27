@@ -92,7 +92,7 @@ def run_gcc_pipeline():
 
     assert os.path.exists(
         path_to_plugin
-    ), f"Error: GCC AST dump plugin does not exist at expected location: {GCC_PLUGIN_IMAGE_DIR + plugin_name}"
+    ), f"Error: GCC AST dump plugin does not exist at expected location: {path_to_plugin }"
 
     print("Dumping GCC AST...")
 

@@ -765,6 +765,9 @@ class VariableVersionPass:
         if node.has_func_def:
             self.call_top_interface_args_with_func_def(node)
             self.add_globals_to_call_interfaces(node)
+            func_node = node.func.id
+            func_def_node = self.ann_cast.func_def_node_from_id(func_node)
+            node.has_ret_val = func_def_node.has_ret_val
         # if we do not have the FunctionDef, we will not add any globals to the interfaces
         else:
             self.call_top_interface_args_with_no_func_def(node)
@@ -785,6 +788,7 @@ class VariableVersionPass:
         # top interface outputs: NamedParam0, NamedParam1, ...
         self.grfn_2_2_call_top_interface_args(node)
 
+        node.has_ret_val = node.func_def_copy.has_ret_val
         # add return value to bot interface out if function_copy has a ret_val
         if node.func_def_copy.has_ret_val:
             self.grfn_2_2_call_ret_val_creation(node)

@@ -589,26 +589,27 @@ class ToGrfnPass:
         self.subgraphs.add_edge(parent, subgraph)
 
         # build top interface
-        top_interface = self.create_interface_node(node.top_interface_lambda)
-        self.network.add_node(top_interface, **top_interface.get_kwargs())
-        inputs = []
-        for var_id, fullid in node.top_interface_in.items():
-            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
-            self.network.add_edge(grfn_var, top_interface)
-            inputs.append(grfn_var)
+        if len(node.top_interface_in) > 0:
+            top_interface = self.create_interface_node(node.top_interface_lambda)
+            self.network.add_node(top_interface, **top_interface.get_kwargs())
+            inputs = []
+            for var_id, fullid in node.top_interface_in.items():
+                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
+                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                self.network.add_edge(grfn_var, top_interface)
+                inputs.append(grfn_var)
 
-        outputs = []
-        for var_id, fullid in node.top_interface_out.items():
-            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
-            self.network.add_edge(top_interface, grfn_var)
-            outputs.append(grfn_var)
+            outputs = []
+            for var_id, fullid in node.top_interface_out.items():
+                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
+                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                self.network.add_edge(top_interface, grfn_var)
+                outputs.append(grfn_var)
 
-        self.hyper_edges.append(HyperEdge(inputs, top_interface, outputs))
-        # container includes top_interface and top_interface outputs
-        subgraph.nodes.append(top_interface)
-        subgraph.nodes.extend(outputs)
+            self.hyper_edges.append(HyperEdge(inputs, top_interface, outputs))
+            # container includes top_interface and top_interface outputs
+            subgraph.nodes.append(top_interface)
+            subgraph.nodes.extend(outputs)
 
         # visit expr, then setup condition info
         self.visit(node.expr, subgraph)
@@ -618,33 +619,35 @@ class ToGrfnPass:
         self.visit_node_list(node.orelse, subgraph)
         
         condition_var = node.condition_var
-        self.create_decision_node(node.decision_in, node.decision_out, 
+        if len(node.decision_in) > 0:
+            self.create_decision_node(node.decision_in, node.decision_out, 
                                   condition_var, node.decision_lambda, subgraph)
 
         # self.create_interface_node(node.bot_interface_in, node.bot_interface_out, subgraph)
         # build bot interface
-        bot_interface = self.create_interface_node(node.bot_interface_lambda)
-        self.network.add_node(bot_interface, **bot_interface.get_kwargs())
-        inputs = []
-        for var_id, fullid in node.bot_interface_in.items():
-            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
-            self.network.add_edge(grfn_var, bot_interface)
-            inputs.append(grfn_var)
+        if len(node.bot_interface_in) > 0:
+            bot_interface = self.create_interface_node(node.bot_interface_lambda)
+            self.network.add_node(bot_interface, **bot_interface.get_kwargs())
+            inputs = []
+            for var_id, fullid in node.bot_interface_in.items():
+                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
+                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                self.network.add_edge(grfn_var, bot_interface)
+                inputs.append(grfn_var)
 
-        outputs = []
-        for var_id, fullid in node.bot_interface_out.items():
-            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
-            self.network.add_edge(bot_interface, grfn_var)
-            outputs.append(grfn_var)
+            outputs = []
+            for var_id, fullid in node.bot_interface_out.items():
+                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
+                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                self.network.add_edge(bot_interface, grfn_var)
+                outputs.append(grfn_var)
 
-        self.hyper_edges.append(HyperEdge(inputs, bot_interface, outputs))
-        # bot interface includes input and bot interface
-        # the outputs need to be added to the parent subgraph
-        subgraph.nodes.extend(inputs)
-        subgraph.nodes.append(bot_interface)
-        parent.nodes.extend(outputs)
+            self.hyper_edges.append(HyperEdge(inputs, bot_interface, outputs))
+            # bot interface includes input and bot interface
+            # the outputs need to be added to the parent subgraph
+            subgraph.nodes.extend(inputs)
+            subgraph.nodes.append(bot_interface)
+            parent.nodes.extend(outputs)
 
     @_visit.register
     def visit_model_return(self, node: AnnCastModelReturn, subgraph: GrFNSubgraph):

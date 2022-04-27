@@ -28,6 +28,8 @@ def lambda_for_decision(condition_fullid: str, decision_in: typing.Dict) -> str:
     The lambda has for the form:
         lambda x_if, y_if, x_else, y_else: (x_if, y_if) if COND else (x_else, y_else)
     """
+    if len(decision_in) == 0:
+        return f"lambda: None"
     cond_name = var_name_from_fullid(condition_fullid)
 
     lambda_body = ""
@@ -55,7 +57,7 @@ def lambda_for_interface(interface_in: typing.Dict) -> str:
     Lambdas for plain interface nodes are simply multi-parameter identity functions
     """
     if len(interface_in) == 0:
-        return ""
+        return "lambda: None"
 
     get_name = lambda fullid: parse_fullid(fullid)["var_name"]
     var_names = map(get_name, interface_in.values())
@@ -152,7 +154,7 @@ class LambdaExpressionPass:
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment) -> str:
         right = self.visit(node.right)
-        # build the lambda expression for the ret_val assignment
+        # build the lambda expression for the assignment
         # and store in GrfnAssignment
         lambda_expr = lambda_for_grfn_assignment(node.grfn_assignment, right)
         node.grfn_assignment.lambda_expr = lambda_expr
@@ -253,21 +255,14 @@ class LambdaExpressionPass:
     def visit_call(self, node: AnnCastCall) -> str:
         if node.is_grfn_2_2:
             self.visit_call_grfn_2_2(node)
-            if node.func_def_copy.has_ret_val:
-                assert(len(node.out_ret_val) == 1)
-                ret_val_fullid = list(node.out_ret_val.values())[0]
-                node.expr_str = var_name_from_fullid(ret_val_fullid)
-        
-        # TODO: new functions for case when we have the function def for the non-grfn 2.2 call
-        elif node.has_func_def:
-            pass
-
+        # The GrFN for grfn2.2 function calls without function bodies
+        # is handled in the new GrFN 3.0 style
         else:
             self.visit_call_no_func_def(node)
-            if node.has_ret_val:
-                assert(len(node.out_ret_val) == 1)
-                ret_val_fullid = list(node.out_ret_val.values())[0]
-                node.expr_str = var_name_from_fullid(ret_val_fullid)
+        if node.has_ret_val:
+            assert(len(node.out_ret_val) == 1)
+            ret_val_fullid = list(node.out_ret_val.values())[0]
+            node.expr_str = var_name_from_fullid(ret_val_fullid)
         
         return node.expr_str
 
