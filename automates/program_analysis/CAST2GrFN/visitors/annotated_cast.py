@@ -1090,8 +1090,8 @@ class AnnCastString(AnnCastNode):
 class AnnCastSubscript(AnnCastNode):
     def __init__(self, value, slice, source_refs):
         super().__init__(self)
-        self.value = node.value
-        self.slice = node.slice
+        self.value = value
+        self.slice = slice
         self.source_refs = source_refs
 
         
