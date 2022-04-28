@@ -1,4 +1,5 @@
 from enum import unique
+from lib2to3.pgen2.pgen import generate_grammar
 from typing import Type, Union
 import ast
 import os 
@@ -188,7 +189,7 @@ class PyASTToCAST():
         else:
             return name
 
-
+    def identify_piece(self, piece: AstNode, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict)
 
 
 
@@ -1004,47 +1005,52 @@ class PyASTToCAST():
 
         ref = [self.filenames[-1], node.col_offset, node.end_col_offset, node.lineno, node.end_lineno]
 
-        generators = node.generators
-        first_gen = generators[0] 
-
-        temp_dict_name = f"list_temp%"
-        temp_assign = ast.Assign(targets=[ast.Name(id=temp_dict_name,ctx=ast.Store(),col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])], 
+        temp_list_name = f"list_temp%"
+        temp_assign = ast.Assign(targets=[ast.Name(id=temp_list_name,ctx=ast.Store(),col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])], 
                                  value=ast.List(elts=[], col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
                                  type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
-        loop = None
-        if isinstance(first_gen.iter, ast.Call):
-            """
-            loop_body = [ast.Assign(targets=[ast.Subscript(value=ast.Name(id="list_temp%", ctx=ast.Load(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
-                                                           slice=node.elt,
-                                                           ctx=ast.Store(),
-                                                           col_offset=ref[1],
-                                                           end_col_offset=ref[2],
-                                                           lineno=ref[3],
-                                                           end_lineno=ref[4]
-                                                           )],
-                                    value=node.elt,
-                                    type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
-                        ]
-            """
-            loop_body = [ast.Expr(value=ast.Call(
-                        func=ast.Attribute(value=ast.Name(id='list_temp%', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), attr='append', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
-                        args=[node.elt],
-                        keywords=[], col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]
-                        ), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
-            ]
-            loop = ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
-                                    iter=first_gen.iter.func,
-                                    body=loop_body,orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+        
+        generators = node.generators
+        first_gen = generators[-1] 
+        i = len(generators)-2
+
+        # Constructs the Python AST for the innermost loop in the list comprehension
+        innermost_loop_body = [ast.Expr(value=ast.Call(
+                    func=ast.Attribute(value=ast.Name(id='list_temp%', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), attr='append', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
+                    args=[node.elt],
+                    keywords=[], col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]
+                    ), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
+        loop_collection = [ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                    iter=first_gen.iter,
+                                    body=innermost_loop_body,orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
+
+        # Every other loop in the list comprehension wraps itself around the previous loop that we 
+        # added
+        while i >= 0:
+            curr_gen = generators[i]
+            if len(curr_gen.ifs) > 0:
+                # TODO: if multiple ifs exist per a single generator then we have to expand this
+                curr_if = curr_gen.ifs[0]
+                next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                iter=curr_gen.iter,
+                                body=[ast.If(test=curr_if, body=[loop_collection[0]],
+                                orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
+                            orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+            else:
+                next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                        iter=curr_gen.iter,
+                                        body=[loop_collection[0]],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+            loop_collection.insert(0, next_loop)
+            i = i - 1
 
         temp_cast = self.visit(temp_assign, prev_scope_id_dict, curr_scope_id_dict)
-        loop_cast = self.visit(loop, prev_scope_id_dict, curr_scope_id_dict)
+        loop_cast = self.visit(loop_collection[0], prev_scope_id_dict, curr_scope_id_dict)
 
         to_ret = []
         to_ret.extend(temp_cast)
         to_ret.extend(loop_cast)
 
         return to_ret
-
 
         """
         generators = node.generators
@@ -1084,12 +1090,70 @@ class PyASTToCAST():
     def visit_DictComp(self, node: ast.DictComp, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         ref = [self.filenames[-1], node.col_offset, node.end_col_offset, node.lineno, node.end_lineno]
         
-
-        # node (ast.DictCompt)
+        # node (ast.DictComp)
         #  key       - what makes the keys 
         #  value     - what makes the valuedds
         #  generators - list of 'comprehension' nodes 
         
+        temp_dict_name = f"dict_temp%"
+        
+        generators = node.generators
+        first_gen = generators[-1] 
+        i = len(generators)-2
+        temp_assign = ast.Assign(targets=[ast.Name(id=temp_dict_name,ctx=ast.Store(),col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])], 
+                                 value=ast.Dict(keys=[], values=[], col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
+                                 type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+
+        # Constructs the Python AST for the innermost loop in the dict comprehension
+        if len(first_gen.ifs) > 0:
+            innermost_loop_body = ast.If(test=first_gen.ifs[0], body=[ast.Assign(targets=[ast.Subscript(value=ast.Name(id=temp_dict_name, ctx=ast.Load(), 
+                                                                col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                                                slice=node.key,
+                                                                ctx=ast.Store(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
+                                                                value=node.value,
+                                                                type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
+                                    orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+        else:
+            innermost_loop_body = ast.Assign(targets=[ast.Subscript(value=ast.Name(id=temp_dict_name, ctx=ast.Load(), 
+                                                                col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                                                slice=node.key,
+                                                                ctx=ast.Store(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
+                                            value=node.value,
+                                            type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+
+        loop_collection = [ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                    iter=first_gen.iter,
+                                    body=[innermost_loop_body],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
+
+        # Every other loop in the list comprehension wraps itself around the previous loop that we 
+        # added
+        while i >= 0:
+            curr_gen = generators[i]
+            if len(curr_gen.ifs) > 0:
+                # TODO: if multiple ifs exist per a single generator then we have to expand this
+                curr_if = curr_gen.ifs[0]
+                next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                iter=curr_gen.iter,
+                                body=[ast.If(test=curr_if, body=[loop_collection[0]],
+                                orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
+                            orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+            else:
+                next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                                        iter=curr_gen.iter,
+                                        body=[loop_collection[0]],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+            loop_collection.insert(0, next_loop)
+            i = i - 1
+
+        temp_cast = self.visit(temp_assign, prev_scope_id_dict, curr_scope_id_dict)
+        loop_cast = self.visit(loop_collection[0], prev_scope_id_dict, curr_scope_id_dict)
+
+        to_ret = []
+        to_ret.extend(temp_cast)
+        to_ret.extend(loop_cast)
+
+        return to_ret
+
+        """
         generators = node.generators
         first_gen = generators[0] 
 
@@ -1123,7 +1187,7 @@ class PyASTToCAST():
         to_ret.extend(loop_cast)
 
         return to_ret
-
+        """
 
     @visit.register
     def visit_If(self, node: ast.If, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
