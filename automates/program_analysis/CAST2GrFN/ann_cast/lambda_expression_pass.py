@@ -1,8 +1,7 @@
 import typing
-import re
 from functools import singledispatchmethod
 
-from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 def lambda_for_grfn_assignment(grfn_assignment: GrfnAssignment, lambda_body: str) -> str:
     var_names = map(var_name_from_fullid, grfn_assignment.inputs.keys())

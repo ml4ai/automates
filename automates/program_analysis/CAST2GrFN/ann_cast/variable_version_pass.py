@@ -1,8 +1,7 @@
 import typing
-from collections import defaultdict
 from functools import singledispatchmethod
 
-from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 class VariableVersionPass:
     def __init__(self, ann_cast: AnnCast):

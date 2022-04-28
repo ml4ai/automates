@@ -91,7 +91,7 @@ class GCC2CAST:
     for one file outputted from our ast_dump.cpp GCC plugin.
     """
 
-    def __init__(self, gcc_asts):
+    def __init__(self, gcc_asts, legacy_cast: bool = False):
         self.gcc_asts = gcc_asts
         self.variables_ids_to_expression = {}
         self.ssa_ids_to_expression = {}
@@ -109,6 +109,11 @@ class GCC2CAST:
         self.loop_num_to_loop_info = {}
         self.bb_headers_to_loop_info = {} 
 
+        # legacy CAST generation does not create Name nodes
+        # for the `name` attribute of FunctionDef's.
+        # This allows the legacy CAST -> AIR -> GrFN 
+        # pipeline to be run on the resulting CAST json
+        self.legacy_cast = legacy_cast
 
     def clear_function_dependent_vars(self):
         self.variables_ids_to_expression = {}
@@ -288,7 +293,6 @@ class GCC2CAST:
                 name = name.replace(".", "_")
                 id = operand["id"]
                 source_refs = self.get_source_refs(operand)
-                print(f"parse_operand: Name: source_refs = {source_refs}")
                 return Name(name=name, id=id, source_refs=source_refs)
             elif "id" in operand:
                 return self.variables_ids_to_expression[operand["id"]]
@@ -784,7 +788,11 @@ class GCC2CAST:
     def parse_function(self, function):
         # clear functions variables to prepare for parsing
         self.clear_function_dependent_vars()
-        name_node = Name(function["name"], function["id"])
+        name = Name(function["name"], function["id"])
+
+        # if we want legacy CAST, the `name` attribute should just be a string
+        if self.legacy_cast:
+            name = function["name"]
 
         parameters = function["parameters"] if "parameters" in function else []
         var_declarations = (
@@ -834,7 +842,7 @@ class GCC2CAST:
                 self.top_level_pseudo_loop_body.append(new_return)
 
         return FunctionDef(
-            name=name_node,
+            name=name,
             func_args=arguments,
             body=self.top_level_pseudo_loop_body,
             source_refs=[body_source_ref, decl_source_ref],

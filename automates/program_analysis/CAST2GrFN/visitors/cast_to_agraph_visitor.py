@@ -5,7 +5,7 @@ from automates.utils.misc import uuid
 
 from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.cast import CAST
-from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,

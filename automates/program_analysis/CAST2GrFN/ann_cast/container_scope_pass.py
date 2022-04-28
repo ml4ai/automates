@@ -1,15 +1,11 @@
 from functools import singledispatchmethod
-from dataclasses import dataclass
 from collections import defaultdict
 import copy
 import typing
-import re
 from enum import Enum
 
 
-from automates.utils.misc import uuid
-from .cast_visitor import CASTVisitor
-from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 class AssignSide(Enum):
     NEITHER = 0

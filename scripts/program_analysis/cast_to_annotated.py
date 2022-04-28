@@ -1,19 +1,17 @@
 import sys
 
-from automates.program_analysis.CAST2GrFN.visitors.cast_to_annotated_cast import (
+from automates.program_analysis.CAST2GrFN.ann_cast.cast_to_annotated_cast import (
     CastToAnnotatedCastVisitor
 )
 from automates.program_analysis.CAST2GrFN.cast import CAST
-from automates.program_analysis.CAST2GrFN.visitors.annotations_pass import AnnotationsPass
 from automates.program_analysis.CAST2GrFN.visitors.cast_to_agraph_visitor import CASTToAGraphVisitor
-from automates.program_analysis.CAST2GrFN.visitors.id_collapse_pass import IdCollapsePass
-from automates.program_analysis.CAST2GrFN.visitors.container_scope_pass import ContainerScopePass
-from automates.program_analysis.CAST2GrFN.visitors.variable_version_pass import VariableVersionPass
-from automates.program_analysis.CAST2GrFN.visitors.incoming_outgoing_pass import IncomingOutgoingPass
-from automates.program_analysis.CAST2GrFN.visitors.grfn_var_creation_pass import GrfnVarCreationPass
-from automates.program_analysis.CAST2GrFN.visitors.lambda_expression_pass import LambdaExpressionPass
-from automates.program_analysis.CAST2GrFN.visitors.to_grfn_pass import ToGrfnPass
-from automates.program_analysis.CAST2GrFN.visitors.grfn_assignment_pass import GrfnAssignmentPass
+from automates.program_analysis.CAST2GrFN.ann_cast.id_collapse_pass import IdCollapsePass
+from automates.program_analysis.CAST2GrFN.ann_cast.container_scope_pass import ContainerScopePass
+from automates.program_analysis.CAST2GrFN.ann_cast.variable_version_pass import VariableVersionPass
+from automates.program_analysis.CAST2GrFN.ann_cast.grfn_var_creation_pass import GrfnVarCreationPass
+from automates.program_analysis.CAST2GrFN.ann_cast.grfn_assignment_pass import GrfnAssignmentPass
+from automates.program_analysis.CAST2GrFN.ann_cast.lambda_expression_pass import LambdaExpressionPass
+from automates.program_analysis.CAST2GrFN.ann_cast.to_grfn_pass import ToGrfnPass
 
 
 def main():
@@ -29,34 +27,31 @@ def main():
     """
     f_name = sys.argv[1]
     file_contents = open(f_name).read()
-    C = CAST([], "python")
-    C2 = C.from_json_str(file_contents)
+    cast_json = CAST([], "python")
+    cast = cast_json.from_json_str(file_contents)
 
-    visitor = CastToAnnotatedCastVisitor(C2)
+    visitor = CastToAnnotatedCastVisitor(cast)
     annotated_cast = visitor.generate_annotated_cast()
-
-    print("Calling IdCollapsePass------------------------")
-    collapsed_ids = IdCollapsePass(annotated_cast)
-    V = CASTToAGraphVisitor(collapsed_ids)
-
-    print("\nCalling ContainerScopePass-------------------")
-    con_scope  = ContainerScopePass(annotated_cast)
-
-    print("\nCalling VariableVersionPass-------------------")
-    VariableVersionPass(annotated_cast)
-
-    V2 = CASTToAGraphVisitor(annotated_cast)
-
-    print("\nCalling GrfnVarCreationPass-------------------")
-    GrfnVarCreationPass(annotated_cast)
 
     # TODO: make filename creation more resilient
     f_name = f_name.split("/")[-1]
     f_name = f_name.replace("--CAST.json", "")
-    pdf_file_name = f"{f_name}-AnnCast.pdf"
-    print("AnnCast file name", pdf_file_name)
-    V2.to_pdf(pdf_file_name)
 
+    print("Calling IdCollapsePass------------------------")
+    IdCollapsePass(annotated_cast)
+
+    print("\nCalling ContainerScopePass-------------------")
+    ContainerScopePass(annotated_cast)
+
+    print("\nCalling VariableVersionPass-------------------")
+    VariableVersionPass(annotated_cast)
+
+    agraph = CASTToAGraphVisitor(annotated_cast)
+    pdf_file_name = f"{f_name}-AnnCast.pdf"
+    agraph.to_pdf(pdf_file_name)
+
+    print("\nCalling GrfnVarCreationPass-------------------")
+    GrfnVarCreationPass(annotated_cast)
 
     print("\nCalling GrfnAssignmentPass-------------------")
     GrfnAssignmentPass(annotated_cast)
@@ -64,11 +59,13 @@ def main():
     print("\nCalling LambdaExpressionPass-------------------")
     LambdaExpressionPass(annotated_cast)
 
-
     print("\nCalling ToGrfnPass-------------------")
     ToGrfnPass(annotated_cast)
+    grfn = annotated_cast.get_grfn()
+    grfn.to_json_file(f"{f_name}--AC-GrFN.json")
 
-
+    grfn_agraph = grfn.to_AGraph()
+    grfn_agraph.draw(f"{f_name}--AC-GrFN.pdf", prog="dot")
 
 
 if __name__ == "__main__":

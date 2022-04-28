@@ -27,6 +27,17 @@ from automates.program_analysis.CAST2GrFN.visitors.cast_to_agraph_visitor import
 )
 from automates.utils import misc
 
+from automates.program_analysis.CAST2GrFN.ann_cast.cast_to_annotated_cast import (
+    CastToAnnotatedCastVisitor
+)
+from automates.program_analysis.CAST2GrFN.ann_cast.id_collapse_pass import IdCollapsePass
+from automates.program_analysis.CAST2GrFN.ann_cast.container_scope_pass import ContainerScopePass
+from automates.program_analysis.CAST2GrFN.ann_cast.variable_version_pass import VariableVersionPass
+from automates.program_analysis.CAST2GrFN.ann_cast.grfn_var_creation_pass import GrfnVarCreationPass
+from automates.program_analysis.CAST2GrFN.ann_cast.grfn_assignment_pass import GrfnAssignmentPass
+from automates.program_analysis.CAST2GrFN.ann_cast.lambda_expression_pass import LambdaExpressionPass
+from automates.program_analysis.CAST2GrFN.ann_cast.to_grfn_pass import ToGrfnPass
+
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
 GCC_PLUGIN_IMAGE_DIR = "automates/program_analysis/gcc_plugin/plugin/"
 
@@ -46,6 +57,9 @@ def get_args(args=sys.argv[1:]):
     parser.add_argument("-p", "--plugin", help="Custom path to gcc plugin")
     parser.add_argument("-Cg", "--CASTgraph", help="Create CAST graphviz pdf",
             action='store_true')
+    parser.add_argument("-L", "--legacy", 
+            help="Generate legacy CAST for the legacy CAST -> AIR -> GrFN pipeline",
+            action="store_true")
     options = parser.parse_args(args)
     return options
 
@@ -134,23 +148,75 @@ def run_gcc_pipeline():
     ast_jsons = [json.load(open(a)) for a in ast_file_names]
 
     print("Turning GCC AST into CAST...")
-    cast = GCC2CAST(ast_jsons).to_cast()
+    make_legacy_cast = False
+    if args.legacy:
+        make_legacy_cast = True
+    cast = GCC2CAST(ast_jsons, make_legacy_cast).to_cast()
     json.dump(cast.to_json_object(), open(f"{program_name}--CAST.json", "w+"))
 
     if args.CASTgraph:
         V = CASTToAGraphVisitor(cast)
         V.to_pdf(program_name + "--CAST.pdf")
+    
+    # if we are making legacy CAST, run the legacy pipeline
+    if make_legacy_cast:
+        print("Transforming CAST into GrFN...")
+        # Set random seed to 0 for UUID generation for consistent results in
+        # GrFN generation for tests
+        misc.rd.seed(0)
+        grfn = cast.to_GrFN()
+        grfn.to_json_file(f"{program_name}--GrFN.json")
 
-    print("Transforming CAST into GrFN...")
-    # Set random seed to 0 for UUID generation for consistent results in
-    # GrFN generation for tests
-    misc.rd.seed(0)
-    grfn = cast.to_GrFN()
-    grfn.to_json_file(f"{program_name}--GrFN.json")
+        print("Transforming GrFN into AGraph...")
+        A = grfn.to_AGraph()
+        A.draw(program_name + "--GrFN.pdf", prog="dot")
+        # GE Simple PI controller dynamics inputs
+        inputs = {
+            "GE_simple_PI_controller_dynamics::GE_simple_PI_controller_dynamics.main::integrator_state::-1": 0
+            # "GE_simple_PI_controller::GE_simple_PI_controller.main::integrator_state::-1": 0
+        }
 
-    print("Transforming GrFN into AGraph...")
-    A = grfn.to_AGraph()
-    A.draw(program_name + "--GrFN.pdf", prog="dot")
+        print("Executing GrFN...")
+        inputs = {}
+        result = grfn(inputs)
+        from pprint import pprint
+
+        print("GrFn execution results:")
+        pprint(result)
+
+
+    # otherwise use the AnnCast -> GrFN pipeline
+    else:
+        visitor = CastToAnnotatedCastVisitor(cast)
+        annotated_cast = visitor.generate_annotated_cast()
+        print("Transforming CAST to AnnCAST and running passes...")
+        IdCollapsePass(annotated_cast)
+        ContainerScopePass(annotated_cast)
+        VariableVersionPass(annotated_cast)
+
+        print("Saving AnnCAST pdf...")
+        agraph = CASTToAGraphVisitor(annotated_cast)
+        pdf_file_name = f"{program_name}-AnnCast.pdf"
+        agraph.to_pdf(pdf_file_name)
+
+        GrfnVarCreationPass(annotated_cast)
+        GrfnAssignmentPass(annotated_cast)
+        LambdaExpressionPass(annotated_cast)
+        ToGrfnPass(annotated_cast)
+
+        print("Saving GrFN pdf and json...")
+        grfn = annotated_cast.get_grfn()
+        grfn.to_json_file(f"{program_name}--GrFN.json")
+
+        grfn_agraph = grfn.to_AGraph()
+        grfn_agraph.draw(f"{program_name}--GrFN.pdf", prog="dot")
+
+        # TODO: Add in GrFN Execution
+        # print("Executing GrFN...")
+        # inputs = {}
+        # result = grfn(inputs)
+            
+        
 
     # STEMP SOILT inputs
     # inputs = {
@@ -193,20 +259,6 @@ def run_gcc_pipeline():
     #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tma::-1": [1, 2, 3, 4, 5],
     #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::st::-1": [1, 1, 1, 1, 1],
     # }
-
-    # GE Simple PI controller dynamics inputs
-    inputs = {
-        "GE_simple_PI_controller_dynamics::GE_simple_PI_controller_dynamics.main::integrator_state::-1": 0
-        # "GE_simple_PI_controller::GE_simple_PI_controller.main::integrator_state::-1": 0
-    }
-
-    print("Executing GrFN...")
-    inputs = {}
-    result = grfn(inputs)
-    from pprint import pprint
-
-    print("GrFn execution results:")
-    pprint(result)
 
 
 if __name__ == "__main__":

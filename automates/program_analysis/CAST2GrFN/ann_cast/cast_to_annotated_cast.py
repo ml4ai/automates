@@ -2,7 +2,6 @@ from functools import singledispatchmethod
 from automates.utils.misc import uuid
 import typing
 
-from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.cast import CAST
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
@@ -48,7 +47,7 @@ class CASTTypeError(TypeError):
     """
     pass
 
-class CastToAnnotatedCastVisitor(CASTVisitor):
+class CastToAnnotatedCastVisitor():
     '''
     class CastToAnnotatedCastVisitor - A visitor that traverses CAST nodes
     and generates an annotated cast version of the CAST.

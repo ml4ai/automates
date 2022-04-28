@@ -47,7 +47,8 @@ from automates.model_assembly.structures import (
 
 from automates.model_assembly.networks import (
     LambdaNode,
-    VariableNode
+    VariableNode,
+    GroundedFunctionNetwork
 )
 
 GENERATE_GRFN_2_2 = True
@@ -526,16 +527,7 @@ class GrfnAssignment():
         inputs: typing.Dict[str, str] = field(default_factory=dict)
         outputs: typing.Dict[str, str] = field(default_factory=dict)
         lambda_expr: str = ""
-
-
-# class GrfnAssignment:
-#     def __init__(self, grfn_node: LambdaNode):
-#         self.grfn_node = grfn_node
-#         self.inputs = {}
-#         self.outputs = {}
-# 
-#     def __str__(self):
-#         return f"GrFNasgn: {str(self.grfn_node)}\n\t inputs  : {self.inputs}\n\t outputs : {self.outputs}"
+# TODO: move all/most above code to a utility file
 
 class AnnCast:
     def __init__(self, ann_nodes: typing.List):
@@ -552,6 +544,12 @@ class AnnCast:
         self.fullid_to_grfn_id = {}
         # TODO: do we need to store multiple modules?
         self.module_node = None
+        # GrFN stored after ToGrfnPass
+        self.grfn: typing.Optional[GroundedFunctionNetwork] = None
+
+    def get_grfn(self) -> typing.Optional[GroundedFunctionNetwork]:
+        return self.grfn
+
 
     def func_def_exists(self, id: int) -> bool:
         """

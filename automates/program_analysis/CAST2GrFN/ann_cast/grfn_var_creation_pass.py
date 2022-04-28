@@ -1,8 +1,7 @@
 import typing
-import re
 from functools import singledispatchmethod
 
-from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 from automates.model_assembly.structures import (
     GenericIdentifier,

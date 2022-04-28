@@ -1,10 +1,9 @@
 import typing
-import re
 from functools import singledispatchmethod
 import networkx as nx
 import uuid
 
-from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 from automates.model_assembly.metadata import LambdaType
 from automates.model_assembly.structures import (
@@ -60,14 +59,10 @@ class ToGrfnPass:
         con_name = "GrFN"
         identifier = ContainerIdentifier(ns, scope, con_name)
 
-        grfn = GroundedFunctionNetwork(grfn_uid, identifier, timestamp, 
+        # store GrFN in AnnCast
+        self.ann_cast.grfn = GroundedFunctionNetwork(grfn_uid, identifier, timestamp, 
                                         self.network, self.hyper_edges, self.subgraphs,
                                         type_defs, metadata)
-        grfn.to_json_file("AnnCast-to-GrFN.json")
-
-        A = grfn.to_AGraph()
-        A.draw("AnnCast-to-GrFN.pdf", prog="dot")
-
 
     def create_interface_node(self, lambda_expr):
         # we should never create an interface node if we have an empty lambda expr
