@@ -105,7 +105,7 @@ def test_c_simple_function_and_assignments():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json, cast_source_language="c")
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -132,7 +132,7 @@ def test_all_binary_ops():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json, cast_source_language="c")
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -177,7 +177,7 @@ def test_all_unary_ops():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -207,7 +207,7 @@ def test_function_call():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -235,7 +235,7 @@ def test_function_call_one_variable_for_multiple_args():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -264,7 +264,7 @@ def test_function_call_no_args():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -293,7 +293,7 @@ def test_function_call_with_literal_return():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -321,7 +321,7 @@ def test_function_same_func_multiple_times():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -351,7 +351,7 @@ def test_function_call_literal_args():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -381,7 +381,7 @@ def test_function_call_expression_args():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -417,7 +417,7 @@ def test_function_call_with_complex_return():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -448,7 +448,7 @@ def test_function_call_nested():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
 
     assert expected_cast == cast
 
@@ -475,7 +475,7 @@ def test_if_statement():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
@@ -501,7 +501,7 @@ def test_if_else_statement():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
@@ -527,7 +527,7 @@ def test_if_elif_statement():
 
     expected_cast_json = json.load(open(f"{TEST_DATA_DIR}/{test_name}--CAST.json"))
     expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
+    cast = GCC2CAST([gcc_ast_obj], legacy_cast=True).to_cast()
     assert expected_cast == cast
 
     expected_grfn = GroundedFunctionNetwork.from_json(
