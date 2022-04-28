@@ -56,7 +56,6 @@ class AnnotationsPass:
         self.highest_variable_version: Dict = defaultdict(lambda: -1)
         self.ann_cast = ann_cast
         self.module_functions = {}
-        self.con_scope_to_varialbe
         # start processing nodes
         input_vars = {}
         for node in self.ann_cast.nodes:
@@ -346,6 +345,3 @@ class AnnotationsPass:
         node.updated_variables = updated_vars
 
         return updated_vars
-
-
-

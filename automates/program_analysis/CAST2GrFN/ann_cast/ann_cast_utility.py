@@ -37,5 +37,3 @@ def run_all_passes(ann_cast: AnnCast):
         print(f"Running AnnCast Pass: {pass_name}")
         print(f"{'*'*20}")
         ANN_CAST_ALL_PASSES[pass_name](ann_cast)
-
-

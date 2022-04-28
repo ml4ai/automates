@@ -356,8 +356,7 @@ def is_literal_assignment(node):
     Check if the node is a Number, Boolean, or String
     This may need to updated later
     """
-    if isinstance(node, AnnCastNumber) or isinstance(node, AnnCastBoolean) \
-        or isinstance(node, AnnCastString):
+    if isinstance(node, (AnnCastNumber, AnnCastBoolean, AnnCastString)):
         return True
 
     return False
@@ -1127,4 +1126,3 @@ class AnnCastVar(AnnCastNode):
         
     def __str__(self):
         return Var.__str__(self)
-
