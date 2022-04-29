@@ -1,26 +1,229 @@
 import pytest
-import subprocess
-import os
-import random
 import json
-import numpy as np
+import os
+import subprocess
+from pathlib import Path
 from sys import platform
+from types import SimpleNamespace
+from typing import List
 
-# import automates.model_assembly.networks as networks
-import automates.utils.misc as misc
-from automates.program_analysis.CAST2GrFN.cast import CAST
-from automates.model_assembly.networks import GroundedFunctionNetwork
-from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
+# All test data is stored in `TEST_DATA_DIR`
+# Each test uses two files for test data
+#     1. the C source file
+#     2. the expected gcc AST json file
+# We use pytest's parametrize functionality to dynamically
+# generate tests based on a test names.  To make this work correctly,
+# the source and gcc AST json files must follow an expected pattern.
+# For now, we use the following:
+#    - For a test named "name_of_test"
+#    - The source file should be named: "name_of_test.c"
+#    - The gcc_AST_json file should be named: "name_of_test_gcc_ast.json"
+# When adding new tests, you must do the following two things:
+#    - Add the C source file and expected gcc AST json to `TEST_DATA_DIR` using the
+#      the naming pattern described above
 
-GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
+# Below, we use `SimpleNamespace` to automatically convert the gcc AST json to
+# an object.  This allows us to access fields with dots instead of dictionary like access.
+# I.e. we can write `json.field1.field2` instead of `json["field1"]["field2"]`
+
+TEST_DATA_DIR = "tests/data/program_analysis/GCC2GrFN/gcc_plugin_c"
+GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin"
 GCC_PLUGIN_IMAGE = "automates/program_analysis/gcc_plugin/plugin/ast_dump.so"
-GCC_TEST_DATA_DIRECTORY = "tests/data/program_analysis/GCC2GrFN"
+GCC_TEST_DATA_DIRECTORY = "tests/data/program_analysis/GCC2GrFN/gcc_plugin"
+
+# global identifiers such as `stdin`, `stdout`, `stderr`
+# can be added to the AST by including system header files
+# However, the CI that is run on Github actions includes additional 
+# global names which should be skipped.  
+# It sounds like these global names are added from errno.h
+GLOBAL_NAMES_TO_SKIP = ['_sys_errlist', '_sys_nerr', 'sys_errlist', 'sys_nerr']
 
 
-def cleanup():
+def make_gcc_ast_json_file_path(test_name: str) -> str:
+    return f"{TEST_DATA_DIR}/{test_name}_gcc_ast.json"
+
+
+def make_source_file_path(test_name: str) -> str:
+    return f"{TEST_DATA_DIR}/{test_name}.c"
+
+
+# We find the test names to run, by using a glob over the TEST_DATA_DIR directory
+def collect_test_names():
+    """ "
+    Finds all test names in `TEST_DATA_DIR` which have are valid, i.e.
+    which have both a C file and associated gcc AST json
+    """
+    test_data_dir_path = Path(TEST_DATA_DIR)
+    c_files = test_data_dir_path.glob("*.c")
+    ast_files = test_data_dir_path.glob("*_gcc_ast.json")
+    # the stem of the file is the file name without extension
+    c_test_names = [f.stem for f in c_files]
+    ast_test_names = [f.stem.replace("_gcc_ast", "") for f in ast_files]
+
+    test_names = set(c_test_names).intersection(set(ast_test_names))
+    return test_names
+
+
+class FunctionData:
+    """
+    This class grabs certain fields of a function from a
+    gcc AST json, and is used to check equality between two function.
+    This class can be extended with more fields as desired.
+
+    Currently we track:
+        - the name of the function
+        - the names of parameters to the function
+        - the names of variable declaration inside the function
+        - the number of loops inside the function
+    """
+    name: str
+    parameters: List[str]
+    variable_declarations: List[str]
+    number_of_loops: int
+
+    def __init__(self, function: SimpleNamespace):
+        self.name = function.name
+        # due to single static assignments, some variable declarations
+        # in a function do not have a name (only an id)
+        named_var_declarations = filter(
+            lambda var: hasattr(var, "name"), function.variableDeclarations
+        )
+        self.variable_declarations = [var.name for var in named_var_declarations]
+        self.parameters = []
+        if hasattr(function, "parameters"):
+            self.parameters = [param.name for param in function.parameters]
+        self.number_of_loops = function.numberOfLoops
+
+    def __eq__(self, other):
+        
+        equal = (
+            self.name == other.name
+            and self.variable_declarations == other.variable_declarations
+            and self.parameters == other.parameters
+            and self.number_of_loops == other.number_of_loops
+        )
+
+        # We print out the difference, so it can be viewed in Github CI results
+        if not equal:
+            print(f"{50*'*'}")
+            print(f"DEBUGGING: in __eq__ for FunctionData")
+            print(f"{5*' '}self.name = {self.name}, other.name = {other.name}")
+            print(f"{5*' '}self.var_decls = {self.variable_declarations}, other.var_decls = {other.variable_declarations}")
+            print(f"{5*' '}self.params = {self.parameters}, other.params = {other.parameters}")
+            print(f"{5*' '}self.num_loops = {self.number_of_loops}, other.num_loops = {other.number_of_loops}")
+            print(f"{50*'*'}")
+
+        return equal
+
+def build_gcc_ast_json_from_source(test_name: str) -> SimpleNamespace:
+    path_to_source = make_source_file_path(test_name)
+    run_gcc_plugin_with_c_file(path_to_source)
+    print(f"cwd = {os.getcwd()}")
+    path_to_json = f"{test_name}_gcc_ast.json"
+    return load_gcc_ast_json(path_to_json)
+
+
+def load_gcc_ast_json(path_to_json: str) -> SimpleNamespace:
+    # Parse JSON into an object with attributes corresponding to dict keys
+    return json.load(
+        open(path_to_json, "r"), object_hook=lambda d: SimpleNamespace(**d)
+    )
+
+
+def compare_asts(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
+    """
+    Compares `ast1` and `ast2` to check if they match.
+    Currently, we only check specific fields in the AST.  More fields can be added later
+    as stability of the produced AST increases.
+
+    Returns True if they match and False otherwise
+    """
+    same_globals = compare_global_variables(ast1, ast2)
+    same_functions = compare_ast_functions(ast1, ast2)
+    return same_globals and same_functions
+
+
+def compare_global_variables(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
+    """
+    Check that global variables of the same name appear in each AST.  We remove the global
+    variables names that appear in `GLOBAL_NAMES_TO_SKIP`.  The names from that list
+    appear on Github Actions CI, but not locally.
+
+    Returns True if global variable names match and False otherwise
+    """
+    ast1_global_names = [gv.name for gv in ast1.globalVariables]
+    ast1_global_names = set(ast1_global_names).difference(GLOBAL_NAMES_TO_SKIP)
+    ast2_global_names = [gv.name for gv in ast2.globalVariables]
+    ast2_global_names = set(ast2_global_names).difference(GLOBAL_NAMES_TO_SKIP)
+    
+    # We print out the difference, so it can be viewed in Github CI results
+    if set(ast1_global_names) != set(ast2_global_names):
+        print(f"{50*'*'}")
+        print(f"DEBUGGING: in compare_global_variables")
+        print(f"{5*' '}ast1_g_names = {ast1_global_names} and ast2_g_names = {ast2_global_names}")
+        print(f"{50*'*'}")
+        return False
+
+    return True
+
+
+def compare_ast_functions(ast1: SimpleNamespace, ast2: SimpleNamespace) -> bool:
+    """
+    Checks that the "functions" list of `ast1` matches the functions list of `ast2`
+    For individual functions from the list, we only check equality of fields
+    defined in `FunctionData`.
+
+    Returns True is the functions lists match and False otherwise
+    """
+    ast1_functions = {}
+    ast2_functions = {}
+
+    # map functions name to FunctionData to easily grab during comparison
+    for func in ast1.functions:
+        ast1_functions[func.name] = FunctionData(func)
+
+    for func in ast2.functions:
+        ast2_functions[func.name] = FunctionData(func)
+
+    if len(ast1_functions) != len(ast2_functions):
+        return False
+
+    # check functions are the same
+    for name, func1 in ast1_functions.items():
+        if name not in ast2_functions:
+            return False
+        func2 = ast2_functions[name]
+        if func1 != func2:
+            return False
+
+    return True
+
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_files():
+    """
+    Pytest fixture which runs after all test to
+    remove object files and gcc AST jsons created during test run time
+    """
+    # don't do anything to start the session
+    yield  # run the session
+    # clean up after session
     for item in os.listdir("./"):
-        if item.endswith(".o") or item.endswith("gcc_ast.json"):
+        if item.endswith(".o") or item.endswith("_gcc_ast.json"):
             os.remove("./" + item)
+
+
+TEST_NAMES = collect_test_names()
+
+
+@pytest.mark.parametrize("test_name", TEST_NAMES)
+def test_expected_ast(test_name):
+    expected_ast_file_path = make_gcc_ast_json_file_path(test_name)
+
+    created_ast = build_gcc_ast_json_from_source(test_name)
+    expected_ast = load_gcc_ast_json(expected_ast_file_path)
+
+    assert compare_asts(created_ast, expected_ast)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -48,27 +251,13 @@ def run_before_tests(request):
     ), f"Error: GCC AST dump plugin does not exist at expected location: {GCC_PLUGIN_IMAGE}"
 
 
-@pytest.fixture(autouse=True)
-def run_around_tests():
-    # Before each test, set the seed for generating uuids to 0 for consistency
-    # between tests and expected output
-    misc.rd = random.Random()
-    misc.rd.seed(0)
-
-    # Run the test function
-    yield
-
-    # clean up generated files
-    cleanup()
-
-
 def run_gcc_plugin_with_c_file(c_file):
     gpp_command = os.getenv("CUSTOM_GCC_10_PATH")
     if gpp_command is None:
-        gpp_command = GCC_10_BIN_DIRECTORY + "g++-10.1"
+        gpp_command = f"{GCC_10_BIN_DIRECTORY}/g++-10.1"
     plugin_option = f"-fplugin={GCC_PLUGIN_IMAGE}"
-    # Runs g++ with the given c file. This should create the file ast.json
-    # with the programs ast inside of it.
+    # Runs g++ with the given c file. This creates a file ending with "*_gcc_ast.json"
+    # with the programs AST inside of it.
     results = subprocess.run(
         [
             gpp_command,
@@ -77,616 +266,8 @@ def run_gcc_plugin_with_c_file(c_file):
             "-x",
             "c++",
             c_file,
-            # "-o",
-            # "/dev/null",
         ],
         stdout=subprocess.DEVNULL,
     )
-
     # Assert return code is 0 which is success
     assert results.returncode == 0
-
-
-def evaluate_execution_results(expected_result, result):
-    for k, v in expected_result.items():
-        assert k in result
-        try:
-            assert v == result[k]
-        except AssertionError:
-            raise AssertionError(f"Error in result for key {k}: {v} != {result[k]}")
-
-
-def test_c_simple_function_and_assignments():
-    test_name = "simple_function_and_assignments"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json, cast_source_language="c")
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {"y": np.array([465])}
-    evaluate_execution_results(expected_result, result)
-
-
-def test_all_binary_ops():
-    test_name = "all_binary_ops"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json, cast_source_language="c")
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {
-        "add": np.array([3]),
-        "bitwise_and": np.array([0]),
-        "bitwise_l_shift": np.array([2]),
-        "bitwise_or": np.array([3]),
-        "bitwise_r_shift": np.array([1]),
-        "bitwise_xor": np.array([3]),
-        "div": np.array([0.5]),
-        "eq": np.array([False]),
-        "gt": np.array([False]),
-        "gte": np.array([False]),
-        "lt": np.array([True]),
-        "lte": np.array([True]),
-        "mult": np.array([6]),
-        "neq": np.array([True]),
-        "remainder": np.array([2]),
-        "sub": np.array([-1]),
-    }
-
-    evaluate_execution_results(expected_result, result)
-
-
-def test_all_unary_ops():
-    test_name = "all_unary_ops"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {
-        "bitwise_not": np.array([-2]),
-        "logical_not": np.array([False]),
-        "unary_plus": np.array([-1]),
-    }
-    evaluate_execution_results(expected_result, result)
-
-
-def test_function_call():
-    test_name = "function_call"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {
-        "x": np.array([25]),
-    }
-    evaluate_execution_results(expected_result, result)
-
-
-def test_function_call_one_variable_for_multiple_args():
-    test_name = "function_call_one_variable_for_multiple_args"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {
-        "x": np.array([25]),
-    }
-    evaluate_execution_results(expected_result, result)
-
-
-@pytest.mark.skip(reason="Need to fix trimming hanging lambdas in cast_to_air_model")
-def test_function_call_no_args():
-    test_name = "function_call_no_args"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    # TODO cannot currently execute GrFN with no starting node in root container
-    # (This should be fixed when master is merged in?) no_starting_nodes_in_root
-    # inputs = {}
-    # result = grfn(inputs)
-    # assert result == {
-    #     "x": np.array([25]),
-    # }
-
-
-def test_function_call_with_literal_return():
-    test_name = "function_call_with_literal_return"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {
-        "x": np.array([5]),
-    }
-    evaluate_execution_results(expected_result, result)
-
-
-def test_function_same_func_multiple_times():
-    test_name = "function_same_func_multiple_times"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {
-        "five_squared": np.array([25]),
-        "two_hundred": np.array([200]),
-        "fifty": np.array([50]),
-    }
-    evaluate_execution_results(expected_result, result)
-
-
-def test_function_call_literal_args():
-    test_name = "function_call_literal_args"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {
-        "five_squared": np.array([25]),
-        "two_hundred": np.array([200]),
-        "fifty": np.array([50]),
-    }
-    evaluate_execution_results(expected_result, result)
-
-
-def test_function_call_expression_args():
-    test_name = "function_call_expression_args"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {
-        "r1": np.array([7000]),
-        "r2": np.array([50]),
-        "r3": np.array([250]),
-        "r4": np.array([125]),
-    }
-    evaluate_execution_results(expected_result, result)
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_function_call_with_mixed_args():
-    pass
-
-
-def test_function_call_with_complex_return():
-    test_name = "function_call_with_complex_return"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {"nine": np.array([9])}
-    evaluate_execution_results(expected_result, result)
-
-
-@pytest.mark.skip(reason="Need to develop a way to trim out the function")
-def test_function_no_args_void_return():
-    pass
-
-
-def test_function_call_nested():
-    test_name = "function_call_nested"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {"onesixtyeight": np.array([168])}
-    evaluate_execution_results(expected_result, result)
-
-
-@pytest.mark.skip(reason="GrFN may be incorrect")
-def test_if_statement():
-    test_name = "if_statement"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {"x": np.array([10]), "a": np.array([3]), "b": np.array([5])}
-    evaluate_execution_results(expected_result, result)
-
-
-@pytest.mark.skip(reason="GrFN may be incorrect")
-def test_if_else_statement():
-    test_name = "if_else_statement"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {"x": np.array([5]), "a": np.array([10]), "b": np.array([5])}
-    evaluate_execution_results(expected_result, result)
-
-
-@pytest.mark.skip(reason="CAST is incorrect (and so is GrFN)")
-def test_if_elif_statement():
-    test_name = "if_elif_statement"
-    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
-    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
-
-    assert os.path.exists(f"./{test_name}_gcc_ast.json")
-    gcc_ast_obj = json.load(open(f"./{test_name}_gcc_ast.json"))
-
-    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
-    expected_cast = CAST.from_json_data(expected_cast_json)
-    cast = GCC2CAST([gcc_ast_obj]).to_cast()
-    assert expected_cast == cast
-
-    expected_grfn = GroundedFunctionNetwork.from_json(
-        f"{test_dir}/{test_name}--GrFN.json"
-    )
-    grfn = cast.to_GrFN()
-
-    assert expected_grfn == grfn
-
-    inputs = {}
-    result = grfn(inputs)
-    expected_result = {"x": np.array([5]), "a": np.array([10]), "b": np.array([7])}
-    evaluate_execution_results(expected_result, result)
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_if_elif_else_statement():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_nested_if_statements():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_for_loop():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_while_loop():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_nested_loops():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_nested_conditionals():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_nested_function_calls_and_conditionals():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_global_variable_passing():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_pack_and_extract():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_only_pack():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_only_extract():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_multiple_levels_extract_and_pack():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_multiple_variables_extract_and_pack():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_function_no_args_void_return_obj_update():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_nested_types():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_no_root_container():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_array_usage():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_array_iterating_length():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_array_updated_in_lower_scopes():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_multi_file():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_source_refs():
-    pass
-
-
-##### Model tests ######
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_pid_controller():
-    pass
-
-
-# TODO move to fortran tests
-# @pytest.mark.skip(reason="Developing still")
-# def test_stemp_soilt_for():
-#     pass
-
-# @pytest.mark.skip(reason="Developing still")
-# def test_stemp_epic_soilt_for():
-#     pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_GE_simple_PI_controller():
-    pass
-
-
-@pytest.mark.skip(reason="Developing still")
-def test_simple_controller_bhpm():
-    pass

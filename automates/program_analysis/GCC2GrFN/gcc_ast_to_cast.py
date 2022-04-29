@@ -1,6 +1,7 @@
 from pprint import pprint
 from typing import List, Optional
 from dataclasses import dataclass
+from pathlib import Path
 
 from automates.program_analysis.CAST2GrFN.cast import CAST
 from automates.program_analysis.CAST2GrFN.model.cast import (
@@ -90,7 +91,7 @@ class GCC2CAST:
     for one file outputted from our ast_dump.cpp GCC plugin.
     """
 
-    def __init__(self, gcc_asts):
+    def __init__(self, gcc_asts, legacy_cast: bool = False):
         self.gcc_asts = gcc_asts
         self.variables_ids_to_expression = {}
         self.ssa_ids_to_expression = {}
@@ -108,6 +109,11 @@ class GCC2CAST:
         self.loop_num_to_loop_info = {}
         self.bb_headers_to_loop_info = {} 
 
+        # legacy CAST generation does not create Name nodes
+        # for the `name` attribute of FunctionDef's.
+        # This allows the legacy CAST -> AIR -> GrFN 
+        # pipeline to be run on the resulting CAST json
+        self.legacy_cast = legacy_cast
 
     def clear_function_dependent_vars(self):
         self.variables_ids_to_expression = {}
@@ -178,9 +184,10 @@ class GCC2CAST:
         if obj.keys() >= {"line_start", "col_start", "file"}:
             line = obj["line_start"]
             col = obj["col_start"]
-            file = obj["file"]
+            file_path = Path(obj["file"])
+            file_name = file_path.name
             source_refs.append(
-                SourceRef(source_file_name=file, col_start=col, row_start=line)
+                SourceRef(source_file_name=file_name, col_start=col, row_start=line)
             )
         return source_refs
 
@@ -214,15 +221,13 @@ class GCC2CAST:
         name = name.replace(".", "_")
         cast_type = gcc_type_to_var_type(var_type, self.type_ids_to_defined_types)
 
-        line = variable["line_start"] if "line_start" in variable else None
-        col = variable["col_start"] if "col_start" in variable else None
-        file = variable["file"] if "file" in variable else None
-        source_ref = SourceRef(source_file_name=file, col_start=col, row_start=line)
+        id = variable["id"] if "id" in variable else None
+        source_refs = self.get_source_refs(variable)
 
         var_node = Var(
-            val=Name(name=name),
+            val=Name(name=name, id=id, source_refs=source_refs),
             type=cast_type,
-            source_refs=[source_ref],
+            source_refs=source_refs,
         )
 
         if parse_value:
@@ -240,6 +245,18 @@ class GCC2CAST:
         default_val = default_cast_val_for_gcc_types(
             v["type"], self.type_ids_to_defined_types
         )
+        # TODO: Rethink how variable declarations are handled
+        # It does not make much sense to create an Assignment node from
+        # a declaration
+        # We could just return None, however there is a potential issue with
+        # code like
+        # int x;
+        # int y = x + 1;
+        # this would compile fine, and both x and y would end up with random
+        # values
+        # However, the translation to CAST would fail, when trying to 
+        # evaluate the expression "x + 1" because there is no value for "x"
+        # in `self.variables_ids_to_expression`
         if "id" in v:
             self.variables_ids_to_expression[v["id"]] = default_val
         if var is not None:
@@ -257,7 +274,9 @@ class GCC2CAST:
         else:
             name = value["name"]
             name = name.replace(".", "_")
-            return Name(name=name)
+            id = value["id"]
+            # TODO: add in source_refs to returned Name
+            return Name(name=name, id=id)
 
     def parse_operand(self, operand):
         code = operand["code"]
@@ -272,7 +291,9 @@ class GCC2CAST:
             if "name" in operand:
                 name = operand["name"]
                 name = name.replace(".", "_")
-                return Name(name=name)
+                id = operand["id"]
+                source_refs = self.get_source_refs(operand)
+                return Name(name=name, id=id, source_refs=source_refs)
             elif "id" in operand:
                 return self.variables_ids_to_expression[operand["id"]]
         elif code == "addr_expr":
@@ -376,7 +397,9 @@ class GCC2CAST:
             if "name" in lhs:
                 name = lhs["name"]
                 name = name.replace(".", "_")
-                assign_var = Var(val=Name(name=name), type=cast_type)
+                id = lhs["id"]
+                source_refs = self.get_source_refs(lhs)
+                assign_var = Var(val=Name(name=name,id=id, source_refs=source_refs), type=cast_type, source_refs=source_refs)
             elif "id" in lhs:
                 assign_var = self.variables_ids_to_expression[lhs["id"]]
 
@@ -402,16 +425,13 @@ class GCC2CAST:
         member = operand["member"]
         field = member["name"]
 
-        line = member["line_start"]
-        col = member["col_start"]
-        file = member["file"]
-        source_ref = SourceRef(source_file_name=file, row_start=line, col_start=col)
+        source_refs = self.get_source_refs(operand)
 
         return [
             Attribute(
                 value=Name(name=var_name),
                 attr=Name(name=field),
-                source_refs=[source_ref],
+                source_refs=source_refs,
             )
         ]
 
@@ -434,7 +454,11 @@ class GCC2CAST:
                 if "name" in operands[0]:
                     name = operands[0]["name"].replace(".", "_")
                     name = name.replace(".", "_")
-                    assign_value = Name(name=name)
+                    id = operands[0]["id"]
+                    source_refs = self.get_source_refs(operands[0])
+                    assign_value = Name(name=name,id=id, source_refs=source_refs)
+                # When do we have an id but no name
+                # Do we need to track the numerical id in this situation?
                 elif "id" in operands[0]:
                     assign_value = self.variables_ids_to_expression[operands[0]["id"]]
                 else:
@@ -499,6 +523,7 @@ class GCC2CAST:
         arguments = stmt["arguments"] if "arguments" in stmt else []
         src_ref = self.get_source_refs(stmt)
         func_name = function["value"]["name"]
+        func_id = function["value"]["id"]
         # TODO not sure if this is a permenant solution, but ignore these
         # unexpected builtin calls for now
         if "__builtin_" in func_name and not is_allowed_gcc_builtin_func(func_name):
@@ -509,7 +534,7 @@ class GCC2CAST:
             cast_args.append(self.parse_operand(arg))
 
         cast_call = Call(
-            func=Name(name=func_name), arguments=cast_args, source_refs=src_ref
+            func=Name(name=func_name, id=func_id), arguments=cast_args, source_refs=src_ref
         )
         if "lhs" in stmt and stmt["lhs"] is not None:
             return self.parse_lhs(stmt, stmt["lhs"], cast_call)
@@ -747,13 +772,14 @@ class GCC2CAST:
         line_end = function["line_end"]
         decl_line = function["decl_line_start"]
         decl_col = function["decl_col_start"]
-        file = function["file"]
+        file_path = Path(function["file"])
+        file_name = file_path.name
 
         body_source_ref = SourceRef(
-            source_file_name=file, row_start=line_start, row_end=line_end
+            source_file_name=file_name, row_start=line_start, row_end=line_end
         )
         decl_source_ref = SourceRef(
-            source_file_name=file, row_start=decl_line, col_start=decl_col
+            source_file_name=file_name, row_start=decl_line, col_start=decl_col
         )
 
         return body_source_ref, decl_source_ref
@@ -762,7 +788,11 @@ class GCC2CAST:
     def parse_function(self, function):
         # clear functions variables to prepare for parsing
         self.clear_function_dependent_vars()
-        name = function["name"]
+        name = Name(function["name"], function["id"])
+
+        # if we want legacy CAST, the `name` attribute should just be a string
+        if self.legacy_cast:
+            name = function["name"]
 
         parameters = function["parameters"] if "parameters" in function else []
         var_declarations = (
