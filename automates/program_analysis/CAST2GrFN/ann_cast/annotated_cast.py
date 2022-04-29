@@ -2,6 +2,7 @@ import uuid
 import typing
 import re
 import sys
+from enum import Enum
 from datetime import datetime
 from dataclasses import dataclass, field
 
@@ -111,6 +112,16 @@ def cast_op_to_str(op):
     return op_map[op] if op in op_map else None
 
 # Metadata functions
+# From Source Creastion Reason constants
+class CreationReason(str, Enum):
+    TOP_IFACE_INTRO = "Variable Introduced for Top Interface"
+    BOT_IFACE_INTRO = "Variable Introduced for Bot Interface"
+    FUNC_RET_VAL = "Function Return Value"
+    FUNC_ARG = "Function Argument"
+    COND_VAR = "Variable Introduced for Conditional Expression"
+    DUP_GLOBAL = "Duplicated Global for FunctionDef Container"
+
+
 def source_ref_dict(source_ref: SourceRef):
     # We want the following fields in the GrFN Metadata
     # line_begin=source_ref.row_start,
@@ -191,7 +202,7 @@ def generate_from_source_metadata(from_source: bool, reason: str):
             "from_source": str(from_source),
             "creation_reason": reason,
         }
-    return VariableFromSource.from_data(data=data)
+    return VariableFromSource.from_ann_cast_data(data=data)
 
 def generate_variable_node_span_metadata(source_refs):
     src_ref_dict = {}
@@ -209,11 +220,24 @@ def generate_variable_node_span_metadata(source_refs):
     }
     return CodeSpanReference.from_air_data(code_span_data)
 
+def add_metadata_from_name_node(grfn_var, name_node):
+    """
+    Adds metadata to the GrFN VariableNode inferred from the (Ann)CAST Name node
+
+    Currently, all Name nodes are obtained from source, so we generate
+    the from source metadata accordingly.
+    """
+    from_source_mdata = generate_from_source_metadata(from_source=True, reason="Unknown")
+    span_mdata = generate_variable_node_span_metadata(name_node.source_refs)
+    add_metadata_to_grfn_var(grfn_var, from_source_mdata, span_mdata) 
+
 def add_metadata_to_grfn_var(grfn_var, from_source_mdata=None, span_mdata=None, domain_mdata=None):
     if from_source_mdata is None:
         from_source_mdata = generate_from_source_metadata(True, "UNKNOWN")
-
-    if span_mdata is None:
+    
+    # if this GrFN variable is from source, and we don't have span metadata, create
+    # an blank SourceRef for its span metadata
+    if from_source_mdata.from_source and span_mdata is None:
         source_refs = [SourceRef(None, None, None, None, None)]
         span_mdata = generate_variable_node_span_metadata(source_refs)
 
@@ -500,23 +524,19 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
     """
     Creates a GrFN `VariableNode` using the parameters
     """
-    # TODO: For now, we are passing in an empty Metadata
-    # list.  We should update this to include the necessary
-    # metadata
-    # We may also need to update the namespace and scope 
-    # we provide, e.g. use :: instead of . as delimiter
+    # TODO: update the namespace and scope we provide, e.g. use :: instead of . as delimiter?
     identifier = VariableIdentifier("default_ns", con_scopestr, var_name, version)
 
-    # TODO: change to using UUIDs?
+    # TODO: change this uid to a UUID and
+    # replace the calls to uuid4() in later passes with 
+    # GenericNode.create_node_id() 
     # uid = GenericNode.create_node_id()
     uid = build_fullid(var_name, id, version, con_scopestr)
     
-    # this will be filled out later
+    # we initialize the GrFN VariableNode with an empty metadata list.
+    # we fill in the metadata later with a call to add_metadata_to_grfn_var()
     metadata = []
     return VariableNode(uid, identifier, metadata)
-
-
-
 
 @dataclass
 class GrfnAssignment():  

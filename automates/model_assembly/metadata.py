@@ -461,6 +461,15 @@ class VariableFromSource(TypedMetadata):
             VariableCreationReason.from_str(data["creation_reason"]),
         )
 
+    @classmethod
+    def from_ann_cast_data(cls, data: dict) -> VariableFromSource:
+        return cls(
+            data["type"],
+            data["provenance"],
+            data["from_source"] or data["from_source"] == "True",
+            data["creation_reason"],
+        )
+
     def to_dict(self):
         data = super().to_dict()
         data.update(

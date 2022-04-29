@@ -83,7 +83,8 @@ class GrfnVarCreationPass:
             # don't try to alias, if VAR_INIT_VERSION is never used in the body
             # if not self.ann_cast.grfn_var_exists(body_fullid):
             #     continue
-            self.ann_cast.alias_grfn_vars(call_fullid, body_fullid)
+            # we create GrFN variables with call_fullid during VariableVersionPass
+            self.ann_cast.alias_grfn_vars(body_fullid, call_fullid)
 
         # we also alias function parameters
         for i, call_fullid in node.param_index_to_fullid.items():
@@ -93,7 +94,8 @@ class GrfnVarCreationPass:
             func_id = name.id
             var_name = name.name
             func_fullid = build_fullid(var_name, func_id, version, func_con_scopestr)
-            self.ann_cast.alias_grfn_vars(call_fullid, func_fullid)
+            # we create GrFN variables with call_fullid during VariableVersionPass
+            self.ann_cast.alias_grfn_vars(func_fullid, call_fullid)
 
     def alias_copied_func_body_highest_vers(self, node: AnnCastFunctionDef, call_con_scopestr: str):
         """
@@ -156,6 +158,9 @@ class GrfnVarCreationPass:
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.ann_cast.store_grfn_var(fullid, grfn_var)
+            # create From Source metadata for the GrFN var
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.TOP_IFACE_INTRO)
+            add_metadata_to_grfn_var(grfn_var, from_source_mdata)
 
             # alias VAR_INIT_VERSION expr variables
             expr_scopestr = con_scopestr + CON_STR_SEP + IFEXPR
@@ -169,6 +174,9 @@ class GrfnVarCreationPass:
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.ann_cast.store_grfn_var(fullid, grfn_var)
+            # create From Source metadata for the GrFN var
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.BOT_IFACE_INTRO)
+            add_metadata_to_grfn_var(grfn_var, from_source_mdata)
 
     def setup_loop_condition(self, node: AnnCastLoop):
         """
@@ -197,6 +205,9 @@ class GrfnVarCreationPass:
         cond_var.is_exit = True
         self.ann_cast.fullid_to_grfn_id[cond_fullid] = cond_var.uid
         self.ann_cast.grfn_id_to_grfn_var[cond_var.uid] = cond_var
+        # create From Source metadata for the GrFN var
+        from_source_mdata = generate_from_source_metadata(False, CreationReason.COND_VAR)
+        add_metadata_to_grfn_var(cond_var, from_source_mdata)
 
         # cache condtiional variable
         node.condition_var = cond_var
@@ -229,6 +240,9 @@ class GrfnVarCreationPass:
         cond_var = create_grfn_var(cond_name, cond_id, cond_version, if_scopestr)
         self.ann_cast.fullid_to_grfn_id[cond_fullid] = cond_var.uid
         self.ann_cast.grfn_id_to_grfn_var[cond_var.uid] = cond_var
+        # create From Source metadata for the GrFN var
+        from_source_mdata = generate_from_source_metadata(False, CreationReason.COND_VAR)
+        add_metadata_to_grfn_var(cond_var, from_source_mdata)
 
         # cache condtiional variable
         node.condition_var = cond_var
@@ -288,6 +302,9 @@ class GrfnVarCreationPass:
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.ann_cast.store_grfn_var(fullid, grfn_var)
+            # create From Source metadata for the GrFN var
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.TOP_IFACE_INTRO)
+            add_metadata_to_grfn_var(grfn_var, from_source_mdata)
 
             # alias VAR_INIT_VERSION expr variables
             expr_version = VAR_INIT_VERSION
@@ -405,13 +422,14 @@ class GrfnVarCreationPass:
 
     def visit_call_grfn_2_2(self, node: AnnCastCall):
         assert isinstance(node.func, AnnCastName)
-        self.visit_node_list(node.arguments)
-
         call_con_scopestr = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
-        self.visit_function_def_copy(node.func_def_copy)
+        # alias GrFN variables before visiting children
         self.alias_copied_func_body_init_vers(node, call_con_scopestr)
         self.alias_copied_func_body_highest_vers(node.func_def_copy, call_con_scopestr)
 
+        self.visit_node_list(node.arguments)
+
+        self.visit_function_def_copy(node.func_def_copy)
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef):
         pass
@@ -441,11 +459,11 @@ class GrfnVarCreationPass:
     def visit_loop(self, node: AnnCastLoop):
         self.create_grfn_vars_loop(node)
         # visit children
+        self.alias_loop_expr_highest_vers(node)
+        self.alias_loop_body_highest_vers(node)
         self.visit(node.expr)
         self.setup_loop_condition(node)
-        self.alias_loop_expr_highest_vers(node)
         self.visit_node_list(node.body)
-        self.alias_loop_body_highest_vers(node)
 
     @_visit.register
     def visit_model_break(self, node: AnnCastModelBreak):
@@ -458,11 +476,12 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_model_if(self, node: AnnCastModelIf):
         self.create_grfn_vars_model_if(node)
+        # alias highest version vars inside expr to initial body versions
+        self.alias_if_expr_highest_vers(node)
+
         # visit expr, then setup condition info
         self.visit(node.expr)
         self.setup_model_if_condition(node)
-        # alias highest version vars inside expr to initial body versions
-        self.alias_if_expr_highest_vers(node)
 
         self.visit_node_list(node.body)
         self.visit_node_list(node.orelse)
@@ -497,10 +516,7 @@ class GrfnVarCreationPass:
 
         # store metdata for GrFN var associated to this Name node
         grfn_var = self.ann_cast.get_grfn_var(fullid)
-
-        span_mdata = generate_variable_node_span_metadata(node.source_refs)
-        from_source_mdata = generate_from_source_metadata(from_source=True, reason="Unknown")
-        add_metadata_to_grfn_var(grfn_var, from_source_mdata, span_mdata) 
+        add_metadata_from_name_node(grfn_var, node) 
 
     @_visit.register
     def visit_number(self, node: AnnCastNumber):
