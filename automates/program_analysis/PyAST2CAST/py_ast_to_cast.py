@@ -388,7 +388,7 @@ class PyASTToCAST():
 
         # foo.x, foo.bar(), etc...
         # (one single layer of attribute)
-        if isinstance(curr, ast.Name):
+        elif isinstance(curr, ast.Name):
             unique_name = construct_unique_name(curr.id, node.attr)
         
             if isinstance(curr.ctx,ast.Load):
@@ -407,13 +407,58 @@ class PyASTToCAST():
                     else:
                         self.insert_next_id(curr_scope_id_dict, unique_name)
 
+        elif isinstance(curr, ast.Subscript):
+            curr_value = curr.value
+            while isinstance(curr_value, ast.Subscript):
+                curr_value = curr_value.value
+            
+            if isinstance(curr_value, ast.Name):
+                unique_name = construct_unique_name(curr_value.id, node.attr)
+
+                if isinstance(curr.ctx,ast.Load):
+                    if unique_name not in curr_scope_id_dict:
+                        if unique_name in prev_scope_id_dict:
+                            curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
+                        else:
+                            if unique_name not in self.global_identifier_dict: # added for random.seed not exising, and other modules like that. in other words for functions in modules that we don't have visibility for. 
+                                self.insert_next_id(self.global_identifier_dict, unique_name)
+                            curr_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
+                    
+                if isinstance(curr.ctx,ast.Store):
+                    if unique_name not in curr_scope_id_dict:
+                        if unique_name in prev_scope_id_dict:
+                            curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
+                        else:
+                            self.insert_next_id(curr_scope_id_dict, unique_name)
+            else:
+                raise NotImplementedError(f"Node type: {type(node)} with value {type(curr_value)} not recognized")
+
+        elif isinstance(curr, ast.Constant):
+            unique_name = construct_unique_name(curr.value, node.attr)
+            if isinstance(node.ctx,ast.Load):
+                if unique_name not in curr_scope_id_dict:
+                    if unique_name in prev_scope_id_dict:
+                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
+                    else:
+                        if unique_name not in self.global_identifier_dict: # added for random.seed not exising, and other modules like that. in other words for functions in modules that we don't have visibility for. 
+                            self.insert_next_id(self.global_identifier_dict, unique_name)
+                        curr_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
+                
+            if isinstance(node.ctx,ast.Store):
+                if unique_name not in curr_scope_id_dict:
+                    if unique_name in prev_scope_id_dict:
+                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
+                    else:
+                        self.insert_next_id(curr_scope_id_dict, unique_name)
+        else:
+            raise NotImplementedError(f"Node type: {type(curr)}")
+
         value = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)
         
         # If the attribute we're checking isn't in the current scope
         # We look to the enclosing scope
         # if node.attr not in curr_scope_id_dict:
         #    pass
-
         attr = Name(node.attr, id=curr_scope_id_dict[unique_name], source_refs=ref)
 
         # module_name : has an ID
@@ -912,7 +957,7 @@ class PyASTToCAST():
             if isinstance(node.target,ast.Tuple):
                 loop_assign = [Assignment(
                     Tuple([Var(type="float",val=Name(f"{node.val.name}_",id=-1,source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
-                    Subscript(Name(name=node.iter.id,id=curr_scope_id_dict[node.iter.id],source_refs=ref), 
+                    Subscript(Name(name=node.iter.value.id,id=curr_scope_id_dict[node.iter.value.id],source_refs=ref), 
                     Name(count_var_name,source_refs=ref),source_refs=ref),
                     source_refs=ref
                 ),
@@ -1108,7 +1153,8 @@ class PyASTToCAST():
                     func=ast.Attribute(value=ast.Name(id=temp_list_name, ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), attr='append', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
                     args=[node.elt],
                     keywords=[], col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
-                    col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])])]
+                    col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
+                    orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
         else:
             innermost_loop_body = [ast.Expr(value=ast.Call(
                     func=ast.Attribute(value=ast.Name(id=temp_list_name, ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), attr='append', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
@@ -1135,7 +1181,7 @@ class PyASTToCAST():
                                 iter=self.identify_piece(curr_gen.iter, curr_scope_id_dict, prev_scope_id_dict),
                                 body=[ast.If(test=curr_if, body=[loop_collection[0]],
                                 orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
-                            orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+                                orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
 
                 #next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
                  #               iter=curr_gen.iter,
