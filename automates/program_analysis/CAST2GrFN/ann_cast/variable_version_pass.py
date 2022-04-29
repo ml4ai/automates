@@ -69,6 +69,15 @@ class VariableVersionPass:
         for var_id, var_name in vars.items():
             self.incr_version_in_con_scope(scopestr, var_id, var_name)
 
+    def add_default_bot_interface_metadata(self, interface_vars):
+        """
+        Adds a bot interface metadata to interface_vars 
+        """
+        for fullid in interface_vars.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.BOT_IFACE_INTRO)
+            add_metadata_to_grfn_var(grfn_var, from_source_mdata=from_source_mdata)
+
     def populate_interface(self, con_scopestr, vars, interface):
         """
         Parameters:
@@ -98,6 +107,7 @@ class VariableVersionPass:
         # populate bot interface out
         node.bot_interface_vars = node.modified_vars
         self.populate_interface(prev_scopestr, node.bot_interface_vars, node.bot_interface_out)
+        self.add_default_bot_interface_metadata(node.bot_interface_out)
 
         # populate "inside" of interfaces
         con_scopestr = con_scope_to_str(node.con_scope)
@@ -138,6 +148,7 @@ class VariableVersionPass:
         # populate bot interface out
         node.bot_interface_vars = node.modified_vars
         self.populate_interface(prev_scopestr, node.bot_interface_vars, node.bot_interface_out)
+        self.add_default_bot_interface_metadata(node.bot_interface_out)
 
         # populate "inside" of interfaces
         con_scopestr = con_scope_to_str(node.con_scope)
@@ -179,7 +190,7 @@ class VariableVersionPass:
             param_name = param.val.name
 
             # argument and parameter share id, and start with initial version
-            id = self.ann_cast.next_collapsed_id()
+            id = param.val.id
             version = VAR_INIT_VERSION
 
             # build and store GrFN variables for argument and parameter
@@ -188,12 +199,17 @@ class VariableVersionPass:
             self.ann_cast.store_grfn_var(arg_fullid, arg_grfn_var)
             # store arg_fullid
             node.arg_index_to_fullid[i] = arg_fullid
+            # create From Source metadata for the GrFN var
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.FUNC_ARG)
+            add_metadata_to_grfn_var(arg_grfn_var, from_source_mdata)
 
             param_grfn_var = create_grfn_var(param_name, id, version, param_con_scopestr)
             param_fullid = build_fullid(param_name, id, version, param_con_scopestr)
             self.ann_cast.store_grfn_var(param_fullid, param_grfn_var)
             # store param_fullid
             node.param_index_to_fullid[i] = param_fullid
+            # store metadata in paramter GrFN Var
+            add_metadata_from_name_node(param_grfn_var, param.val)
 
             # link argument and parameter through top interface
             node.top_interface_in[id] = arg_fullid
@@ -222,6 +238,10 @@ class VariableVersionPass:
         in_ret_val = create_grfn_var(var_name, id, version, func_scopestr)
         in_fullid = build_fullid(var_name, id, version, func_scopestr)
         self.ann_cast.store_grfn_var(in_fullid, in_ret_val)
+        # create From Source metadata for the GrFN var
+        from_source_mdata = generate_from_source_metadata(False, CreationReason.FUNC_RET_VAL)
+        add_metadata_to_grfn_var(in_ret_val, from_source_mdata)
+
 
         # exterior container scope
         enclosing_con = node.con_scope[:-1]
@@ -229,6 +249,8 @@ class VariableVersionPass:
         out_ret_val = create_grfn_var(var_name, id, version, enclosing_scopestr)
         out_fullid = build_fullid(var_name, id, version, enclosing_scopestr)
         self.ann_cast.store_grfn_var(out_fullid, out_ret_val)
+        # create From Source metadata for the GrFN var
+        add_metadata_to_grfn_var(out_ret_val, from_source_mdata)
 
         # store created fullid and grfn_id in node's ret_val
         node.out_ret_val[id] = out_fullid
@@ -283,6 +305,9 @@ class VariableVersionPass:
             init_global = create_grfn_var(var_name, id, version, func_scopestr)
             self.ann_cast.store_grfn_var(init_fullid, init_global)
             node.top_interface_out[id] = init_fullid
+            # create From Source metadata for the GrFN var
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.TOP_IFACE_INTRO)
+            add_metadata_to_grfn_var(init_global, from_source_mdata)
     
         # we do not create the GrFN VariableNode for the highest version global
         # here, since it is done while visitng Assignment node during GrfnVarCreation pass
@@ -323,37 +348,58 @@ class VariableVersionPass:
         # the bot interface globals are all modified globals
         node.bot_interface_globals = node.modified_globals
 
-        # create specialized globals for top interface
-        # by convention the top interface produces version VAR_INIT_VERSION variables
+        # TODO: need to decide how to handle 3.0 FunctionDef container interfaces for globals
+        # Concerns: using the globals that exist in the enclosing scope will likely lead to 
+        # version collisions, so we cannot use the same logic as for main
+        # If we create specialized globals, then due to the way interfaces expect the same id 
+        # on either side, we need to create both exterior and interior specialized globals.  
+        # To have the assignments in the FunctionDef link up correclty, 
+        # this route requires aliasing these specialized globals
+        # to the "true" globals appearing in the FunctionDef
+        # For now, we simply create VAR_INIT_VERSION interior globals
         version = VAR_INIT_VERSION
-        for var_name in node.top_interface_globals.values():
-            id = self.ann_cast.next_collapsed_id()
-            # exterior specialized top global
+        for id, var_name in node.top_interface_globals.items():
             in_fullid = build_fullid(var_name, id, version, enclosing_scopestr)
             in_global = create_grfn_var(var_name, id, version, enclosing_scopestr)
             self.ann_cast.store_grfn_var(in_fullid, in_global)
-            node.top_interface_in[id] = in_fullid
-            # interior specialized top global
-            out_fullid = build_fullid(var_name, id, version, func_scopestr)
-            out_global = create_grfn_var(var_name, id, version, func_scopestr)
-            self.ann_cast.store_grfn_var(out_fullid, out_global)
-            node.top_interface_out[id] = out_fullid
-    
-        # create specialized globals for bot interface
-        # by convention, the bot interface in takes version VAR_EXIT_VERSION variables
-        version = VAR_EXIT_VERSION
-        for var_name in node.bot_interface_globals.values():
-            id = self.ann_cast.next_collapsed_id()
-            # interior specialized bot global
-            in_fullid = build_fullid(var_name, id, version, func_scopestr)
-            in_global = create_grfn_var(var_name, id, version, func_scopestr)
-            self.ann_cast.store_grfn_var(in_fullid, in_global)
-            node.top_interface_in[id] = in_fullid
-            # exterior specialized bot global
-            out_fullid = build_fullid(var_name, id, version, enclosing_scopestr)
-            out_global = create_grfn_var(var_name, id, version, enclosing_scopestr)
-            self.ann_cast.store_grfn_var(out_fullid, out_global)
-            node.top_interface_out[id] = out_fullid
+
+    #     # create specialized globals for top interface
+    #     # by convention the top interface produces version VAR_INIT_VERSION variables
+    #     version = VAR_INIT_VERSION
+    #     for var_name in node.top_interface_globals.values():
+    #         id = self.ann_cast.next_collapsed_id()
+    #         # exterior specialized top global
+    #         in_fullid = build_fullid(var_name, id, version, enclosing_scopestr)
+    #         in_global = create_grfn_var(var_name, id, version, enclosing_scopestr)
+    #         self.ann_cast.store_grfn_var(in_fullid, in_global)
+    #         node.top_interface_in[id] = in_fullid
+    #         # create From Source metadata for the GrFN var
+    #         from_source_mdata = generate_from_source_metadata(False, CreationReason.DUP_GLOBAL)
+    #         add_metadata_to_grfn_var(in_global, from_source_mdata)
+    #         # interior specialized top global
+    #         out_fullid = build_fullid(var_name, id, version, func_scopestr)
+    #         out_global = create_grfn_var(var_name, id, version, func_scopestr)
+    #         self.ann_cast.store_grfn_var(out_fullid, out_global)
+    #         node.top_interface_out[id] = out_fullid
+    #         # create From Source metadata for the GrFN var
+    #         from_source_mdata = generate_from_source_metadata(False, CreationReason.TOP_IFACE_INTRO)
+    #         add_metadata_to_grfn_var(in_global, from_source_mdata)
+    # 
+    #     # create specialized globals for bot interface
+    #     # by convention, the bot interface in takes version VAR_EXIT_VERSION variables
+    #     version = VAR_EXIT_VERSION
+    #     for var_name in node.bot_interface_globals.values():
+    #         id = self.ann_cast.next_collapsed_id()
+    #         # interior specialized bot global
+    #         in_fullid = build_fullid(var_name, id, version, func_scopestr)
+    #         in_global = create_grfn_var(var_name, id, version, func_scopestr)
+    #         self.ann_cast.store_grfn_var(in_fullid, in_global)
+    #         node.bot_interface_in[id] = in_fullid
+    #         # exterior specialized bot global
+    #         out_fullid = build_fullid(var_name, id, version, enclosing_scopestr)
+    #         out_global = create_grfn_var(var_name, id, version, enclosing_scopestr)
+    #         self.ann_cast.store_grfn_var(out_fullid, out_global)
+    #         node.bot_interface_out[id] = out_fullid
 
         print(f"For FunctionDef {node.name.name}")
         print("\tAfter add_globals_to_non_main_func_def_interfaces():")
@@ -396,12 +442,17 @@ class VariableVersionPass:
             self.ann_cast.store_grfn_var(arg_fullid, arg_grfn_var)
             # store arg_fullid
             node.arg_index_to_fullid[i] = arg_fullid
+            # create From Source metadata for the GrFN var
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.FUNC_ARG)
+            add_metadata_to_grfn_var(arg_grfn_var, from_source_mdata)
 
             param_grfn_var = create_grfn_var(param_name, id, version, param_con_scopestr)
             param_fullid = build_fullid(param_name, id, version, param_con_scopestr)
             self.ann_cast.store_grfn_var(param_fullid, param_grfn_var)
             # store param_fullid
             node.param_index_to_fullid[i] = param_fullid
+            # create From Source metadata for the GrFN var
+            add_metadata_from_name_node(param_grfn_var, param.val)
 
             # link argument and parameter through top interface
             node.top_interface_in[id] = arg_fullid
@@ -434,7 +485,6 @@ class VariableVersionPass:
             param_name = call_param_name(node, i)
             param_con_scopestr = con_scope_to_str(node.func.con_scope + [call_con_name])
             
-
             # argument and parameter share id, and start with initial version
             id = self.ann_cast.next_collapsed_id()
             version = VAR_INIT_VERSION
@@ -445,12 +495,18 @@ class VariableVersionPass:
             self.ann_cast.store_grfn_var(arg_fullid, arg_grfn_var)
             # store arg_fullid
             node.arg_index_to_fullid[i] = arg_fullid
+            # create From Source metadata for the GrFN var
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.FUNC_ARG)
+            add_metadata_to_grfn_var(arg_grfn_var, from_source_mdata)
 
             param_grfn_var = create_grfn_var(param_name, id, version, param_con_scopestr)
             param_fullid = build_fullid(param_name, id, version, param_con_scopestr)
             self.ann_cast.store_grfn_var(param_fullid, param_grfn_var)
             # store param_fullid
             node.param_index_to_fullid[i] = param_fullid
+            # create From Source metadata for the GrFN var
+            # when we don't have the function def, we create a paramter with a default name
+            add_metadata_to_grfn_var(param_grfn_var, from_source_mdata)
 
             # link argument and parameter through top interface
             node.top_interface_in[id] = arg_fullid
@@ -478,12 +534,16 @@ class VariableVersionPass:
         in_ret_val = create_grfn_var(var_name, id, version, call_con_scopestr)
         in_fullid = build_fullid(var_name, id, version, call_con_scopestr)
         self.ann_cast.store_grfn_var(in_fullid, in_ret_val)
+        # create From Source metadata for the GrFN var
+        from_source_mdata = generate_from_source_metadata(False, CreationReason.FUNC_RET_VAL)
+        add_metadata_to_grfn_var(in_ret_val, from_source_mdata)
 
         # exterior container scope
         con_scopestr = con_scope_to_str(node.func.con_scope)
         out_ret_val = create_grfn_var(var_name, id, version, con_scopestr)
         out_fullid = build_fullid(var_name, id, version, con_scopestr)
         self.ann_cast.store_grfn_var(out_fullid, out_ret_val)
+        add_metadata_to_grfn_var(out_ret_val, from_source_mdata)
 
         # store created fullid and grfn_id in node's ret_val
         node.out_ret_val[id] = out_fullid
@@ -530,12 +590,16 @@ class VariableVersionPass:
             self.ann_cast.store_grfn_var(arg_fullid, arg_grfn_var)
             # store arg_fullid
             node.arg_index_to_fullid[i] = arg_fullid
+            # create From Source metadata for the GrFN var
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.FUNC_ARG)
+            add_metadata_to_grfn_var(arg_grfn_var, from_source_mdata)
 
             param_grfn_var = create_grfn_var(param_name, id, version, param_con_scopestr)
             param_fullid = build_fullid(param_name, id, version, param_con_scopestr)
             self.ann_cast.store_grfn_var(param_fullid, param_grfn_var)
             # store param_fullid
             node.param_index_to_fullid[i] = param_fullid
+            add_metadata_from_name_node(param_grfn_var, param.val)
 
             # link argument and parameter through top interface
             node.top_interface_in[id] = arg_fullid
@@ -567,12 +631,17 @@ class VariableVersionPass:
         in_ret_val = create_grfn_var(var_name, id, version, call_con_scopestr)
         in_fullid = build_fullid(var_name, id, version, call_con_scopestr)
         self.ann_cast.store_grfn_var(in_fullid, in_ret_val)
+        # create From Source metadata for the GrFN var
+        from_source_mdata = generate_from_source_metadata(False, CreationReason.FUNC_RET_VAL)
+        add_metadata_to_grfn_var(in_ret_val, from_source_mdata)
 
         # exterior container scope
         con_scopestr = con_scope_to_str(node.func.con_scope)
         out_ret_val = create_grfn_var(var_name, id, version, con_scopestr)
         out_fullid = build_fullid(var_name, id, version, con_scopestr)
         self.ann_cast.store_grfn_var(out_fullid, out_ret_val)
+        # create From Source metadata for the GrFN var
+        add_metadata_to_grfn_var(out_ret_val, from_source_mdata)
 
         # store created fullid and grfn_id in node's ret_val
         node.out_ret_val[id] = out_fullid
@@ -632,10 +701,12 @@ class VariableVersionPass:
             call_init_global = create_grfn_var(var_name, id, version, call_con_scopestr)
             self.ann_cast.store_grfn_var(call_init_fullid, call_init_global)
             node.top_interface_out[id] = call_init_fullid
+            # create From Source metadata for the GrFN var
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.TOP_IFACE_INTRO)
+            add_metadata_to_grfn_var(call_init_global, from_source_mdata)
 
+            # alias the func copies init version
             func_copy_init_fullid = build_fullid(var_name, id, version, copied_func_scopestr)
-            func_copy_init_global = create_grfn_var(var_name, id, version, copied_func_scopestr)
-            self.ann_cast.store_grfn_var(func_copy_init_fullid, func_copy_init_global)
             self.ann_cast.alias_grfn_vars(func_copy_init_fullid, call_init_fullid)
     
         for id, var_name in node.bot_interface_globals.items():
@@ -688,6 +759,9 @@ class VariableVersionPass:
             init_global = create_grfn_var(var_name, id, version, call_con_scopestr)
             self.ann_cast.store_grfn_var(init_fullid, init_global)
             node.top_interface_out[id] = init_fullid
+            # create From Source metadata for the GrFN var
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.TOP_IFACE_INTRO)
+            add_metadata_to_grfn_var(init_global, from_source_mdata)
     
         for id, var_name in node.bot_interface_globals.items():
             version = VAR_EXIT_VERSION
@@ -695,6 +769,9 @@ class VariableVersionPass:
             exit_global = create_grfn_var(var_name, id, version, call_con_scopestr)
             self.ann_cast.store_grfn_var(exit_fullid, exit_global)
             node.bot_interface_in[id] = exit_fullid
+            # create From Source metadata for the GrFN var
+            from_source_mdata = generate_from_source_metadata(False, CreationReason.BOT_IFACE_INTRO)
+            add_metadata_to_grfn_var(exit_global, from_source_mdata)
 
     def visit(self, node: AnnCastNode, assign_lhs: bool):
         # type(node) is a string which looks like
