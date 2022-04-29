@@ -1489,13 +1489,19 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
     def to_FCG(self):
         G = nx.DiGraph()
-        func_to_func_edges = [
-            (func_node, node)
-            for node in self.nodes
-            if isinstance(node, LambdaNode)
-            for var_node in self.predecessors(node)
-            for func_node in self.predecessors(var_node)
-        ]
+        func_to_func_edges = []
+        for node in self.nodes:
+            if isinstance(node, LambdaNode):
+                preds = list(self.predecessors(node))
+                # DEBUGGING
+                # print(f"node {node} has predecessors {preds}")
+                for var_node in self.predecessors(node):
+                    preds = list(self.predecessors(var_node))
+                    # DEBUGGING
+                    # print(f"node {var_node} has predecessors {preds}")
+                    for func_node in self.predecessors(var_node):
+                        func_to_func_edges.append((func_node, node))
+                        
         G.add_edges_from(func_to_func_edges)
         return G
 
