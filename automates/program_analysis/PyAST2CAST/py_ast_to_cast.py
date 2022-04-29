@@ -6,6 +6,7 @@ import os
 import copy
 import sys
 from functools import singledispatchmethod
+from xml.etree.ElementTree import ElementTree
 
 from numpy import isin
 from pandas import concat
@@ -125,7 +126,7 @@ class PyASTToCAST():
         - Var_Count
         - global_identifier_dict
     """
-    def __init__(self, file_name: str):
+    def __init__(self, file_name: str, legacy: Boolean = False):
         """Initializes any auxiliary data structures that are used 
            for generating CAST.
            The current data structures are:
@@ -138,6 +139,8 @@ class PyASTToCAST():
            - classes: A dictionary of class names and their associated functions.
            - var_count: An int used when CAST variables need to be generated (i.e. loop variables, etc)
            - global_identifier_dict: A dictionary used to map global variables to unique identifiers
+           - legacy: A flag used to determine whether we generate old style CAST (uses strings for function def names)
+                     or new style CAST (uses Name CAST nodes for function def names)
         """
 
         self.aliases = {}
@@ -147,6 +150,7 @@ class PyASTToCAST():
         self.var_count = 0
         self.global_identifier_dict = {}
         self.id_count = 0
+        self.legacy = legacy
 
 
     def insert_next_id(self, scope_dict: Dict, dict_key: str):
@@ -189,8 +193,83 @@ class PyASTToCAST():
         else:
             return name
 
-    def identify_piece(self, piece: AstNode, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict)
+    def identify_piece(self, piece: AstNode, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
+        """This function is used to 'centralize' the handling of different node types
+        in list/dictionary/set comprehensions.
+        Take the following list comprehensions as examples
+        L = [ele**2 for small_l in d         for ele in small_l]   -- comp1 
+        L = [ele**2 for small_l in foo.bar() for ele in small_l]   -- comp2 
+        L = [ele**2 for small_l in foo.baz   for ele in small_l]   -- comp3
+               F1         F2        F3            F4      F5
+        
+        In these comprehensions F3 has a different type for its node
+            - In comp1 it's a list
+            - In comp2 it's an attribute of an object with a function call
+            - In comp3 it's an attribute of an object without a function call    
+        
+        The code that handles comprehensions generates slightly different AST depending
+        on what type these fields (F1 through F5) are, but this handling becomes very repetitive
+        and difficult to maintain if it's written in the comprehension visitors. Thus, this method
+        is to contain that handling in one place. This method acts on one field at a time, and thus will
+        be called multiple times per comprehension as necessary.
 
+        Args:
+            piece (AstNode): The current Python AST node we're looking at, generally an individual field
+                             of the list comprehension    
+            prev_scope_id_dict (Dict): Scope dictionaries in case something needs to be accessed or changed
+            curr_scope_id_dict (Dict): see above
+        """
+        
+
+        """
+        
+        [ELT for TARGET in ITER]
+          F1       F2      F3 
+        F1 - doesn't need to be handled here because that's just code that is done somewhere else
+        F2/F4 - commonly it's a Name or a Tuple node
+        F3/F5 - generally a list, or something that gives back a list like:
+                * a subscript          
+                * an attribute of an object with or w/out a function call
+                * 
+        """
+        
+        """
+            if isinstance(   ,ast.Subscript):
+                if isinstance(   ,ast.Tuple):
+                else:
+            elif isinstance(   ,ast.Call):
+                if isinstance(   ,ast.Tuple):
+                else:
+            else:
+                if isinstance(   ,ast.Tuple):
+                else:
+        """
+        if isinstance(piece, ast.Tuple): # for targets (generator.target)
+            return piece
+        elif isinstance(piece, ast.Name):
+            ref = [self.filenames[-1], piece.col_offset, piece.end_col_offset, piece.lineno, piece.end_lineno]
+            # return ast.Name(id=piece.id, ctx=ast.Store(), col_offset=None, end_col_offset=None, lineno=None, end_lineno=None)
+            return ast.Name(id=piece.id, ctx=ast.Store(), col_offset=[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4])
+        elif isinstance(piece, ast.Subscript): # for iters (generator.iter)
+            return piece.value
+        elif isinstance(piece, ast.Call):
+            return piece.func
+        else:
+            piece
+
+
+
+       # if isinstance(piece, ast.Name):
+        #    if isinstance(piece, ast.Tuple):
+         #       return piece.target
+          #  else:
+           #     return ast.Name(id=piece.target.id, ctx=ast.Store)
+        
+       # if isinstance(piece, ast.Call):
+        #    if isinstance():
+         #       return
+        #if isinstance(piece, ast.Subscript):
+         #   return
 
 
     @singledispatchmethod
@@ -946,14 +1025,20 @@ class PyASTToCAST():
         # TODO: this might need to be different, since Python variables can exist outside of a scope?? 
         prev_scope_id_dict = copy.deepcopy(prev_scope_id_dict_copy)
         
-        # Global level functions have their module names appended to them, we make sure
+        # Global level (i.e. module level) functions have their module names appended to them, we make sure
         # we have the correct name depending on whether or not we're visiting a global
         # level function or a function enclosed within another function
         if node.name in prev_scope_id_dict.keys():
-            return [FunctionDef(Name(node.name,prev_scope_id_dict[node.name]), args, body, source_refs=ref)]
+            if self.legacy:
+                return [FunctionDef(node.name, args, body, source_refs=ref)]
+            else:
+                return [FunctionDef(Name(node.name,prev_scope_id_dict[node.name]), args, body, source_refs=ref)]
         else:
             unique_name = construct_unique_name(self.filenames[-1], node.name) 
-            return [FunctionDef(Name(node.name,prev_scope_id_dict[unique_name]), args, body, source_refs=ref)]
+            if self.legacy:
+                return [FunctionDef(node.name, args, body, source_refs=ref)]
+            else:
+                return [FunctionDef(Name(node.name,prev_scope_id_dict[unique_name]), args, body, source_refs=ref)]
 
 
 
@@ -989,7 +1074,10 @@ class PyASTToCAST():
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         # TODO: add an ID for lambda name
-        return [FunctionDef(Name("LAMBDA",id=-1), args, body, source_refs=ref)]
+        if self.legacy:
+            return [FunctionDef("LAMBDA", args, body, source_refs=ref)]
+        else:
+            return [FunctionDef(Name("LAMBDA",id=-1), args, body, source_refs=ref)]
 
     @visit.register
     def visit_ListComp(self, node: ast.ListComp, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -1015,14 +1103,26 @@ class PyASTToCAST():
         i = len(generators)-2
 
         # Constructs the Python AST for the innermost loop in the list comprehension
-        innermost_loop_body = [ast.Expr(value=ast.Call(
-                    func=ast.Attribute(value=ast.Name(id='list_temp%', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), attr='append', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
+        if len(first_gen.ifs) > 0:
+            innermost_loop_body = [ast.If(test=first_gen.ifs[0], body=[ast.Expr(value=ast.Call(
+                    func=ast.Attribute(value=ast.Name(id=temp_list_name, ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), attr='append', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
+                    args=[node.elt],
+                    keywords=[], col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
+                    col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])])]
+        else:
+            innermost_loop_body = [ast.Expr(value=ast.Call(
+                    func=ast.Attribute(value=ast.Name(id=temp_list_name, ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), attr='append', ctx=ast.Load(), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]), 
                     args=[node.elt],
                     keywords=[], col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4]
                     ), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
-        loop_collection = [ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
-                                    iter=first_gen.iter,
+
+        loop_collection = [ast.For(target=self.identify_piece(first_gen.target, prev_scope_id_dict, curr_scope_id_dict),
+                                    iter=self.identify_piece(first_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
                                     body=innermost_loop_body,orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
+
+        #loop_collection = [ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+         #                           iter=first_gen.iter,
+          #                          body=innermost_loop_body,orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
 
         # Every other loop in the list comprehension wraps itself around the previous loop that we 
         # added
@@ -1031,15 +1131,27 @@ class PyASTToCAST():
             if len(curr_gen.ifs) > 0:
                 # TODO: if multiple ifs exist per a single generator then we have to expand this
                 curr_if = curr_gen.ifs[0]
-                next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
-                                iter=curr_gen.iter,
+                next_loop = ast.For(target=self.identify_piece(curr_gen.target, curr_scope_id_dict, prev_scope_id_dict),
+                                iter=self.identify_piece(curr_gen.iter, curr_scope_id_dict, prev_scope_id_dict),
                                 body=[ast.If(test=curr_if, body=[loop_collection[0]],
                                 orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
                             orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+
+                #next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                 #               iter=curr_gen.iter,
+                  #              body=[ast.If(test=curr_if, body=[loop_collection[0]],
+                   #             orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
+                    #        orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+
             else:
-                next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
-                                        iter=curr_gen.iter,
+                next_loop = ast.For(target=self.identify_piece(curr_gen.target, curr_scope_id_dict, prev_scope_id_dict),
+                                        iter=self.identify_piece(curr_gen.iter, curr_scope_id_dict, prev_scope_id_dict),
                                         body=[loop_collection[0]],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+            
+                #next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
+                 #                       iter=curr_gen.iter,
+                  #                      body=[loop_collection[0]],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
+
             loop_collection.insert(0, next_loop)
             i = i - 1
 
@@ -1121,8 +1233,8 @@ class PyASTToCAST():
                                             value=node.value,
                                             type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
 
-        loop_collection = [ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
-                                    iter=first_gen.iter,
+        loop_collection = [ast.For(target= self.identify_piece(first_gen.target, prev_scope_id_dict, curr_scope_id_dict),
+                                    iter=self.identify_piece(first_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
                                     body=[innermost_loop_body],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
 
         # Every other loop in the list comprehension wraps itself around the previous loop that we 
@@ -1132,14 +1244,14 @@ class PyASTToCAST():
             if len(curr_gen.ifs) > 0:
                 # TODO: if multiple ifs exist per a single generator then we have to expand this
                 curr_if = curr_gen.ifs[0]
-                next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
-                                iter=curr_gen.iter,
+                next_loop = ast.For(target=self.identify_piece(curr_gen.target, prev_scope_id_dict, curr_scope_id_dict),
+                                iter=self.identify_piece(curr_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
                                 body=[ast.If(test=curr_if, body=[loop_collection[0]],
                                 orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
                             orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
             else:
-                next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
-                                        iter=curr_gen.iter,
+                next_loop = ast.For(target=self.identify_piece(curr_gen.target, prev_scope_id_dict, curr_scope_id_dict),
+                                        iter=self.identify_piece(curr_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
                                         body=[loop_collection[0]],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
             loop_collection.insert(0, next_loop)
             i = i - 1

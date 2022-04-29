@@ -29,7 +29,10 @@ for l in file_list:
 file_handle.close()
 
 # Create a PyASTToCAST Object
-convert = py_ast_to_cast.PyASTToCAST(file_name)
+if '--legacy' in sys.argv:
+    convert = py_ast_to_cast.PyASTToCAST(file_name, legacy=True)
+else:
+    convert = py_ast_to_cast.PyASTToCAST(file_name)
 
 # Additional option to allow us to view the PyAST 
 # using the astpp module 
