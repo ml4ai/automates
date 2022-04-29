@@ -108,7 +108,9 @@ def get_const_value(operand):
     elif operand["code"] == "real_cst":
         return Number(number=float(operand["decimal"]))
     elif operand["code"] == "string_cst":
-        return String(string=operand["value"])
+        # remove any null bytes (\x00) in the string
+        string = operand["value"].replace("\x00", "")
+        return String(string=string)
     elif operand["code"] == "const_decl":
         return get_const_value(operand["value"])
     else:

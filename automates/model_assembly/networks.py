@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn
+from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn, Optional
 from abc import ABC, abstractmethod
 from functools import singledispatch
 from dataclasses import dataclass
@@ -86,6 +86,7 @@ class VariableNode(GenericNode):
     object_ref: str = None
     value: Any = None
     input_value: Any = None
+    is_exit: bool = False
 
     def __hash__(self):
         return hash(self.uid)
@@ -138,12 +139,11 @@ class VariableNode(GenericNode):
         return str(self.identifier)
 
     def get_kwargs(self):
-        is_exit = self.identifier.var_name == "EXIT"
         return {
             "color": "crimson",
-            "fontcolor": "white" if is_exit else "black",
-            "fillcolor": "crimson" if is_exit else "white",
-            "style": "filled" if is_exit else "",
+            "fontcolor": "white" if self.is_exit else "black",
+            "fillcolor": "crimson" if self.is_exit else "white",
+            "style": "filled" if self.is_exit else "",
             "padding": 15,
             "label": self.get_label(),
         }
@@ -338,6 +338,49 @@ class LambdaNode(GenericNode):
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
+# TODO: make a subclass of LambdaNode for LoopTopInterface which includes
+# a use_initial boolean attribute and overwrite the parse_result() method
+# TODO: use this in to_grfn_pass.py when the loop top interface is created
+@dataclass
+class LoopTopInterface(LambdaNode):
+    use_initial: bool = False
+
+    def parse_result(self, values, res):
+        # The top interfaces node (LTI) should output a tuple of the
+        # correct variables. However, if there is only one var in the
+        # tuple it is outputting, python collapses this to a single
+        # var, so handle this scenario
+        if not isinstance(res[0], tuple):
+            # return [[r] for r in res]
+            return [res]
+        res = [list(v) for v in res]
+        return [np.array(v) for v in list(map(list, zip(*res)))]
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        lambda_fn = load_lambda_function(data["lambda"])
+        lambda_type = LambdaType.from_str(data["type"])
+        if "metadata" in data:
+            metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
+        else:
+            metadata = []
+        return cls(
+            data["uid"],
+            lambda_type,
+            data["lambda"],
+            lambda_fn,
+            metadata,
+            data["use_initial"],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "uid": self.uid,
+            "type": str(self.func_type),
+            "lambda": self.func_str,
+            "metadata": [m.to_dict() for m in self.metadata],
+            "use_initial": self.use_initial
+        }
 
 @dataclass
 class HyperEdge:
@@ -436,6 +479,8 @@ class GrFNSubgraph:
     basename: str
     occurrence_num: int
     parent: str
+    # TODO: maybe uncomment
+    # parent: Optional[GrFNSubgraph]
     type: str
     border_color: str
     nodes: Iterable[GenericNode]
@@ -778,6 +823,10 @@ class GrFNSubgraph:
             return "forestgreen"
         elif type_str == "LoopContainer":
             return "navyblue"
+        elif type_str == "CallContainer":
+            return "purple"
+        elif type_str == "Module":
+            return "grey"
         else:
             raise TypeError(f"Unrecognized subgraph type: {type_str}")
 

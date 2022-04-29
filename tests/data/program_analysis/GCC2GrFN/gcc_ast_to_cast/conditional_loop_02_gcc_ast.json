@@ -12,7 +12,7 @@
       "decl_col_start": 5,
       "file": "conditional_loop_02.c",
       "line_start": 1,
-      "line_end": 19,
+      "line_end": 18,
       "variableDeclarations": [
         {
           "name": "divisible",
@@ -422,7 +422,7 @@
             },
             {
               "type": "assign",
-              "line_start": 12,
+              "line_start": 11,
               "col_start": 16,
               "file": "conditional_loop_02.c",
               "operator": "integer_cst",
@@ -479,7 +479,7 @@
           "statements": [
             {
               "type": "conditional",
-              "line_start": 12,
+              "line_start": 11,
               "col_start": 23,
               "file": "conditional_loop_02.c",
               "operator": "gt_expr",
@@ -543,7 +543,7 @@
           "statements": [
             {
               "type": "assign",
-              "line_start": 13,
+              "line_start": 12,
               "col_start": 15,
               "file": "conditional_loop_02.c",
               "operator": "minus_expr",
@@ -591,7 +591,7 @@
             },
             {
               "type": "assign",
-              "line_start": 12,
+              "line_start": 11,
               "col_start": 9,
               "file": "conditional_loop_02.c",
               "operator": "plus_expr",
@@ -665,7 +665,7 @@
           "statements": [
             {
               "type": "assign",
-              "line_start": 16,
+              "line_start": 15,
               "col_start": 19,
               "file": "conditional_loop_02.c",
               "operator": "integer_cst",
@@ -721,7 +721,7 @@
           "statements": [
             {
               "type": "assign",
-              "line_start": 19,
+              "line_start": 18,
               "col_start": 1,
               "file": "conditional_loop_02.c",
               "operator": "integer_cst",
@@ -733,7 +733,7 @@
                   "unsigned": false
                 },
                 "id": 4294964956,
-                "line_start": 19,
+                "line_start": 18,
                 "col_start": 1,
                 "file": "conditional_loop_02.c"
               },
@@ -776,7 +776,7 @@
           "statements": [
             {
               "type": "return",
-              "line_start": 19,
+              "line_start": 18,
               "col_start": 1,
               "file": "conditional_loop_02.c",
               "value": {
@@ -787,7 +787,7 @@
                   "unsigned": false
                 },
                 "id": 4294964956,
-                "line_start": 19,
+                "line_start": 18,
                 "col_start": 1,
                 "file": "conditional_loop_02.c"
               }
