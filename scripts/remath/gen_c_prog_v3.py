@@ -408,13 +408,13 @@ CONFIG_1 = GeneratorConfig(
     operators_num=(4, 4),
     operators_primitive=OP_DEFINITIONS,
 
-    conditional_prob=0,          # probability of creating conditionals
+    conditional_prob=1.0,          # probability of creating conditionals
     conditionals_num=(4, 4),       # when creating conditionals, how many?
     conditional_else_prob=0.5,     # probability that a conditional has an else branch
     conditional_nesting_level=3,   # 1 = no nesting, otherwise (>1) nesting up to level depth
     conditional_return_prob=0.25,
 
-    loop_prob=0,                 # probability of creating loops
+    loop_prob=1.0,                 # probability of creating loops
     loop_num=(3, 3),               # when creating loops, how many?
     loop_for_prob=0.5,             # probability that loop is a for-loop (otherwise while)
     loop_while_nesting_level=3
@@ -923,7 +923,7 @@ class ProgramSpec:
 
 
 # -----------------------------------------------------------------------------
-#
+# FunctionBody generator
 # -----------------------------------------------------------------------------
 
 # TODO NOTE: there is a *lot* of repeated code here. Reduce with inheritance?
@@ -1139,6 +1139,65 @@ class PNode:
             return l
 
 
+def swap_finish(pnode_to_swap: PNode, new: PNode, fn_body: FunctionBody):
+    if pnode_to_swap.before is None:
+        if fn_body.head == pnode_to_swap:
+            fn_body.head = new.before
+    else:
+        new.before.before = pnode_to_swap.before
+        pnode_to_swap.before.after = new.before
+
+    if pnode_to_swap.after is None:
+        if fn_body.tail == pnode_to_swap:
+            fn_body.tail = new.after
+    else:
+        new.after.after = pnode_to_swap.after
+        pnode_to_swap.after.before = new.after
+
+    if pnode_to_swap.parent is not None:
+        pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
+        pnode_to_swap.parent.swap_child_end(pnode_to_swap, new.after)
+
+    fn_body.unassigned_pnodes.remove(pnode_to_swap)
+    if pnode_to_swap in fn_body.nes_pnodes:
+        fn_body.nes_pnodes.remove(pnode_to_swap)
+    del pnode_to_swap
+
+
+def swap_finish_no_after(pnode_to_swap: PNode, new: PNode, fn_body: FunctionBody):
+    """
+    This special version of 'swap_finish' assumes the pnode_to_swap.after is being consumed.
+    This pattern is used by productions that only generate in the 'before' direction.
+    Currently only Expr does this.
+    :param pnode_to_swap:
+    :param new:
+    :param fn_body:
+    :return:
+    """
+    if pnode_to_swap.before is None:
+        if fn_body.head == pnode_to_swap:
+            fn_body.head = new.before
+    else:
+        new.before.before = pnode_to_swap.before
+        pnode_to_swap.before.after = new.before
+
+    if pnode_to_swap.after is None:
+        if fn_body.tail == pnode_to_swap:
+            fn_body.tail = new
+    else:
+        new.after = pnode_to_swap.after   # difference from swap
+        pnode_to_swap.after.before = new  # difference from swap
+
+    if pnode_to_swap.parent is not None:
+        pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
+        pnode_to_swap.parent.swap_child_end(pnode_to_swap, new)  # difference from swap
+
+    fn_body.unassigned_pnodes.remove(pnode_to_swap)
+    if pnode_to_swap in fn_body.nes_pnodes:
+        fn_body.nes_pnodes.remove(pnode_to_swap)
+    del pnode_to_swap
+
+
 class PNodeExpr(PNode):
 
     @staticmethod
@@ -1155,29 +1214,31 @@ class PNodeExpr(PNode):
 
         fn_body.unassigned_pnodes.add(new.before)
 
-        if pnode_to_swap.before is None:
-            if fn_body.head == pnode_to_swap:
-                fn_body.head = new.before
-        else:
-            new.before.before = pnode_to_swap.before
-            pnode_to_swap.before.after = new.before
+        swap_finish_no_after(pnode_to_swap=pnode_to_swap, new=new, fn_body=fn_body)
 
-        if pnode_to_swap.after is None:
-            if fn_body.tail == pnode_to_swap:
-                fn_body.tail = new
-        if pnode_to_swap.after is not None:
-            new.after = pnode_to_swap.after
-            pnode_to_swap.after.before = new
-
-        if pnode_to_swap.parent is not None:
-            # new.parent = pnode_to_swap.parent
-            pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
-            pnode_to_swap.parent.swap_child_end(pnode_to_swap, new)
-
-        fn_body.unassigned_pnodes.remove(pnode_to_swap)
-        if pnode_to_swap in fn_body.nes_pnodes:
-            fn_body.nes_pnodes.remove(pnode_to_swap)
-        del pnode_to_swap
+        # if pnode_to_swap.before is None:
+        #     if fn_body.head == pnode_to_swap:
+        #         fn_body.head = new.before
+        # else:
+        #     new.before.before = pnode_to_swap.before
+        #     pnode_to_swap.before.after = new.before
+        #
+        # if pnode_to_swap.after is None:
+        #     if fn_body.tail == pnode_to_swap:
+        #         fn_body.tail = new
+        # if pnode_to_swap.after is not None:
+        #     new.after = pnode_to_swap.after
+        #     pnode_to_swap.after.before = new
+        #
+        # if pnode_to_swap.parent is not None:
+        #     # new.parent = pnode_to_swap.parent
+        #     pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
+        #     pnode_to_swap.parent.swap_child_end(pnode_to_swap, new)
+        #
+        # fn_body.unassigned_pnodes.remove(pnode_to_swap)
+        # if pnode_to_swap in fn_body.nes_pnodes:
+        #     fn_body.nes_pnodes.remove(pnode_to_swap)
+        # del pnode_to_swap
 
     def __init__(self, before: PNode = None, after: PNode = None, parent: PNode = None):
         super().__init__(before=before, after=after, parent=parent)
@@ -1199,17 +1260,18 @@ class PNodeExpr(PNode):
             return l
 
 
-class PNodeLoopWhile(PNode):
+class PNodeControlWithBody(PNode, ABC):
 
     @staticmethod
-    def swap(pnode_to_swap: PNode, fn_body: FunctionBody):
+    def swap(pnode_to_swap: PNode, fn_body: FunctionBody, new: PNode):
         """
         Swap an existing PNode with a new PNodeLoopWhile
         :param pnode_to_swap: existing (old) PNode
+        :param new: new PNode -- must be assigned by subclass swap
         :param fn_body: the FunctionBody context
         :return:
         """
-        new = PNodeLoopWhile()
+        # new = PNodeLoopWhile()
         new.before = PNode(after=new)
         new.after = PNode(before=new)
 
@@ -1223,227 +1285,304 @@ class PNodeLoopWhile(PNode):
         fn_body.unassigned_pnodes.add(body)
         fn_body.nes_pnodes.add(body)
 
-        if pnode_to_swap.before is None:
-            # new.before = PNode(after=new)
-            # fn_body.unassigned_pnodes.add(new.before)
-            if fn_body.head == pnode_to_swap:
-                fn_body.head = new.before
-        else:
-            new.before.before = pnode_to_swap.before
-            pnode_to_swap.before.after = new.before
-
-        if pnode_to_swap.after is None:
-            # new.after = PNode(before=new)
-            # fn_body.unassigned_pnodes.add(new.after)
-            if fn_body.tail == pnode_to_swap:
-                fn_body.tail = new.after
-        else:
-            new.after.after = pnode_to_swap.after
-            pnode_to_swap.after.before = new.after
-
-        if pnode_to_swap.parent is not None:
-            # new.parent = pnode_to_swap.parent
-            pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
-            pnode_to_swap.parent.swap_child_end(pnode_to_swap, new.after)
-
-        fn_body.unassigned_pnodes.remove(pnode_to_swap)
-        if pnode_to_swap in fn_body.nes_pnodes:
-            fn_body.nes_pnodes.remove(pnode_to_swap)
-        del pnode_to_swap
+        swap_finish(pnode_to_swap=pnode_to_swap, new=new, fn_body=fn_body)
 
     def __init__(self, before: PNode = None, after: PNode = None, parent: PNode = None):
         self.condition = None
         self.body_start = None
         self.body_end = None
+        super().__init__(before=before, after=after, parent=parent)
+
+    def swap_child_start(self, pnode_to_swap: PNode, new: PNode):
+        if self.body_start == pnode_to_swap:
+            self.body_start = new
+            new.parent = self
+
+    def swap_child_end(self, pnode_to_swap: PNode, new: PNode):
+        if self.body_end == pnode_to_swap:
+            self.body_end = new
+            new.parent = self
+
+    def visit_depth_first_forward(self, visitor: Visitor):
+        visitor.visit(self)
+        self.body_start.visit_depth_first_forward(visitor)
+        if self.after:
+            self.after.visit_depth_first_forward(visitor)
+
+    def to_string_depth_first_forward(self, level: int = 0):
+        indent_str = TAB_STR*level
+        indent_str_body = TAB_STR*(level + 1)
+        l = [f'{indent_str}{self}', f'{indent_str_body}<body>'] \
+            + self.body_start.to_string_depth_first_forward(level + 2) \
+            + [f'{indent_str_body}</body>', f'{indent_str}</{self}>']
+        if self.after:
+            return l + self.after.to_string_depth_first_forward(level)
+        else:
+            return l
+
+
+class PNodeLoopWhile(PNodeControlWithBody):
+
+    @staticmethod
+    def swap(pnode_to_swap: PNode, fn_body: FunctionBody, new: PNode = None):
+        """
+        Swap an existing PNode with a new PNodeLoopWhile
+        :param pnode_to_swap: existing (old) PNode
+        :param fn_body: the FunctionBody context
+        :param new: IGNORED
+        :return:
+        """
+        new = PNodeLoopWhile()
+
+        PNodeControlWithBody.swap(pnode_to_swap, fn_body, new)
+
+    #     new.before = PNode(after=new)
+    #     new.after = PNode(before=new)
+    #
+    #     body = PNode(parent=new)
+    #     new.body_start = body
+    #     new.body_end = body
+    #     print(f'    new: {new}')
+    #
+    #     fn_body.unassigned_pnodes.add(new.before)
+    #     fn_body.unassigned_pnodes.add(new.after)
+    #     fn_body.unassigned_pnodes.add(body)
+    #     fn_body.nes_pnodes.add(body)
+    #
+    #     swap_finish(pnode_to_swap=pnode_to_swap, new=new, fn_body=fn_body)
+    #
+    #     # if pnode_to_swap.before is None:
+    #     #     # new.before = PNode(after=new)
+    #     #     # fn_body.unassigned_pnodes.add(new.before)
+    #     #     if fn_body.head == pnode_to_swap:
+    #     #         fn_body.head = new.before
+    #     # else:
+    #     #     new.before.before = pnode_to_swap.before
+    #     #     pnode_to_swap.before.after = new.before
+    #     #
+    #     # if pnode_to_swap.after is None:
+    #     #     # new.after = PNode(before=new)
+    #     #     # fn_body.unassigned_pnodes.add(new.after)
+    #     #     if fn_body.tail == pnode_to_swap:
+    #     #         fn_body.tail = new.after
+    #     # else:
+    #     #     new.after.after = pnode_to_swap.after
+    #     #     pnode_to_swap.after.before = new.after
+    #     #
+    #     # if pnode_to_swap.parent is not None:
+    #     #     # new.parent = pnode_to_swap.parent
+    #     #     pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
+    #     #     pnode_to_swap.parent.swap_child_end(pnode_to_swap, new.after)
+    #     #
+    #     # fn_body.unassigned_pnodes.remove(pnode_to_swap)
+    #     # if pnode_to_swap in fn_body.nes_pnodes:
+    #     #     fn_body.nes_pnodes.remove(pnode_to_swap)
+    #     # del pnode_to_swap
+
+    def __init__(self, before: PNode = None, after: PNode = None, parent: PNode = None):
+        # self.condition = None
+        # self.body_start = None
+        # self.body_end = None
         super().__init__(before=before, after=after, parent=parent)
 
     def __repr__(self):
         return f'<LoopWhile {self.pnode_idx}:{self.get_connectivity_str()}>'
 
-    def swap_child_start(self, pnode_to_swap: PNode, new: PNode):
-        if self.body_start == pnode_to_swap:
-            self.body_start = new
-            new.parent = self
+    # def swap_child_start(self, pnode_to_swap: PNode, new: PNode):
+    #     if self.body_start == pnode_to_swap:
+    #         self.body_start = new
+    #         new.parent = self
+    #
+    # def swap_child_end(self, pnode_to_swap: PNode, new: PNode):
+    #     if self.body_end == pnode_to_swap:
+    #         self.body_end = new
+    #         new.parent = self
+    #
+    # def visit_depth_first_forward(self, visitor: Visitor):
+    #     visitor.visit(self)
+    #     self.body_start.visit_depth_first_forward(visitor)
+    #     if self.after:
+    #         self.after.visit_depth_first_forward(visitor)
 
-    def swap_child_end(self, pnode_to_swap: PNode, new: PNode):
-        if self.body_end == pnode_to_swap:
-            self.body_end = new
-            new.parent = self
-
-    def visit_depth_first_forward(self, visitor: Visitor):
-        visitor.visit(self)
-        self.body_start.visit_depth_first_forward(visitor)
-        if self.after:
-            self.after.visit_depth_first_forward(visitor)
-
-    def to_string_depth_first_forward(self, level: int = 0):
-        indent_str = TAB_STR*level
-        indent_str_body = TAB_STR*(level + 1)
-        l = [f'{indent_str}{self}', f'{indent_str_body}<body>'] \
-            + self.body_start.to_string_depth_first_forward(level + 2) \
-            + [f'{indent_str_body}</body>', f'{indent_str}</{self}>']
-        if self.after:
-            return l + self.after.to_string_depth_first_forward(level)
-        else:
-            return l
+    # def to_string_depth_first_forward(self, level: int = 0):
+    #     indent_str = TAB_STR*level
+    #     indent_str_body = TAB_STR*(level + 1)
+    #     l = [f'{indent_str}{self}', f'{indent_str_body}<body>'] \
+    #         + self.body_start.to_string_depth_first_forward(level + 2) \
+    #         + [f'{indent_str_body}</body>', f'{indent_str}</{self}>']
+    #     if self.after:
+    #         return l + self.after.to_string_depth_first_forward(level)
+    #     else:
+    #         return l
 
 
-class PNodeLoopFor(PNode):
+class PNodeLoopFor(PNodeControlWithBody):
 
     @staticmethod
-    def swap(pnode_to_swap: PNode, fn_body: FunctionBody):
+    def swap(pnode_to_swap: PNode, fn_body: FunctionBody, new: PNode = None):
         """
         Swap an existing PNode with a new PNodeLoopFor
         :param pnode_to_swap: existing (old) PNode
         :param fn_body: the FunctionBody context
+        :param new: IGNORED
         :return:
         """
         new = PNodeLoopFor()
-        new.before = PNode(after=new)
-        new.after = PNode(before=new)
 
-        body = PNode(parent=new)
-        new.body_start = body
-        new.body_end = body
-        print(f'    new: {new}')
+        PNodeControlWithBody.swap(pnode_to_swap, fn_body, new)
 
-        fn_body.unassigned_pnodes.add(new.before)
-        fn_body.unassigned_pnodes.add(new.after)
-        fn_body.unassigned_pnodes.add(body)
-        fn_body.nes_pnodes.add(body)
-
-        if pnode_to_swap.before is None:
-            if fn_body.head == pnode_to_swap:
-                fn_body.head = new.before
-        else:
-            new.before.before = pnode_to_swap.before
-            pnode_to_swap.before.after = new.before
-
-        if pnode_to_swap.after is None:
-            if fn_body.tail == pnode_to_swap:
-                fn_body.tail = new.after
-        else:
-            new.after.after = pnode_to_swap.after
-            pnode_to_swap.after.before = new.after
-
-        if pnode_to_swap.parent is not None:
-            pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
-            pnode_to_swap.parent.swap_child_end(pnode_to_swap, new.after)
-
-        fn_body.unassigned_pnodes.remove(pnode_to_swap)
-        if pnode_to_swap in fn_body.nes_pnodes:
-            fn_body.nes_pnodes.remove(pnode_to_swap)
-        del pnode_to_swap
+    #     new.before = PNode(after=new)
+    #     new.after = PNode(before=new)
+    #
+    #     body = PNode(parent=new)
+    #     new.body_start = body
+    #     new.body_end = body
+    #     print(f'    new: {new}')
+    #
+    #     fn_body.unassigned_pnodes.add(new.before)
+    #     fn_body.unassigned_pnodes.add(new.after)
+    #     fn_body.unassigned_pnodes.add(body)
+    #     fn_body.nes_pnodes.add(body)
+    #
+    #     swap_finish(pnode_to_swap=pnode_to_swap, new=new, fn_body=fn_body)
+    #
+    #     # if pnode_to_swap.before is None:
+    #     #     if fn_body.head == pnode_to_swap:
+    #     #         fn_body.head = new.before
+    #     # else:
+    #     #     new.before.before = pnode_to_swap.before
+    #     #     pnode_to_swap.before.after = new.before
+    #     #
+    #     # if pnode_to_swap.after is None:
+    #     #     if fn_body.tail == pnode_to_swap:
+    #     #         fn_body.tail = new.after
+    #     # else:
+    #     #     new.after.after = pnode_to_swap.after
+    #     #     pnode_to_swap.after.before = new.after
+    #     #
+    #     # if pnode_to_swap.parent is not None:
+    #     #     pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
+    #     #     pnode_to_swap.parent.swap_child_end(pnode_to_swap, new.after)
+    #     #
+    #     # fn_body.unassigned_pnodes.remove(pnode_to_swap)
+    #     # if pnode_to_swap in fn_body.nes_pnodes:
+    #     #     fn_body.nes_pnodes.remove(pnode_to_swap)
+    #     # del pnode_to_swap
 
     def __init__(self, before: PNode = None, after: PNode = None, parent: PNode = None):
-        self.condition = None
-        self.body_start = None
-        self.body_end = None
+        # self.condition = None
+        # self.body_start = None
+        # self.body_end = None
         super().__init__(before=before, after=after, parent=parent)
 
     def __repr__(self):
         return f'<LoopFor {self.pnode_idx}:{self.get_connectivity_str()}>'
 
-    def swap_child_start(self, pnode_to_swap: PNode, new: PNode):
-        if self.body_start == pnode_to_swap:
-            self.body_start = new
-            new.parent = self
+    # def swap_child_start(self, pnode_to_swap: PNode, new: PNode):
+    #     if self.body_start == pnode_to_swap:
+    #         self.body_start = new
+    #         new.parent = self
+    #
+    # def swap_child_end(self, pnode_to_swap: PNode, new: PNode):
+    #     if self.body_end == pnode_to_swap:
+    #         self.body_end = new
+    #         new.parent = self
+    #
+    # def visit_depth_first_forward(self, visitor: Visitor):
+    #     visitor.visit(self)
+    #     self.body_start.visit_depth_first_forward(visitor)
+    #     if self.after:
+    #         self.after.visit_depth_first_forward(visitor)
+    #
+    # def to_string_depth_first_forward(self, level: int = 0):
+    #     indent_str = TAB_STR*level
+    #     indent_str_body = TAB_STR*(level + 1)
+    #     l = [f'{indent_str}{self}', f'{indent_str_body}<body>'] \
+    #         + self.body_start.to_string_depth_first_forward(level + 2) \
+    #         + [f'{indent_str_body}</body>', f'{indent_str}</{self}>']
+    #     if self.after:
+    #         return l + self.after.to_string_depth_first_forward(level)
+    #     else:
+    #         return l
 
-    def swap_child_end(self, pnode_to_swap: PNode, new: PNode):
-        if self.body_end == pnode_to_swap:
-            self.body_end = new
-            new.parent = self
 
-    def visit_depth_first_forward(self, visitor: Visitor):
-        visitor.visit(self)
-        self.body_start.visit_depth_first_forward(visitor)
-        if self.after:
-            self.after.visit_depth_first_forward(visitor)
-
-    def to_string_depth_first_forward(self, level: int = 0):
-        indent_str = TAB_STR*level
-        indent_str_body = TAB_STR*(level + 1)
-        l = [f'{indent_str}{self}', f'{indent_str_body}<body>'] \
-            + self.body_start.to_string_depth_first_forward(level + 2) \
-            + [f'{indent_str_body}</body>', f'{indent_str}</{self}>']
-        if self.after:
-            return l + self.after.to_string_depth_first_forward(level)
-        else:
-            return l
-
-
-class PNodeCondIf(PNode):
+class PNodeCondIf(PNodeControlWithBody):
 
     @staticmethod
-    def swap(pnode_to_swap: PNode, fn_body: FunctionBody):
+    def swap(pnode_to_swap: PNode, fn_body: FunctionBody, new: PNode = None):
         new = PNodeCondIf()
-        new.before = PNode(after=new)
-        new.after = PNode(before=new)
 
-        body = PNode(parent=new)
-        new.body_if_start = body
-        new.body_if_end = body
-        print(f'    new: {new}')
+        PNodeControlWithBody.swap(pnode_to_swap, fn_body, new)
 
-        fn_body.unassigned_pnodes.add(new.before)
-        fn_body.unassigned_pnodes.add(new.after)
-        fn_body.unassigned_pnodes.add(body)
-        fn_body.nes_pnodes.add(body)
+    #     new.before = PNode(after=new)
+    #     new.after = PNode(before=new)
+    #
+    #     body = PNode(parent=new)
+    #     new.body_if_start = body
+    #     new.body_if_end = body
+    #     print(f'    new: {new}')
+    #
+    #     fn_body.unassigned_pnodes.add(new.before)
+    #     fn_body.unassigned_pnodes.add(new.after)
+    #     fn_body.unassigned_pnodes.add(body)
+    #     fn_body.nes_pnodes.add(body)
+    #
+    #     swap_finish(pnode_to_swap=pnode_to_swap, new=new, fn_body=fn_body)
+    #
+    #     # if pnode_to_swap.before is None:
+    #     #     if fn_body.head == pnode_to_swap:
+    #     #         fn_body.head = new.before
+    #     # else:
+    #     #     new.before.before = pnode_to_swap.before
+    #     #     pnode_to_swap.before.after = new.before
+    #     #
+    #     # if pnode_to_swap.after is None:
+    #     #     if fn_body.tail == pnode_to_swap:
+    #     #         fn_body.tail = new.after
+    #     # else:
+    #     #     new.after.after = pnode_to_swap.after
+    #     #     pnode_to_swap.after.before = new.after
+    #     #
+    #     # if pnode_to_swap.parent is not None:
+    #     #     pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
+    #     #     pnode_to_swap.parent.swap_child_end(pnode_to_swap, new.after)
+    #     #
+    #     # fn_body.unassigned_pnodes.remove(pnode_to_swap)
+    #     # if pnode_to_swap in fn_body.nes_pnodes:
+    #     #     fn_body.nes_pnodes.remove(pnode_to_swap)
+    #     # del pnode_to_swap
 
-        if pnode_to_swap.before is None:
-            if fn_body.head == pnode_to_swap:
-                fn_body.head = new.before
-        else:
-            new.before.before = pnode_to_swap.before
-            pnode_to_swap.before.after = new.before
-
-        if pnode_to_swap.after is None:
-            if fn_body.tail == pnode_to_swap:
-                fn_body.tail = new.after
-        else:
-            new.after.after = pnode_to_swap.after
-            pnode_to_swap.after.before = new.after
-
-        if pnode_to_swap.parent is not None:
-            pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
-            pnode_to_swap.parent.swap_child_end(pnode_to_swap, new.after)
-
-        fn_body.unassigned_pnodes.remove(pnode_to_swap)
-        if pnode_to_swap in fn_body.nes_pnodes:
-            fn_body.nes_pnodes.remove(pnode_to_swap)
-        del pnode_to_swap
-
-    def __init__(self, before: PNode = None, after: PNode = None):
-        self.condition = None
-        self.body_if_start = None
-        self.body_if_end = None
-        super().__init__(before=before, after=after)
+    def __init__(self, before: PNode = None, after: PNode = None, parent: PNode = None):
+        # self.condition = None
+        # self.body_if_start = None
+        # self.body_if_end = None
+        super().__init__(before=before, after=after, parent=parent)
 
     def __repr__(self):
         return f'<CondIf {self.pnode_idx}:{self.get_connectivity_str()}>'
 
-    def swap_child_start(self, pnode_to_swap: PNode, new: PNode):
-        if self.body_if_start == pnode_to_swap:
-            self.body_if_start = new
-            new.parent = self
-
-    def swap_child_end(self, pnode_to_swap: PNode, new: PNode):
-        if self.body_if_end == pnode_to_swap:
-            self.body_if_end = new
-            new.parent = self
-
-    def visit_depth_first_forward(self, visitor: Visitor):
-        visitor.visit(self)
-        self.body_if_start.visit_depth_first_forward(visitor)
-        if self.after:
-            self.after.visit_depth_first_forward(visitor)
+    # def swap_child_start(self, pnode_to_swap: PNode, new: PNode):
+    #     if self.body_if_start == pnode_to_swap:
+    #         self.body_if_start = new
+    #         new.parent = self
+    #
+    # def swap_child_end(self, pnode_to_swap: PNode, new: PNode):
+    #     if self.body_if_end == pnode_to_swap:
+    #         self.body_if_end = new
+    #         new.parent = self
+    #
+    # def visit_depth_first_forward(self, visitor: Visitor):
+    #     visitor.visit(self)
+    #     self.body_if_start.visit_depth_first_forward(visitor)
+    #     if self.after:
+    #         self.after.visit_depth_first_forward(visitor)
 
     def to_string_depth_first_forward(self, level: int = 0):
         indent_str = TAB_STR*level
         indent_str_body = TAB_STR*(level + 1)
-        l = [f'{indent_str}{self}>', f'{indent_str_body}<if_cond>'] \
-            + self.body_if_start.to_string_depth_first_forward(level + 2) \
-            + [f'{indent_str_body}</if_cond>', f'{indent_str}</{self}>']
+        l = [f'{indent_str}{self}>', f'{indent_str_body}<body_if>'] \
+            + self.body_start.to_string_depth_first_forward(level + 2) \
+            + [f'{indent_str_body}</body_if>', f'{indent_str}</{self}>']
         if self.after:
             return l + self.after.to_string_depth_first_forward(level)
         else:
@@ -1473,28 +1612,30 @@ class PNodeCondIfElse(PNode):
         fn_body.unassigned_pnodes.add(body_else)
         fn_body.nes_pnodes.add(body_else)
 
-        if pnode_to_swap.before is None:
-            if fn_body.head == pnode_to_swap:
-                fn_body.head = new.before
-        else:
-            new.before.before = pnode_to_swap.before
-            pnode_to_swap.before.after = new.before
+        swap_finish(pnode_to_swap=pnode_to_swap, new=new, fn_body=fn_body)
 
-        if pnode_to_swap.after is None:
-            if fn_body.tail == pnode_to_swap:
-                fn_body.tail = new.after
-        else:
-            new.after.after = pnode_to_swap.after
-            pnode_to_swap.after.before = new.after
-
-        if pnode_to_swap.parent is not None:
-            pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
-            pnode_to_swap.parent.swap_child_end(pnode_to_swap, new.after)
-
-        fn_body.unassigned_pnodes.remove(pnode_to_swap)
-        if pnode_to_swap in fn_body.nes_pnodes:
-            fn_body.nes_pnodes.remove(pnode_to_swap)
-        del pnode_to_swap
+        # if pnode_to_swap.before is None:
+        #     if fn_body.head == pnode_to_swap:
+        #         fn_body.head = new.before
+        # else:
+        #     new.before.before = pnode_to_swap.before
+        #     pnode_to_swap.before.after = new.before
+        #
+        # if pnode_to_swap.after is None:
+        #     if fn_body.tail == pnode_to_swap:
+        #         fn_body.tail = new.after
+        # else:
+        #     new.after.after = pnode_to_swap.after
+        #     pnode_to_swap.after.before = new.after
+        #
+        # if pnode_to_swap.parent is not None:
+        #     pnode_to_swap.parent.swap_child_start(pnode_to_swap, new.before)
+        #     pnode_to_swap.parent.swap_child_end(pnode_to_swap, new.after)
+        #
+        # fn_body.unassigned_pnodes.remove(pnode_to_swap)
+        # if pnode_to_swap in fn_body.nes_pnodes:
+        #     fn_body.nes_pnodes.remove(pnode_to_swap)
+        # del pnode_to_swap
 
     def __init__(self, before: PNode = None, after: PNode = None, parent: PNode = None):
         self.condition = None
