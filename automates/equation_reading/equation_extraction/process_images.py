@@ -311,22 +311,22 @@ def single_process(list_directory='./data_1802',
 
     # PREPROCESSING
     # Preprocess Images: Crops Formula & Group Similar Sized Images for Batching
-    preprocess_images.main(["--input-dir",  os.path.join(processed_directory, img_dir),
+    preprocess_images.main_batch(["--input-dir", os.path.join(processed_directory, img_dir),
                             "--output-dir", os.path.join(processed_directory, proc_dir)])
                             
     # Preprocess Formulas: Tokenize & Normalize LaTeX Formulas
     # Doesn't work in container: no node.js
     # Must be run in python2!!!
-    preprocess_formulas.main(["--mode",        "normalize",
-                              "--input-file",  os.path.join(list_directory, formulas),
+    preprocess_formulas.main_batch(["--mode", "normalize",
+                              "--input-file", os.path.join(list_directory, formulas),
                               "--output-file", os.path.join(list_directory, norm)])
                               
     # Preprocess Test Set: Ignore Formulas with Many Tokens or Grammar Errors
-    preprocess_filter.main(["--no-filter",
-                            "--image-dir",   os.path.join(processed_directory, proc_dir),
-                            "--label-path",  os.path.join(list_directory, norm),
-                            "--data-path",   os.path.join(list_directory, test),
-                            "--output-path", os.path.join(list_directory, filter) ])
+    preprocess_filter.main_batch(["--no-filter",
+                            "--image-dir", os.path.join(processed_directory, proc_dir),
+                            "--label-path", os.path.join(list_directory, norm),
+                            "--data-path", os.path.join(list_directory, test),
+                            "--output-path", os.path.join(list_directory, filter)])
 
 ################################################################################
 
@@ -395,22 +395,22 @@ def multiprocess(list_directory='./data_1802',
     
     # PREPROCESSING
     # Preprocess Images: Crops Formula & Group Similar Sized Images for Batching
-    preprocess_images.main(["--input-dir",  os.path.join(processed_directory, img_dir),
+    preprocess_images.main_batch(["--input-dir", os.path.join(processed_directory, img_dir),
                             "--output-dir", os.path.join(processed_directory, proc_dir)])
 
     # Preprocess Formulas: Tokenize & Normalize LaTeX Formulas
     # Doesn't work in container: no node.js
     # Must be run in python2!!!
-    preprocess_formulas.main(["--mode",        "normalize",
-                              "--input-file",  os.path.join(list_directory, formulas),
+    preprocess_formulas.main_batch(["--mode", "normalize",
+                              "--input-file", os.path.join(list_directory, formulas),
                               "--output-file", os.path.join(list_directory, norm)])
     
     # Preprocess Test Set: Ignore Formulas with Many Tokens or Grammar Errors
-    preprocess_filter.main(["--no-filter",
-                            "--image-dir",   os.path.join(processed_directory, proc_dir),
-                            "--label-path",  os.path.join(list_directory, norm),
-                            "--data-path",   os.path.join(list_directory, test),
-                            "--output-path", os.path.join(list_directory, filter) ])
+    preprocess_filter.main_batch(["--no-filter",
+                            "--image-dir", os.path.join(processed_directory, proc_dir),
+                            "--label-path", os.path.join(list_directory, norm),
+                            "--data-path", os.path.join(list_directory, test),
+                            "--output-path", os.path.join(list_directory, filter)])
 
 
 

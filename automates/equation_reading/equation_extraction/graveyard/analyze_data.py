@@ -206,10 +206,10 @@ def main(list_directory='./im2markup/data/sample',
                             delimiter='\t', dtype=None, comments=None)
 
     # Render Gold & Predicted LaTeX Equations
-    render_latex.main(["--result-path", os.path.join(list_directory, results_file),
-                       "--data-path",   os.path.join(list_directory, test_list),
-                       "--label-path",  os.path.join(list_directory, gold_list),
-                       "--output-dir",  os.path.join(processed_directory, render_dir),
+    render_latex.main_batch(["--result-path", os.path.join(list_directory, results_file),
+                       "--data-path", os.path.join(list_directory, test_list),
+                       "--label-path", os.path.join(list_directory, gold_list),
+                       "--output-dir", os.path.join(processed_directory, render_dir),
                        "--no-replace"])
     logging.info('Jobs finished')
 
@@ -221,7 +221,7 @@ def main(list_directory='./im2markup/data/sample',
                plot_directory=os.path.join(list_directory, plot_dir))
 
     # Print Evaluation Metrics
-    evaluate_image.main(["--images-dir", os.path.join(processed_directory, render_dir)])
+    evaluate_image.main_batch(["--images-dir", os.path.join(processed_directory, render_dir)])
 
     # Write Rendered Results File
     with open(os.path.join(list_directory, render_file), 'wt') as out_file:
