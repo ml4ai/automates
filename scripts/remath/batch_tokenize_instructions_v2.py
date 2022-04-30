@@ -20,10 +20,11 @@ instruction class tokenizes each instruction based on opcode, operands and metad
 """
 
 import argparse
+import ast
 import pathlib
 import os
 import re
-from typing import List, Dict, Tuple, Union
+from typing import List, Dict, Tuple, Union, Any
 from collections import OrderedDict
 import struct
 
@@ -106,37 +107,14 @@ def parse_fn_name_from_parsed_metadata(parsed_metadata: List[str]) -> Tuple[str,
 
 
 def parse_hex_float_value(hex_value: str, size: str) -> str:
-    # TODO I think we need to handle other types
-    # TODO I think we need to be sure about the endianness
+    # TODO: we need to handle other types
+    # TODO: we need to be sure about the endianness
     if size == 'dword':
         return struct.unpack('!f', bytes.fromhex(hex_value))[0]
     elif size == 'qword':
         return struct.unpack('!d', bytes.fromhex(hex_value))[0]
     else:
         raise Exception(f'ERROR parse_hex_float_value(): Unhandled size {size}')
-
-
-def get_info_from_parsed_metadata(parsed_metadata: List[str], size=None) -> \
-        Union[Tuple[str, str, str], Tuple[str, str]]:
-    # interpreted hex float
-    if len(parsed_metadata) == 3 and parsed_metadata[2].startswith('= ') and parsed_metadata[2][-1] == 'h':
-        hex_str = parsed_metadata[2][2:-1]
-        return ':interpreted_hex_float', hex_str, parse_hex_float_value(hex_str, size)
-    # string
-    elif len(parsed_metadata) == 3 and parsed_metadata[0] == ':array' and parsed_metadata[1] == 'java.lang.String':
-        val = parsed_metadata[2]
-        # format it if it has answer in it in a nice way
-        match = re.search('.*Answer', val)
-        if match:
-            # remove = character
-            val = re.sub('= ', '', val)
-            # remove " characters
-            val = re.sub('"', '', val)
-            # remove any 1 or more \ followed by n
-            val = re.sub(r'\\+n', '', val)
-        return ':string', val
-    else:
-        raise Exception(f"Unable to handle this parsed metadata: {parsed_metadata}")
 
 
 def parse_hex_value(value: str) -> Tuple[str, str, int]:
@@ -190,31 +168,6 @@ def param_or_local(memory_address: str) -> str:
         return "param"
     else:
         return "local"
-
-
-class FunctionTokens:
-    """
-    global key - value pair for a program: give unique labels to each function in the program called from main
-    create an instance of function tokens in the program and pass it to each function so that it can modify it
-    """
-
-    def __init__(self):
-        """
-        ordered dict to keep track of function name to labels
-        """
-        self.counter = 0
-        self.name_to_label = OrderedDict()
-
-    def add_function_token(self, fn_name: str) -> str:
-        if fn_name in self.name_to_label:
-            return self.name_to_label[fn_name]
-        label = '_f' + str(self.counter)
-        self.name_to_label[fn_name] = label
-        self.counter += 1
-        return label
-
-    def get_label(self, fn_name: str) -> str:
-        return self.name_to_label[fn_name]
 
 
 class Register:
@@ -287,6 +240,15 @@ class Tokens:
         self.counter += 1
         return key
 
+    def get_key(self, elm: str):
+        """
+        get key for elements already in the token
+        """
+        if elm in self.elm_to_token:
+            return self.elm_to_token[elm]
+        else:
+            raise Exception(f'Unable to find element {elm} in the tokenmap: {self.name}')
+
     def __str__(self) -> str:
         """
         string representaton of the key value pairs
@@ -312,13 +274,28 @@ class Program:
         self.name_to_address: Dict[str, str] = dict()
         # initialize it's call stack of functions being called from it's main function
         self.stack = Stack()
-        # each program has global FunctionToken to give unique labels to all the functions called from main
-        self.function_tokens = FunctionTokens()
+        # each program has global function_tokens_map to give unique labels to all the
+        # functions called from main: updated from function.tokenize()
+        self.function_tokens_map = Tokens(name="function", base="_f")
         # keep track of jump [conditional/unconditional] flags
         self.jump_flags = ['JMP', 'JO', 'JNO', 'JS', 'JNS', 'JE', 'JZ', 'JNE', 'JNZ', 'JB',
                            'JNAE', 'JC', 'JNB', 'JAE', 'JNC', 'JBE', 'JNA', 'JA', 'JNBE',
                            'JL', 'JNGE', 'JGE', 'JNL', 'JLE', 'JNG', 'JG', 'JNLE', 'JP',
                            'JPE', 'JNP', 'JPO', 'JCXZ', 'JECXZ', 'JRCXZ']
+
+        # list of global addresses
+        # this will be used by each instruction to determine if each address is either global or not
+        # and return appropriate information to the function which will do the update to the
+        # global_tokens_map
+        self.globals = []
+        # global tokens map: key-value pair for global tokens
+        # note this is being updated by a function.tokenize(): when it tokenizes each
+        # instruction and determines that the address is a global address, it returns appropriate
+        # information to the function and function updates global_tokens_map
+        self.global_tokens_map = Tokens(name="globals", base='_g')
+
+        # list of library functions: so that we don't try to tokenize them
+        self.library_functions = ['printf']
 
     def update_name(self, name: str) -> None:
         self.name = name
@@ -337,6 +314,12 @@ class Program:
         address = self.name_to_address[name]
         return self.functions[address]
 
+    def add_globals(self, global_addresses):
+        """
+        add list of global addresses to the current program
+        """
+        self.globals.extend(global_addresses)
+
 
 class Function:
     """
@@ -354,16 +337,16 @@ class Function:
         # tokenized version of lines: List of instructions
         self.instructions: List[Instruction] = list()
         # list of tokens to be used for NMT: no <sep> tag
-        self.tokens_nmt = list()
+        self.token_sequence = list()
         # list of tokens to be used for NMT: with <sep> tag
-        self.tokens_nmt_space = list()
+        self.token_sequence_sep = list()
         # each function has key-value pairs for value tokens, param tokens, and memory_address
         # and instruction_address tokens [for jump targets]
-        self.value_tokens = Tokens(name="value", base='_v')
-        self.param_tokens = Tokens(name="param", base='_p')
-        self.memory_address_tokens = Tokens(name="memory_address", base='_m')
+        self.value_tokens_map = Tokens(name="value", base='_v')
+        self.param_tokens_map = Tokens(name="param", base='_p')
+        self.memory_address_tokens_map = Tokens(name="memory_address", base='_m')
         # also tokenize the jmp [conditional/unconditional] targets
-        self.jump_address_tokens = Tokens(name="jump_address", base='_a')
+        self.jump_address_tokens_map = Tokens(name="jump_address", base='_a')
         # list of functions called by this function
         self.called_fns = []
         # The function has parameters: which are passed either through the registers or throuhg the
@@ -380,9 +363,9 @@ class Function:
 
         # each function has nmt_tokens: each nmt_token is associated with an instruction_address
         # track address for each token: no <sep> token
-        self.token_sequence_address = []
+        self.address_sequence = []
         # track address for each token: with <sep> token: for <sep> token: put the next address
-        self.token_sequence_address_space = []
+        self.address_sequence_sep = []
 
     def add_lines(self, lines: List[str]) -> None:
         """
@@ -400,7 +383,7 @@ class Function:
         # add instruction_address to the nmt_tokens if only it's the
         # target of the conditional and unconditional jump
         if token in self.jump_targets:
-            key = self.jump_address_tokens.add_token(token)
+            key = self.jump_address_tokens_map.add_token(token)
             # because it's a jump target append 'TAG' token
             nmt_tokens_instruction.append('TAG')
             nmt_tokens_instruction.append(key)
@@ -417,7 +400,7 @@ class Function:
         also updates nmt token list and nmt address sequence list
         """
         # replace jmp 0xabcd => jmp _a0
-        key = self.jump_address_tokens.add_token(token)
+        key = self.jump_address_tokens_map.add_token(token)
         nmt_tokens_instruction.append(key)
         nmt_sequence_address.append(address)
 
@@ -428,7 +411,7 @@ class Function:
         handles adding jump values to required token fields and updates them
         also updates nmt token list and nmt address sequence list
         """
-        key = self.value_tokens.add_token(token)
+        key = self.value_tokens_map.add_token(token)
         nmt_tokens_instruction.append(key)
         nmt_sequence_address.append(address)
 
@@ -447,34 +430,30 @@ class Function:
             address_type = param_or_local(token)
             # address_type is either param or local
             if address_type == "param":
-                key = self.param_tokens.add_token(token)
+                key = self.param_tokens_map.add_token(token)
                 nmt_tokens_instruction.append(key)
                 nmt_sequence_address.append(address)
             else:
-                key = self.memory_address_tokens.add_token(token)
+                key = self.memory_address_tokens_map.add_token(token)
                 nmt_tokens_instruction.append(key)
                 nmt_sequence_address.append(address)
         else:
-            key = self.memory_address_tokens.add_token(token)
+            key = self.memory_address_tokens_map.add_token(token)
             nmt_tokens_instruction.append(key)
             nmt_sequence_address.append(address)
 
     @staticmethod
     def function_name_handler(current_fn_name: str, address: str,
-                              function_tokens: "FunctionTokens",
+                              function_tokens_map: "Tokens",
                               nmt_tokens_instruction: List[str],
                               nmt_sequence_address: List[str]) -> None:
         """
         handles adding jump values to required token fields and updates them
         also updates nmt token list and nmt address sequence list
         """
-        if current_fn_name != 'printf':
-            label = function_tokens.add_function_token(current_fn_name)
-            nmt_tokens_instruction.append(label)
-            nmt_sequence_address.append(address)
-        else:
-            nmt_tokens_instruction.append(current_fn_name)
-            nmt_sequence_address.append(address)
+        label = function_tokens_map.add_token(current_fn_name)
+        nmt_tokens_instruction.append(label)
+        nmt_sequence_address.append(address)
 
     def register_handler(self, token: str, address: str, index: int,
                          nmt_tokens_instruction: List[str],
@@ -488,7 +467,7 @@ class Function:
         """
         if index == 3 and token in self.param_registers:
             if not self.param_registers[token].defined_before:
-                key = self.param_tokens.add_token(token)
+                key = self.param_tokens_map.add_token(token)
                 nmt_tokens_instruction.append(key)
                 nmt_sequence_address.append(address)
                 self.param_registers[token].defined_before = True
@@ -499,7 +478,8 @@ class Function:
         if index == 2 and token in self.param_registers:
             self.param_registers[token].defined_before = True
 
-    def tokenize_function(self, function_tokens: "FunctionTokens", jump_flags: List[str]) -> List[str]:
+    def tokenize_function(self, function_tokens_map: "Tokens", jump_flags: List[str],
+                          global_addresses: List[str], global_tokens_map: "Tokens") -> List[str]:
         """
         convert the raw lines (self.lines) into Instruction
         function_token: global FunctionToken instance of a program to give unique labels to each function in the
@@ -521,7 +501,7 @@ class Function:
             # each instruction needs to be tokenized according to it's type
             # call instruction.tokenize() that detects the type and tokenizes accordingly
             # this will also update the tokenized list for that instruction
-            instruction.tokenize_instruction(jump_flags)
+            instruction.tokenize_instruction(jump_flags, global_addresses)
 
         # find jump targets and update the jump_targets list
         # jump tags
@@ -537,7 +517,6 @@ class Function:
             # we need to append the address
             nmt_sequence_address = list()
             # keep track of current function name: to find if it's printf or not
-            current_fn_name = ''
             for index, instruction_token in enumerate(instruction.tokenized):
                 token_type, token = instruction_token
                 if token_type == "instruction_address":
@@ -557,38 +536,42 @@ class Function:
                                                 nmt_tokens_instruction,
                                                 nmt_sequence_address)
                 elif token_type == 'function_name':
-                    current_fn_name = token
-                    self.function_name_handler(current_fn_name, instruction.address,
-                                               function_tokens,
+                    self.function_name_handler(token, instruction.address,
+                                               function_tokens_map,
                                                nmt_tokens_instruction,
                                                nmt_sequence_address)
                 elif token_type == 'function_address':
-                    if current_fn_name != 'printf':
-                        functions_called.append(token)
+                    functions_called.append(token)
                 elif token_type == "register":
                     self.register_handler(token, instruction.address, index,
                                           nmt_tokens_instruction,
                                           nmt_sequence_address)
+                elif token_type == "global":
+                    key = global_tokens_map.add_token(token)
+                    nmt_tokens_instruction.append(key)
+                    nmt_sequence_address.append(instruction.address)
                 else:
                     nmt_tokens_instruction.append(token)
                     nmt_sequence_address.append(instruction.address)
 
             # add the tokens of a line (instructon) to tokens_nmt
-            self.tokens_nmt.extend(nmt_tokens_instruction)
-            self.token_sequence_address.extend(nmt_sequence_address)
+            # add to the token_sequence and address_sequence no <sep>
+            self.token_sequence.extend(nmt_tokens_instruction)
+            self.address_sequence.extend(nmt_sequence_address)
             # add the tokens of a line (instruction) to tokens_nmt
             # add the <sep> tag for separating instructions
             if instruction_index > 0:
-                self.tokens_nmt_space.append('<sep>')
-                self.tokens_nmt_space.extend(nmt_tokens_instruction)
-                self.token_sequence_address_space.append(instruction.address)
-                self.token_sequence_address_space.extend(nmt_sequence_address)
-            else:
-                self.tokens_nmt_space.extend(nmt_tokens_instruction)
-                self.token_sequence_address_space.extend(nmt_sequence_address)
+                # add <sep> token
+                self.token_sequence_sep.append('<sep>')
+                # add address for <sep> token
+                self.address_sequence_sep.append(instruction.address)
 
-        assert len(self.tokens_nmt) == len(self.token_sequence_address)
-        assert len(self.tokens_nmt_space) == len(self.token_sequence_address_space)
+            # add token_sequence and address_sequence with <sep>
+            self.token_sequence_sep.extend(nmt_tokens_instruction)
+            self.address_sequence_sep.extend(nmt_sequence_address)
+
+        assert len(self.token_sequence) == len(self.address_sequence)
+        assert len(self.token_sequence_sep) == len(self.address_sequence_sep)
         return functions_called
 
 
@@ -611,6 +594,52 @@ class Instruction:
         self.parsed_metadata = []
         # tokenized version of me
         self.tokenized = []
+
+    def get_info_from_string(self):
+        """
+        extract information from string format
+        """
+        val = self.parsed_metadata[2]
+        # format strings in a nice way
+        # remove = character if any
+        val = re.sub('= ', '', val)
+        # remove " characters if any
+        val = re.sub('"', '', val)
+        # remove any 1 or more \ followed by n
+        val = re.sub(r'\\+n', '', val)
+        # uninitialized globals have '??' in their string representation
+        if '??' in val:
+            return ':string', 'not initialized'
+        else:
+            return ':string', val
+
+    def get_info_from_hex(self, size):
+        # check if floating point registers present in the operands
+        uses_floating_point_register = False
+        for operand in self.operands:
+            if 'XMM' in operand:
+                uses_floating_point_register = True
+        if uses_floating_point_register:
+            hex_str = self.parsed_metadata[2][2:-1]
+            return ':interpreted_hex_float', hex_str, parse_hex_float_value(hex_str, size)
+        else:
+            hex_str = self.parsed_metadata[2][2:-1]
+            # remove leading zeros and add '0x'
+            hex_str = '0x' + hex_str.lstrip("0")
+            return parse_hex_value(hex_str)
+
+    def get_info_from_parsed_metadata(self, size=None) -> \
+            Union[Tuple[str, str, str], Tuple[str, str], Tuple[str, str, int]]:
+        # interpreted hex float
+        if len(self.parsed_metadata) == 3 and self.parsed_metadata[2].startswith('= ') and \
+                self.parsed_metadata[2][-1] == 'h':
+            return self.get_info_from_hex(size)
+        # string
+        elif len(self.parsed_metadata) == 3 and self.parsed_metadata[0] == ':array' and \
+                self.parsed_metadata[1] == 'java.lang.String':
+            return self.get_info_from_string()
+        else:
+            raise Exception(f"Unable to handle this parsed metadata: {self.parsed_metadata}")
 
     def tokenize_function_call_instruction(self) -> List[Tuple[str, str]]:
         """
@@ -641,7 +670,93 @@ class Instruction:
         assert len(self.operands) == 1
         return [("jump_address", self.operands[0])]
 
-    def tokenize_normal_instruction(self) -> List[Tuple[str, str]]:
+    def value_token_handler(self, operand: str, tokens) -> None:
+        """
+        handle instruction that starts with 0x or -0x
+        """
+        if self.parsed_metadata:
+            # matches following sample
+            # opcode reg, 0xnum
+            # metadata: [':array', 'java.lang.String', '= "Answer: %g\\\\n"']
+            parsed_value = self.get_info_from_parsed_metadata()
+            tokens.append(("value", parsed_value))
+        else:
+            # matches the following sample
+            # opcode reg, 0xnum && (no metadata)
+            value = parse_hex_value(operand)
+            tokens.append(("value", value))
+
+    def global_token_handler(self, operand, tokens):
+        """
+        find if memory address is global memory address and handle it
+        """
+        size = operand.split(' ')[0]
+        parsed_value = self.get_info_from_parsed_metadata(size)
+        tokens.append(("global", parsed_value))
+
+    @staticmethod
+    def check_global(operand, global_addresses):
+        """
+        check if memory address is a global
+        return True if global mem address else False
+        """
+        match = re.search(r'\[.*', operand)
+        address = match.group(0)[1:-1]
+        if address in global_addresses:
+            return True
+        else:
+            return False
+
+    def normal_memory_ptr_token_handler(self, operand, tokens):
+        """
+        normal memory access [not global] with ptr in it
+        """
+        # matches opcode reg *ptr* (with and without metadata)
+        if self.parsed_metadata:
+            # get size directive
+            size = operand.split(' ')[0]
+            parsed_value = self.get_info_from_parsed_metadata(size)
+            tokens.append(("value", parsed_value))
+        else:
+            tokens.append(("memory_address", operand))
+
+    def normal_memory_token_handler(self, operand, tokens):
+        """
+        normal memory access [not global] no ptr in it
+        """
+        # matches opcode reg [address_calculation]
+        # sometimes has reg [address] metadata that has Answer: %d
+        if self.parsed_metadata:
+            parsed_value = self.get_info_from_parsed_metadata()
+            tokens.append(("value", parsed_value))
+        else:
+            tokens.append(("memory_address", operand))
+
+    def memory_address_ptr_handler(self, operand: str, global_addresses, tokens) -> None:
+        """
+        handle instruction [memory access] that has ptr in it
+        """
+        is_global = self.check_global(operand, global_addresses)
+        if is_global:
+            # global variable treat differently
+            self.global_token_handler(operand, tokens)
+        else:
+            # normal memory access with ptr in it
+            self.normal_memory_ptr_token_handler(operand, tokens)
+
+    def memory_address_handler(self, operand, global_addresses, tokens):
+        """
+        handle instruction [memory access] but not ptr in it
+        """
+        is_global = self.check_global(operand, global_addresses)
+        if is_global:
+            # global variable treat differently
+            self.global_token_handler(operand, tokens)
+        else:
+            # normal memory access with ptr in it
+            self.normal_memory_token_handler(operand, tokens)
+
+    def tokenize_normal_instruction(self, global_addresses: List[str]) -> List[Tuple[str, Any]]:
         """
         tokenize normal operands (with metadata / no metadata)
         """
@@ -649,43 +764,19 @@ class Instruction:
         for operand in self.operands:
             # value tokens
             if operand.startswith('0x') or operand.startswith('-0x'):
-                if self.parsed_metadata:
-                    # matches following sample
-                    # opcode reg, 0xnum
-                    # metadata: [':array', 'java.lang.String', '= "Answer: %g\\\\n"']
-                    parsed_value = get_info_from_parsed_metadata(self.parsed_metadata)
-                    tokens.append(("value", parsed_value))
-                else:
-                    # matches the following sample
-                    # opcode reg, 0xnum && (no metadata)
-                    value = parse_hex_value(operand)
-                    tokens.append(("value", value))
-
+                self.value_token_handler(operand, tokens)
+            # memory access tokens with ptr in instruction
             elif 'ptr' in operand:
-                # matches opcode reg *ptr* (with and without metadata)
-                if self.parsed_metadata:
-                    # get size directive
-                    size = operand.split(' ')[0]
-                    parsed_value = get_info_from_parsed_metadata(self.parsed_metadata, size)
-                    tokens.append(("value", parsed_value))
-                else:
-                    tokens.append(("memory_address", operand))
-
+                self.memory_address_ptr_handler(operand, global_addresses, tokens)
+            # memory access tokens without ptr in instruction
             elif operand.startswith('[') and operand.endswith(']'):
-                # matches opcode reg [address_calculation]
-                # sometimes has reg [address] metadata that has Answer: %d
-                if self.parsed_metadata:
-                    parsed_value = get_info_from_parsed_metadata(self.parsed_metadata)
-                    tokens.append(("value", parsed_value))
-                else:
-                    tokens.append(("memory_address", operand))
-
+                self.memory_address_handler(operand, global_addresses, tokens)
+            # remaining: registers
             else:
                 tokens.append(("register", operand))
-
         return tokens
 
-    def tokenize_instruction(self, jump_flags: List[str]) -> None:
+    def tokenize_instruction(self, jump_flags: List[str], global_addresses: List[str]) -> None:
         """
         determine the type of instruction and tokenize it accordingly
         currently follows the following format for tokenizing
@@ -709,7 +800,7 @@ class Instruction:
         elif self.opcode in jump_flags:
             tokens = self.tokenize_jump_instruction()
         else:
-            tokens = self.tokenize_normal_instruction()
+            tokens = self.tokenize_normal_instruction(global_addresses)
 
         self.tokenized.extend(tokens)
 
@@ -727,6 +818,10 @@ def process_file(file_path: str) -> "Program":
             if line.startswith('>>> FILE_START'):
                 name = line.split(':')[1].strip()
                 program.update_name(name)
+            elif line.startswith('>>> GLOBALS'):
+                global_addresses = line.split(':')[-1].strip()
+                global_addresses = ast.literal_eval(global_addresses)
+                program.add_globals(global_addresses)
             elif line.startswith('>>> FUNCTION_START'):
                 inside_function = True
                 function_address, function_name = line.split(':')[1].strip().split()
@@ -766,46 +861,59 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
         tokenized_functions.append(function)
         # tokenize will tokenize the function and return list of other functions(addresses)
         # that are being called by that function
-        fn_list = function.tokenize_function(program.function_tokens, program.jump_flags)
+        fn_list = function.tokenize_function(program.function_tokens_map, program.jump_flags,
+                                             program.globals, program.global_tokens_map)
         for fn_addr in fn_list:
             fn = program.functions[fn_addr]
-            program.stack.push(fn)
+            # do not push library functions
+            if fn.name not in program.library_functions:
+                program.stack.push(fn)
 
     # collect some stats about the program and dump them to the end of __tokens.txt file
 
     with open(_dst_filepath, 'w') as write_file:
+        # write global information about program
+        write_file.write(f'function_tokens_map\n')
+        write_file.write(str(program.function_tokens_map))
+        write_file.write('\n\n')
+
+        # write globals
+        write_file.write(f'global_tokens_map\n')
+        write_file.write(str(program.global_tokens_map))
+        write_file.write('\n\n')
+
         for function in tokenized_functions:
-            if function.name != 'main':
-                write_file.write(f'function_label: {program.function_tokens.get_label(function.name)}\n')
             write_file.write(f'function_name: {function.name}\n')
+            if function.name != 'main':
+                write_file.write(f'function_label: {program.function_tokens_map.get_key(function.name)}\n')
 
             # token sequence and sequence address without <sep>
-            write_file.write(f'NMT input sequence: no <sep> token\n')
-            write_file.write(str(function.tokens_nmt))
+            write_file.write(f'token_sequence\n')
+            write_file.write(str(function.token_sequence))
             write_file.write('\n\n')
-            write_file.write('token sequence address: no <sep> token\n')
-            write_file.write(str(function.token_sequence_address))
+            write_file.write('address_sequence\n')
+            write_file.write(str(function.address_sequence))
             write_file.write('\n\n')
 
             # token sequence and sequence address with <sep>
-            write_file.write(f'NMT input sequence: with <sep> token\n')
-            write_file.write(str(function.tokens_nmt_space))
+            write_file.write(f'token_sequence_sep\n')
+            write_file.write(str(function.token_sequence_sep))
             write_file.write('\n\n')
-            write_file.write('token sequence address: with <sep> token\n')
-            write_file.write(str(function.token_sequence_address_space))
+            write_file.write('address_sequence_sep\n')
+            write_file.write(str(function.address_sequence_sep))
             write_file.write('\n\n')
 
-            write_file.write('address tokens\n')
-            write_file.write(str(function.jump_address_tokens))
+            write_file.write('address_tokens_map\n')
+            write_file.write(str(function.jump_address_tokens_map))
             write_file.write('\n\n')
-            write_file.write('param tokens\n')
-            write_file.write(str(function.param_tokens))
+            write_file.write('param_tokens_map\n')
+            write_file.write(str(function.param_tokens_map))
             write_file.write('\n\n')
-            write_file.write('value tokens\n')
-            write_file.write(str(function.value_tokens))
+            write_file.write('value_tokens_map\n')
+            write_file.write(str(function.value_tokens_map))
             write_file.write('\n\n')
-            write_file.write('memory address tokens\n')
-            write_file.write(str(function.memory_address_tokens))
+            write_file.write('memory_address_tokens_map\n')
+            write_file.write(str(function.memory_address_tokens_map))
             write_file.write(f"\n\n")
 
 
