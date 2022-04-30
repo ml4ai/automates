@@ -396,15 +396,18 @@ class ExprSeqSample:
     def __init__(self, params: SampleParameters, var_gen: VarGen):
         self.params: SampleParameters = params  # The generation process parameters
         self.var_gen: VarGen = var_gen  # The variable (gensym) generator
+
         # map of expr_index [int] to an expression [ExprTreeSample]
         # The indices of the expressions are in reverse order of how they
         #   appear in the final generated code:
         #     0 is the root (final) expression, and higher indices are
         #     "earlier" in the sequence
         self.expressions: Dict[int, ExprTreeSample] = dict()
+
         # map of expr_index [int] to the variable its return value is
         #   assigned to [str]
         self.expr_var: Dict[int, str] = dict()
+
         # map of variable to the list of indices in an expr that it has
         #   been assigned to: <var_name> : list of (<expr_index>, <var_index>)
         self.expr_index_var_assignments: Dict[str, List[Tuple[int, int]]] = dict()
