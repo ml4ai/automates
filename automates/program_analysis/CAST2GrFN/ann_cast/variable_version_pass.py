@@ -738,6 +738,32 @@ class VariableVersionPass:
         # add globals to exterior interfaces
         # top interface globals are globals which are accessed before modification
         node.top_interface_globals = func_def.used_globals
+
+        # TODO: Figure this out 
+        # first, we need to propagate up globals
+        # due to GrFN 2.2 FunctionDef copying, we need to also propagate up the
+        # globals accessed before modification and modified globals to 
+        # scopes higher than base_func_scopestr
+#         scopestr = ""
+#         for index, name in enumerate(node.func.con_scope):
+#             # add separator between container scope component names
+#             if index != 0:
+#                 scopestr += f"{CON_STR_SEP}"
+#                 scopestr += f"{name}"
+#             # TODO: store dict mapping all container scope strs to container nodes
+#             # currently, we only do this for function defs
+#             # otherwise, add to correct globals tracking dict
+#             func_node = self.ann_cast.func_def_node_from_scopestr(scopestr)
+# 
+#             if node.version == VAR_INIT_VERSION:  # only occurs on RHS
+#             func_node.globals_accessed_before_mod[node.id] = node.name
+#             # if we are assigning to the global, then it is modified
+#             elif assign_lhs:
+#             func_node.modified_globals[node.id] = node.name
+#             # no matter what, add to used_globals dict
+#             func_node.used_globals[node.id] = node.name
+
+
         # add global variables to top_interface_in
         self.populate_interface(calling_scopestr, node.top_interface_globals, node.top_interface_in)
         # the bot interface globals are all modified globals

@@ -52,7 +52,7 @@ from automates.model_assembly.networks import (
     GroundedFunctionNetwork
 )
 
-GENERATE_GRFN_2_2 = True
+GENERATE_GRFN_2_2 = False
 
 # used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
 CON_STR_SEP = "."
