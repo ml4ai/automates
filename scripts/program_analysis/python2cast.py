@@ -9,7 +9,7 @@ from automates.program_analysis.CAST2GrFN import cast
 from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
 
 if len(sys.argv) < 2:
-    print("USAGE: python3 python2cast.py PYTHON_FILE_NAME [--astpp]")
+    print("USAGE: python3 python2cast.py PYTHON_FILE_NAME [--astpp] [--legacy] [--rawjson] [--stdout]")
     print("Requires a Python file on the command line to run")
     sys.exit()
 

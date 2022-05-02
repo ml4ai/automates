@@ -10,7 +10,6 @@ from xml.etree.ElementTree import ElementTree
 
 from numpy import isin
 from pandas import concat
-from zmq import PROTOCOL_ERROR_ZMTP_MECHANISM_MISMATCH
 
 from automates.utils.misc import uuid
 from scripts.program_analysis.astpp import parseprint
@@ -665,17 +664,18 @@ class PyASTToCAST():
             # This should only be the case for built-in python functions (i.e print, len, etc...)
             # Otherwise it would be an error to call a function before it is defined
             # (An ID would exist for a user-defined function here even if it isn't visited yet because of deferment)
-            if node.func.id not in prev_scope_id_dict.keys():
+            unique_name = construct_unique_name(self.filenames[-1], node.func.id)
+            if unique_name not in prev_scope_id_dict.keys():
 
                 # If a built-in is called, then it gets added to the global dictionary if
                 # it hasn't been called before. This is to maintain one consistent ID per built-in 
                 # function
-                if node.func.id not in self.global_identifier_dict.keys():
-                    self.insert_next_id(self.global_identifier_dict, node.func.id)
+                if unique_name not in self.global_identifier_dict.keys():
+                    self.insert_next_id(self.global_identifier_dict, unique_name)
 
-                prev_scope_id_dict[node.func.id] = self.global_identifier_dict[node.func.id]
+                prev_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
 
-            return [Call(Name(node.func.id, id=prev_scope_id_dict[node.func.id], source_refs=ref), args, source_refs=ref)]
+            return [Call(Name(node.func.id, id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref)]
 
     @visit.register
     def visit_ClassDef(self, node: ast.ClassDef, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
