@@ -555,6 +555,8 @@ class AnnCast:
         self.collapsed_id_counter = 0
         # dict mapping FunctionDef container scopestr to its id
         self.func_con_scopestr_to_id = {}
+        # dict mapping container scope strings to their nodes
+        self.cont_scopestr_to_node = {}
         # dict mapping function IDs to their FunctionDef nodes.  
         self.func_id_to_def = {}
         self.grfn_id_to_grfn_var = {}

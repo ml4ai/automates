@@ -31,7 +31,7 @@ class ContainerScopePass:
         # the container
         self.if_count = defaultdict(int)
         self.loop_count = defaultdict(int)
-        # dict mapping containter scope str to AnnCastNode
+        # dict mapping container scope str to AnnCastNode
         self.con_str_to_node = {}
         # dict mapping container scope str to cached Container Data
         self.con_str_to_con_data = {}
@@ -45,6 +45,9 @@ class ContainerScopePass:
 
         # add cached container data to container nodes
         self.add_container_data_to_nodes()
+ 
+        # save the dict mapping container scope to AnnCastNode
+        self.ann_cast.cont_scopestr_to_node = self.con_str_to_node
         print("Done")
 
     def next_if_scope(self, enclosing_con_scope):

@@ -405,6 +405,8 @@ class VariableVersionPass:
         print("\tAfter add_globals_to_non_main_func_def_interfaces():")
         print(f"\ttop_interface_in = {node.top_interface_in}")
         print(f"\ttop_interface_out = {node.top_interface_out}")
+        print(f"\ttop_interface_globals = {node.top_interface_globals}")
+        print(f"\tbot_interface_globals = {node.bot_interface_globals}")
 
     def call_top_interface_args_with_func_def(self, node: AnnCastCall):
         """
@@ -716,6 +718,10 @@ class VariableVersionPass:
             self.ann_cast.store_grfn_var(exit_fullid, exit_global)
             node.bot_interface_in[id] = exit_fullid
 
+        print("After adding globals for GrFN 2.2 call ():")
+        print(f"\ttop_interface_in = {node.top_interface_in}")
+        print(f"\tbot_interface_out = {node.bot_interface_out}")
+
     def add_globals_to_call_interfaces(self, node: AnnCastCall):
         """
         Populates top and bot interface with global variables
@@ -744,25 +750,31 @@ class VariableVersionPass:
         # due to GrFN 2.2 FunctionDef copying, we need to also propagate up the
         # globals accessed before modification and modified globals to 
         # scopes higher than base_func_scopestr
-#         scopestr = ""
-#         for index, name in enumerate(node.func.con_scope):
-#             # add separator between container scope component names
-#             if index != 0:
-#                 scopestr += f"{CON_STR_SEP}"
-#                 scopestr += f"{name}"
-#             # TODO: store dict mapping all container scope strs to container nodes
-#             # currently, we only do this for function defs
-#             # otherwise, add to correct globals tracking dict
-#             func_node = self.ann_cast.func_def_node_from_scopestr(scopestr)
-# 
-#             if node.version == VAR_INIT_VERSION:  # only occurs on RHS
-#             func_node.globals_accessed_before_mod[node.id] = node.name
-#             # if we are assigning to the global, then it is modified
-#             elif assign_lhs:
-#             func_node.modified_globals[node.id] = node.name
-#             # no matter what, add to used_globals dict
-#             func_node.used_globals[node.id] = node.name
+        scopestr = ""
+        for index, name in enumerate(node.func.con_scope):
+            # add separator between container scope component names
+            if index != 0:
+                scopestr += f"{CON_STR_SEP}"
+            scopestr = f"{name}"
+            # TODO: store dict mapping all container scope strs to container nodes
+            # Note:  the above is done in the container scope pass; saved that in 
+            #        a new AnnCast attribute
+            # currently, we only do this for function defs
+            # otherwise, add to correct globals tracking dict
+            # func_node = self.ann_cast.func_def_node_from_scopestr(scopestr)
 
+            container_node = self.ann_cast.cont_scopestr_to_node[scopestr]
+ 
+            #if node.version == VAR_INIT_VERSION:  # only occurs on RHS
+            #    func_node.globals_accessed_before_mod[node.id] = node.name
+            # if we are assigning to the global, then it is modified
+            #elif assign_lhs:
+            #    func_node.modified_globals[node.id] = node.name
+            # no matter what, add to used_globals dict
+            #func_node.used_globals[node.id] = node.name
+
+            for id, var in func_def.used_globals.items():
+                container_node.used_vars[i] = var
 
         # add global variables to top_interface_in
         self.populate_interface(calling_scopestr, node.top_interface_globals, node.top_interface_in)
@@ -798,6 +810,10 @@ class VariableVersionPass:
             # create From Source metadata for the GrFN var
             from_source_mdata = generate_from_source_metadata(False, CreationReason.BOT_IFACE_INTRO)
             add_metadata_to_grfn_var(exit_global, from_source_mdata)
+
+        print("After adding globals for GrFN 2.3 call ():")
+        print(f"\ttop_interface_in = {node.top_interface_in}")
+        print(f"\tbot_interface_out = {node.bot_interface_out}")
 
     def visit(self, node: AnnCastNode, assign_lhs: bool):
         # type(node) is a string which looks like
