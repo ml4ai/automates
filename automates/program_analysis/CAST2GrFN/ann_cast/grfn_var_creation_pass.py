@@ -76,7 +76,7 @@ class GrfnVarCreationPass:
         # NOTE: if we change to globals which are accessed before modification
         #       this loop should be changed as well
         # we alias globals which are used for the top interface
-        for id, var_name in node.top_interface_globals.items():
+        for id, var_name in node.top_interface_vars.items():
             body_fullid = build_fullid(var_name, id, version, func_con_scopestr)
             call_fullid = build_fullid(var_name, id, version, call_con_scopestr)
             # TODO: do we want this?

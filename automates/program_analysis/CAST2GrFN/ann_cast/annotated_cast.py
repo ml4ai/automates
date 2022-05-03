@@ -556,7 +556,7 @@ class AnnCast:
         # dict mapping FunctionDef container scopestr to its id
         self.func_con_scopestr_to_id = {}
         # dict mapping container scope strings to their nodes
-        self.cont_scopestr_to_node = {}
+        self.con_scopestr_to_node = {}
         # dict mapping function IDs to their FunctionDef nodes.  
         self.func_id_to_def = {}
         self.grfn_id_to_grfn_var = {}
@@ -568,15 +568,30 @@ class AnnCast:
         # GrFN stored after ToGrfnPass
         self.grfn: typing.Optional[GroundedFunctionNetwork] = None
 
+    def is_container(self, scopestr: str): 
+        """ 
+        Check if scopestr is a container scopestr
+        """
+        return scopestr in self.con_scopestr_to_node
+
+    def con_node_from_scopestr(self, scopestr: str):
+        """
+        Precondition: scopestr is a container scopestr
+        Return the container node associated with scopestr
+        """
+        return self.con_scopestr_to_node[scopestr]
+
     def get_grfn(self) -> typing.Optional[GroundedFunctionNetwork]:
         return self.grfn
-
 
     def func_def_exists(self, id: int) -> bool:
         """
         Check if there is a FuncionDef for id
         """
         return id in self.func_id_to_def
+
+    def is_con_scopestr_func_def(self, con_scopestr: str):
+        return con_scopestr in  self.func_con_scopestr_to_id
 
     def func_def_node_from_scopestr(self, con_scopestr: str):
         """
@@ -712,8 +727,8 @@ class AnnCastCall(AnnCastNode):
         self.bot_interface_in = {}
         self.bot_interface_out = {}
         # dicts mapping Name id to Name string
-        self.top_interface_globals = {}
-        self.bot_interface_globals = {}
+        self.top_interface_vars = {}
+        self.bot_interface_vars = {}
         # GrFN lambda expressions
         self.top_interface_lambda: str
         self.bot_interface_lambda: str
@@ -833,8 +848,10 @@ class AnnCastFunctionDef(AnnCastNode):
         self.modified_vars: typing.Dict[int, str]
         self.vars_accessed_before_mod: typing.Dict[int, str]
         self.used_vars: typing.Dict[int, str]
-        self.top_interface_globals: typing.Dict[int, str]
-        self.bot_interface_globals: typing.Dict[int, str]
+        # for now, top_interface_vars and bot_interface_vars only include globals
+        # since those variables cross the container boundaries
+        self.top_interface_vars: typing.Dict[int, str] = {}
+        self.bot_interface_vars: typing.Dict[int, str] = {}
         # dicts for global variables
         # for top_interface_out
         # mapping Name id to fullid
@@ -907,9 +924,9 @@ class AnnCastLoop(AnnCastNode):
         self.modified_vars: typing.Dict[int, str]
         self.vars_accessed_before_mod: typing.Dict[int, str]
         self.used_vars: typing.Dict[int, str]
-        self.top_interface_vars: typing.Dict[int, str]
-        self.top_interface_updated_vars: typing.Dict[int, str]
-        self.bot_interface_vars: typing.Dict[int, str]
+        self.top_interface_vars: typing.Dict[int, str] = {}
+        self.top_interface_updated_vars: typing.Dict[int, str] = {}
+        self.bot_interface_vars: typing.Dict[int, str] = {}
 
         # dicts mapping Name id to highest version at end of "block"
         self.expr_highest_var_vers = {}
@@ -986,8 +1003,8 @@ class AnnCastModelIf(AnnCastNode):
         self.modified_vars: typing.Dict[int, str]
         self.vars_accessed_before_mod: typing.Dict[int, str]
         self.used_vars: typing.Dict[int, str]
-        self.top_interface_vars: typing.Dict[int, str]
-        self.bot_interface_vars: typing.Dict[int, str]
+        self.top_interface_vars: typing.Dict[int, str] = {}
+        self.bot_interface_vars: typing.Dict[int, str] = {}
         # dicts mapping a Name id to variable string name
         # for variables used in the if expr
         self.expr_vars_accessed_before_mod = {}
