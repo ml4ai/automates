@@ -76,15 +76,12 @@ def get_node_name(ast_node):
     elif isinstance(ast_node, ast.Attribute):
         return ""
     elif isinstance(ast_node, Assignment):
-        # to_add[0].left.val.name
         if isinstance(ast_node.left, Subscript):
             return ast_node.left.value.name
         else:
             return ast_node.left.val.name
     elif isinstance(ast_node, Subscript):
         raise TypeError(f"Type {ast_node} not supported")
-    #elif isinstance(ast_node, Subscript):
-     #   return "" 
     else:
         raise TypeError(f"Type {type(ast_node)} not supported")
 
@@ -211,10 +208,6 @@ class PyASTToCAST():
                              of the list comprehension    
             prev_scope_id_dict (Dict): Scope dictionaries in case something needs to be accessed or changed
             curr_scope_id_dict (Dict): see above
-        """
-        
-
-        """
         
         [ELT for TARGET in ITER]
           F1       F2      F3 
@@ -223,19 +216,6 @@ class PyASTToCAST():
         F3/F5 - generally a list, or something that gives back a list like:
                 * a subscript          
                 * an attribute of an object with or w/out a function call
-                * 
-        """
-        
-        """
-            if isinstance(   ,ast.Subscript):
-                if isinstance(   ,ast.Tuple):
-                else:
-            elif isinstance(   ,ast.Call):
-                if isinstance(   ,ast.Tuple):
-                else:
-            else:
-                if isinstance(   ,ast.Tuple):
-                else:
         """
         if isinstance(piece, ast.Tuple): # for targets (generator.target)
             return piece
@@ -250,19 +230,6 @@ class PyASTToCAST():
         else:
             piece
 
-
-
-       # if isinstance(piece, ast.Name):
-        #    if isinstance(piece, ast.Tuple):
-         #       return piece.target
-          #  else:
-           #     return ast.Name(id=piece.target.id, ctx=ast.Store)
-        
-       # if isinstance(piece, ast.Call):
-        #    if isinstance():
-         #       return
-        #if isinstance(piece, ast.Subscript):
-         #   return
 
 
     @singledispatchmethod
@@ -333,7 +300,6 @@ class PyASTToCAST():
         # node.value.id gets us module name (string)
         # node.attr gets us attribute we're accessing (string)
         # helper(node.attr) -> "module_name".node.attr
-
         
         curr = node.value
         
@@ -359,8 +325,6 @@ class PyASTToCAST():
                 name_list.insert(0, temp.id)
 
             unique_name = ".".join(name_list)
-
-            print(f"UN: {unique_name}")
 
             if isinstance(curr.ctx,ast.Load):
                 if unique_name not in curr_scope_id_dict:
@@ -448,10 +412,6 @@ class PyASTToCAST():
 
         value = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)
         
-        # If the attribute we're checking isn't in the current scope
-        # We look to the enclosing scope
-        # if node.attr not in curr_scope_id_dict:
-        #    pass
         attr = Name(node.attr, id=curr_scope_id_dict[unique_name], source_refs=ref)
 
         # module_name : has an ID
@@ -565,9 +525,6 @@ class PyASTToCAST():
             ast.BitAnd: BinaryOperator.BITAND,
             ast.BitXor: BinaryOperator.BITXOR,
         }
-        #curr_scope_id_dict = {}
-        #merge_dicts(prev_scope_id_dict, curr_scope_id_dict)
-    
         left = self.visit(node.left, prev_scope_id_dict, curr_scope_id_dict)
         op = ops[type(node.op)]
         right = self.visit(node.right, prev_scope_id_dict, curr_scope_id_dict)
@@ -903,13 +860,13 @@ class PyASTToCAST():
 
         list_var_id = self.insert_next_id(curr_scope_id_dict, list_name)
 
+        # Built-ins used: "list", "len"
         list_id = -1
         if "list" not in self.global_identifier_dict.keys():
             list_id = self.insert_next_id(self.global_identifier_dict, "list")
         else:
             list_id = self.global_identifier_dict["list"]
 
-        # Built-ins: "list", "len" 
         len_id = -1
         if "len" not in self.global_identifier_dict.keys():
             len_id = self.insert_next_id(self.global_identifier_dict, "len")
@@ -1160,9 +1117,6 @@ class PyASTToCAST():
                                     iter=self.identify_piece(first_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
                                     body=innermost_loop_body,orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
 
-        #loop_collection = [ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
-         #                           iter=first_gen.iter,
-          #                          body=innermost_loop_body,orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
 
         # Every other loop in the list comprehension wraps itself around the previous loop that we 
         # added
@@ -1177,20 +1131,11 @@ class PyASTToCAST():
                                 orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
                                 orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
 
-                #next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
-                 #               iter=curr_gen.iter,
-                  #              body=[ast.If(test=curr_if, body=[loop_collection[0]],
-                   #             orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
-                    #        orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
-
             else:
                 next_loop = ast.For(target=self.identify_piece(curr_gen.target, curr_scope_id_dict, prev_scope_id_dict),
                                         iter=self.identify_piece(curr_gen.iter, curr_scope_id_dict, prev_scope_id_dict),
                                         body=[loop_collection[0]],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
             
-                #next_loop = ast.For(target=ast.Name(id=curr_gen.target.id,ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4]),
-                 #                       iter=curr_gen.iter,
-                  #                      body=[loop_collection[0]],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
 
             loop_collection.insert(0, next_loop)
             i = i - 1
@@ -1552,8 +1497,6 @@ class PyASTToCAST():
         # TODO: Typing so it's not hardcoded to floats
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
-        #unique_name = construct_unique_name(self.filenames[-1], node.id)
-
         if isinstance(node.ctx,ast.Load):
             if node.id in self.aliases: 
                 return [Name(self.aliases[node.id], id=-1, source_refs=ref)]
@@ -1583,8 +1526,6 @@ class PyASTToCAST():
             if node.id in self.aliases: 
                 return [Var(Name(self.aliases[node.id], id=-1, source_refs=ref), "float", source_refs=ref)]
 
-            #if node.id in curr_scope_id_dict:
-             #   return [Var(Name(node.id, id=curr_scope_id_dict[node.id],source_refs=ref), "float", source_refs=ref)]
             
             if node.id not in curr_scope_id_dict:
                 if node.id in prev_scope_id_dict:
@@ -1594,9 +1535,6 @@ class PyASTToCAST():
 
             return [Var(Name(node.id, id=curr_scope_id_dict[node.id],source_refs=ref), "float", source_refs=ref)]
 
-            #else:
-            #    self.insert_next_id(curr_scope_id_dict, node.id)
-            #    return [Var(Name(node.id, id=curr_scope_id_dict[node.id],source_refs=ref), "float", source_refs=ref)]
 
         if isinstance(node.ctx,ast.Del):
             # TODO: At some point..
