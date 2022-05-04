@@ -88,10 +88,9 @@ class ContainerScopePass:
                     container_node.used_globals.update(func_def.used_globals)
                     container_node.modified_globals.update(func_def.modified_globals)
                     container_node.globals_accessed_before_mod.update(func_def.globals_accessed_before_mod)
-                else:
-                    container_node.used_vars.update(func_def.used_globals)
-                    container_node.modified_vars.update(func_def.modified_globals)
-                    container_node.vars_accessed_before_mod.update(func_def.globals_accessed_before_mod)
+                container_node.used_vars.update(func_def.used_globals)
+                container_node.modified_vars.update(func_def.modified_globals)
+                container_node.vars_accessed_before_mod.update(func_def.globals_accessed_before_mod)
                 
     def add_container_data_to_expr(self, container, data):
         """
@@ -295,8 +294,9 @@ class ContainerScopePass:
                                                source_file_name=src_ref.source_file_name)
         node.grfn_con_src_ref = grfn_src_ref
         
-        # queue node to process globals through interfaces later
-        self.calls_to_process.append(node)
+        # queue node to process globals through interfaces later if we have the associated FunctionDef
+        if node.has_func_def:
+            self.calls_to_process.append(node)
 
         # # globals which are used by this Call's FunctionDef while be added to the Call's interface
         # # so, we need to propagate the use of these globals to enclosing containers
