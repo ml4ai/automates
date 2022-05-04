@@ -426,6 +426,9 @@ class ToGrfnPass:
         self.visit(node.expr, subgraph)
 
     def visit_function_def_copy(self, node: AnnCastFunctionDef, subgraph: GrFNSubgraph):
+        for dummy_assignment in node.dummy_grfn_assignments:
+            self.visit_grfn_assignment(dummy_assignment, subgraph)
+
         self.visit_node_list(node.func_args, subgraph)
         self.visit_node_list(node.body, subgraph)
 
@@ -467,6 +470,10 @@ class ToGrfnPass:
             # add interface node and outputs to subraph
             subgraph.nodes.append(top_interface)
             subgraph.nodes.extend(outputs)
+        
+        # visit dummy assignments before body
+        for dummy_assignment in node.dummy_grfn_assignments:
+            self.visit_grfn_assignment(dummy_assignment, subgraph)
 
         # visit body
         self.visit_node_list(node.body, subgraph)

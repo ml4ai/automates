@@ -120,6 +120,7 @@ class CreationReason(str, Enum):
     FUNC_ARG = "Function Argument"
     COND_VAR = "Variable Introduced for Conditional Expression"
     DUP_GLOBAL = "Duplicated Global for FunctionDef Container"
+    DUMMY_ASSIGN = "Dummy Assignment for Interface Propagation"
 
 
 def source_ref_dict(source_ref: SourceRef):
@@ -568,6 +569,21 @@ class AnnCast:
         # GrFN stored after ToGrfnPass
         self.grfn: typing.Optional[GroundedFunctionNetwork] = None
 
+    def is_var_local_to_func(self, scopestr: str, id: int):
+        """
+        Precondition: scopestr is the scopestr of a FunctionDef 
+        Check if the variable with id `id` is neither a global nor a formal parameter
+        """
+        if self.is_global_var(id):
+            return False
+
+        func_def_node = self.func_def_node_from_scopestr(scopestr)
+        for param in func_def_node.func_args:
+            if id == param.val.id:
+                return False
+
+        return True
+
     def is_container(self, scopestr: str): 
         """ 
         Check if scopestr is a container scopestr
@@ -879,6 +895,9 @@ class AnnCastFunctionDef(AnnCastNode):
 
         # metadata attributes
         self.grfn_con_src_ref: GrfnContainerSrcRef
+
+        # dummy assignments to handle Python dynamic variable creation
+        self.dummy_grfn_assignments = []
 
         
     def __str__(self):

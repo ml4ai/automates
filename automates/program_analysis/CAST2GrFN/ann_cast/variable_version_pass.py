@@ -1,6 +1,8 @@
 import typing
 from functools import singledispatchmethod
 
+from automates.model_assembly.networks import load_lambda_function
+
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 class VariableVersionPass:
@@ -81,6 +83,59 @@ class VariableVersionPass:
             from_source_mdata = generate_from_source_metadata(False, CreationReason.BOT_IFACE_INTRO)
             add_metadata_to_grfn_var(grfn_var, from_source_mdata=from_source_mdata)
 
+
+    def fix_for_python_gcc_declaration_distinction(self, con_scopestr, id, var_name):
+        """
+        This function adds a dummy GrfnAssignment to `None` for variable with id `id`
+        in the container for con_scopestr
+    
+        The motivation for this is the difference between how the gcc and Python handle
+        variable declaration.  
+
+        For gcc, all variable declaration are placed at the top
+        of the enclosing FunctionDef.  Currently, we rely on this for If and Loop container
+        top interfaces.  
+        
+        The Python AST follows Python semantics, and variables are introduced inline dynamically.
+        This leads to many challenges creating interfaces e.g.
+
+        ```python
+        def func():
+            x = 5
+            if x == 5:
+                z = 3
+        ```
+        In this code example, what happens to z along the else branch?  GrFN If containers always make a
+        selection between two values, but this does not align with dynamic/conditional variable creation in Python,
+        as in the above code example.
+        """
+        version = self.con_scope_to_highest_var_vers[con_scopestr][id]
+        # this function should only be called in cases where we need to implement a dummy assignment
+        # which creates a version 1 variable
+        assert(version == VAR_INIT_VERSION)
+        # increment the version, and create an GrFN variable for the incremented version
+        self.incr_version_in_con_scope(con_scopestr, id, var_name)
+        new_version = self.con_scope_to_highest_var_vers[con_scopestr][id]
+        new_fullid = build_fullid(var_name, id, new_version, con_scopestr)
+        grfn_var = self.ann_cast.get_grfn_var(new_fullid)
+        from_source_mdata = generate_from_source_metadata(False, CreationReason.DUMMY_ASSIGN)
+        add_metadata_to_grfn_var(grfn_var, from_source_mdata)
+
+        # create a literal GrFN assignment for this dummy assignment
+        assign_metadata = create_lambda_node_metadata(source_refs=[])
+        literal_node = create_grfn_literal_node(assign_metadata)
+        lambda_expr = "lambda: None"
+        literal_node.func_str = lambda_expr
+        literal_node.function = load_lambda_function(literal_node.func_str)
+        dummy_assignment = GrfnAssignment(literal_node, LambdaType.LITERAL, lambda_expr=lambda_expr)
+        dummy_assignment.outputs[new_fullid] = grfn_var.uid
+
+        # add dummy assignment to function def node
+        assert(self.ann_cast.is_con_scopestr_func_def(con_scopestr))
+        func_def_node = self.ann_cast.func_def_node_from_scopestr(con_scopestr)
+
+        func_def_node.dummy_grfn_assignments.append(dummy_assignment)
+
     def populate_interface(self, con_scopestr, vars, interface):
         """
         Parameters:
@@ -95,6 +150,16 @@ class VariableVersionPass:
         # add vars to interface
         for id, var_name in vars.items():
             highest_ver = self.get_highest_ver_in_con_scope(con_scopestr, id)
+            # if con_scopestr is a FunctionDef container, and highest_ver is VAR_INIT_VERSION
+            # we call fix_for_python_gcc_declaration_distinction
+            # this creates a dummy assignment to the variable in the FunctionDef container
+            # most likely, this is not the ideal long term solution
+            scopestr_is_func = self.ann_cast.is_con_scopestr_func_def(con_scopestr)
+            local_var = scopestr_is_func and self.ann_cast.is_var_local_to_func(con_scopestr, id)
+            if local_var and highest_ver == VAR_INIT_VERSION:
+                self.fix_for_python_gcc_declaration_distinction(con_scopestr, id, var_name)
+                # update highest ver after the dummy assignment
+                highest_ver = self.get_highest_ver_in_con_scope(con_scopestr, id)
             fullid = build_fullid(var_name, id, highest_ver, con_scopestr)
             interface[id] = fullid
 
