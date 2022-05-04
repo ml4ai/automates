@@ -228,7 +228,7 @@ class PyASTToCAST():
         elif isinstance(piece, ast.Call):
             return piece.func
         else:
-            piece
+            return piece
 
 
 
