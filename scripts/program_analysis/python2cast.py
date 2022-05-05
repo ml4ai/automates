@@ -9,7 +9,7 @@ from automates.program_analysis.CAST2GrFN import cast
 from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
 
 if len(sys.argv) < 2:
-    print("USAGE: python3 python2cast.py PYTHON_FILE_NAME [--astpp]")
+    print("USAGE: python3 python2cast.py PYTHON_FILE_NAME [--astpp] [--legacy] [--rawjson] [--stdout]")
     print("Requires a Python file on the command line to run")
     sys.exit()
 
@@ -29,7 +29,10 @@ for l in file_list:
 file_handle.close()
 
 # Create a PyASTToCAST Object
-convert = py_ast_to_cast.PyASTToCAST(file_name)
+if '--legacy' in sys.argv:
+    convert = py_ast_to_cast.PyASTToCAST(file_name, legacy=True)
+else:
+    convert = py_ast_to_cast.PyASTToCAST(file_name)
 
 # Additional option to allow us to view the PyAST 
 # using the astpp module 
@@ -45,7 +48,7 @@ os.chdir(curr_path)
 
 # Parse the python program's AST and create the CAST
 contents = ast.parse(file_contents)
-C = convert.visit(contents)
+C = convert.visit(contents, {}, {})
 C.source_refs = [SourceRef(file_name, None, None, 1, line_count)]
 
 os.chdir(old_path)
