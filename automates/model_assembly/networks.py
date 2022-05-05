@@ -338,10 +338,7 @@ class LambdaNode(GenericNode):
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
-# TODO: make a subclass of LambdaNode for LoopTopInterface which includes
-# a use_initial boolean attribute and overwrite the parse_result() method
-# TODO: use this in to_grfn_pass.py when the loop top interface is created
-@dataclass
+@dataclass(eq=False)
 class LoopTopInterface(LambdaNode):
     use_initial: bool = False
 
@@ -1532,8 +1529,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
                         else dist
                     )
                     if func not in visited_funcs:
-                        new_successors.extend(self.FCG.successors(func))
                         visited_funcs.add(func)
+                        # add new successors if func is in FCG
+                        if func in self.FCG:
+                            new_successors.extend(self.FCG.successors(func))
 
                 if len(new_successors) > 0:
                     all_successors.extend(new_successors)
