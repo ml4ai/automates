@@ -1494,11 +1494,11 @@ class GroundedFunctionNetwork(nx.DiGraph):
             if isinstance(node, LambdaNode):
                 preds = list(self.predecessors(node))
                 # DEBUGGING
-                # print(f"node {node} has predecessors {preds}")
+                print(f"node {node} has predecessors {preds}")
                 for var_node in self.predecessors(node):
                     preds = list(self.predecessors(var_node))
                     # DEBUGGING
-                    # print(f"node {var_node} has predecessors {preds}")
+                    print(f"node {var_node} has predecessors {preds}")
                     for func_node in self.predecessors(var_node):
                         func_to_func_edges.append((func_node, node))
                         
@@ -1532,8 +1532,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
                         else dist
                     )
                     if func not in visited_funcs:
-                        new_successors.extend(self.FCG.successors(func))
                         visited_funcs.add(func)
+                        # add new successors if func is in FCG
+                        if func in self.FCG:
+                            new_successors.extend(self.FCG.successors(func))
 
                 if len(new_successors) > 0:
                     all_successors.extend(new_successors)
