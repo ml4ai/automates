@@ -40,7 +40,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 
 from automates.model_assembly.metadata import (
         LambdaType, TypedMetadata, CodeSpanReference, Domain, ProvenanceData, 
-        VariableFromSource, MetadataMethod
+        VariableFromSource, MetadataMethod, VariableCreationReason
         )
 from automates.model_assembly.structures import (
     VariableIdentifier,
@@ -52,7 +52,17 @@ from automates.model_assembly.networks import (
     GroundedFunctionNetwork
 )
 
-GENERATE_GRFN_2_2 = False
+GENERATE_GRFN_2_2 = True
+
+# flag deciding whether or not to use GE's interpretation of From Source 
+# when populating metadata information
+# 
+# For GE, all instances of a variable which exists in the source code should 
+# be considered from source.  
+# We think this loses information about the GrFN variables we create to facilitate
+# transition between interfaces. That is, we create many GrFN variables which
+# do not literally exist in source, and so don't consider those to be from source
+FROM_SOURCE_FOR_GE = True
 
 # used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
 CON_STR_SEP = "."
@@ -112,15 +122,16 @@ def cast_op_to_str(op):
     return op_map[op] if op in op_map else None
 
 # Metadata functions
+# TODO: Remove
 # From Source Creastion Reason constants
-class CreationReason(str, Enum):
-    TOP_IFACE_INTRO = "Variable Introduced for Top Interface"
-    BOT_IFACE_INTRO = "Variable Introduced for Bot Interface"
-    FUNC_RET_VAL = "Function Return Value"
-    FUNC_ARG = "Function Argument"
-    COND_VAR = "Variable Introduced for Conditional Expression"
-    DUP_GLOBAL = "Duplicated Global for FunctionDef Container"
-    DUMMY_ASSIGN = "Dummy Assignment for Interface Propagation"
+# class CreationReason(str, Enum):
+#     TOP_IFACE_INTRO = "Variable Introduced for Top Interface"
+#     BOT_IFACE_INTRO = "Variable Introduced for Bot Interface"
+#     FUNC_RET_VAL = "Function Return Value"
+#     FUNC_ARG = "Function Argument"
+#     COND_VAR = "Variable Introduced for Conditional Expression"
+#     DUP_GLOBAL = "Duplicated Global for FunctionDef Container"
+#     DUMMY_ASSIGN = "Dummy Assignment for Interface Propagation"
 
 
 def source_ref_dict(source_ref: SourceRef):
@@ -192,7 +203,7 @@ def generate_domain_metadata():
 
     return Domain.from_data(data=data)
 
-def generate_from_source_metadata(from_source: bool, reason: str):
+def generate_from_source_metadata(from_source: bool, reason: VariableCreationReason):
     provenance = ProvenanceData(
         MetadataMethod.PROGRAM_ANALYSIS_PIPELINE,
         ProvenanceData.get_dt_timestamp()
@@ -228,13 +239,15 @@ def add_metadata_from_name_node(grfn_var, name_node):
     Currently, all Name nodes are obtained from source, so we generate
     the from source metadata accordingly.
     """
-    from_source_mdata = generate_from_source_metadata(from_source=True, reason="Unknown")
+    from_source = True
+    from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.UNKNOWN)
     span_mdata = generate_variable_node_span_metadata(name_node.source_refs)
     add_metadata_to_grfn_var(grfn_var, from_source_mdata, span_mdata) 
 
 def add_metadata_to_grfn_var(grfn_var, from_source_mdata=None, span_mdata=None, domain_mdata=None):
     if from_source_mdata is None:
-        from_source_mdata = generate_from_source_metadata(True, "UNKNOWN")
+        from_source = True
+        from_source_mdata = generate_from_source_metadata(True, VariableCreationReason.UNKNOWN)
     
     # if this GrFN variable is from source, and we don't have span metadata, create
     # an blank SourceRef for its span metadata

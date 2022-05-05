@@ -425,6 +425,13 @@ class VariableCreationReason(AutoMATESBaseEnum):
     CONDITION_RESULT = auto()
     LOOP_EXIT_VAR = auto()
     LITERAL_FUNCTION_ARG = auto()
+    TOP_IFACE_INTRO = auto()
+    BOT_IFACE_INTRO = auto()
+    FUNC_RET_VAL = auto()
+    FUNC_ARG = auto()
+    COND_VAR = auto()
+    DUP_GLOBAL = auto()
+    DUMMY_ASSIGN = auto()
 
     def __str__(self):
         return str(self.name)

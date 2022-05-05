@@ -3,6 +3,7 @@ from functools import singledispatchmethod
 
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
+from automates.model_assembly.metadata import VariableCreationReason
 from automates.model_assembly.structures import (
     GenericIdentifier,
     VariableIdentifier,
@@ -159,7 +160,9 @@ class GrfnVarCreationPass:
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.ann_cast.store_grfn_var(fullid, grfn_var)
             # create From Source metadata for the GrFN var
-            from_source_mdata = generate_from_source_metadata(False, CreationReason.TOP_IFACE_INTRO)
+            # See comment above declaration for `FROM_SOURCE_FOR_GE` 
+            from_source = True if FROM_SOURCE_FOR_GE else False
+            from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.TOP_IFACE_INTRO)
             add_metadata_to_grfn_var(grfn_var, from_source_mdata)
 
             # alias VAR_INIT_VERSION expr variables
@@ -175,7 +178,9 @@ class GrfnVarCreationPass:
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.ann_cast.store_grfn_var(fullid, grfn_var)
             # create From Source metadata for the GrFN var
-            from_source_mdata = generate_from_source_metadata(False, CreationReason.BOT_IFACE_INTRO)
+            # See comment above declaration for `FROM_SOURCE_FOR_GE` 
+            from_source = True if FROM_SOURCE_FOR_GE else False
+            from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.BOT_IFACE_INTRO)
             add_metadata_to_grfn_var(grfn_var, from_source_mdata)
 
     def setup_loop_condition(self, node: AnnCastLoop):
@@ -206,7 +211,8 @@ class GrfnVarCreationPass:
         self.ann_cast.fullid_to_grfn_id[cond_fullid] = cond_var.uid
         self.ann_cast.grfn_id_to_grfn_var[cond_var.uid] = cond_var
         # create From Source metadata for the GrFN var
-        from_source_mdata = generate_from_source_metadata(False, CreationReason.COND_VAR)
+        from_source = False
+        from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.COND_VAR)
         add_metadata_to_grfn_var(cond_var, from_source_mdata)
 
         # cache condtiional variable
@@ -241,7 +247,8 @@ class GrfnVarCreationPass:
         self.ann_cast.fullid_to_grfn_id[cond_fullid] = cond_var.uid
         self.ann_cast.grfn_id_to_grfn_var[cond_var.uid] = cond_var
         # create From Source metadata for the GrFN var
-        from_source_mdata = generate_from_source_metadata(False, CreationReason.COND_VAR)
+        from_source = False
+        from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.COND_VAR)
         add_metadata_to_grfn_var(cond_var, from_source_mdata)
 
         # cache condtiional variable
@@ -303,7 +310,9 @@ class GrfnVarCreationPass:
             fullid = build_fullid(var_name, id, version, con_scopestr)
             self.ann_cast.store_grfn_var(fullid, grfn_var)
             # create From Source metadata for the GrFN var
-            from_source_mdata = generate_from_source_metadata(False, CreationReason.TOP_IFACE_INTRO)
+            # See comment above declaration for `FROM_SOURCE_FOR_GE` 
+            from_source = True if FROM_SOURCE_FOR_GE else False
+            from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.TOP_IFACE_INTRO)
             add_metadata_to_grfn_var(grfn_var, from_source_mdata)
 
             # alias VAR_INIT_VERSION expr variables
@@ -312,13 +321,16 @@ class GrfnVarCreationPass:
             expr_fullid = build_fullid(var_name, id, expr_version, expr_scopestr)
             self.ann_cast.alias_grfn_vars(expr_fullid, fullid)
 
-        # create version `LOOP_VAR_UPDATED_VERSION`  and `LOOP_VAR_EXIT_VERSION` 
+        # create version `LOOP_VAR_UPDATED_VERSION`  and `VAR_EXIT_VERSION` 
         # for modified variables
         for id, var_name in node.modified_vars.items():
             for version in [LOOP_VAR_UPDATED_VERSION, VAR_EXIT_VERSION]:
                 grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
                 fullid = build_fullid(var_name, id, version, con_scopestr)
                 self.ann_cast.store_grfn_var(fullid, grfn_var)
+                # we intentionally do not add metadata to the GrFN variables here, since
+                # these variables will be aliased to other variables created from Name nodes
+                # and the metadata will be populated from those Name nodes
 
     def alias_loop_expr_highest_vers(self, node:AnnCastLoop):
         """
