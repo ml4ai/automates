@@ -52,7 +52,7 @@ from automates.model_assembly.networks import (
     GroundedFunctionNetwork
 )
 
-GENERATE_GRFN_2_2 = True
+GENERATE_GRFN_2_2 = False
 
 # flag deciding whether or not to use GE's interpretation of From Source 
 # when populating metadata information
@@ -410,6 +410,8 @@ def is_func_def_main(node) -> bool:
     return node.name.name == MAIN_FUNC_DEF_NAME
 
 def function_container_name(node) -> str:
+    # TODO: Maybe change this to take an FunctionDef instead of Name node?
+    # That might make more sense when calling it
     """
     Parameter: AnnCastNameNode
     Returns function container name in the form "name#id"
@@ -429,6 +431,16 @@ def func_def_ret_val_name(node) -> str:
     Used for the AnnCastCall's bot interface out
     """
     return f"{function_container_name(node.name)}_ret_val"
+
+def specialized_global_name(node, var_name) -> str:
+    """
+    Parameters: 
+        - node: a (AnnCast)FunctionDef 
+        - var_name: the variable name for the global
+    Returns the specialized global name for FunctionDef `func_def_node` 
+    """
+    return f"{function_container_name(node.name)}_{var_name}"
+
 
 def call_argument_name(node, arg_index: int) -> str:
     """
@@ -494,6 +506,13 @@ def parse_fullid(fullid: str) -> typing.Dict:
     assert(len(keys) == len(values))
 
     return dict(zip(keys, values))
+
+def lambda_var_from_fullid(fullid: str) -> str:
+    """
+    Return a suitable lambda variable name for variable with fullid `fullid`
+    """
+    parsed = parse_fullid(fullid)
+    return f"{parsed['var_name']}_{parsed['id']}"
 
 def var_name_from_fullid(fullid: str) -> str:
     """

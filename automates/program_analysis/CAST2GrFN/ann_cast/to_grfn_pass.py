@@ -22,6 +22,7 @@ from automates.model_assembly.networks import (
     GrFNLoopSubgraph,
     HyperEdge,
     LambdaNode,
+    LoopTopInterface,
     VariableNode
 )
 
@@ -67,10 +68,10 @@ class ToGrfnPass:
     def create_interface_node(self, lambda_expr):
         # we should never create an interface node if we have an empty lambda expr
         assert(len(lambda_expr) > 0)
-        # TODO: correct values for thes
-        lambda_uuid = str(uuid.uuid4())[:5]
+        lambda_uuid = str(uuid.uuid4())
         lambda_str = lambda_expr
         lambda_func = load_lambda_function(lambda_str)
+        # FUTURE: decide on metadata for interface nodes
         lambda_metadata = []
         lambda_type = LambdaType.INTERFACE
 
@@ -85,14 +86,14 @@ class ToGrfnPass:
     def create_loop_top_interface(self, lambda_expr):
         # we should never create an interface node if we have an empty lambda expr
         assert(len(lambda_expr) > 0)
-        # TODO: correct values for these
         lambda_uuid = str(uuid.uuid4())
         lambda_str = lambda_expr
         lambda_func = load_lambda_function(lambda_str)
+        # FUTURE: decide on metadata for interface nodes
         lambda_metadata = []
         lambda_type = LambdaType.LOOP_TOP_INTERFACE
 
-        interface_node = LambdaNode(lambda_uuid, lambda_type,
+        interface_node = LoopTopInterface(lambda_uuid, lambda_type,
                                      lambda_str, lambda_func, lambda_metadata)
 
         return interface_node
@@ -117,10 +118,10 @@ class ToGrfnPass:
         self.hyper_edges.append(HyperEdge(inputs, lambda_node, outputs))
 
     def create_condition_node(self, condition_in, condition_out, lambda_expr,  subgraph: GrFNSubgraph):
-        # TODO: correct values for these
         lambda_uuid = str(uuid.uuid4())
         lambda_str = lambda_expr
         lambda_func = load_lambda_function(lambda_str)
+        # FUTURE: decide on metadata for condition nodes
         lambda_metadata = []
         lambda_type = LambdaType.CONDITION
 
@@ -151,6 +152,7 @@ class ToGrfnPass:
         lambda_uuid = str(uuid.uuid4())
         lambda_str = lambda_expr
         lambda_func = load_lambda_function(lambda_str)
+        # FUTURE: decide on metadata for decision nodes
         lambda_metadata = []
         lambda_type = LambdaType.DECISION
 

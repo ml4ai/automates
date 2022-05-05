@@ -338,10 +338,7 @@ class LambdaNode(GenericNode):
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
-# TODO: make a subclass of LambdaNode for LoopTopInterface which includes
-# a use_initial boolean attribute and overwrite the parse_result() method
-# TODO: use this in to_grfn_pass.py when the loop top interface is created
-@dataclass
+@dataclass(eq=False)
 class LoopTopInterface(LambdaNode):
     use_initial: bool = False
 
@@ -1494,11 +1491,11 @@ class GroundedFunctionNetwork(nx.DiGraph):
             if isinstance(node, LambdaNode):
                 preds = list(self.predecessors(node))
                 # DEBUGGING
-                print(f"node {node} has predecessors {preds}")
+                # print(f"node {node} has predecessors {preds}")
                 for var_node in self.predecessors(node):
                     preds = list(self.predecessors(var_node))
                     # DEBUGGING
-                    print(f"node {var_node} has predecessors {preds}")
+                    # print(f"node {var_node} has predecessors {preds}")
                     for func_node in self.predecessors(var_node):
                         func_to_func_edges.append((func_node, node))
                         

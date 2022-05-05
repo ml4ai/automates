@@ -4,7 +4,7 @@ from functools import singledispatchmethod
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 def lambda_for_grfn_assignment(grfn_assignment: GrfnAssignment, lambda_body: str) -> str:
-    var_names = map(var_name_from_fullid, grfn_assignment.inputs.keys())
+    var_names = map(lambda_var_from_fullid, grfn_assignment.inputs.keys())
 
     param_str = ", ".join(var_names)
     lambda_expr = f"lambda {param_str}: {lambda_body}"  
@@ -12,7 +12,7 @@ def lambda_for_grfn_assignment(grfn_assignment: GrfnAssignment, lambda_body: str
     return lambda_expr
 
 def lambda_for_condition(condition_in: typing.Dict, lambda_body: str) -> str:
-    var_names = map(var_name_from_fullid, condition_in.values())
+    var_names = map(lambda_var_from_fullid, condition_in.values())
 
     param_str = ", ".join(var_names)
     lambda_expr = f"lambda {param_str}: {lambda_body}"
@@ -29,7 +29,7 @@ def lambda_for_decision(condition_fullid: str, decision_in: typing.Dict) -> str:
     """
     if len(decision_in) == 0:
         return f"lambda: None"
-    cond_name = var_name_from_fullid(condition_fullid)
+    cond_name = lambda_var_from_fullid(condition_fullid)
 
     lambda_body = ""
 
@@ -37,9 +37,9 @@ def lambda_for_decision(condition_fullid: str, decision_in: typing.Dict) -> str:
     else_names = []
     for dec in decision_in.values():
         if_fullid = dec[IFBODY]
-        if_names.append(var_name_from_fullid(if_fullid) + "_if")
+        if_names.append(lambda_var_from_fullid(if_fullid) + "_if")
         else_fullid = dec[ELSEBODY]
-        else_names.append(var_name_from_fullid(else_fullid) + "_else")
+        else_names.append(lambda_var_from_fullid(else_fullid) + "_else")
 
     if_names_str = ", ".join(if_names)
     else_names_str = ", ".join(else_names)
@@ -58,8 +58,7 @@ def lambda_for_interface(interface_in: typing.Dict) -> str:
     if len(interface_in) == 0:
         return "lambda: None"
 
-    get_name = lambda fullid: parse_fullid(fullid)["var_name"]
-    var_names = map(get_name, interface_in.values())
+    var_names = map(lambda_var_from_fullid, interface_in.values())
     param_str = ", ".join(var_names)
 
     lambda_expr = f"lambda {param_str}: ({param_str})"  
@@ -78,9 +77,9 @@ def lambda_for_loop_top_interface(top_interface_initial: typing.Dict, top_interf
     The `use_initial` value comes from the internal state of the LoopTopInterface during execution.
     """
 
-    init_name = lambda fullid: var_name_from_fullid(fullid) + "_init"
+    init_name = lambda fullid: lambda_var_from_fullid(fullid) + "_init"
     init_names = map(init_name, top_interface_initial.values())
-    updt_name = lambda fullid: var_name_from_fullid(fullid) + "_update"
+    updt_name = lambda fullid: lambda_var_from_fullid(fullid) + "_update"
     updt_names = map(updt_name, top_interface_updated.values())
 
     # NOTE: the lengths of top_interface_initial and top_interface_updated may not be the same
@@ -111,7 +110,7 @@ def lambda_for_loop_top_interface(top_interface_initial: typing.Dict, top_interf
     return lambda_expr
 
 def lambda_for_loop_condition(condition_in, lambda_body):
-    var_names = map(var_name_from_fullid, condition_in.values())
+    var_names = map(lambda_var_from_fullid, condition_in.values())
 
     param_str = ", ".join(var_names)
     lambda_expr = f"lambda {param_str}: {lambda_body}"
@@ -261,7 +260,7 @@ class LambdaExpressionPass:
         if node.has_ret_val:
             assert(len(node.out_ret_val) == 1)
             ret_val_fullid = list(node.out_ret_val.values())[0]
-            node.expr_str = var_name_from_fullid(ret_val_fullid)
+            node.expr_str = lambda_var_from_fullid(ret_val_fullid)
         
         return node.expr_str
 
