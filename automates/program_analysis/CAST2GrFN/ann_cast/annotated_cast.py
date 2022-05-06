@@ -52,7 +52,7 @@ from automates.model_assembly.networks import (
     GroundedFunctionNetwork
 )
 
-GENERATE_GRFN_2_2 = False
+GENERATE_GRFN_2_2 = True
 
 # flag deciding whether or not to use GE's interpretation of From Source 
 # when populating metadata information

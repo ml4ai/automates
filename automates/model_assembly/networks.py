@@ -822,7 +822,7 @@ class GrFNSubgraph:
             return "navyblue"
         elif type_str == "CallContainer":
             return "purple"
-        elif type_str == "Module":
+        elif type_str == "ModuleContainer":
             return "grey"
         else:
             raise TypeError(f"Unrecognized subgraph type: {type_str}")

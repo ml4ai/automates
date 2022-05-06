@@ -124,8 +124,6 @@ class CAST(object):
         if len(self.nodes) != len(other.nodes):
             return False
 
-        compare_nodes = lambda n1, n2, comparator: comparator(n1, n2)
-
         for i, node in enumerate(self.nodes):
             other_node = other.nodes[i]
             if isinstance(node, Name):
@@ -133,7 +131,7 @@ class CAST(object):
             else:
                 comparator = lambda n1, n2: n1 == n2
 
-            if not compare_nodes(node, other_node, comparator):
+            if not comparator(node, other_node):
                 print(f"**Self node **\n")
                 print(f"{node}")
                 print(f"\n**Other node**\n")
