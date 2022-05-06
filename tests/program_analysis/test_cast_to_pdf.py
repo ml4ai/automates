@@ -9,7 +9,7 @@ from automates.program_analysis.CAST2GrFN import cast
 
 DATA_DIR = "tests/data/program_analysis/CAST2PDF"
 
-@pytest.mark.skip("Need to regenerate data for new Name nodes which include id attribute")
+# @pytest.mark.skip("Need to regenerate data for new Name nodes which include id attribute")
 def test_cast_all_nodes():
     file_name = "cast_all_nodes.json"
 

@@ -470,7 +470,10 @@ class CASTToAGraphVisitor(CASTVisitor):
         body_node = uuid.uuid4()
 
         # self.G.add_node(node_uid, label="Function: " + node.name)
-        self.G.add_node(node_uid, label="Function: " + node.name.name + " (id: " + str(node.name.id) +")" )
+        if isinstance(node.name, Name):
+            self.G.add_node(node_uid, label="Function: " + node.name.name + " (id: " + str(node.name.id) +")" )
+        else:
+            self.G.add_node(node_uid, label="Function: " + node.name)
         self.G.add_node(args_node, label="Arguments")
         self.G.add_node(body_node, label="Body")
 
