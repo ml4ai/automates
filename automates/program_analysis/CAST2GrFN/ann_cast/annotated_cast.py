@@ -49,10 +49,11 @@ from automates.model_assembly.structures import (
 from automates.model_assembly.networks import (
     LambdaNode,
     VariableNode,
+    GenericNode,
     GroundedFunctionNetwork
 )
 
-GENERATE_GRFN_2_2 = False
+GENERATE_GRFN_2_2 = True
 
 # flag deciding whether or not to use GE's interpretation of From Source 
 # when populating metadata information
@@ -525,7 +526,7 @@ def create_grfn_literal_node(metadata: typing.List):
     Creates a GrFN `LambdaNode` with type `LITERAL` and metadata `metadata`.
     The created node has an empty lambda expression (`func_str` attribute)
     """
-    lambda_uuid = str(uuid.uuid4())
+    lambda_uuid = GenericNode.create_node_id()
     # we fill out lambda expression in a later pass
     lambda_str = ""
     lambda_func = lambda: None
@@ -538,7 +539,7 @@ def create_grfn_assign_node(metadata: typing.List):
     Creates a GrFN `LambdaNode` with type `ASSIGN` and metadata `metadata`.
     The created node has an empty lambda expression (`func_str` attribute)
     """
-    lambda_uuid = str(uuid.uuid4())
+    lambda_uuid = GenericNode.create_node_id()
     # we fill out lambda expression in a later pass
     lambda_str = ""
     lambda_func = lambda: None
@@ -560,11 +561,7 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
     # TODO: update the namespace and scope we provide, e.g. use :: instead of . as delimiter?
     identifier = VariableIdentifier("default_ns", con_scopestr, var_name, version)
 
-    # TODO: change this uid to a UUID and
-    # replace the calls to uuid4() in later passes with 
-    # GenericNode.create_node_id() 
-    # uid = GenericNode.create_node_id()
-    uid = build_fullid(var_name, id, version, con_scopestr)
+    uid = GenericNode.create_node_id()
     
     # we initialize the GrFN VariableNode with an empty metadata list.
     # we fill in the metadata later with a call to add_metadata_to_grfn_var()

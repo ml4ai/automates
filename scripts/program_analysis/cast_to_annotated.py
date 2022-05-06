@@ -1,4 +1,5 @@
 import sys
+import json
 
 from automates.program_analysis.CAST2GrFN.ann_cast.cast_to_annotated_cast import (
     CastToAnnotatedCastVisitor
@@ -12,6 +13,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.grfn_var_creation_pass import
 from automates.program_analysis.CAST2GrFN.ann_cast.grfn_assignment_pass import GrfnAssignmentPass
 from automates.program_analysis.CAST2GrFN.ann_cast.lambda_expression_pass import LambdaExpressionPass
 from automates.program_analysis.CAST2GrFN.ann_cast.to_grfn_pass import ToGrfnPass
+from automates.model_assembly.expression_trees.expression_walker import expr_trees_from_grfn
 
 
 def main():
@@ -66,6 +68,17 @@ def main():
 
     grfn_agraph = grfn.to_AGraph()
     grfn_agraph.draw(f"{f_name}--AC-GrFN.pdf", prog="dot")
+
+    print("\nExtracting Expression Trees---------------")
+    expr_trees = expr_trees_from_grfn(grfn)
+    expr_trees_json = json.dumps(expr_trees)
+
+    expr_trees_path = f"{f_name}--expression_trees.json"
+    with open(expr_trees_path, "w") as outfile:
+        outfile.write(expr_trees_json)
+
+    
+
 
 
 if __name__ == "__main__":
