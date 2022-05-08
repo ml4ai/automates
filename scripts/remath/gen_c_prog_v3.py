@@ -555,68 +555,6 @@ class VariableDecl:
             return f'{self.var_type} {name}'
 
 
-# TODO: Way to get expressions through conditionals:
-#  Have expression_var (the variable the expression value is set to) be
-#  defined outside of the conditional, and then it get updates in either conditional branch,
-#  and then used after the conditionals
-# class BlockSpec:
-#     def __init__(self, var_env: List[str], parent: Union["BlockSpec", None] = None,
-#                  level: int = 1):
-#         self.level: int = level
-#         self.parent: Union[BlockSpec, None] = parent
-#         self.var_env: List[str] = var_env
-#         self.expressions: Dict[int, Union[ExprTree, ConditionalSpec, LoopWhileSpec, LoopForSpec]] = list()
-#
-#     def sample(self, function_spec: "FunctionSpec", program_spec: "ProgramSpec"):
-#         # sample how many expressions will be in this block
-#         num_expressions = random.randint(program_spec.params.expressions_num[0],
-#                                          program_spec.params.expressions_num[1])
-#         for i in range(num_expressions):
-#             # sample how many operators will be in this expression
-#             num_ops = random.randint(program_spec.params.operators_num[0],
-#                                      program_spec.params.operators_num[1])
-#             # sample the expression tree
-#             expr = ExprTree(num_ops=num_ops, function_spec=function_spec, program_spec=program_spec)
-#             self.expressions[i] = expr
-#             # self.expr_var[i] = None
-#
-#     def to_string(self):
-#         indent = ' '*(self.level * TAB_SIZE)
-#         lines = list()
-#         for expr in self.expressions.values():
-#             lines.append(f'{indent}{expr.to_string()}')
-#         return '\n'.join(lines)
-#
-#
-# class ConditionalSpec(BlockSpec):
-#     def __init__(self, var_env: List[str], parent: BlockSpec = None,
-#                  condition: "ExprTree" = None,
-#                  if_cond: BlockSpec = None,
-#                  else_cond: BlockSpec = None,
-#                  level: int = 0):
-#         self.condition: ExprTree = condition
-#         self.if_cond: BlockSpec = if_cond
-#         self.else_cond: BlockSpec = else_cond
-#         super(BlockSpec, self).__init__(var_env=var_env, parent=parent, level=level)
-#
-#
-# class LoopWhileSpec(BlockSpec):
-#     def __init__(self, var_env: List[str], parent: BlockSpec = None,
-#                  condition: "ExprTree" = None,
-#                  body: BlockSpec = None,
-#                  level: int = 0):
-#         self.condition: ExprTree = condition
-#         self.body: Union[BlockSpec, None] = body
-#         super(BlockSpec, self).__init__(var_env=var_env, parent=parent, level=level)
-#
-#
-# class LoopForSpec:
-#     def __init__(self):
-#         # Here the condition is a for-loop decl: (<initial>; <test>; <update>)
-#         self.condition = None
-#         self.body: BlockSpec = None
-
-
 def op_def_dict_to_fn_spec_dict(op_def_dict: Dict):
     """
     Converts an operator definition dictionary into a dictionary with
@@ -644,7 +582,7 @@ def op_def_dict_to_fn_spec_dict(op_def_dict: Dict):
 
 
 # TODO Every function has
-#  (1) a return
+#  (1) a return (the current v3 default)
 #  OR
 #  (2) all conditional branches have returns (and no more expressions after the last conditional block)
 class FunctionSpec:
@@ -661,7 +599,7 @@ class FunctionSpec:
                  globals_to_be_set: Union[List[str], None] = None,
                  # globals_set_at_body_top: bool = False,
                  fns_to_call: Union[List[str], None] = None,
-                 body: 'FunctionBody' = None,
+                 # body: 'FunctionBody' = None,
                  local_vargen: VarGen = None):
         self.name: str = name
         if local_vargen is None:
@@ -698,7 +636,7 @@ class FunctionSpec:
         else:
             self.fns_to_call: list = fns_to_call
 
-        self.body: FunctionBody = body
+        # self.body: FunctionBody = body
         self.called_by: Set[str] = set()  #
 
     def to_c_string_signature(self):
@@ -721,98 +659,6 @@ class FunctionSpec:
         if self.globals_to_be_set:
             print(f'{indent_str}globals_to_be_set: {self.globals_to_be_set}')
             # TODO possibly remove?: print(f'{indent_str}globals_set_at_body_top: {self.globals_set_at_body_top}')
-
-
-# class Block:
-#     def __init__(self, expr_vargen: VarGen = None,
-#                  program_spec: "ProgramSpec" = None,
-#                  function_spec: "FunctionSpec" = None):
-#         self.program_spec: ProgramSpec = program_spec
-#         self.function_spec: FunctionSpec = function_spec
-#         if expr_vargen is None:
-#             self.expr_vargen = VarGen('e')
-#         else:
-#             self.expr_vargen = expr_vargen
-#         self.last_index: int = 0
-#         self.unassigned_indices: set[int] = {0}
-#         self.elm_indices: Set[int] = set()
-#         self.map_index_to_elm: Dict[int, str] = dict()
-#         self.map_index_to_children: Dict[int, List[int]] = dict()
-#
-#     def sample(self):
-#
-#         # (assign <before> <ExprTree> <after>)
-#         # (loop_while <before> <body> <after>)
-#         # (cond_if <before> <if_cond> <after>)
-#         # (cond_if_else <before> <if_cond> <else_cond> <after>)
-#
-#         num_conditionals = 0
-#         if random.random() < self.program_spec.params.conditional_prob:
-#             num_conditionals = random.randint(self.program_spec.params.conditionals_num[0],
-#                                               self.program_spec.params.conditionals_num[1])
-#
-#         print(f'DEBUG: num_conditionals={num_conditionals}')
-#         for i in range(num_conditionals):
-#             idx = random.choice(list(self.unassigned_indices))
-#             if random.random() < self.program_spec.params.conditional_else_prob:
-#                 self.add_elm_at(index=idx, elm='cond_if_else', num_args=4)
-#             else:
-#                 self.add_elm_at(index=idx, elm='cond_if', num_args=3)
-#
-#         num_loop_while = 0
-#         if random.random() < self.program_spec.params.loop_prob:
-#             num_loop_while = random.randint(self.program_spec.params.loop_num[0],
-#                                             self.program_spec.params.loop_num[1])
-#
-#         print(f'DEBUG: num_loop_while={num_loop_while}')
-#         for i in range(num_loop_while):
-#             idx = random.choice(list(self.unassigned_indices))
-#             self.add_elm_at(index=idx, elm='loop_while', num_args=3)
-#
-#         num_expressions = random.randint(self.program_spec.params.expressions_num[0],
-#                                          self.program_spec.params.expressions_num[1])
-#
-#         print(f'DEBUG: num_expressions={num_expressions}')
-#         for i in range(num_expressions):
-#             idx = random.choice(list(self.unassigned_indices))
-#             num_ops = random.randint(self.program_spec.params.operators_num[0],
-#                                      self.program_spec.params.operators_num[1])
-#             expr = ExprTree(num_ops=num_ops,
-#                             program_spec=self.program_spec,
-#                             function_spec=self.function_spec)
-#             expr.sample()
-#             self.add_elm_at(index=idx, elm=expr, num_args=1)
-#
-#     def add_elm_at(self, index: int, elm: str, num_args: int):
-#         new_indices = list(range(self.last_index + 1, self.last_index + num_args + 1))
-#         self.last_index += num_args
-#         self.unassigned_indices |= set(new_indices)
-#         self.unassigned_indices.remove(index)
-#         self.elm_indices.add(index)
-#         self.map_index_to_elm[index] = elm
-#         self.map_index_to_children[index] = new_indices
-#
-#     def to_string(self, index=0):
-#         if index in self.map_index_to_elm:
-#             elm = self.map_index_to_elm[index]
-#             if elm == 'loop_while':
-#                 return f's:{self.to_string(self.map_index_to_children[index][0])}, ' \
-#                        f'(loop_while {self.to_string(self.map_index_to_children[index][1])}), ' \
-#                        f'e:{self.to_string(self.map_index_to_children[index][2])}'
-#             elif elm == 'cond_if':
-#                 return f's:{self.to_string(self.map_index_to_children[index][0])}, ' \
-#                        f'(cond_if b1:{self.to_string(self.map_index_to_children[index][1])}), ' \
-#                        f'e:{self.to_string(self.map_index_to_children[index][2])}'
-#             elif elm == 'cond_if_else':
-#                 return f's:{self.to_string(self.map_index_to_children[index][0])}, ' \
-#                        f'(cond_if_else b1:{self.to_string(self.map_index_to_children[index][1])}' \
-#                        f' b2:{self.to_string(self.map_index_to_children[index][2])}), ' \
-#                        f'e:{self.to_string(self.map_index_to_children[index][3])}'
-#             elif isinstance(elm, ExprTree) :
-#                 return f'{self.to_string(self.map_index_to_children[index][0])}, ' \
-#                        f'({elm.to_string()})'
-#         else:
-#             return f'<{index}>'
 
 
 class ExprTree:
@@ -1259,42 +1105,6 @@ class VisitorCollectElements(Visitor):
             return [elm for (elm, context) in self.elements]
 
 
-# class VisitorCollectElements(Visitor):
-#
-#     def __init__(self, of_type: type = None, filter_fn: Callable = None):
-#         self.of_type = of_type
-#         self.filter_fn = filter_fn  # keep obj IF filter_fn(obj) returns False
-#         self.elements = list()
-#
-#     def visit(self, obj, context=None):
-#         if (self.of_type is not None and isinstance(obj, self.of_type)) \
-#                 or self.of_type is None:
-#             if self.filter_fn is not None:
-#                 if not self.filter_fn(obj):
-#                     self.elements.append((obj, context))
-#             else:
-#                 self.elements.append((obj, context))
-#
-#     def get_elements(self, with_context_p: bool = True) -> List:
-#         if with_context_p:
-#             return self.elements
-#         else:
-#             return [elm for (elm, context) in self.elements]
-
-
-# class VisitorIndexPNodes(Visitor):
-#
-#     def __init__(self, fn_body: 'FunctionBody', reset: bool = False):
-#         self.fn_body = fn_body
-#
-#         if reset:
-#             # reset the tree_pnode_by_index
-#             self.fn_body.tree_pnode_by_index = dict()
-#
-#     def visit(self, obj, context=None):
-#         self.fn_body.tree_pnode_by_index[obj.pnode_idx] = obj
-
-
 class FunctionBody:
     def __init__(self,
                  program_spec: ProgramSpec = None,
@@ -1330,9 +1140,6 @@ class FunctionBody:
         self.var_decls: List[VariableDecl] = list()
         if self.function_spec.args:
             self.var_decls = self.function_spec.args.copy()
-
-        # TODO: Is this needed?
-        # self.tree_pnode_by_index: Dict[int, ExprTree] = dict()
 
     def sample(self, skip_sample_pnode_structure: bool = False):
         """
@@ -1478,9 +1285,6 @@ class FunctionBody:
 
         # Remove remaining unassigned ('production') PNodes
         self.remove_unassigned_pnodes()
-
-        # Now index the remaining PNodes
-        # self.index_pnodes(reset=True)
 
     def collect_all_pnode_exprs(self, reverse: bool = True, with_context_p=True) -> List['PNodeExpr']:
         """
@@ -1738,21 +1542,6 @@ class FunctionBody:
     def visit_depth_first_forward(self, visitor: Visitor):
         self.head.visit_depth_first_forward(visitor)
 
-    # def index_pnodes(self, reset: bool = True):
-    #     """
-    #     Creates a VisitorIndexPNodes that will fill self.tree_pnode_by_index
-    #     Calls self.visit_depth_first_forward to visit every PNode,
-    #       and assigns that PNode's pnode_idx as the key pointing to the PNode
-    #       (in the VisitorIndexPNodes visit()).
-    #     BACKGROUND: We could update the self.tree_node_by_index while sampling,
-    #       except that we ultimately end up deleting many. So rather than manage
-    #       the deletes, instead postpone the indexing until after the tree has
-    #       been constructed and cleaned of unassigned ('production') PNodes.
-    #     :reset: Flag to determine whether to reset self.tree_pnode_by_index to an empty dict
-    #     :return:
-    #     """
-    #     self.visit_depth_first_forward(VisitorIndexPNodes(fn_body=self, reset=reset))
-
     def to_string_depth_first_forward(self):
         l = [f'head:{self.head}', f'tail:{self.tail}']
         return l + self.head.to_string_depth_first_forward()
@@ -1888,6 +1677,14 @@ class PNode:
             return l + self.after.to_string_depth_first_forward(level)
         else:
             return l
+
+    def to_c_string(self, level: int) -> List[str]:
+        """
+        Must be implemented...
+        :param level:
+        :return:
+        """
+        raise Exception('PNode.to_c_string(): Should be more specific subtype of PNode')
 
 
 def swap_finish(pnode_to_swap: PNode, new: PNode, fn_body: FunctionBody):
@@ -2583,8 +2380,10 @@ def generate_and_save_program(filepath: str):
     """
     prog = ProgramSpec(params=CONFIG_1)
     prog.sample(verbose=False)
+    sample_program_str = '\n'.join(prog.to_c_string())
     with open(filepath, 'w') as fout:
-        fout.write('\n'.join(prog.to_c_string()))
+        fout.write(sample_program_str)
+    return prog, sample_program_str
 
 
 # -----------------------------------------------------------------------------
