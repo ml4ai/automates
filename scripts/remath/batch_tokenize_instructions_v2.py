@@ -867,7 +867,9 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
             fn = program.functions[fn_addr]
             # do not push library functions
             if fn.name not in program.library_functions:
-                program.stack.push(fn)
+                # also if the function is tokenized already: don't tokenize again
+                if fn not in tokenized_functions:
+                    program.stack.push(fn)
 
     # collect some stats about the program and dump them to the end of __tokens.txt file
 
