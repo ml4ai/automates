@@ -833,6 +833,36 @@ class ExprTree:
         print(f'    self.map_index_to_val_assignments: {self.map_index_to_literal_assignments}')
 
 
+# TODO
+class ProgramStats:
+    """
+    Summary statistics of generated program
+    """
+    def __init__(self, prog_spec: 'ProgramSpec' = None):
+        self.num_globals = 0
+        self.num_functions = 0
+
+
+# TODO
+class FunctionStats:
+    """
+    Summary statistics of FunctionBody
+    """
+
+    def __init__(self, fb: 'FunctionSpec' = None):
+        self.num_args = 0
+        self.num_expressions = 0
+        self.num_operators = 0
+        self.num_vars = 0
+        self.num_inline_literals = 0
+        self.num_global_gets = 0
+        self.num_global_sets = 0
+        self.num_loop_while = 0
+        self.num_loop_for = 0
+        self.num_cond_if = 0
+        self.num_cond_if_else = 0
+
+
 class ProgramSpec:
     """
     Specification of a Program
@@ -2372,7 +2402,7 @@ def debug_test_program_spec_sample():
 # Generate and save program
 # -----------------------------------------------------------------------------
 
-def generate_and_save_program(filepath: str):
+def generate_and_save_program(filepath: str) -> Tuple[ProgramSpec, str]:
     """
     Top-level fn to generate a new program and save it to file
     :param filepath:
