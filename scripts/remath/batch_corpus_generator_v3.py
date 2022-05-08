@@ -1,4 +1,4 @@
-from typing import List
+from typing import Union, List
 import sys
 import os
 import json
@@ -9,7 +9,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 import timeit
 
-import gen_c_prog_v2 as gen_c_prog
+import gen_c_prog_v3 as gen_c_prog
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 from batch_tokenize_instructions import TokenSet, extract_tokens_from_instr_file
 
@@ -296,7 +296,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
     filename_cast = ''
     filename_ghidra_instructions = ''
     filename_tokens_output = ''
-    sample_prog_expr_seq = None
+    sample_prog: Union[gen_c_prog.ProgramSpec, None] = None
 
     attempt = 0
     keep_going = True
@@ -319,18 +319,18 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         filename_uuid_c = filename_base_uuid + '.c'
 
         # generate candidate source code
-        sample_prog_str, sample_prog_expr_seq = \
-            gen_c_prog.gen_prog(filename_src)
+        sample_prog, sample_program_str = \
+            gen_c_prog.generate_and_save_program(filename_src)
 
         # save sample stats
         with open(filename_src_stats, 'w') as stats_file:
-            stats_file.write(gen_c_prog.ExprSeqSampleStats(sample_prog_expr_seq).to_string())
+            stats_file.write(gen_c_prog.ExprSeqSampleStats(sample_prog).to_string())
 
         # compile candidate
         result, filename_bin = try_compile(config=config, src_filepath=filename_src)  # filepath_uuid_c)
 
         if result.returncode != 0:
-            failure('COMPILE', result, sample_prog_str, filename_src, filename_uuid_c)
+            failure('COMPILE', result, sample_program_str, filename_src, filename_uuid_c)
             # print(f'FAILURE - COMPILE - {result.returncode}')
             # print(f'CWD: {os.getcwd()}')
             # print(f'listdir: {os.listdir()}')
@@ -338,11 +338,12 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
             # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
 
+        # TODO: Possibly skip this ?
         # execute_candidate
         result = subprocess.run([f'./{filename_bin}'], stdout=subprocess.PIPE)
 
         if result.returncode != 0:
-            failure('EXECUTE', result, sample_prog_str, filename_src, filename_uuid_c)
+            failure('EXECUTE', result, sample_program_str, filename_src, filename_uuid_c)
             # print(f'FAILURE - EXECUTE - {result.returncode}')
             # print(f'CWD: {os.getcwd()}')
             # print(f'listdir: {os.listdir()}')
@@ -364,7 +365,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         result = subprocess.run(command_list, stdout=subprocess.PIPE)
 
         if result.returncode != 0:
-            failure('GHIDRA', result, sample_prog_str, filename_src, filename_uuid_c)
+            failure('GHIDRA', result, sample_program_str, filename_src, filename_uuid_c)
             # print(f'CWD: {os.getcwd()}')
             # print(f'listdir: {os.listdir()}')
             # print(f'FAILURE - GHIDRA - {result.returncode}')
@@ -378,7 +379,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
                                  filename_cast], stdout=subprocess.PIPE)
 
         if result.returncode != 0:
-            failure('TOKEN_CAST', result, sample_prog_str, filename_src, filename_uuid_c)
+            failure('TOKEN_CAST', result, sample_program_str, filename_src, filename_uuid_c)
             # print(f'CWD: {os.getcwd()}')
             # print(f'listdir: {os.listdir()}')
             # print(f'FAILURE - cast_to_token_cast.py - {result.returncode}')
