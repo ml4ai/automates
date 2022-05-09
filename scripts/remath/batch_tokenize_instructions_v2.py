@@ -175,9 +175,13 @@ class Register:
     Register classe: represents a register and its properties
     """
 
-    def __init__(self, name):
+    def __init__(self, name, child_names=None):
         self.name = name
         self.defined_before = False
+        if child_names:
+            self.child_names = child_names
+        else:
+            self.child_names = []
 
 
 class Stack:
@@ -295,7 +299,7 @@ class Program:
         self.global_tokens_map = Tokens(name="globals", base='_g')
 
         # list of library functions: so that we don't try to tokenize them
-        self.library_functions = ['printf']
+        self.library_functions = ['printf', 'sqrt', 'sin', 'abs', 'fmin', 'fmax']
 
     def update_name(self, name: str) -> None:
         self.name = name
@@ -355,8 +359,28 @@ class Function:
         # keep track of registers used for passing arguments: if they are used (are in dest) before any
         # values are moved to them first: they are parameters
         # registers used to pass the parameters
-        self.param_registers = {'EDI': Register('EDI'), 'ESI': Register('ESI'), 'EDX': Register('EDX'),
-                                'ECX': Register('ECX'), 'R8D': Register('R8D'), 'R9D': Register('R9D')}
+        # defined here: because they also hold a state: if they are defined or not: which is
+        # specific for a given function
+        self.param_registers = {'EDI': Register('EDI'),
+                                'ESI': Register('ESI'),
+                                'EDX': Register('EDX'),
+                                'ECX': Register('ECX'),
+                                'R8D': Register('R8D'),
+                                'R9D': Register('R9D'),
+                                'RDI': Register('RDI', child_names=['EDI']),
+                                'RSI': Register('RSI', child_names=['ESI']),
+                                'RDX': Register('RDX', child_names=['EDX']),
+                                'RCX': Register('RCX', child_names=['ECX']),
+                                'R8': Register('R8', child_names=['R8D']),
+                                'R9': Register('R9', child_names=['R9D']),
+                                'XMM0': Register('XMM0'),
+                                'XMM1': Register('XMM1'),
+                                'XMM2': Register('XMM2'),
+                                'XMM3': Register('XMM3'),
+                                'XMM4': Register('XMM4'),
+                                'XMM5': Register('XMM5'),
+                                'XMM6': Register('XMM6'),
+                                'XMM7': Register('XMM7')}
 
         # keep track of jump target addresses
         self.jump_targets = []
@@ -366,6 +390,11 @@ class Function:
         self.address_sequence = []
         # track address for each token: with <sep> token: for <sep> token: put the next address
         self.address_sequence_sep = []
+
+        # certain opcodes sets the values of other registers:
+        # need a clear way to handle this: for example cdq commands sets some bits in the
+        # edx register
+        self.register_setter_opcodes = {'CDQ': ['EDX']}
 
     def add_lines(self, lines: List[str]) -> None:
         """
@@ -445,14 +474,19 @@ class Function:
     @staticmethod
     def function_name_handler(current_fn_name: str, address: str,
                               function_tokens_map: "Tokens",
+                              library_functions: List[str],
                               nmt_tokens_instruction: List[str],
                               nmt_sequence_address: List[str]) -> None:
         """
         handles adding jump values to required token fields and updates them
         also updates nmt token list and nmt address sequence list
         """
-        label = function_tokens_map.add_token(current_fn_name)
-        nmt_tokens_instruction.append(label)
+        # for function names in library functions: treat them as primitives
+        if current_fn_name not in library_functions:
+            label = function_tokens_map.add_token(current_fn_name)
+            nmt_tokens_instruction.append(label)
+        else:
+            nmt_tokens_instruction.append(current_fn_name)
         nmt_sequence_address.append(address)
 
     def register_handler(self, token: str, address: str, index: int,
@@ -477,9 +511,15 @@ class Function:
         # if the param_registers appear in the src then set defined_before=True
         if index == 2 and token in self.param_registers:
             self.param_registers[token].defined_before = True
+            # also set it's childs to be defined as well recursively
+            # example rdx is defined: edx should be defined as well
+            child_names = self.param_registers[token].child_names
+            for child_name in child_names:
+                self.param_registers[child_name].defined_before = True
 
     def tokenize_function(self, function_tokens_map: "Tokens", jump_flags: List[str],
-                          global_addresses: List[str], global_tokens_map: "Tokens") -> List[str]:
+                          global_addresses: List[str], global_tokens_map: "Tokens",
+                          library_functions: List[str]) -> List[str]:
         """
         convert the raw lines (self.lines) into Instruction
         function_token: global FunctionToken instance of a program to give unique labels to each function in the
@@ -538,6 +578,7 @@ class Function:
                 elif token_type == 'function_name':
                     self.function_name_handler(token, instruction.address,
                                                function_tokens_map,
+                                               library_functions,
                                                nmt_tokens_instruction,
                                                nmt_sequence_address)
                 elif token_type == 'function_address':
@@ -550,9 +591,16 @@ class Function:
                     key = global_tokens_map.add_token(token)
                     nmt_tokens_instruction.append(key)
                     nmt_sequence_address.append(instruction.address)
-                else:
+                elif token_type == "opcode":
+                    opcode = token
+                    if opcode in self.register_setter_opcodes:
+                        for _, registers in self.register_setter_opcodes.items():
+                            for register in registers:
+                                self.param_registers[register].defined_before = True
                     nmt_tokens_instruction.append(token)
                     nmt_sequence_address.append(instruction.address)
+                else:
+                    raise Exception(f"Unhandled token type: {token_type}")
 
             # add the tokens of a line (instructon) to tokens_nmt
             # add to the token_sequence and address_sequence no <sep>
@@ -615,18 +663,12 @@ class Instruction:
 
     def get_info_from_hex(self, size):
         # check if floating point registers present in the operands
-        uses_floating_point_register = False
-        for operand in self.operands:
-            if 'XMM' in operand:
-                uses_floating_point_register = True
-        if uses_floating_point_register:
-            hex_str = self.parsed_metadata[2][2:-1]
-            return ':interpreted_hex_float', hex_str, parse_hex_float_value(hex_str, size)
-        else:
-            hex_str = self.parsed_metadata[2][2:-1]
-            # remove leading zeros and add '0x'
-            hex_str = '0x' + hex_str.lstrip("0")
+        hex_str = self.parsed_metadata[2][2:-1]
+        hex_str = hex_str.lstrip("0")
+        if len(hex_str) == 1:
+            hex_str = '0x' + hex_str
             return parse_hex_value(hex_str)
+        return ':interpreted_hex_float', hex_str, parse_hex_float_value(hex_str, size)
 
     def get_info_from_parsed_metadata(self, size=None) -> \
             Union[Tuple[str, str, str], Tuple[str, str], Tuple[str, str, int]]:
@@ -858,16 +900,20 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
     tokenized_functions = []
     while not program.stack.is_empty():
         function = program.stack.pop()
-        tokenized_functions.append(function)
-        # tokenize will tokenize the function and return list of other functions(addresses)
-        # that are being called by that function
-        fn_list = function.tokenize_function(program.function_tokens_map, program.jump_flags,
-                                             program.globals, program.global_tokens_map)
-        for fn_addr in fn_list:
-            fn = program.functions[fn_addr]
-            # do not push library functions
-            if fn.name not in program.library_functions:
-                program.stack.push(fn)
+        if function not in tokenized_functions:
+            tokenized_functions.append(function)
+            # tokenize will tokenize the function and return list of other functions(addresses)
+            # that are being called by that function
+            fn_list = function.tokenize_function(program.function_tokens_map, program.jump_flags,
+                                                 program.globals, program.global_tokens_map,
+                                                 program.library_functions)
+            for fn_addr in fn_list:
+                fn = program.functions[fn_addr]
+                # do not push library functions
+                if fn.name not in program.library_functions:
+                    # also if the function is tokenized already: don't tokenize again
+                    if fn not in tokenized_functions:
+                        program.stack.push(fn)
 
     # collect some stats about the program and dump them to the end of __tokens.txt file
 
@@ -891,17 +937,17 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
             write_file.write(f'token_sequence\n')
             write_file.write(str(function.token_sequence))
             write_file.write('\n\n')
-            write_file.write('address_sequence\n')
-            write_file.write(str(function.address_sequence))
-            write_file.write('\n\n')
+            # write_file.write('address_sequence\n')
+            # write_file.write(str(function.address_sequence))
+            # write_file.write('\n\n')
 
             # token sequence and sequence address with <sep>
-            write_file.write(f'token_sequence_sep\n')
-            write_file.write(str(function.token_sequence_sep))
-            write_file.write('\n\n')
-            write_file.write('address_sequence_sep\n')
-            write_file.write(str(function.address_sequence_sep))
-            write_file.write('\n\n')
+            # write_file.write(f'token_sequence_sep\n')
+            # write_file.write(str(function.token_sequence_sep))
+            # write_file.write('\n\n')
+            # write_file.write('address_sequence_sep\n')
+            # write_file.write(str(function.address_sequence_sep))
+            # write_file.write('\n\n')
 
             write_file.write('address_tokens_map\n')
             write_file.write(str(function.jump_address_tokens_map))
