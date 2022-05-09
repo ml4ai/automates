@@ -276,8 +276,8 @@ OP_MATH_H = \
 # Definitions for functions from stdlib.h
 OP_STDLIB_H = \
     {'abs': (('ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type abs (any_type);
-     'min': (('ANY', 'ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type min (any_type a, any_type b);
-     'max': (('ANY', 'ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type max (any_type a, any_type b);
+     'fmin': (('ANY', 'ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type min (any_type a, any_type b);
+     'fmax': (('ANY', 'ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type max (any_type a, any_type b);
      }
 
 
@@ -1075,6 +1075,12 @@ class ProgramSpec:
         prog_str_list.append('// globals')
         for global_var_decl in self.globals.values():
             prog_str_list.append(global_var_decl.to_c_string() + ';')
+        prog_str_list.append('')
+        # function signatures
+        prog_str_list.append('// function signatures')
+        prog_str_list.append('')
+        for fn_spec in self.functions.values():
+            prog_str_list.append(fn_spec.to_c_string_signature() + ';')
         prog_str_list.append('')
         # functions
         prog_str_list.append('// functions')
