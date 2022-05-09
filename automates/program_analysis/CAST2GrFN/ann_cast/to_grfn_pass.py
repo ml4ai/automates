@@ -65,7 +65,7 @@ class ToGrfnPass:
                                         self.network, self.hyper_edges, self.subgraphs,
                                         type_defs, metadata)
 
-    def create_interface_node(self, lambda_expr):
+    def create_interface_node(self, lambda_expr, lambda_params_grfn_uids):
         # we should never create an interface node if we have an empty lambda expr
         assert(len(lambda_expr) > 0)
         lambda_uuid = GenericNode.create_node_id()
@@ -74,16 +74,17 @@ class ToGrfnPass:
         # FUTURE: decide on metadata for interface nodes
         lambda_metadata = []
         lambda_type = LambdaType.INTERFACE
+        lambda_params_grfn_uids = lambda_params_grfn_uids
 
-        interface_node = LambdaNode(lambda_uuid, lambda_type,
-                                     lambda_str, lambda_func, lambda_metadata)
+        interface_node = LambdaNode(lambda_uuid, lambda_type, lambda_str,
+                                    lambda_func, lambda_metadata, lambda_params_grfn_uids)
 
         # DEBUGGING
         # print(f"CREATED INTERFACE {lambda_uuid} with lambda {lambda_expr}")
 
         return interface_node
 
-    def create_loop_top_interface(self, lambda_expr):
+    def create_loop_top_interface(self, lambda_expr, lambda_params_grfn_uids):
         # we should never create an interface node if we have an empty lambda expr
         assert(len(lambda_expr) > 0)
         lambda_uuid = GenericNode.create_node_id()
@@ -92,9 +93,10 @@ class ToGrfnPass:
         # FUTURE: decide on metadata for interface nodes
         lambda_metadata = []
         lambda_type = LambdaType.LOOP_TOP_INTERFACE
+        lambda_params_grfn_uids = lambda_params_grfn_uids
 
-        interface_node = LoopTopInterface(lambda_uuid, lambda_type,
-                                     lambda_str, lambda_func, lambda_metadata)
+        interface_node = LoopTopInterface(lambda_uuid, lambda_type, lambda_str,
+                                          lambda_func, lambda_metadata, lambda_params_grfn_uids)
 
         return interface_node
 
@@ -127,6 +129,12 @@ class ToGrfnPass:
 
         condition_node = LambdaNode(lambda_uuid, lambda_type,
                                      lambda_str, lambda_func, lambda_metadata)
+
+        # added for GE, populate lambda_params_grfn_uids
+        for fullid in condition_in.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            condition_node.lambda_params_grfn_uids.append(grfn_var.uid)
+
         self.network.add_node(condition_node, **condition_node.get_kwargs())
         inputs = []
         for var_id, fullid in condition_in.items():
@@ -157,6 +165,15 @@ class ToGrfnPass:
 
         decision_node = LambdaNode(lambda_uuid, lambda_type,
                                      lambda_str, lambda_func, lambda_metadata)
+
+        # added for GE, populate lambda_params_grfn_uids
+        # condition_var is the first parameter of the decision lambda
+        decision_node.lambda_params_grfn_uids.append(condition_var.uid)
+        for body in decision_in.values():
+            for fullid in body.values():
+                grfn_var = self.ann_cast.get_grfn_var(fullid)
+                decision_node.lambda_params_grfn_uids.append(grfn_var.uid)
+
         self.network.add_node(decision_node, **decision_node.get_kwargs())
         inputs = []
 
@@ -191,6 +208,11 @@ class ToGrfnPass:
 
     def visit_grfn_assignment(self, grfn_assignment: GrfnAssignment, subgraph: GrFNSubgraph):
         assignment_node = grfn_assignment.assignment_node
+
+        # added for GE, populate lambda_params_grfn_uids
+        for grfn_uid in grfn_assignment.inputs.values():
+            assignment_node.lambda_params_grfn_uids.append(grfn_uid)
+
         # update func_str and function for assignment node
         assignment_node.func_str = grfn_assignment.lambda_expr
         assignment_node.function = load_lambda_function(assignment_node.func_str)
@@ -293,7 +315,7 @@ class ToGrfnPass:
 
         # build top interface if needed
         if len(node.top_interface_in) > 0:
-            top_interface = self.create_interface_node(node.top_interface_lambda)
+            top_interface = self.create_interface_node(node.top_interface_lambda, node.top_iface_lambda_params_grfn_uids)
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             inputs = []
             for var_id, fullid in node.top_interface_in.items():
@@ -317,7 +339,7 @@ class ToGrfnPass:
         # build bot interface if needed
         # TODO: decide what to do by default with bot interface
         if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node(node.bot_interface_lambda)
+            bot_interface = self.create_interface_node(node.bot_interface_lambda, node.bot_iface_lambda_params_grfn_uids)
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             inputs = []
             for var_id, fullid in node.bot_interface_in.items():
@@ -365,7 +387,7 @@ class ToGrfnPass:
 
         # build top interface
         if len(node.top_interface_in) > 0:
-            top_interface = self.create_interface_node(node.top_interface_lambda)
+            top_interface = self.create_interface_node(node.top_interface_lambda, node.top_iface_lambda_params_grfn_uids)
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             inputs = []
             for fullid in node.top_interface_in.values():
@@ -390,7 +412,7 @@ class ToGrfnPass:
 
         # build bot interface
         if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node(node.bot_interface_lambda)
+            bot_interface = self.create_interface_node(node.bot_interface_lambda, node.bot_iface_lambda_params_grfn_uids)
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             inputs = []
             for fullid in node.bot_interface_in.values():
@@ -458,7 +480,7 @@ class ToGrfnPass:
 
         # build top interface if needed
         if len(node.top_interface_in) > 0:
-            top_interface = self.create_interface_node(node.top_interface_lambda)
+            top_interface = self.create_interface_node(node.top_interface_lambda, node.top_iface_lambda_params_grfn_uids)
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             # collect input GrFN VariableNodes
             inputs = list(map(self.ann_cast.get_grfn_var, node.top_interface_in.values()))
@@ -481,7 +503,7 @@ class ToGrfnPass:
 
         # build bot interface if needed
         if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node(node.bot_interface_lambda)
+            bot_interface = self.create_interface_node(node.bot_interface_lambda, node.bot_iface_lambda_params_grfn_uids)
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             # collect input GrFN VariableNodes
             inputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_in.values()))
@@ -526,7 +548,7 @@ class ToGrfnPass:
 
         # build top interface
         if len(node.top_interface_initial) > 0:
-            top_interface = self.create_loop_top_interface(node.top_interface_lambda)
+            top_interface = self.create_loop_top_interface(node.top_interface_lambda, node.top_iface_lambda_params_grfn_uids)
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             # collect initial GrFN VariableNodes
             grfn_initial = map(self.ann_cast.get_grfn_var, node.top_interface_initial.values())
@@ -550,7 +572,7 @@ class ToGrfnPass:
 
         # build bot interface
         if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node(node.bot_interface_lambda)
+            bot_interface = self.create_interface_node(node.bot_interface_lambda, node.bot_iface_lambda_params_grfn_uids)
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             # collect input GrFN VariableNodes
             inputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_in.values()))
@@ -600,7 +622,7 @@ class ToGrfnPass:
 
         # build top interface
         if len(node.top_interface_in) > 0:
-            top_interface = self.create_interface_node(node.top_interface_lambda)
+            top_interface = self.create_interface_node(node.top_interface_lambda, node.top_iface_lambda_params_grfn_uids)
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             inputs = []
             for var_id, fullid in node.top_interface_in.items():
@@ -633,10 +655,9 @@ class ToGrfnPass:
             self.create_decision_node(node.decision_in, node.decision_out, 
                                   condition_var, node.decision_lambda, subgraph)
 
-        # self.create_interface_node(node.bot_interface_in, node.bot_interface_out, subgraph)
         # build bot interface
         if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node(node.bot_interface_lambda)
+            bot_interface = self.create_interface_node(node.bot_interface_lambda, node.bot_iface_lambda_params_grfn_uids)
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             inputs = []
             for var_id, fullid in node.bot_interface_in.items():

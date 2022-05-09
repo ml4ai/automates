@@ -39,6 +39,9 @@ def add_grfn_uids(nodes, F2H, func_uid):
     arg_names = [
         id2node[node_uid].identifier for node_uid in arguments_node.children
     ]
+    arg_nodes = [id2node[node_uid] for node_uid in arguments_node.children]
+
+    lambda_node = F2H[func_uid].lambda_fn
     arg_name2input_uid = {
         arg_name: input_uid
         for arg_name, input_uid in zip(arg_names, input_var_uids)
@@ -46,6 +49,14 @@ def add_grfn_uids(nodes, F2H, func_uid):
     for node in variable_nodes:
         if node.identifier in arg_name2input_uid:
             node.grfn_uid = arg_name2input_uid[node.identifier]
+
+        # if len(arg_names) != len(lambda_node.lambda_params_grfn_uids):
+        #     print(f"Variable node = {arg_names}")
+        #     print(f"lambda_params_grfn_uids= {lambda_node.lambda_params_grfn_uids}")
+    # assert(len(arg_nodes) == len(lambda_node.lambda_params_grfn_uids))
+    # for i, node in enumerate(arg_nodes):
+    #     node.grfn_uid = lambda_node.lambda_params_grfn_uids[i]
+
 
 def expr_trees_from_grfn(G: GroundedFunctionNetwork, generate_agraph=False):
     func2hyperedge = {edge.lambda_fn.uid: edge for edge in G.hyper_edges}

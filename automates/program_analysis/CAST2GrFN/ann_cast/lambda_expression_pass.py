@@ -102,10 +102,19 @@ def lambda_for_loop_top_interface(top_interface_initial: typing.Dict, top_interf
     init_names_str = ", ".join(init_names)
     updt_names_str = ", ".join(updt_names)
     return_updt_names_str = ", ".join(return_updt_names)
-
     lambda_body = f"({init_names_str}) if {use_initial_str} else ({return_updt_names_str})"
 
     lambda_expr = f"lambda {use_initial_str}, {init_names_str}, {updt_names_str}: {lambda_body}"  
+
+    # HACK for GE
+    first_updt_name = updt_names[0]
+    if_expr_str = f"{first_updt_name} is None"
+
+
+    lambda_body = f"({init_names_str}) if {if_expr_str} else ({return_updt_names_str})"
+    lambda_expr = f"lambda {init_names_str}, {updt_names_str}: {lambda_body}"  
+
+
 
     return lambda_expr
 
@@ -200,12 +209,22 @@ class LambdaExpressionPass:
 
         # top interface lambda
         node.top_interface_lambda = lambda_for_interface(node.top_interface_in)
+        # added for GE, store param grfn ids
+        # add in vars
+        for fullid in node.top_interface_in.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.top_iface_lambda_params_grfn_uids.append(grfn_var.uid)
 
         # build lamba expressions for function def copy body
         body_expr = self.visit_function_def_copy(node.func_def_copy)
 
         # bot interface lambda
         node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
+        # added for GE, store param grfn ids
+        # add in vars
+        for fullid in node.bot_interface_in.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.bot_iface_lambda_params_grfn_uids.append(grfn_var.uid)
 
 
         # DEBUGGING
@@ -235,9 +254,19 @@ class LambdaExpressionPass:
 
         # top interface lambda
         node.top_interface_lambda = lambda_for_interface(node.top_interface_in)
+        # added for GE, store param grfn ids
+        # add in vars
+        for fullid in node.top_interface_in.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.top_iface_lambda_params_grfn_uids.append(grfn_var.uid)
 
         # bot interface lambda
         node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
+        # added for GE, store param grfn ids
+        # add in vars
+        for fullid in node.bot_interface_in.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.bot_iface_lambda_params_grfn_uids.append(grfn_var.uid)
 
         # DEBUGGING
         print(f"Call No FuncDef{node.func.name}")
@@ -284,10 +313,20 @@ class LambdaExpressionPass:
     @_visit.register
     def visit_function_def(self, node: AnnCastFunctionDef) -> str:
         node.top_interface_lambda = lambda_for_interface(node.top_interface_in)
+        # added for GE, store param grfn ids
+        # add in vars
+        for fullid in node.top_interface_in.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.top_iface_lambda_params_grfn_uids.append(grfn_var.uid)
         # NOTE: we do not visit node.func_args because those parameters are 
         # includes in the outputs of the top interface
         body_expr = self.visit_node_list(node.body)
         node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
+        # added for GE, store param grfn ids
+        # add in vars
+        for fullid in node.bot_interface_in.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.bot_iface_lambda_params_grfn_uids.append(grfn_var.uid)
         
         # DEBUGGING
         print(f"FunctionDef {node.name.name}")
@@ -310,7 +349,18 @@ class LambdaExpressionPass:
         
         # top interface lambda
         node.top_interface_lambda = lambda_for_loop_top_interface(node.top_interface_initial, 
-                                                                 node.top_interface_updated)
+                                                                  node.top_interface_updated)
+        # added for GE, store param grfn ids
+        # use_initial is first param
+        node.top_iface_lambda_params_grfn_uids.append("Not a GrFN Variable")
+        # add init vars
+        for fullid in node.top_interface_initial.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.top_iface_lambda_params_grfn_uids.append(grfn_var.uid)
+        # add updt vars
+        for fullid in node.top_interface_updated.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.top_iface_lambda_params_grfn_uids.append(grfn_var.uid)
 
         # condition lambda
         loop_expr = self.visit(node.expr)
@@ -320,6 +370,11 @@ class LambdaExpressionPass:
         body_expr = self.visit_node_list(node.body)
 
         node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
+        # added for GE, store param grfn ids
+        # add in vars
+        for fullid in node.bot_interface_in.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.bot_iface_lambda_params_grfn_uids.append(grfn_var.uid)
         
         # DEBUGGING
         print(f"Loop ")
@@ -348,6 +403,11 @@ class LambdaExpressionPass:
     def visit_model_if(self, node: AnnCastModelIf) -> str:
         # top interface lambda
         node.top_interface_lambda = lambda_for_interface(node.top_interface_in)
+        # added for GE, store param grfn ids
+        # add in vars
+        for fullid in node.top_interface_in.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.top_iface_lambda_params_grfn_uids.append(grfn_var.uid)
 
         # make condition lambda
         expr_str = self.visit(node.expr)
@@ -362,6 +422,11 @@ class LambdaExpressionPass:
 
         # bot interface lambda
         node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
+        # added for GE, store param grfn ids
+        # add in vars
+        for fullid in node.bot_interface_in.values():
+            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            node.bot_iface_lambda_params_grfn_uids.append(grfn_var.uid)
 
         # DEBUGGING
         print(f"If ")

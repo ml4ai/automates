@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn, Optional
 from abc import ABC, abstractmethod
 from functools import singledispatch
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import product
 from copy import deepcopy
 
@@ -228,6 +228,8 @@ class LambdaNode(GenericNode):
     func_str: str
     function: callable
     metadata: List[TypedMetadata]
+    # added for GE
+    lambda_params_grfn_uids: List[str] = field(default_factory=list)
 
     def __hash__(self):
         return hash(self.uid)

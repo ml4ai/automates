@@ -513,7 +513,9 @@ def lambda_var_from_fullid(fullid: str) -> str:
     Return a suitable lambda variable name for variable with fullid `fullid`
     """
     parsed = parse_fullid(fullid)
-    return f"{parsed['var_name']}_{parsed['id']}"
+    # return f"{parsed['var_name']}_{parsed['id']}"
+    # changed for GE
+    return f"{parsed['var_name']}"
 
 def var_name_from_fullid(fullid: str) -> str:
     """
@@ -777,6 +779,9 @@ class AnnCastCall(AnnCastNode):
         # GrFN lambda expressions
         self.top_interface_lambda: str
         self.bot_interface_lambda: str
+        # added for GE
+        self.top_iface_lambda_params_grfn_uids = []
+        self.bot_iface_lambda_params_grfn_uids = []
 
         # for top_interface_out
         # mapping Name id to fullid
@@ -918,6 +923,9 @@ class AnnCastFunctionDef(AnnCastNode):
         # GrFN lambda expressions
         self.top_interface_lambda: str
         self.bot_interface_lambda: str
+        # added for GE
+        self.top_iface_lambda_params_grfn_uids = []
+        self.bot_iface_lambda_params_grfn_uids = []
 
         # dict mapping Name id to highest version at end of "block"
         self.body_highest_var_vers = {}
@@ -1005,6 +1013,9 @@ class AnnCastLoop(AnnCastNode):
         # GrFN lambda expressions
         self.top_interface_lambda: str
         self.bot_interface_lambda: str
+        # added for GE
+        self.top_iface_lambda_params_grfn_uids = []
+        self.bot_iface_lambda_params_grfn_uids = []
         self.condition_lambda: str
         # metadata attributes
         self.grfn_con_src_ref: GrfnContainerSrcRef
@@ -1070,14 +1081,19 @@ class AnnCastModelIf(AnnCastNode):
         self.bot_interface_out = {}
         self.condition_in = {}
         self.condition_out = {}
-        self.decision_in = {}
         self.decision_out = {}
+        # decision_in has keys IFBODY, ELSEBODY and each of those 
+        # are dicts mapping Name id to fullid
+        self.decision_in = {}
         # GrFN VariableNode for the condition node
         self.condition_var = None
 
         # GrFN lambda expressions
         self.top_interface_lambda: str
         self.bot_interface_lambda: str
+        # added for GE
+        self.top_iface_lambda_params_grfn_uids = []
+        self.bot_iface_lambda_params_grfn_uids = []
         self.condition_lambda: str
         self.decision_lambda: str
 
