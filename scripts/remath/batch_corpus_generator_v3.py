@@ -232,8 +232,9 @@ def try_compile(config: Config, src_filepath: str):
 
     # print('try_compile() cwd:', os.getcwd())
 
+    # CTM 2022-05-10: Adding -lm to link the math lib
     command_list = [config.gcc, f'-fplugin={config.gcc_plugin_filepath}',
-                    '-C', '-x', 'c++', '-O0', src_filepath, '-o', dst_filepath]
+                    '-C', '-x', 'c++', '-O0', '-lm', src_filepath, '-o', dst_filepath]
     print(command_list)
 
     result = subprocess.run(command_list, stdout=subprocess.PIPE)
@@ -283,7 +284,10 @@ def finalize(config: Config, token_set: TokenSet):
         sys.stdout = original_stdout
 
 
-def try_generate(config: Config, i: int, token_set: TokenSet):
+def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
+
+    if verbose:
+        print('try_generate(): i={i}')
 
     time_start = timeit.default_timer()
 
@@ -338,18 +342,18 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
             # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
 
-        # TODO: Possibly skip this ?
-        # execute_candidate
-        result = subprocess.run([f'./{filename_bin}'], stdout=subprocess.PIPE)
-
-        if result.returncode != 0:
-            failure('EXECUTE', result, sample_program_str, filename_src, filename_uuid_c)
-            # print(f'FAILURE - EXECUTE - {result.returncode}')
-            # print(f'CWD: {os.getcwd()}')
-            # print(f'listdir: {os.listdir()}')
-            # log_failure(filename_src, f'execution return {result.returncode}')
-            # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
-            continue
+        # CTM 2022-05-10: For now, skipping execution test
+        # # execute_candidate
+        # result = subprocess.run([f'./{filename_bin}'], stdout=subprocess.PIPE)
+        #
+        # if result.returncode != 0:
+        #     failure('EXECUTE', result, sample_program_str, filename_src, filename_uuid_c)
+        #     # print(f'FAILURE - EXECUTE - {result.returncode}')
+        #     # print(f'CWD: {os.getcwd()}')
+        #     # print(f'listdir: {os.listdir()}')
+        #     # log_failure(filename_src, f'execution return {result.returncode}')
+        #     # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
+        #     continue
 
         # gcc ast to CAST
         filename_gcc_ast, filename_cast = gcc_ast_to_cast(filename_base)
@@ -449,7 +453,7 @@ def mv_files(config, token_set,
                             f"  current directory: {os.getcwd()}")
 
 
-def generate_corpus(start=0, num_samples=None, corpus_root=None):
+def generate_corpus(start=0, num_samples=None, corpus_root=None, verbose=False):
     config = load_config()
 
     config.time_start = timeit.default_timer()
@@ -490,7 +494,7 @@ def generate_corpus(start=0, num_samples=None, corpus_root=None):
         raise Exception(f"ERROR: Cannot find cast_to_token_cast.py: {config.cast_to_token_cast_filepath}")
 
     for i in range(start, start + config.num_samples):
-        try_generate(config=config, i=i, token_set=token_set)
+        try_generate(config=config, i=i, token_set=token_set, verbose=verbose)
     finalize(config, token_set)
     os.chdir(original_working_dir)
 
