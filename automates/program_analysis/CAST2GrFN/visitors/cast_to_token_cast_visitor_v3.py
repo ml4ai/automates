@@ -223,18 +223,25 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
         self.filename = f"{str(self.cast.nodes[0].name)}.c"
         self.populate_global_maps()       
 
+        out_file = open(file_name, "w")
 
         for tok in self.dump_global_tokens_map():
-            print(tok)
+            out_file.write(f"{tok}\n")
+            #print(tok)
 
-        print()
-        print()
+        out_file.write(f"\n")
+        out_file.write(f"\n")
+        #print()
+        #print()
 
         for tok in self.dump_function_token_map():
-            print(tok)
+            out_file.write(f"{tok}\n")
+            #print(tok)
 
-        print()
-        print()
+        out_file.write(f"\n")
+        out_file.write(f"\n")
+        #print()
+        #print()
         
         token_string = ""
         self.reset_local_maps()
@@ -244,29 +251,38 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
         for node in self.cast.nodes[0].body:
             if isinstance(node, FunctionDef) and node.source_refs[0].source_file_name == self.filename:
                 token_string = self.visit(node)
-                print(token_string)
+                out_file.write(f"{token_string}\n")
+                #print(token_string)
                 (params, local_vars, local_vals) = self.dump_local_maps()
 
-                print()
+                out_file.write(f"\n")
+                #print()
 
                 for tok in params:
-                    print(tok)
+                    out_file.write(f"{tok}\n")
+                    #print(tok)
 
-                print()
+                out_file.write(f"\n")
+                #print()
 
                 for tok in local_vars:
-                    print(tok)
+                    out_file.write(f"{tok}\n")
+                    #print(tok)
 
-                print()
+                out_file.write(f"\n")
+                #print()
 
                 for tok in local_vals:
-                    print(tok)
+                    out_file.write(f"{tok}\n")
+                    #print(tok)
 
                 token_string = ""
                 self.reset_local_maps()
                 
-                print()
-                print()
+                out_file.write(f"\n")
+                out_file.write(f"\n")
+                #print()
+                #print()
 
 
         sys.exit()
@@ -446,7 +462,7 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
         if node.name in self.global_map:
             return self.global_map[node.name]
 
-        if node.name not in self.var_map:
+        if node.name not in self.param_map and node.name not in self.var_map:
             self.insert_var(node.name)
 
         return self.local_map[node.name]
