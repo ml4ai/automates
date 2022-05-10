@@ -299,8 +299,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
     filename_base = f'{config.base_name}_{num_str}'
     filename_src = filename_base + '.c'
 
-    # TODO CTM 2022-05-09: turning off _stats.txt for now
-    # filename_src_stats = filename_base + '_stats.txt'
+    filename_src_stats = filename_base + '_stats.txt'
 
     filename_bin = ''
     filename_gcc_ast = ''
@@ -338,6 +337,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
 
         # save sample stats
         # TODO CTM 2022-05-10: implement new stats collection and call here...
+        #  When re-introduce, need to update function mv_files, below
         # with open(filename_src_stats, 'w') as stats_file:
         #     stats_file.write(gen_c_prog.ExprSeqSampleStats(sample_prog).to_string())
 
@@ -417,7 +417,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
 
         # move files to respective locations:
         mv_files(config, token_set,
-                 filename_src,  # filename_src_stats, ## TODO CTM 2022-05-10: turning off mv of _stats file for now
+                 filename_src,  filename_src_stats,
                  filename_bin, filename_gcc_ast, filename_cast,
                  filename_ghidra_instructions,
                  filename_tokens_output)
@@ -444,7 +444,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
 
 
 def mv_files(config, token_set,
-             filename_src, filename_src_stats,
+             filename_src,  filename_src_stats,
              filename_bin, filename_gcc_ast, filename_cast,
              filename_ghidra_instructions,
              filename_tokens_output):
