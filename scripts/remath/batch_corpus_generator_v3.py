@@ -11,7 +11,7 @@ import timeit
 
 import gen_c_prog_v3 as gen_c_prog
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
-from batch_tokenize_instructions import TokenSet, extract_tokens_from_instr_file
+from batch_tokenize_instructions_v3 import extract_tokens_and_save  # TokenSet, extract_tokens_from_instr_file
 
 
 @dataclass
@@ -275,20 +275,21 @@ def failure(location, _result, sample_prog_str, filename_src, filename_uuid_c):
     # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
 
 
-def finalize(config: Config, token_set: TokenSet):
+def finalize(config: Config):  # , token_set: TokenSet):  ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
     token_set_summary_filepath = os.path.join(config.stage_root, 'tokens_summary.txt')
     original_stdout = sys.stdout
     time_end = timeit.default_timer()
     total_time = time_end - config.time_start
     with open(token_set_summary_filepath, 'w') as fout:
         sys.stdout = fout
-        token_set.print()
+        # token_set.print()
         print(f'finalize(): total time: {config.time_start} {time_end} {total_time}')
         print(f'            iteration_times: {config.iteration_times}')
         sys.stdout = original_stdout
 
 
-def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
+def try_generate(config: Config, i: int,  # token_set: TokenSet,  ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+                 verbose=False):
 
     if verbose:
         print('try_generate(): i={i}')
@@ -409,14 +410,19 @@ def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
     if success:
         # extract bin input tokens from ghidra instructions
         filename_bin_tokens = f'{config.corpus_input_tokens_root}/{filename_bin}__tokens.txt'
-        extract_tokens_from_instr_file(token_set=token_set,
-                                       _src_filepath=filename_ghidra_instructions,
-                                       _dst_filepath=filename_bin_tokens,
-                                       execute_p=True,
-                                       verbose_p=False)
+
+        extract_tokens_and_save(_src_filepath=filename_ghidra_instructions,
+                                _dst_filepath=filename_bin_tokens)
+
+        # CTM 2022-05-10: the old method:
+        # extract_tokens_from_instr_file(token_set=token_set,
+        #                                _src_filepath=filename_ghidra_instructions,
+        #                                _dst_filepath=filename_bin_tokens,
+        #                                execute_p=True,
+        #                                verbose_p=False)
 
         # move files to respective locations:
-        mv_files(config, token_set,
+        mv_files(config,  # token_set,  ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
                  filename_src,  filename_src_stats,
                  filename_bin, filename_gcc_ast, filename_cast,
                  filename_ghidra_instructions,
@@ -439,11 +445,15 @@ def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
         with open('iteration_times.txt', 'a') as it_file:
             it_file.write(f'{time_elapsed} ')
         config.iteration_times.append(time_elapsed)
-        finalize(config, token_set)  # save current token_set before bailing
+
+        # save current token_set before bailing
+        finalize(config)  # TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+        # finalize(config, token_set)
+
         raise Exception(f"ERROR try_generate(): failed to generate a viable program after {attempt} tries.")
 
 
-def mv_files(config, token_set,
+def mv_files(config,  # token_set, ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
              filename_src,  filename_src_stats,
              filename_bin, filename_gcc_ast, filename_cast,
              filename_ghidra_instructions,
@@ -460,7 +470,8 @@ def mv_files(config, token_set,
         dest_filepath = os.path.join(dest_path, src_filename)
         result = subprocess.run(['mv', src_filename, dest_filepath], stdout=subprocess.PIPE)
         if result.returncode != 0:
-            finalize(config, token_set)
+            finalize(config)  # TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+            # finalize(config, token_set)
             raise Exception(f"ERROR mv_files(): failed mv {src_filename} --> {dest_filepath}\n"
                             f"  current directory: {os.getcwd()}")
 
@@ -492,7 +503,7 @@ def generate_corpus(start=0, num_samples=None, corpus_root=None, verbose=False):
                  config.corpus_output_tokens_root):
         Path(path).mkdir(parents=True, exist_ok=False)
 
-    token_set = TokenSet()
+    # token_set = TokenSet()  ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
 
     original_working_dir = os.getcwd()
     os.chdir(config.stage_root)
@@ -506,8 +517,10 @@ def generate_corpus(start=0, num_samples=None, corpus_root=None, verbose=False):
         raise Exception(f"ERROR: Cannot find cast_to_token_cast.py: {config.cast_to_token_cast_filepath}")
 
     for i in range(start, start + config.num_samples):
-        try_generate(config=config, i=i, token_set=token_set, verbose=verbose)
-    finalize(config, token_set)
+        try_generate(config=config, i=i,  # token_set=token_set, ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+                     verbose=verbose)
+    finalize(config)  ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+    # finalize(config, token_set)
     os.chdir(original_working_dir)
 
 
