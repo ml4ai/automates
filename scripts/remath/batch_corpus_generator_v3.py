@@ -217,11 +217,12 @@ def get_gcc_version(gcc_path):
         return 'gcc-' + version_str.split('\n')[0].split(' ')[2], 'gcc'
 
 
-def try_compile(config: Config, src_filepath: str):
+def try_compile(config: Config, src_filepath: str, verbose: bool = False):
     """
     Attempts to compile binary from source using GCC with GCC-ast-dump plugin.
     :param config:
     :param src_filepath: C program source file path
+    :param verbose:
     :return:
     """
     gcc_version, compiler_type = get_gcc_version(config.gcc)
@@ -230,14 +231,18 @@ def try_compile(config: Config, src_filepath: str):
 
     dst_filepath = os.path.splitext(src_filepath)[0] + binary_postfix
 
-    # print('try_compile() cwd:', os.getcwd())
-
     # CTM 2022-05-10: Adding -lm to link the math lib
     command_list = [config.gcc, f'-fplugin={config.gcc_plugin_filepath}',
                     '-C', '-x', 'c++', '-O0', '-lm', src_filepath, '-o', dst_filepath]
-    print(command_list)
+
+    if verbose:
+        print(f'try_compile() cwd {os.getcwd()}')
+        print(f'              command_list: {command_list}')
 
     result = subprocess.run(command_list, stdout=subprocess.PIPE)
+
+    if verbose:
+        print(f'              result={result}')
 
     return result, dst_filepath
 
@@ -246,7 +251,7 @@ def gcc_ast_to_cast(filename_base: str, verbose_p: bool = False):
     ast_filename = filename_base + '_gcc_ast.json'
     ast_json = json.load(open(ast_filename))
     if verbose_p:
-        print("Translate GCC AST into CAST:")
+        print("gcc_ast_to_cast(): Translate GCC AST into CAST...")
     cast = GCC2CAST([ast_json]).to_cast()
     cast_filename = filename_base + '--CAST.json'
     json.dump(cast.to_json_object(), open(cast_filename, "w"))
@@ -278,9 +283,8 @@ def finalize(config: Config, token_set: TokenSet):
     with open(token_set_summary_filepath, 'w') as fout:
         sys.stdout = fout
         token_set.print()
-        print(f'total time: {config.time_start} {time_end} {total_time}')
-        print('iteration_times:')
-        print(config.iteration_times)
+        print(f'finalize(): total time: {config.time_start} {time_end} {total_time}')
+        print(f'            iteration_times: {config.iteration_times}')
         sys.stdout = original_stdout
 
 
@@ -322,16 +326,20 @@ def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
         filename_base_uuid = f'{filename_base}_{temp_uuid}'
         filename_uuid_c = filename_base_uuid + '.c'
 
+        if verbose:
+            print(f'    attempt={attempt} : {filename_uuid_c}')
+
         # generate candidate source code
         sample_prog, sample_program_str = \
             gen_c_prog.generate_and_save_program(filename_src)
 
         # save sample stats
-        with open(filename_src_stats, 'w') as stats_file:
-            stats_file.write(gen_c_prog.ExprSeqSampleStats(sample_prog).to_string())
+        # TODO CTM 2022-05-10: implement new stats collection and call here...
+        # with open(filename_src_stats, 'w') as stats_file:
+        #     stats_file.write(gen_c_prog.ExprSeqSampleStats(sample_prog).to_string())
 
         # compile candidate
-        result, filename_bin = try_compile(config=config, src_filepath=filename_src)  # filepath_uuid_c)
+        result, filename_bin = try_compile(config=config, src_filepath=filename_src, verbose=verbose)  # filepath_uuid_c)
 
         if result.returncode != 0:
             failure('COMPILE', result, sample_program_str, filename_src, filename_uuid_c)
@@ -356,7 +364,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
         #     continue
 
         # gcc ast to CAST
-        filename_gcc_ast, filename_cast = gcc_ast_to_cast(filename_base)
+        filename_gcc_ast, filename_cast = gcc_ast_to_cast(filename_base, verbose_p=verbose)
 
         # run Ghidra
         filename_ghidra_instructions = filename_bin + '-instructions.txt'
@@ -414,6 +422,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
         # Update the counter file
         with open('counter.txt', 'w') as counter_file:
             counter_file.write(f'{i}, {config.num_padding}')
+
         print('Success')
 
         time_end = timeit.default_timer()
