@@ -271,18 +271,19 @@ OP_LOGICAL = \
 OP_MATH_H = \
     {'sqrt': (('ANY', 'ANY'), 'PREFIX', '#include <math.h>'),  # double sqrt(double x);
      'sin': (('ANY', 'ANY'), 'PREFIX', '#include <math.h>'),  # double sin(double x);
+     'fmin': (('ANY', 'ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type min (any_type a, any_type b);
+     'fmax': (('ANY', 'ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type max (any_type a, any_type b);
      }   # double sin(double x);
 
 # Definitions for functions from stdlib.h
 OP_STDLIB_H = \
     {'abs': (('ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type abs (any_type);
-     'fmin': (('ANY', 'ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type min (any_type a, any_type b);
-     'fmax': (('ANY', 'ANY', 'ANY'), 'PREFIX', '#include <stdlib.h>'),  # any_type max (any_type a, any_type b);
      }
 
 
+# NOTE: CTM 2022-05-10: turning off use of OP_STDLIB_H for now (need to figure out why `abs` does not show up as fn call)
 # NOTE: type inspection warns that OP_MATH_H has a different value type signature
-OP_DEFINITIONS = OP_ARITHMETIC | OP_MATH_H | OP_STDLIB_H
+OP_DEFINITIONS = OP_ARITHMETIC | OP_MATH_H  # | OP_STDLIB_H
 
 # Sequence of operators
 OPS = tuple(OP_DEFINITIONS.keys())
