@@ -298,7 +298,10 @@ def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
     num_str = f'{i}'.zfill(config.num_padding)
     filename_base = f'{config.base_name}_{num_str}'
     filename_src = filename_base + '.c'
-    filename_src_stats = filename_base + '_stats.txt'
+
+    # TODO CTM 2022-05-09: turning off _stats.txt for now
+    # filename_src_stats = filename_base + '_stats.txt'
+
     filename_bin = ''
     filename_gcc_ast = ''
     filename_cast = ''
@@ -414,7 +417,7 @@ def try_generate(config: Config, i: int, token_set: TokenSet, verbose=False):
 
         # move files to respective locations:
         mv_files(config, token_set,
-                 filename_src, filename_src_stats,
+                 filename_src,  # filename_src_stats, ## TODO CTM 2022-05-10: turning off mv of _stats file for now
                  filename_bin, filename_gcc_ast, filename_cast,
                  filename_ghidra_instructions,
                  filename_tokens_output)
@@ -445,11 +448,11 @@ def mv_files(config, token_set,
              filename_bin, filename_gcc_ast, filename_cast,
              filename_ghidra_instructions,
              filename_tokens_output):
-    filenames = (filename_src, filename_src_stats,
+    filenames = (filename_src,  # filename_src_stats,  ## TODO CTM 2022-05-10: turning off mv of _stats file for now
                  filename_bin, filename_gcc_ast, filename_cast,
                  filename_ghidra_instructions,
                  filename_tokens_output)
-    dest_paths = (config.src_root, config.src_root,
+    dest_paths = (config.src_root,  # config.src_root,  ## TODO CTM 2022-05-10: turning off mv of _stats file for now
                   config.bin_root, config.cast_root, config.cast_root,
                   config.ghidra_instructions_root,
                   config.corpus_output_tokens_root)
