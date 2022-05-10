@@ -1,8 +1,8 @@
 import networkx as nx
+import sys
 
 from functools import singledispatchmethod
 from automates.utils.misc import uuid
-#from scripts.remath.cast_to_token_cast_v3 import main
 
 from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.cast import CAST
@@ -92,21 +92,39 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
         self.global_value_map = {}
 
         # Gets reset per function
+        self.param_map_ctr = 0
+        self.param_map = {}        
+        self.visit_params = True
+
         self.var_map_ctr = 0
         self.var_map = {}
 
         self.val_map_ctr = 0
         self.val_map = {}
+
+        self.local_map = {}
 
     def reset_local_maps(self):
+        self.param_map = {}
+        self.param_map_ctr = 0
+        self.visit_params = True
+
         self.var_map_ctr = 0
         self.var_map = {}
 
         self.val_map_ctr = 0
         self.val_map = {}
+        
+        self.local_map = {}
+
+    def insert_param(self, param_name: str):
+        self.param_map[param_name] = f"_p{self.param_map_ctr}"
+        self.local_map[param_name] = self.param_map[param_name]
+        self.param_map_ctr += 1
 
     def insert_var(self, var_name: str):
-        self.var_map[var_name] = f"_var{self.var_map_ctr}"
+        self.var_map[var_name] = f"_v{self.var_map_ctr}"
+        self.local_map[var_name] = self.var_map[var_name]
         self.var_map_ctr += 1
 
     def insert_val(self, val_name: str):
@@ -133,7 +151,7 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
                     self.global_map[node_left_val.name] = f"_g{self.global_map_ctr}"
 
                     node_right = node.right
-                    self.global_value_map[node_right.number] = f"_g{self.global_map_ctr}"
+                    self.global_value_map[node_left_val.name] = node_right.number 
                     self.global_map_ctr += 1
                 
             elif isinstance(node, FunctionDef):
@@ -143,24 +161,28 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
 
     def dump_function_token_map(self):
         funcs = ["function_tokens_map"]
-        for (fn_token, func_name) in self.func_map.items():
-            funcs.append(f"{func_name}:{fn_token}")
+        for (func_name, fn_token) in self.func_map.items():
+            funcs.append(f"{fn_token}:{func_name}")
 
         return funcs
 
     def dump_global_tokens_map(self):
         globals = ["global_tokens_map"]
-        for (global_token,global_var_name) in self.global_map.items():
+        for (global_var_name,global_token) in self.global_map.items():
             global_val = self.global_value_map[global_var_name] if global_var_name in self.global_value_map.keys() else None
             if global_val is not None:
-                globals.append(f"{global_var_name}:{global_token} = {global_val}")
+                globals.append(f"{global_token}:{global_var_name} = {global_val}")
             else:
-                globals.append(f"{global_var_name}:{global_token}")
+                globals.append(f"{global_token}:{global_var_name}")
 
         return globals
 
     def dump_local_maps(self):
         # TODO: Function parameter map
+        params = ["parameter_tokens_map"]
+        for (param_name, param_token) in self.param_map.items():
+            params.append(f"{param_token}:{param_name}")
+
         vars = ["variable_tokens_map"]
         for (var_name, var_token) in self.var_map.items():
             vars.append(f"{var_token}:{var_name}")
@@ -169,7 +191,7 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
         for (val_name, val_token) in self.val_map.items():
             vals.append(f"{val_token}:{val_name}")
 
-        return (vars,vals)
+        return (params,vars,vals)
 
 
     def dump_var_map(self):
@@ -190,7 +212,6 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
 
         return vals
 
-
     def tokenize(self, file_name):
         """Visits the portion of the CAST that contains the main body of
         the program to generate a tokenized CAST string.
@@ -202,8 +223,6 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
         self.filename = f"{str(self.cast.nodes[0].name)}.c"
         self.populate_global_maps()       
 
-
-        # global_tokens = self.dump_global_tokens_map()
 
         for tok in self.dump_global_tokens_map():
             print(tok)
@@ -226,7 +245,12 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
             if isinstance(node, FunctionDef) and node.source_refs[0].source_file_name == self.filename:
                 token_string = self.visit(node)
                 print(token_string)
-                (local_vars, local_vals) = self.dump_local_maps()
+                (params, local_vars, local_vals) = self.dump_local_maps()
+
+                print()
+
+                for tok in params:
+                    print(tok)
 
                 print()
 
@@ -244,19 +268,23 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
                 print()
                 print()
 
-        assert False
 
-        variable_map = self.dump_var_map()
-        value_map = self.dump_val_map()
+        sys.exit()
+        
+        
+       # assert False
 
-        out_file = open(file_name, "w")
-        out_file.write(f"{token_string}\n")
+#        variable_map = self.dump_var_map()
+ #       value_map = self.dump_val_map()
 
-        for var in variable_map:
-            out_file.write(f"{var}\n")
+#        out_file = open(file_name, "w")
+ #       out_file.write(f"{token_string}\n")
 
-        for val in value_map:
-            out_file.write(f"{val}\n")
+#        for var in variable_map:
+ #           out_file.write(f"{var}\n")
+
+#        for val in value_map:
+#            out_file.write(f"{val}\n")
 
 
     @singledispatchmethod
@@ -354,6 +382,8 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
 
         args = " ".join(arg_nodes)
 
+        self.visit_params = False
+
         body_nodes = []
         for n in node.body:
             curr_piece = self.visit(n)
@@ -419,7 +449,7 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
         if node.name not in self.var_map:
             self.insert_var(node.name)
 
-        return self.var_map[node.name]
+        return self.local_map[node.name]
 
 
     @visit.register
@@ -430,9 +460,6 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
             self.insert_val(node.number)
 
         return self.val_map[node.number]
-        idx = self.val_map.index(node.number)
-
-        return f"val{idx}"
 
     @visit.register
     def _(self, node: Set):
@@ -480,10 +507,14 @@ class CASTToTokenCASTVisitorV3(CASTVisitor):
         if node.val.name in self.global_map:
             return f"{self.global_map[node.val.name]}"
 
-        # If it's not in the global map, then either it's been used before 
-        # or is brand new and local to the function scope
-        if node.val.name not in self.var_map:
-            self.insert_var(node.val.name)
 
-        return self.var_map[node.val.name]
+        if self.visit_params:
+            self.insert_param(node.val.name)
+        else:
+            # If it's not in the global map, then either it's been used before 
+            # or is brand new and local to the function scope
+            if node.val.name not in self.var_map:
+                self.insert_var(node.val.name)
+
+        return self.local_map[node.val.name]
 
