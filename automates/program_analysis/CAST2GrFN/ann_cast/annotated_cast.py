@@ -2,6 +2,7 @@ import uuid
 import typing
 import re
 import sys
+import difflib
 from enum import Enum
 from datetime import datetime
 from dataclasses import dataclass, field
@@ -702,7 +703,31 @@ class AnnCast:
         `src_fullid` 
         """
         self.fullid_to_grfn_id[src_fullid] = self.fullid_to_grfn_id[tgt_fullid]
-    
+
+    def equiv(self, other: AnnCast): 
+        """
+        Check if this AnnCast is equivalent to another AnnCast
+        Used in the test suite
+        """
+        # FUTURE: once the AnnCast nodes attribute stores multiple modules,
+        # we may need to check that the ordering is consistent.  Currently,
+        # CAST and AnnCast only have a single module, so this is not a concern
+        for i, node in enumerate(self.nodes):
+            if not node.equiv(other.nodes[i]):
+                # printing diff to help locating difference
+                # because we do not overwrite the __str__() methods, 
+                # this has limited usefullness, but its better than nothing
+                print(f"AnnCast equiv failed:")
+                self_lines = str(node).splitlines()
+                other_lines = str(other.nodes[i]).splitlines()
+                for i, diff in enumerate(difflib.ndiff(self_lines, other_lines)):
+                    if diff[0]==' ': 
+                        continue
+                    print(f"Line {i}: {diff}")
+
+                return False
+        
+        return True
 
 class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):
