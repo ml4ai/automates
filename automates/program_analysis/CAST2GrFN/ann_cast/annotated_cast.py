@@ -711,6 +711,14 @@ class AnnCastNode(AstNode):
         self.outgoing_vars = {}
         self.expr_str: str = ""
 
+    def to_dict(self, other):
+        return super().to_dict(self)
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastNode):
+            return False
+        return self.to_dict() == other.to_dict()
+
 class AnnCastAssignment(AnnCastNode):
     def __init__(self, left, right, source_refs ):
         super().__init__(self)
@@ -720,7 +728,16 @@ class AnnCastAssignment(AnnCastNode):
 
         self.grfn_assignment: GrfnAssignment
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["left"] = self.left.to_dict()
+        result["right"] = self.right.to_dict()
+        return result
 
+    def equiv(self, other):
+        if not isinstance(other, AnnCastAssignment):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return Assignment.__str__(self)
@@ -732,6 +749,17 @@ class AnnCastAttribute(AnnCastNode):
         self.attr = attr
         self.source_refs = source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        # TODO: check this
+        result["value"] = self.value.to_dict()
+        result["attr"] = self.attr
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastAttribute):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return Attribute.__str__(self)
@@ -744,7 +772,19 @@ class AnnCastBinaryOp(AnnCastNode):
         self.right = right
         self.source_refs = source_refs
 
-        
+    def to_dict(self):
+        result = super().to_dict()
+        #TODP: op or op.to_dict()?
+        result["op"] = self.op
+        result["left"] = self.left.to_dict()
+        result["right"] = self.right.to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastBinaryOp):
+            return False
+        return self.to_dict() == other.to_dict()
+
     def __str__(self):
         return BinaryOp.__str__(self)
 
@@ -754,6 +794,15 @@ class AnnCastBoolean(AnnCastNode):
         self.boolean = boolean
         self.source_refs = source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["boolean"] = self.boolean.to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastBoolean):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return Boolean.__str__(self)
@@ -767,7 +816,6 @@ class AnnCastCall(AnnCastNode):
 
         # the index of this Call node over all invocations of this function
         self.invocation_index: int 
-
         
         # dicts mapping a Name id to its fullid
         self.top_interface_in = {}
@@ -815,6 +863,16 @@ class AnnCastCall(AnnCastNode):
         # metadata attributes
         self.grfn_con_src_ref: GrfnContainerSrcRef
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["func"] = self.func.to_dict()
+        result["arguments"] = self.arguments
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastCall):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return Call.__str__(self)
@@ -823,12 +881,24 @@ class AnnCastCall(AnnCastNode):
 class AnnCastClassDef(AnnCastNode):
     def __init__(self, name, bases, func, fields, source_refs):
         super().__init__(self)
-        self.name = node.name
-        self.bases = node.bases
-        self.func = node.func
-        self.fields = node.fields
+        self.name = name
+        self.bases = bases
+        self.func = func
+        self.fields = fields
         self.source_refs = node.source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        #TODO: check this
+        result["name"] = self.name
+        result["bases"] = self.bases
+        result["func"] = self.func
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastClassDef):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return ClassDef.__str__(self)
@@ -840,7 +910,18 @@ class AnnCastDict(AnnCastNode):
         self.values = values
         self.source_refs = source_refs
 
-        
+    def to_dict(self):
+        result = super().to_dict()
+        #TODO: check this
+        result["keys"] = self.keys.to_dict()
+        result["values"] = self.values.to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastDict):
+            return False
+        return self.to_dict() == other.to_dict()
+
     def __str__(self):
         return Dict.__str__(self)
 
@@ -850,6 +931,15 @@ class AnnCastExpr(AnnCastNode):
         self.expr = expr
         self.source_refs = source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["expr"] = self.expr.to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastExpr):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return Expr.__str__(self)
@@ -883,7 +973,7 @@ class AnnCastFunctionDef(AnnCastNode):
         # has a return value by looking for a CAST Return node.
         # We do this during the ContainerScopePass.
         # TODO: What should be done with CAST coming from Python? 
-        # In Python, every function retruns something, 
+        # In Python, every function returns something, 
         # either None or the explicit return value
         self.has_ret_val: bool = False
         # for bot_interface
@@ -931,6 +1021,17 @@ class AnnCastFunctionDef(AnnCastNode):
         # dummy assignments to handle Python dynamic variable creation
         self.dummy_grfn_assignments = []
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["name"] = self.name.to_dict()
+        result["func_args"] = self.func_args.to_dict()
+        result["body"] = self.body.to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastFunctionDef):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return FunctionDef.__str__(self)
@@ -941,6 +1042,15 @@ class AnnCastList(AnnCastNode):
         self.values = values
         self.source_refs = source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["values"] = self.values.to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastList):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return List.__str__(self)
@@ -954,6 +1064,20 @@ class AnnCastClassDef(AnnCastNode):
         self.fields = fields
         self.source_refs = source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["name"] = self.name.to_dict()
+        #TODO: is bases a str?
+        result["bases"] = self.bases
+        result["funcs"] = self.funcs.to_dict()
+        #TODO: check this
+        result["fields"] = self.fields.to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastClassDef):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return ClassDef.__str__(self)
@@ -1012,8 +1136,19 @@ class AnnCastLoop(AnnCastNode):
         # metadata attributes
         self.grfn_con_src_ref: GrfnContainerSrcRef
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["expr"] = self.expr.to_dict()
+        result["body"] = self.body.to_dict()
+        result["con_scope"] = self.con_scope
+        result["base_func_scopestr"] = self.base_func_scopestr
+        return result
 
-        
+    def equiv(self, other):
+        if not isinstance(other, AnnCastLoop):
+            return False
+        return self.to_dict() == other.to_dict()
+
     def __str__(self):
         return Loop.__str__(self)
 
@@ -1023,6 +1158,14 @@ class AnnCastModelBreak(AnnCastNode):
         super().__init__(self)
         self.source_refs = source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastModelBreak):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return ModelBreak.__str__(self)
@@ -1032,6 +1175,14 @@ class AnnCastModelContinue(AnnCastNode):
         super().__init__(self)
         self.source_refs = node.source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastModelContinue):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return ModelContinue.__str__(self)
@@ -1087,6 +1238,20 @@ class AnnCastModelIf(AnnCastNode):
         # metadata attributes
         self.grfn_con_src_ref: GrfnContainerSrcRef
         
+    def to_dict(self):
+        result = super().to_dict()
+        result["expr"] = self.expr.to_dict()
+        result["body"] = self.body.to_dict()
+        result["orelse"] = self.orelse.to_dict()
+        result["con_scope"] = self.con_scope
+        result["base_func_scopestr"] = self.base_func_scopestr
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastModelIf):
+            return False
+        return self.to_dict() == other.to_dict()
+
     def __str__(self):
         return ModelIf.__str__(self)
 
@@ -1100,6 +1265,15 @@ class AnnCastModelReturn(AnnCastNode):
         # store GrfnAssignment for use in GrFN generation
         self.grfn_assignment: typing.Optional[GrfnAssignment] = None
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["value"] = self.value.to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastModelReturn):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return ModelReturn.__str__(self)
@@ -1120,6 +1294,19 @@ class AnnCastModule(AnnCastNode):
 
         # metadata attributes
         self.grfn_con_src_ref: GrfnContainerSrcRef
+
+    def to_dict(self):
+        result = super().to_dict()
+        result["name"] = self.name
+        result["body"] = self.body.to_dict()
+        #TODO: add the modified, accessed_before_mod, and used_vars?
+        result["con_scope"] = self.con_scope
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastModule):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return Module.__str__(self)
@@ -1139,6 +1326,18 @@ class AnnCastName(AnnCastNode):
         self.version = None
         self.grfn_id = None
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["name"] = self.name
+        result["id"] = self.id
+        result["version"] = self.version
+        result["con_scope"] = self.con_scope
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastName):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return Name.__str__(self)
@@ -1150,6 +1349,15 @@ class AnnCastNumber(AnnCastNode):
         self.number = number
         self.source_refs = source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["number"] = self.number
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastNumber):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return Number.__str__(self)
@@ -1160,6 +1368,15 @@ class AnnCastSet(AnnCastNode):
         self.values = values
         self.source_refs = source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["values"] = self.values.to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastSet):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return Set.__str__(self)
@@ -1169,6 +1386,16 @@ class AnnCastString(AnnCastNode):
         super().__init__(self)
         self.string = string
         self.source_refs = source_refs
+
+    def to_dict(self):
+        result = super().to_dict()
+        result["string"] = self.string
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastString):
+            return False
+        return self.to_dict() == other.to_dict()
 
         
     def __str__(self):
@@ -1181,7 +1408,17 @@ class AnnCastSubscript(AnnCastNode):
         self.slice = slice
         self.source_refs = source_refs
 
-        
+    def to_dict(self):
+        result = super().to_dict()
+        result["value"] = self.value.to_dict()
+        result["slice"] = self.slice.to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastSubscript):
+            return False
+        return self.to_dict() == other.to_dict()
+
     def __str__(self):
         return Subscript.__str__(self)
 
@@ -1191,6 +1428,15 @@ class AnnCastTuple(AnnCastNode):
         self.values = values
         self.source_refs = source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["values"] = self.values.to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastTuple):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return Tuple.__str__(self)
@@ -1202,6 +1448,15 @@ class AnnCastUnaryOp(AnnCastNode):
         self.value = value
         self.source_refs = source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["op"] = self.op
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastUnaryOp):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return UnaryOp.__str__(self)
@@ -1213,6 +1468,16 @@ class AnnCastVar(AnnCastNode):
         self.type = type
         self.source_refs = source_refs
 
+    def to_dict(self):
+        result = super().to_dict()
+        result["val"] = self.val.to_dict()
+        result["type"] = self.type
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastX):
+            return False
+        return self.to_dict() == other.to_dict()
         
     def __str__(self):
         return Var.__str__(self)

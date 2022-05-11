@@ -25,7 +25,7 @@ def lambda_for_decision(condition_fullid: str, decision_in: typing.Dict) -> str:
     interface_in based on condition_in
 
     The lambda has for the form:
-        lambda x_if, y_if, x_else, y_else: (x_if, y_if) if COND else (x_else, y_else)
+        lambda COND, x_if, y_if, x_else, y_else: (x_if, y_if) if COND else (x_else, y_else)
     """
     if len(decision_in) == 0:
         return f"lambda: None"
