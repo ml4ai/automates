@@ -91,7 +91,7 @@ def corpora_generator_multiprocessing():
     print('>>>>>>>>>> START corpora_generator_multiprocessing()')
 
     # lock = multiprocessing.Lock()
-    num_processors = multiprocessing.cpu_count()
+    num_processors = max(multiprocessing.cpu_count() - 5, 1)
 
     print(f'>>>>>>>>>> num_processors {num_processors}')
 
