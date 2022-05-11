@@ -1208,10 +1208,11 @@ class FunctionBody:
 
     def choose_var(self) -> Union[VariableDecl, None]:
         total = self.program_spec.globals_num + len(self.var_decls)
-        prob_global = self.program_spec.globals_num / total
-        if random.random() < prob_global:
-            # choose a global
-            return self.program_spec.choose_global()
+        if total > 0:
+            prob_global = self.program_spec.globals_num / total
+            if random.random() < prob_global:
+                # choose a global
+                return self.program_spec.choose_global()
         else:
             # choose another existing local var
             if bool(self.var_decls):
