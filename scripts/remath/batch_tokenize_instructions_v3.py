@@ -664,9 +664,9 @@ class Instruction:
     def get_info_from_hex(self, size):
         # check if floating point registers present in the operands
         hex_str = self.parsed_metadata[2][2:-1]
-        hex_str = hex_str.lstrip("0")
-        if len(hex_str) == 1:
-            hex_str = '0x' + hex_str
+        temp_str = hex_str.lstrip("0")
+        if len(temp_str) <= 2:
+            hex_str = '0x' + temp_str
             return parse_hex_value(hex_str)
         return ':interpreted_hex_float', hex_str, parse_hex_float_value(hex_str, size)
 
