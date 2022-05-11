@@ -1207,18 +1207,40 @@ class FunctionBody:
         return new_var_decl
 
     def choose_var(self) -> Union[VariableDecl, None]:
-        total = self.program_spec.globals_num + len(self.var_decls)
-        if total > 0:
+        num_var_decls = len(self.var_decls)
+        if self.program_spec.globals_num > 0 and num_var_decls == 0:
+            return self.program_spec.choose_global()
+        elif self.program_spec.globals_num == 0 and num_var_decls > 0:
+            return random.choice(self.var_decls)
+        elif self.program_spec.globals_num > 0:
+            # if get here, then both global_num and num_var_decls are both > 0...
+            total = self.program_spec.globals_num + num_var_decls
             prob_global = self.program_spec.globals_num / total
             if random.random() < prob_global:
                 # choose a global
                 return self.program_spec.choose_global()
-        else:
-            # choose another existing local var
-            if bool(self.var_decls):
-                return random.choice(self.var_decls)
             else:
-                return None
+                # choose another existing local var
+                return random.choice(self.var_decls)
+        else:
+            return None
+
+    # def choose_var(self) -> Union[VariableDecl, None]:
+    #     total = self.program_spec.globals_num + len(self.var_decls)
+    #     print(f'choose_var(): total: {total}')
+    #     if total > 0:
+    #         prob_global = self.program_spec.globals_num / total
+    #         if random.random() < prob_global:
+    #             # choose a global
+    #             return self.program_spec.choose_global()
+    #         else:
+    #             # choose another existing local var
+    #             if bool(self.var_decls):
+    #                 return random.choice(self.var_decls)
+    #             else:
+    #                 return None
+    #     else:
+    #         return None
 
     def sample_pnode_structure(self, verbose: bool = False):
 
