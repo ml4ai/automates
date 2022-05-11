@@ -482,8 +482,7 @@ def ann_cast_name_to_fullid(node):
     This should only be called after both VariableVersionPass and 
     ContainerScopePass have completed
     """
-    pieces = [node.name, str(node.id), str(node.version), con_scope_to_str(node.con_scope)]
-    return FULLID_SEP.join(pieces)
+    return build_fullid(node.name, node.id, node.version, con_scope_to_str(node.con_scope))
 
 def build_fullid(var_name: str, id: int, version: int, con_scopestr: str):
     """
@@ -743,7 +742,8 @@ class AnnCastNode(AstNode):
         self.expr_str: str = ""
 
     def to_dict(self):
-        return super().to_dict()
+        result = super().to_dict()
+        result["expr_str"] = self.expr_str
 
     def equiv(self, other):
         if not isinstance(other, AnnCastNode):

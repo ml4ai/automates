@@ -406,7 +406,8 @@ class LambdaExpressionPass:
 
     @_visit.register
     def visit_name(self, node: AnnCastName) -> str:
-        node.expr_str = node.name
+        fullid = ann_cast_name_to_fullid(node)
+        node.expr_str = lambda_var_from_fullid(fullid)
         return node.expr_str
 
     @_visit.register
