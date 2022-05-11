@@ -8,11 +8,33 @@ import subprocess
 from pathlib import Path
 from dataclasses import dataclass, field
 import timeit
+import multiprocessing
 
 import gen_c_prog_v3 as gen_c_prog
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 from batch_tokenize_instructions_v3 import extract_tokens_and_save  # TokenSet, extract_tokens_from_instr_file
 
+
+# -----------------------------------------------------------------------------
+# Multiprocessing-safe Progress Log
+# -----------------------------------------------------------------------------
+
+LOCK = multiprocessing.Lock()
+
+
+PROGRESS_LOG_FILENAME = 'log_progress.txt'
+
+
+def log_progress(log_path, instance_id):
+    LOCK.acquire()
+    with open(log_path, 'a') as file:
+        file.write(f'{instance_id}\n')
+    LOCK.release()
+
+
+# -----------------------------------------------------------------------------
+# Config
+# -----------------------------------------------------------------------------
 
 @dataclass
 class Config:
@@ -294,6 +316,8 @@ def try_generate(config: Config, i: int,  # token_set: TokenSet,  ## TODO CTM 20
     if verbose:
         print('try_generate(): i={i}')
 
+    log_progress_path = os.path.join(config.corpus_root, PROGRESS_LOG_FILENAME)
+
     time_start = timeit.default_timer()
 
     num_str = f'{i}'.zfill(config.num_padding)
@@ -431,6 +455,9 @@ def try_generate(config: Config, i: int,  # token_set: TokenSet,  ## TODO CTM 20
         # Update the counter file
         with open('counter.txt', 'w') as counter_file:
             counter_file.write(f'{i}, {config.num_padding}')
+
+        # Log progress!
+        log_progress(log_progress_path, num_str)
 
         print('Success')
 
