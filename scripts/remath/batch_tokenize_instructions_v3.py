@@ -94,6 +94,8 @@ def parse_fn_name_from_parsed_metadata(parsed_metadata: List[str]) -> Tuple[str,
         target_string = parsed_metadata[2]
         if '(' in target_string:
             fn_name = target_string.split('(')[0].split(' ')[-1]
+            if "<" in fn_name:
+                fn_name = fn_name.split("<")[0]
             return ':fn_name', fn_name
         else:
             raise Exception(f"ERROR parse_fn_name_from_parsed_metadata()\n"
@@ -395,6 +397,9 @@ class Function:
         # need a clear way to handle this: for example cdq commands sets some bits in the
         # edx register
         self.register_setter_opcodes = {'CDQ': ['EDX']}
+
+    def update_name(self, new_name):
+        self.name = new_name
 
     def add_lines(self, lines: List[str]) -> None:
         """
@@ -910,6 +915,10 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
             for fn_addr in fn_list:
                 fn = program.functions[fn_addr]
                 # do not push library functions
+                # filter some functions that have "<...>" in their signature
+                if "<" in fn.name:
+                    new_name = fn.name.split("<")[0]
+                    fn.update_name(new_name)
                 if fn.name not in program.library_functions:
                     # also if the function is tokenized already: don't tokenize again
                     if fn not in tokenized_functions:
@@ -931,7 +940,10 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
         for function in tokenized_functions:
             write_file.write(f'function_name: {function.name}\n')
             if function.name != 'main':
-                write_file.write(f'function_label: {program.function_tokens_map.get_key(function.name)}\n')
+                try:
+                    write_file.write(f'function_label: {program.function_tokens_map.get_key(function.name)}\n')
+                except:
+                    breakpoint()
 
             # token sequence and sequence address without <sep>
             write_file.write(f'token_sequence\n')
