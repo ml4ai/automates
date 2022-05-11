@@ -55,7 +55,7 @@ from automates.model_assembly.networks import (
     GenericNode
 )
 
-GENERATE_GRFN_2_2 = True
+GENERATE_GRFN_2_2 = False
 
 # flag deciding whether or not to use GE's interpretation of From Source 
 # when populating metadata information

@@ -1,0 +1,641 @@
+{
+  "mainInputFilename": "args_for_main.c",
+  "functions": [
+    {
+      "id": 4294964968,
+      "name": "func1",
+      "mangledName": "_Z5func1d",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 2,
+      "decl_col_start": 8,
+      "file": "args_for_main.c",
+      "line_start": 2,
+      "line_end": 5,
+      "parameters": [
+        {
+          "name": "x",
+          "id": 4294964969,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          },
+          "line_start": 2,
+          "col_start": 21,
+          "file": "args_for_main.c"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "name": "y",
+          "id": 4294964966,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "id": 4294964960,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 3,
+              "col_start": 12,
+              "file": "args_for_main.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964966,
+                "name": "y",
+                "line_start": 3,
+                "col_start": 12,
+                "file": "args_for_main.c"
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964969,
+                  "name": "x",
+                  "line_start": 2,
+                  "col_start": 21,
+                  "file": "args_for_main.c"
+                },
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "4000000000000000",
+                  "decimal": "2.0e+0"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 4,
+              "col_start": 16,
+              "file": "args_for_main.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964960,
+                "line_start": 4,
+                "col_start": 16,
+                "file": "args_for_main.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964966,
+                  "name": "y",
+                  "line_start": 3,
+                  "col_start": 12,
+                  "file": "args_for_main.c"
+                },
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "4000000000000000",
+                  "decimal": "2.0e+0"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 4,
+              "col_start": 16,
+              "file": "args_for_main.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964960,
+                "line_start": 4,
+                "col_start": 16,
+                "file": "args_for_main.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "real_type",
+        "size": 64
+      }
+    },
+    {
+      "id": 4294964963,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 7,
+      "decl_col_start": 5,
+      "file": "args_for_main.c",
+      "line_start": 7,
+      "line_end": 12,
+      "parameters": [
+        {
+          "name": "argc",
+          "id": 4294964965,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 7,
+          "col_start": 14,
+          "file": "args_for_main.c"
+        },
+        {
+          "name": "argv",
+          "id": 4294964964,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "pointer_type",
+              "size": 64,
+              "baseType": {
+                "type": "integer_type",
+                "size": 8,
+                "unsigned": false
+              }
+            }
+          },
+          "line_start": 7,
+          "col_start": 27,
+          "file": "args_for_main.c"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "name": "out1",
+          "id": 4294964961,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "id": 4294964958,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "call",
+              "line_start": 8,
+              "col_start": 24,
+              "file": "args_for_main.c",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964961,
+                "name": "out1",
+                "line_start": 8,
+                "col_start": 12,
+                "file": "args_for_main.c"
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294964968,
+                  "mangledName": "_Z5func1d",
+                  "name": "func1",
+                  "line_start": 2,
+                  "col_start": 8,
+                  "file": "args_for_main.c"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "4000000000000000",
+                  "decimal": "2.0e+0"
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 9,
+              "col_start": 17,
+              "file": "args_for_main.c",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964961,
+                "name": "out1",
+                "line_start": 8,
+                "col_start": 12,
+                "file": "args_for_main.c"
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294964968,
+                  "mangledName": "_Z5func1d",
+                  "name": "func1",
+                  "line_start": 2,
+                  "col_start": 8,
+                  "file": "args_for_main.c"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "4014000000000000",
+                  "decimal": "5.0e+0"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 11,
+              "col_start": 12,
+              "file": "args_for_main.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964958,
+                "line_start": 11,
+                "col_start": 12,
+                "file": "args_for_main.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 0,
+              "col_start": 0,
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964958,
+                "line_start": 11,
+                "col_start": 12,
+                "file": "args_for_main.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+  ],
+  "recordTypes": [
+  ]
+}

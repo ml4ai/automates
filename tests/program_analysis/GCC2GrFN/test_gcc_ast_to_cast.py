@@ -20,8 +20,7 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 #    - Add the gcc AST json and expected CAST json files to `TEST_DATA_DIR` using the
 #      the naming pattern described above
 
-TEST_DATA_DIR = "tests/data/program_analysis/GCC2GrFN/gcc_ast_to_cast"
-
+TEST_DATA_DIR = "tests/data/program_analysis/GCC2GrFN/gcc_to_cast_pipeline"
 
 def make_gcc_ast_json_file_path(test_name: str) -> str:
     return f"{TEST_DATA_DIR}/{test_name}_gcc_ast.json"
