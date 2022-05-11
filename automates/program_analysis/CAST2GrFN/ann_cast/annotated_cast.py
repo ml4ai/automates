@@ -1,4 +1,3 @@
-import uuid
 import typing
 import re
 import sys
@@ -6,6 +5,8 @@ import difflib
 from enum import Enum
 from datetime import datetime
 from dataclasses import dataclass, field
+
+from automates.utils.misc import uuid
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -50,7 +51,8 @@ from automates.model_assembly.structures import (
 from automates.model_assembly.networks import (
     LambdaNode,
     VariableNode,
-    GroundedFunctionNetwork
+    GroundedFunctionNetwork,
+    GenericNode
 )
 
 GENERATE_GRFN_2_2 = True
@@ -526,7 +528,8 @@ def create_grfn_literal_node(metadata: typing.List):
     Creates a GrFN `LambdaNode` with type `LITERAL` and metadata `metadata`.
     The created node has an empty lambda expression (`func_str` attribute)
     """
-    lambda_uuid = str(uuid.uuid4())
+    # lambda_uuid = str(uuid.uuid4())
+    lambda_uuid = GenericNode.create_node_id()
     # we fill out lambda expression in a later pass
     lambda_str = ""
     lambda_func = lambda: None
@@ -739,8 +742,8 @@ class AnnCastNode(AstNode):
         self.outgoing_vars = {}
         self.expr_str: str = ""
 
-    def to_dict(self, other):
-        return super().to_dict(self)
+    def to_dict(self):
+        return super().to_dict()
 
     def equiv(self, other):
         if not isinstance(other, AnnCastNode):
@@ -779,9 +782,7 @@ class AnnCastAttribute(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        # TODO: check this
-        result["value"] = self.value.to_dict()
-        result["attr"] = self.attr
+        # FUTURE: add value and attr to result
         return result
 
     def equiv(self, other):
@@ -802,8 +803,7 @@ class AnnCastBinaryOp(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        #TODP: op or op.to_dict()?
-        result["op"] = self.op
+        result["op"] = str(self.op)
         result["left"] = self.left.to_dict()
         result["right"] = self.right.to_dict()
         return result
@@ -824,7 +824,7 @@ class AnnCastBoolean(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        result["boolean"] = self.boolean.to_dict()
+        result["boolean"] = self.boolean
         return result
 
     def equiv(self, other):
@@ -894,7 +894,7 @@ class AnnCastCall(AnnCastNode):
     def to_dict(self):
         result = super().to_dict()
         result["func"] = self.func.to_dict()
-        result["arguments"] = self.arguments
+        result["arguments"] = [arg.to_dict() for arg in self.arguments]
         return result
 
     def equiv(self, other):
@@ -917,10 +917,7 @@ class AnnCastClassDef(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        #TODO: check this
-        result["name"] = self.name
-        result["bases"] = self.bases
-        result["func"] = self.func
+        # FUTURE: add attributes to result
         return result
 
     def equiv(self, other):
@@ -940,9 +937,7 @@ class AnnCastDict(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        #TODO: check this
-        result["keys"] = self.keys.to_dict()
-        result["values"] = self.values.to_dict()
+        # FUTURE: add keys and values to result
         return result
 
     def equiv(self, other):
@@ -1052,8 +1047,10 @@ class AnnCastFunctionDef(AnnCastNode):
     def to_dict(self):
         result = super().to_dict()
         result["name"] = self.name.to_dict()
-        result["func_args"] = self.func_args.to_dict()
-        result["body"] = self.body.to_dict()
+        result["func_args"] = [arg.to_dict() for arg in self.func_args]
+        result["body"] = [node.to_dict() for node in self.body]
+        result["con_scope"] = self.con_scope
+        result["has_ret_val"] = self.has_ret_val
         return result
 
     def equiv(self, other):
@@ -1072,7 +1069,8 @@ class AnnCastList(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        result["values"] = self.values.to_dict()
+        # FUTURE: add values to result
+        # result["values"] = [val.to_dict() for val in self.values]
         return result
 
     def equiv(self, other):
@@ -1094,12 +1092,7 @@ class AnnCastClassDef(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        result["name"] = self.name.to_dict()
-        #TODO: is bases a str?
-        result["bases"] = self.bases
-        result["funcs"] = self.funcs.to_dict()
-        #TODO: check this
-        result["fields"] = self.fields.to_dict()
+        # FUTURE: add attributes to result
         return result
 
     def equiv(self, other):
@@ -1167,7 +1160,7 @@ class AnnCastLoop(AnnCastNode):
     def to_dict(self):
         result = super().to_dict()
         result["expr"] = self.expr.to_dict()
-        result["body"] = self.body.to_dict()
+        result["body"] = [node.to_dict() for node in self.body]
         result["con_scope"] = self.con_scope
         result["base_func_scopestr"] = self.base_func_scopestr
         return result
@@ -1269,8 +1262,8 @@ class AnnCastModelIf(AnnCastNode):
     def to_dict(self):
         result = super().to_dict()
         result["expr"] = self.expr.to_dict()
-        result["body"] = self.body.to_dict()
-        result["orelse"] = self.orelse.to_dict()
+        result["body"] = [node.to_dict() for node in self.body]
+        result["orelse"] = [node.to_dict() for node in self.orelse]
         result["con_scope"] = self.con_scope
         result["base_func_scopestr"] = self.base_func_scopestr
         return result
@@ -1325,8 +1318,8 @@ class AnnCastModule(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        result["name"] = self.name
-        result["body"] = self.body.to_dict()
+        result["name"] = str(self.name)
+        result["body"] = [node.to_dict() for node in self.body]
         #TODO: add the modified, accessed_before_mod, and used_vars?
         result["con_scope"] = self.con_scope
         return result
@@ -1398,7 +1391,7 @@ class AnnCastSet(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        result["values"] = self.values.to_dict()
+        # FUTURE: add values to result
         return result
 
     def equiv(self, other):
@@ -1438,8 +1431,7 @@ class AnnCastSubscript(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        result["value"] = self.value.to_dict()
-        result["slice"] = self.slice.to_dict()
+        # FUTURE: add value and slice to result
         return result
 
     def equiv(self, other):
@@ -1458,7 +1450,7 @@ class AnnCastTuple(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        result["values"] = self.values.to_dict()
+        # FUTURE: add values to result
         return result
 
     def equiv(self, other):
@@ -1478,7 +1470,7 @@ class AnnCastUnaryOp(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        result["op"] = self.op
+        result["op"] = str(self.op)
         return result
 
     def equiv(self, other):
@@ -1499,11 +1491,11 @@ class AnnCastVar(AnnCastNode):
     def to_dict(self):
         result = super().to_dict()
         result["val"] = self.val.to_dict()
-        result["type"] = self.type
+        result["type"] = str(self.type)
         return result
 
     def equiv(self, other):
-        if not isinstance(other, AnnCastX):
+        if not isinstance(other, AnnCastVar):
             return False
         return self.to_dict() == other.to_dict()
         

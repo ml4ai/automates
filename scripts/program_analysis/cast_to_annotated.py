@@ -47,6 +47,10 @@ def main():
     print("\nCalling VariableVersionPass-------------------")
     VariableVersionPass(annotated_cast)
 
+    # NOTE: CASTToAGraphVisitor uses misc.uuid, so placing it here means
+    # that the generated GrFN uuids will not be consistent with GrFN uuids
+    # created during test runtime. So, do not use these GrFN jsons as expected 
+    # json for testing
     agraph = CASTToAGraphVisitor(annotated_cast)
     pdf_file_name = f"{f_name}-AnnCast.pdf"
     agraph.to_pdf(pdf_file_name)

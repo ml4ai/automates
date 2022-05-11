@@ -28,12 +28,13 @@ ANN_CAST_PASS_ORDER = [
         "ToGrfnPass"
         ]
 
-def run_all_passes(ann_cast: AnnCast):
+def run_all_ann_cast_passes(ann_cast: AnnCast, verbose=True):
     """
     Runs all passes on `ann_cast`, mutating it and populating
     pass information
     """
     for pass_name in ANN_CAST_PASS_ORDER:
-        print(f"Running AnnCast Pass: {pass_name}")
-        print(f"{'*'*20}")
+        if verbose:
+            print(f"Running AnnCast Pass: {pass_name}")
+            print(f"{'*'*20}")
         ANN_CAST_ALL_PASSES[pass_name](ann_cast)

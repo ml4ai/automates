@@ -27,7 +27,7 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 #    - Add the input CAST json and expected pickled AnnCast object to `TEST_DATA_DIR` using the
 #      the naming pattern described above
 
-TEST_DATA_DIR = "tests/data/program_analysis/CAST2GrFN/cast_to_ann_cast"
+TEST_DATA_DIR = "tests/data/program_analysis/CAST2GrFN/ann_cast_pipeline"
 
 def make_cast_json_file_path(test_name: str) -> str:
     return f"{TEST_DATA_DIR}/{test_name}--CAST.json"
@@ -45,7 +45,6 @@ def load_pickled_ann_cast_obj(path_to_pickled_obj: str) -> AnnCast:
 def run_ann_cast_pipeline(path_to_cast_json: str) -> GroundedFunctionNetwork:
     cast = load_cast_from_json(path_to_cast_json)
     # Before generating GrFN, set the seed to generate uuids consistently
-    misc.rd = random.Random()
     misc.rd.seed(0)
 
     cast_visitor = CastToAnnotatedCastVisitor(cast)
