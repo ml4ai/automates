@@ -469,10 +469,12 @@ class CASTToAGraphVisitor(CASTVisitor):
         args_node = uuid.uuid4()
         body_node = uuid.uuid4()
 
-        # TODO: remove this -> label = "Function: " + node.name
         # include the Name node's id if we have it
         if isinstance(node.name, Name):
-            label = "Function: " + node.name.name + " (id: " + str(node.name.id) +")" 
+            label = "Function: " + str(node.name.name) + " (id: " + str(node.name.id) +")"
+        # otherwise name is just str
+        else:
+            label = f"Function: {node.name}"
         self.G.add_node(node_uid, label=label)
         self.G.add_node(args_node, label="Arguments")
         self.G.add_node(body_node, label="Body")

@@ -744,6 +744,7 @@ class AnnCastNode(AstNode):
     def to_dict(self):
         result = super().to_dict()
         result["expr_str"] = self.expr_str
+        return result
 
     def equiv(self, other):
         if not isinstance(other, AnnCastNode):
