@@ -2479,8 +2479,10 @@ def generate_and_save_program(filepath: str) -> Tuple[ProgramSpec, str]:
 # Properties check
 # -----------------------------------------------------------------------------
 
+# TODO: complete implementation...
 def check_fn_calls_form_tree_rooted_in_main(prog_spec: ProgramSpec):
-    pass
+    fn_call_chains: List[Set[int]]
+    fn_call_chains_reach_main: Set[int]
 
 
 def check_properties(prog_spec: ProgramSpec):
@@ -2514,7 +2516,7 @@ def check_properties(prog_spec: ProgramSpec):
     #   then satisfied by:
     #     FunctionBody.sample_expression_trees()
     #     ExprTree.sample()
-
+    # TODO: implement this check with: check_fn_calls_form_tree_rooted_in_main()
 
     # every function argument parameter (VariableDecl) gets used in at least one ExprTree of FunctionBody
     #   criteria set by: the list of args in FunctionSpec
