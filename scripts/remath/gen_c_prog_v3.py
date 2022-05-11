@@ -673,7 +673,7 @@ class ExprTree:
         self.program_spec: ProgramSpec = program_spec     # needed to access globals, functions, primitive operators
 
         # needed to access
-        #   globals_to_be_get
+        #   globals_to_be_get  <--- NO, this will be handled in FunctionBody sampling
         #   function_spec name (if not allowing recursive calls)
         #   fns_to_call : these fns must be called at least once during generation of expression tree
         self.function_spec: FunctionSpec = function_spec
@@ -752,6 +752,7 @@ class ExprTree:
         :param index:
         :param new_op:
         :return: Set of new available (unassigned) children of new_op
+        :param verbose:
         """
         if index not in self.op_indices:
             self.pprint()
@@ -1001,8 +1002,8 @@ class ProgramSpec:
             #   This is accomplished by making sure each function will be
             #   called by an expression from some function already created
             #   (including possibly within main)
-            # By sampling this call before setting to self.functions, then call
-            #   to self.sample_user_defined_fn wil not include the new fun_name
+            # By sampling this call before setting self.functions[fun_name], then call
+            #   to self.sample_program_specific_fn will not include the new fun_name
             fn_that_calls_name = self.sample_program_specific_fn(include_main_p=True)
             if fn_that_calls_name == 'main':
                 self.function_main.fns_to_call.append(fun_name)
@@ -1190,6 +1191,7 @@ class FunctionBody:
         self.sample_expression_trees(pnode_exprs=pnode_exprs)
         for pnode_expr in pnode_exprs[1:]:
             self.ensure_expressions_affect_output(pnode_expr)
+        self.ensure_globals_to_be_get_are_get()  # TODO: CTM 2022-05-11: try without to see if check gets triggered
         self.ensure_function_args_used_at_least_once()
         for pnode_expr in pnode_exprs:
             self.ensure_expression_at_least_one_var_per_operator(pnode_expr)
@@ -1488,6 +1490,29 @@ class FunctionBody:
             target_pnode_expr.expr_tree.add_var_at(new_var_index_in_target, new_var_decl)
             # store reference in var decl VariableDecl.get
             new_var_decl.update_get(self.function_spec.name, target_pnode_expr, new_var_index_in_target)
+
+    def ensure_globals_to_be_get_are_get(self):
+        """
+        TASK: ensure that any globals_to_be_get are 'get' (used in expression trees)
+        :return:
+        """
+        if self.function_spec.globals_to_be_get and len(self.function_spec.globals_to_be_get) > 0:
+            # get path from pnode_expr to tail via visit_forward_up
+            pnode_exprs = self.collect_all_pnode_exprs(with_context_p=False)
+            for global_to_be_get in self.function_spec.globals_to_be_get:
+                global_to_be_get_decl = self.program_spec.globals[global_to_be_get]
+                # sample a pnode_expr that will use the global_to_be_set
+                target_pnode_expr = random.choice(pnode_exprs)
+                if not len(target_pnode_expr.expr_tree.unassigned_indices) > 0:
+                    # if no remaining unassigned_indices...
+                    #   introduce another binary operator and insert/swap it at some existing op
+                    #   using ExprTree.introduce_new_op_at()
+                    old_op_to_swap_index = random.choice(list(target_pnode_expr.expr_tree.op_indices))
+                    fn_binary_choice = random.choice(self.program_spec.get_fns_with_num_args(num_args=2))
+                    target_pnode_expr.expr_tree.swap_new_op_at(index=old_op_to_swap_index, new_op=fn_binary_choice)
+                index = random.choice(list(target_pnode_expr.expr_tree.unassigned_indices))
+                target_pnode_expr.expr_tree.add_var_at(index, global_to_be_get_decl)
+                global_to_be_get_decl.update_get(self.function_spec.name, target_pnode_expr, index)
 
     def ensure_function_args_used_at_least_once(self):
         """
@@ -2407,7 +2432,7 @@ def debug_test_sample_and_complete_expression_trees():
         print(f'  {i} : {var_decl}')
 
 
-def debug_test_program_spec_sample():
+def debug_test_program_spec_sample(verbose=False):
     prog = ProgramSpec(params=CONFIG_1)
     prog.sample(verbose=False)
 
@@ -2421,12 +2446,15 @@ def debug_test_program_spec_sample():
     #
     # print('=====================')
 
-    print('\n'.join(prog.to_c_string()))
+    if verbose:
+        print('\n'.join(prog.to_c_string()))
 
     # for i, (fn_name, fn_body) in enumerate(prog.function_bodies.items()):
     #     print(f'\n{i} : {fn_name}')
     #     # debug_pprint_expression_trees(fn_body)
     #     print(fn_body.to_string())
+
+    return prog
 
 
 # -----------------------------------------------------------------------------
@@ -2451,19 +2479,43 @@ def generate_and_save_program(filepath: str) -> Tuple[ProgramSpec, str]:
 # Properties check
 # -----------------------------------------------------------------------------
 
-def check_properties():
+def check_fn_calls_form_tree_rooted_in_main(prog_spec: ProgramSpec):
+    pass
+
+
+def check_properties(prog_spec: ProgramSpec):
+    violations = list()
+
     # every global is get at least once in some expression
     #   criteria set in: ProgramSpec.ensure_every_global_is_get_at_least_once()
     #   stored in: FunctionSpec.globals_to_be_get
-    #   then satisfied by:
+    #   then satisfied by: FunctionBody.ensure_globals_to_be_get_are_get()
+    for global_name in prog_spec.globals.keys():
+        found_get = False
+        for fn_name in ['main'] + list(prog_spec.functions.keys()):
+            if fn_name == 'main':
+                fb = prog_spec.function_main_body
+            else:
+                fb = prog_spec.function_bodies[fn_name]
+            pnode_exprs = fb.collect_all_pnode_exprs(with_context_p=False)
+            for pnode_expr in pnode_exprs:
+                for idx, var_decl in pnode_expr.expr_tree.map_index_to_var_assignments.items():
+                    if var_decl.name == global_name:
+                        found_get = True
+        if found_get is False:
+            violations.append(f'ensure_globals_to_be_get_are_get: missing get of global {global_name}')
+
     # some globals have chance of being set
     #   criteria set in: ProgramSpec.
     #   stored in: FunctionSpec.globals_to_be_set
+
     # every introduced fn is called by another fn that leads to main
     #   criteria set in: ProgramSpec.sample_function_signatures(), which sets FunctionSpec.fns_to_call
     #   then satisfied by:
     #     FunctionBody.sample_expression_trees()
     #     ExprTree.sample()
+
+
     # every function argument parameter (VariableDecl) gets used in at least one ExprTree of FunctionBody
     #   criteria set by: the list of args in FunctionSpec
     #   then satisfied by:
@@ -2473,7 +2525,8 @@ def check_properties():
     #       assigns the arg param var decls to unassigned indices (or creates one via swap_new_op_at
     # at least one var per operator in each expression
     #   satisfied by FunctionBody.ensure_expression_at_least_one_var_per_operator()
-    pass
+
+    return violations
 
 
 # -----------------------------------------------------------------------------
@@ -2481,8 +2534,8 @@ def check_properties():
 # -----------------------------------------------------------------------------
 
 def main():
-    prog = ProgramSpec(params=CONFIG_1)
-    prog.sample()
+    # prog = ProgramSpec(params=CONFIG_1)
+    # prog.sample()
 
     # prog.pprint()
     #
@@ -2553,7 +2606,16 @@ def main():
     # debug_ensure_expression_at_least_one_var_per_operator()
     # debug_test_sample_expression_trees()
     # debug_test_sample_and_complete_expression_trees()
-    debug_test_program_spec_sample()
+    prog = debug_test_program_spec_sample()
+
+    violations = check_properties(prog)
+
+    if len(violations) > 0:
+        print('\n'.join(prog.to_c_string()))
+        print('\nViolations:')
+        for violation in violations:
+            print(violation)
+        raise Exception('check_properties(): Violation(s) Found')
 
 
 # -----------------------------------------------------------------------------
@@ -2561,5 +2623,7 @@ def main():
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    main()
+    for i in range(1000):
+        print(f'{i}')
+        main()
 
