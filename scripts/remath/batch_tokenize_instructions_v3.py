@@ -398,9 +398,6 @@ class Function:
         # edx register
         self.register_setter_opcodes = {'CDQ': ['EDX']}
 
-    def update_name(self, new_name):
-        self.name = new_name
-
     def add_lines(self, lines: List[str]) -> None:
         """
         add raw lines for the given function
@@ -899,6 +896,7 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
 
     program = process_file(_src_filepath)
     main_fn = program.get_function_by_name('main')
+    program.function_tokens_map.add_token('main')
     program.stack.push(main_fn)
     # keep track of functions that are tokenized
     # to write them to the file
@@ -906,20 +904,21 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
     while not program.stack.is_empty():
         function = program.stack.pop()
         if function not in tokenized_functions:
-            tokenized_functions.append(function)
             # tokenize will tokenize the function and return list of other functions(addresses)
             # that are being called by that function
             fn_list = function.tokenize_function(program.function_tokens_map, program.jump_flags,
                                                  program.globals, program.global_tokens_map,
                                                  program.library_functions)
+            tokenized_functions.append(function)
             for fn_addr in fn_list:
                 fn = program.functions[fn_addr]
                 # do not push library functions
                 # filter some functions that have "<...>" in their signature
                 if "<" in fn.name:
-                    new_name = fn.name.split("<")[0]
-                    fn.update_name(new_name)
-                if fn.name not in program.library_functions:
+                    name = fn.name.split("<")[0]
+                else:
+                    name = fn.name
+                if name not in program.library_functions:
                     # also if the function is tokenized already: don't tokenize again
                     if fn not in tokenized_functions:
                         program.stack.push(fn)
@@ -939,12 +938,7 @@ def extract_tokens_and_save(_src_filepath: str, _dst_filepath: str) -> None:
 
         for function in tokenized_functions:
             write_file.write(f'function_name: {function.name}\n')
-            if function.name != 'main':
-                try:
-                    write_file.write(f'function_label: {program.function_tokens_map.get_key(function.name)}\n')
-                except:
-                    breakpoint()
-
+            # write_file.write(f'function_label: {program.function_tokens_map.get_key(function.name)}\n')
             # token sequence and sequence address without <sep>
             write_file.write(f'token_sequence\n')
             write_file.write(str(function.token_sequence))
