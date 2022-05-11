@@ -602,6 +602,9 @@ class AnnCast:
         # GrFN stored after ToGrfnPass
         self.grfn: typing.Optional[GroundedFunctionNetwork] = None
 
+    def get_nodes(self):
+        return self.nodes
+
     def is_var_local_to_func(self, scopestr: str, id: int):
         """
         Precondition: scopestr is the scopestr of a FunctionDef 
@@ -704,7 +707,7 @@ class AnnCast:
         """
         self.fullid_to_grfn_id[src_fullid] = self.fullid_to_grfn_id[tgt_fullid]
 
-    def equiv(self, other: AnnCast): 
+    def equiv(self, other): 
         """
         Check if this AnnCast is equivalent to another AnnCast
         Used in the test suite

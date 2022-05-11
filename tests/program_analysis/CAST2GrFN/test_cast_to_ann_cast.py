@@ -1,6 +1,6 @@
 import pytest
 import json
-import pickle
+import dill
 import random
 from pathlib import Path
 
@@ -40,7 +40,7 @@ def load_cast_from_json(path_to_cast_json: str) -> CAST:
 
 def load_pickled_ann_cast_obj(path_to_pickled_obj: str) -> AnnCast:
     with open(path_to_pickled_obj, "rb") as obj:
-        return pickle.load(obj)
+        return dill.load(obj)
 
 def run_ann_cast_pipeline(path_to_cast_json: str) -> GroundedFunctionNetwork:
     cast = load_cast_from_json(path_to_cast_json)

@@ -1,4 +1,5 @@
 import sys
+import dill
 
 from automates.program_analysis.CAST2GrFN.ann_cast.cast_to_annotated_cast import (
     CastToAnnotatedCastVisitor
@@ -66,6 +67,11 @@ def main():
 
     grfn_agraph = grfn.to_AGraph()
     grfn_agraph.draw(f"{f_name}--AC-GrFN.pdf", prog="dot")
+
+    print("\nGenerating pickled AnnCast nodes-----------------")
+    pickled_file_name = f"{f_name}--AnnCast.pickled"
+    with open(pickled_file_name,"wb") as pkfile:
+        dill.dump(annotated_cast, pkfile)
 
 
 if __name__ == "__main__":
