@@ -1525,7 +1525,8 @@ class FunctionBody:
                 print(f'    at_least_one: {at_least_one} ; candidate_indices: {candidate_indices}')
             if at_least_one is False and len(candidate_indices) > 0:
                 idx_for_var = random.choice(candidate_indices)
-                if random.random() < self.program_spec.params.create_new_var_prob:
+                if self.program_spec.globals_num + len(self.var_decls) == 0 \
+                        or random.random() < self.program_spec.params.create_new_var_prob:
                     # create a new VariableDecl
                     new_var_name = self.var_gen_other.get_name()
                     new_var_decl = self.create_and_add_new_var(new_var_name=new_var_name, can_set_literal=True)
