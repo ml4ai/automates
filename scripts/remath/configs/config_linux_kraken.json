@@ -1,4 +1,5 @@
 {
+  "log_progress_root": "/home/claytonm/repository/automates/scripts/remath",
   "corpus_root": "/home/claytonm/repository/automates/scripts/remath/corpus",
   "num_samples": 4,
   "num_padding": 7,

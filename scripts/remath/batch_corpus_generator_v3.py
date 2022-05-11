@@ -38,6 +38,7 @@ def log_progress(log_path, instance_id):
 
 @dataclass
 class Config:
+    log_progress_root: str = ''
     corpus_root: str = ''
     num_samples: int = 1
     num_padding: int = 7
@@ -81,6 +82,7 @@ def missing_config_message():
     print("appropriate absolute path within a string:")
     print("{")
 
+    print("  \"log_progress_root\": \"<str> absolute path to the location the progress log will be stored\"")
     print("  \"corpus_root\": \"<str> absolute path to top-level root directory for the corpus\"")
     print("  \"num_samples\": \"<int> number of samples to generate\"")
     print("  \"num_padding\": \"<int> number of 0's to pad to the left of the filename sample index\"")
@@ -135,6 +137,10 @@ def load_config():
     with open('config.json', 'r') as json_file:
         cdata = json.load(json_file)
         missing_fields = list()
+        if 'log_progress_root' not in cdata:
+            missing_fields.append('log_progress_root')
+        else:
+            config.log_progress_root = cdata['log_progress_root']
         if 'corpus_root' not in cdata:
             missing_fields.append('corpus_root')
         else:
@@ -316,7 +322,7 @@ def try_generate(config: Config, i: int,  # token_set: TokenSet,  ## TODO CTM 20
     if verbose:
         print('try_generate(): i={i}')
 
-    log_progress_path = os.path.join(config.corpus_root, PROGRESS_LOG_FILENAME)
+    log_progress_path = os.path.join(config.log_progress_root, PROGRESS_LOG_FILENAME)
 
     time_start = timeit.default_timer()
 
