@@ -7,7 +7,7 @@ from pathlib import Path
 import automates.utils.misc as misc
 from automates.program_analysis.CAST2GrFN.cast import CAST
 from automates.program_analysis.CAST2GrFN.ann_cast.cast_to_annotated_cast import CastToAnnotatedCastVisitor
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import AnnCast
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import PipelineState
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_utility import run_all_ann_cast_passes
 from automates.model_assembly.networks import GroundedFunctionNetwork
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
@@ -38,7 +38,7 @@ def make_pickled_ann_cast_file_path(test_name: str) -> str:
 def load_cast_from_json(path_to_cast_json: str) -> CAST:
     return CAST.from_json_file(path_to_cast_json)
 
-def load_pickled_ann_cast_obj(path_to_pickled_obj: str) -> AnnCast:
+def load_pickled_ann_cast_obj(path_to_pickled_obj: str) -> PipelineState:
     with open(path_to_pickled_obj, "rb") as obj:
         return dill.load(obj)
 
@@ -48,15 +48,15 @@ def run_ann_cast_pipeline(path_to_cast_json: str) -> GroundedFunctionNetwork:
     misc.rd.seed(0)
 
     cast_visitor = CastToAnnotatedCastVisitor(cast)
-    ann_cast = cast_visitor.generate_annotated_cast()
+    pipeline_state = cast_visitor.generate_annotated_cast()
 
-    run_all_ann_cast_passes(ann_cast, verbose=False)
+    run_all_ann_cast_passes(pipeline_state, verbose=False)
 
-    return ann_cast
+    return pipeline_state
 
-def check_ann_cast_equality(ann_cast1, ann_cast2) -> bool:
+def check_ann_cast_equality(pipeline_state1, pipeline_state2) -> bool:
     # FUTURE: extend AnnCast nodes `equiv()` method as needed
-    return ann_cast1.equiv(ann_cast2)
+    return pipeline_state1.equiv(pipeline_state2)
 
 # We find the test names to run, by using a glob over the TEST_DATA_DIR directory
 def collect_test_names():
