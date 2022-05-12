@@ -1,36 +1,32 @@
 import typing
 from functools import singledispatchmethod
-import networkx as nx
 
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
-        ELSEBODY,
-        IFBODY,
-        GrfnAssignment,
-        create_container_metadata,
-        con_scope_to_str,
-        is_func_def_main,
-        call_container_name
+import networkx as nx
+from automates.model_assembly.metadata import LambdaType
+from automates.model_assembly.networks import (
+    GrFNLoopSubgraph,
+    GrFNSubgraph,
+    GroundedFunctionNetwork,
+    HyperEdge,
+    LambdaNode,
+    LoopTopInterface,
 )
+from automates.model_assembly.sandbox import load_lambda_function
+from automates.model_assembly.structures import ContainerIdentifier
+from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
+    ELSEBODY,
+    IFBODY,
+    GrfnAssignment,
+    call_container_name,
+    con_scope_to_str,
+    create_container_metadata,
+    is_func_def_main,
+)
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 # import uuid from misc instead of standard library to allow manipulating the uuid random seed
 from automates.utils.misc import uuid
 
-from automates.model_assembly.metadata import LambdaType
-from automates.model_assembly.structures import (
-    ContainerIdentifier,
-)
-
-from automates.model_assembly.networks import (
-    GroundedFunctionNetwork,
-    GrFNSubgraph,
-    GrFNLoopSubgraph,
-    HyperEdge,
-    LambdaNode,
-    LoopTopInterface
-)
-
-from automates.model_assembly.sandbox import load_lambda_function
 
 def grfn_subgraph(uid, namespace, scope, basename, occurences, parent, type, nodes):
     pass

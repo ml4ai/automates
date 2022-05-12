@@ -1,38 +1,36 @@
 import typing
 from functools import singledispatchmethod
 
-from automates.model_assembly.networks import load_lambda_function
 from automates.model_assembly.metadata import VariableCreationReason
-
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+from automates.model_assembly.networks import load_lambda_function
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
-        LOOPBODY,
-        ELSEBODY,
-        IFBODY,
-        LOOPEXPR,
-        IFEXPR,
-        VAR_INIT_VERSION,
-        VAR_EXIT_VERSION,
-        LOOP_VAR_UPDATED_VERSION,
-        GrfnAssignment,
-        generate_from_source_metadata,
-        add_metadata_from_name_node,
-        add_metadata_to_grfn_var,
-        create_lambda_node_metadata,
-        con_scope_to_str,
-        is_func_def_main,
-        func_def_argument_name,
-        func_def_ret_val_name,
-        specialized_global_name,
-        call_argument_name,
-        call_param_name,
-        call_container_name,
-        call_ret_val_name,
-        build_fullid,
-        create_grfn_literal_node,
-        create_grfn_var
+    ELSEBODY,
+    IFBODY,
+    IFEXPR,
+    LOOP_VAR_UPDATED_VERSION,
+    LOOPBODY,
+    LOOPEXPR,
+    VAR_EXIT_VERSION,
+    VAR_INIT_VERSION,
+    GrfnAssignment,
+    add_metadata_from_name_node,
+    add_metadata_to_grfn_var,
+    build_fullid,
+    call_argument_name,
+    call_container_name,
+    call_param_name,
+    call_ret_val_name,
+    con_scope_to_str,
+    create_grfn_literal_node,
+    create_grfn_var,
+    create_lambda_node_metadata,
+    func_def_argument_name,
+    func_def_ret_val_name,
+    generate_from_source_metadata,
+    is_func_def_main,
+    specialized_global_name,
 )
-
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 
 class VariableVersionPass:
@@ -111,7 +109,7 @@ class VariableVersionPass:
         for fullid in interface_vars.values():
             grfn_var = self.pipeline_state.get_grfn_var(fullid)
             # See comment above declaration for `FROM_SOURCE_FOR_GE` in annotated_cast.py
-            from_source = True if self.pipeline_state.self.pipeline_state.FROM_SOURCE_FOR_GE else False
+            from_source = True if self.pipeline_state.FROM_SOURCE_FOR_GE else False
             from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.BOT_IFACE_INTRO)
             add_metadata_to_grfn_var(grfn_var, from_source_mdata=from_source_mdata)
 

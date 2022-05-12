@@ -1,33 +1,30 @@
 import typing
 from functools import singledispatchmethod
 
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
-        CON_STR_SEP,
-        LOOPBODY,
-        ELSEBODY,
-        IFBODY,
-        LOOPEXPR,
-        IFEXPR,
-        VAR_INIT_VERSION,
-        VAR_EXIT_VERSION,
-        LOOP_VAR_UPDATED_VERSION,
-        generate_from_source_metadata,
-        add_metadata_from_name_node,
-        add_metadata_to_grfn_var,
-        con_scope_to_str,
-        make_cond_var_name,
-        make_loop_exit_name,
-        call_container_name,
-        ann_cast_name_to_fullid,
-        build_fullid,
-        create_grfn_var_from_name_node,
-        create_grfn_var
-)
-
-
 from automates.model_assembly.metadata import VariableCreationReason
-
+from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
+    CON_STR_SEP,
+    ELSEBODY,
+    IFBODY,
+    IFEXPR,
+    LOOP_VAR_UPDATED_VERSION,
+    LOOPBODY,
+    LOOPEXPR,
+    VAR_EXIT_VERSION,
+    VAR_INIT_VERSION,
+    add_metadata_from_name_node,
+    add_metadata_to_grfn_var,
+    ann_cast_name_to_fullid,
+    build_fullid,
+    call_container_name,
+    con_scope_to_str,
+    create_grfn_var,
+    create_grfn_var_from_name_node,
+    generate_from_source_metadata,
+    make_cond_var_name,
+    make_loop_exit_name,
+)
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 
 class GrfnVarCreationPass:

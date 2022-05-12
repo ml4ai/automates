@@ -1,12 +1,11 @@
-from functools import singledispatchmethod
-from collections import defaultdict
 import typing
+from collections import defaultdict
+from functools import singledispatchmethod
 
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
-        call_container_name
+    call_container_name,
 )
-
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 
 class IdCollapsePass:

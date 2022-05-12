@@ -31,10 +31,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 )
 
 
-from automates.model_assembly.networks import (
-    VariableNode,
-    GroundedFunctionNetwork
-)
+from automates.model_assembly.networks import GroundedFunctionNetwork, VariableNode
 
 class PipelineState:
     def __init__(self, ann_nodes: typing.List, grfn2_2: bool):

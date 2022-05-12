@@ -1,15 +1,16 @@
-from functools import singledispatchmethod
 import typing
+from functools import singledispatchmethod
 
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+from automates.model_assembly.metadata import LambdaType
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
-        GrfnAssignment,
-        create_lambda_node_metadata,
-        is_literal_assignment,
-        ann_cast_name_to_fullid,
-        create_grfn_literal_node,
-        create_grfn_assign_node
+    GrfnAssignment,
+    ann_cast_name_to_fullid,
+    create_grfn_assign_node,
+    create_grfn_literal_node,
+    create_lambda_node_metadata,
+    is_literal_assignment,
 )
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 
 class GrfnAssignmentPass:

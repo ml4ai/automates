@@ -1,30 +1,23 @@
-import typing
 import re
 import sys
-from datetime import datetime
+import typing
 from dataclasses import dataclass, field
-
-from automates.utils.misc import uuid
-
-from automates.program_analysis.CAST2GrFN.model.cast import (
-    SourceRef,
-)
-
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+from datetime import datetime
 
 from automates.model_assembly.metadata import (
-        LambdaType, CodeSpanReference, Domain, ProvenanceData, VariableFromSource, 
-        MetadataMethod, VariableCreationReason
-        )
-from automates.model_assembly.structures import (
-    VariableIdentifier,
+    CodeSpanReference,
+    Domain,
+    LambdaType,
+    MetadataMethod,
+    ProvenanceData,
+    VariableCreationReason,
+    VariableFromSource,
 )
-
-from automates.model_assembly.networks import (
-    LambdaNode,
-    VariableNode,
-    GenericNode
-)
+from automates.model_assembly.networks import GenericNode, LambdaNode, VariableNode
+from automates.model_assembly.structures import VariableIdentifier
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
+from automates.utils.misc import uuid
 
 # used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
 CON_STR_SEP = "."

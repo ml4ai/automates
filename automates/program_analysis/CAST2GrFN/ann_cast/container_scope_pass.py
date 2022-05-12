@@ -1,27 +1,26 @@
-from functools import singledispatchmethod
-from collections import defaultdict
 import copy
 import typing
+from collections import defaultdict
 from enum import Enum
+from functools import singledispatchmethod
 
-
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
-        CON_STR_SEP,
-        LOOPBODY,
-        ELSEBODY,
-        IFBODY,
-        LOOPEXPR,
-        IFEXPR,
-        MODULE_SCOPE,
-        GrfnContainerSrcRef,
-        combine_source_refs,
-        combine_grfn_con_src_refs,
-        con_scope_to_str,
-        var_dict_to_str,
-        function_container_name,
-        call_container_name
+    CON_STR_SEP,
+    ELSEBODY,
+    IFBODY,
+    IFEXPR,
+    LOOPBODY,
+    LOOPEXPR,
+    MODULE_SCOPE,
+    GrfnContainerSrcRef,
+    call_container_name,
+    combine_grfn_con_src_refs,
+    combine_source_refs,
+    con_scope_to_str,
+    function_container_name,
+    var_dict_to_str,
 )
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 
 class AssignSide(Enum):

@@ -1,15 +1,15 @@
 import typing
 from functools import singledispatchmethod
 
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
-        ELSEBODY,
-        IFBODY,
-        GrfnAssignment,
-        cast_op_to_str,
-        ann_cast_name_to_fullid,
-        lambda_var_from_fullid
+    ELSEBODY,
+    IFBODY,
+    GrfnAssignment,
+    ann_cast_name_to_fullid,
+    cast_op_to_str,
+    lambda_var_from_fullid,
 )
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 
 def lambda_for_grfn_assignment(grfn_assignment: GrfnAssignment, lambda_body: str) -> str:
