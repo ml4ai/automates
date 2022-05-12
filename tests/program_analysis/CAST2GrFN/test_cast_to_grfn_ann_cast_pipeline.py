@@ -86,7 +86,3 @@ def test_expected_grfn(test_name):
     expected_grfn = load_grfn_from_json(grfn_file_path)
 
     assert check_grfn_equality(created_grfn, expected_grfn)
-
-
-
-

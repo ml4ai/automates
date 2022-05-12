@@ -85,7 +85,3 @@ def test_expected_grfn(test_name):
     expected_ann_cast = load_pickled_ann_cast_obj(ann_cast_file_path)
 
     assert check_ann_cast_equality(created_ann_cast, expected_ann_cast)
-
-
-
-
