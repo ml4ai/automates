@@ -56,7 +56,7 @@ setup(
         "future==0.18.2",
         "matplotlib==3.3.4",
         "networkx==2.5",
-        "nltk==3.4.5",
+        "nltk==3.6.6",
         "notebook==6.4.1",
         "numpy==1.20.0",
         "pandas==1.2.2",
