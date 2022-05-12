@@ -123,7 +123,7 @@ class GrfnVarCreationPass:
         # alias `VAR_EXIT_VERSION` variables in call_con_scopestr
         # to the highest version occuring the func body
         exit_version = VAR_EXIT_VERSION
-        for id, var_name in node.modified_globals.items():
+        for id, var_name in node.bot_interface_vars.items():
             body_version = node.body_highest_var_vers[id]
             body_fullid = build_fullid(var_name, id, body_version, con_scopestr)
             exit_fullid = build_fullid(var_name, id, exit_version, call_con_scopestr)
@@ -184,7 +184,7 @@ class GrfnVarCreationPass:
 
         # by convention, we introduce `VAR_EXIT_VERSION` for modified variables
         # to be used as the output of the Decision node, and input to bot interface
-        for id, var_name in node.modified_vars.items():
+        for id, var_name in node.bot_interface_vars.items():
             version = VAR_EXIT_VERSION
             grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
             fullid = build_fullid(var_name, id, version, con_scopestr)
@@ -287,7 +287,8 @@ class GrfnVarCreationPass:
         elsebody_scopestr = con_scope_to_str(node.con_scope + [ELSEBODY])
         # inputs to decision node are the highest versions in if-body and else-body
         # of variables modified within if container
-        for id, var_name in node.modified_vars.items():
+        # NOTE: bot_interface_vars is the same as modified_vars
+        for id, var_name in node.bot_interface_vars.items():
             if_highest = node.ifbody_highest_var_vers[id]
             if_fullid = build_fullid(var_name, id, if_highest, ifbody_scopestr)
             else_highest = node.elsebody_highest_var_vers[id]
@@ -296,7 +297,7 @@ class GrfnVarCreationPass:
 
         # outputs to the decision node are version `VAR_EXIT_VERSION` variables in if container scope
         out_version = VAR_EXIT_VERSION
-        for id, var_name in node.modified_vars.items():
+        for id, var_name in node.bot_interface_vars.items():
             fullid = build_fullid(var_name, id, out_version, if_scopestr)
             node.decision_out[id] = fullid
         
@@ -334,8 +335,8 @@ class GrfnVarCreationPass:
             self.pipeline_state.alias_grfn_vars(expr_fullid, fullid)
 
         # create version `LOOP_VAR_UPDATED_VERSION`  and `VAR_EXIT_VERSION` 
-        # for modified variables
-        for id, var_name in node.modified_vars.items():
+        # for modified variables (which are the same as bot interface_vars)
+        for id, var_name in node.bot_interface_vars.items():
             for version in [LOOP_VAR_UPDATED_VERSION, VAR_EXIT_VERSION]:
                 grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
                 fullid = build_fullid(var_name, id, version, con_scopestr)
@@ -368,7 +369,7 @@ class GrfnVarCreationPass:
             body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
             self.pipeline_state.alias_grfn_vars(body_fullid, expr_fullid)
 
-            if id in node.modified_vars:
+            if id in node.bot_interface_vars:
                 exit_scopestr = con_scopestr
                 exit_fullid = build_fullid(var_name, id, exit_version, exit_scopestr)
                 self.pipeline_state.alias_grfn_vars(exit_fullid, expr_fullid)
@@ -385,7 +386,8 @@ class GrfnVarCreationPass:
         # alias `LOOP_VAR_UPDATED_VERSION` modified variables 
         # to the highest version occuring the loop body
         updated_version = LOOP_VAR_UPDATED_VERSION
-        for id, var_name in node.modified_vars.items():
+        # NOTE: bot_interface_vars is the same as modified_vars
+        for id, var_name in node.bot_interface_vars.items():
             body_version = node.body_highest_var_vers[id]
             body_scopestr = con_scopestr + CON_STR_SEP + LOOPBODY
             body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
