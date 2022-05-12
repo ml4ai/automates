@@ -1,50 +1,20 @@
 import typing
 import re
 import sys
-import difflib
-from enum import Enum
 from datetime import datetime
 from dataclasses import dataclass, field
 
 from automates.utils.misc import uuid
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
-    AstNode,
-    Assignment,
-    Attribute,
-    BinaryOp,
-    BinaryOperator,
-    Boolean,
-    Call,
-    ClassDef,
-    Dict,
-    Expr,
-    FunctionDef,
-    List,
-    Loop,
-    ModelBreak,
-    ModelContinue,
-    ModelIf,
-    ModelReturn,
-    Module,
-    Name,
-    Number,
-    Set,
-    String,
     SourceRef,
-    Subscript,
-    Tuple,
-    UnaryOp,
-    UnaryOperator,
-    VarType,
-    Var,
 )
 
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 from automates.model_assembly.metadata import (
-        LambdaType, TypedMetadata, CodeSpanReference, Domain, ProvenanceData, 
-        VariableFromSource, MetadataMethod, VariableCreationReason
+        LambdaType, CodeSpanReference, Domain, ProvenanceData, VariableFromSource, 
+        MetadataMethod, VariableCreationReason
         )
 from automates.model_assembly.structures import (
     VariableIdentifier,
@@ -53,7 +23,6 @@ from automates.model_assembly.structures import (
 from automates.model_assembly.networks import (
     LambdaNode,
     VariableNode,
-    GroundedFunctionNetwork,
     GenericNode
 )
 

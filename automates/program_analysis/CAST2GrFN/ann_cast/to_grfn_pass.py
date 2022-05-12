@@ -4,56 +4,13 @@ import networkx as nx
 
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
-        CON_STR_SEP,
-        FULLID_SEP,
-        LOOPBODY,
         ELSEBODY,
         IFBODY,
-        LOOPEXPR,
-        IFEXPR,
-        MODULE_SCOPE,
-        VAR_INIT_VERSION,
-        VAR_EXIT_VERSION,
-        LOOP_VAR_UPDATED_VERSION,
-        GrfnContainerSrcRef,
         GrfnAssignment,
-        cast_op_to_str,
-        source_ref_dict,
-        combine_source_refs,
-        generate_domain_metadata,
-        generate_from_source_metadata,
-        generate_variable_node_span_metadata,
-        add_metadata_from_name_node,
-        add_metadata_to_grfn_var,
-        create_lambda_node_metadata,
         create_container_metadata,
-        combine_grfn_con_src_refs,
-        union_dicts,
         con_scope_to_str,
-        var_dict_to_str,
-        interface_to_str,
-        decision_in_to_str,
-        make_cond_var_name,
-        make_loop_exit_name,
-        is_literal_assignment,
         is_func_def_main,
-        function_container_name,
-        func_def_argument_name,
-        func_def_ret_val_name,
-        specialized_global_name,
-        call_argument_name,
-        call_param_name,
-        call_container_name,
-        call_ret_val_name,
-        ann_cast_name_to_fullid,
-        build_fullid,
-        parse_fullid,
-        lambda_var_from_fullid,
-        var_name_from_fullid,
-        create_grfn_literal_node,
-        create_grfn_assign_node,
-        create_grfn_var_from_name_node,
-        create_grfn_var
+        call_container_name
 )
 
 # import uuid from misc instead of standard library to allow manipulating the uuid random seed
@@ -61,23 +18,16 @@ from automates.utils.misc import uuid
 
 from automates.model_assembly.metadata import LambdaType
 from automates.model_assembly.structures import (
-    CondContainer,
     ContainerIdentifier,
-    GenericContainer,
-    GenericIdentifier,
-    LambdaStmt,
-    VariableIdentifier,
 )
 
 from automates.model_assembly.networks import (
-    GenericNode,
     GroundedFunctionNetwork,
     GrFNSubgraph,
     GrFNLoopSubgraph,
     HyperEdge,
     LambdaNode,
-    LoopTopInterface,
-    VariableNode
+    LoopTopInterface
 )
 
 from automates.model_assembly.sandbox import load_lambda_function

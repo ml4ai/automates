@@ -1,19 +1,12 @@
 import typing
-import re
-import sys
 import difflib
-from enum import Enum
-from datetime import datetime
-from dataclasses import dataclass, field
 
-from automates.utils.misc import uuid
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
     Assignment,
     Attribute,
     BinaryOp,
-    BinaryOperator,
     Boolean,
     Call,
     ClassDef,
@@ -31,28 +24,16 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Number,
     Set,
     String,
-    SourceRef,
     Subscript,
     Tuple,
     UnaryOp,
-    UnaryOperator,
-    VarType,
     Var,
 )
 
-from automates.model_assembly.metadata import (
-        LambdaType, TypedMetadata, CodeSpanReference, Domain, ProvenanceData, 
-        VariableFromSource, MetadataMethod, VariableCreationReason
-        )
-from automates.model_assembly.structures import (
-    VariableIdentifier,
-)
 
 from automates.model_assembly.networks import (
-    LambdaNode,
     VariableNode,
-    GroundedFunctionNetwork,
-    GenericNode
+    GroundedFunctionNetwork
 )
 
 class PipelineState:

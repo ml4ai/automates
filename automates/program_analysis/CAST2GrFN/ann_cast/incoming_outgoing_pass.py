@@ -1,5 +1,4 @@
 import typing
-from collections import defaultdict
 from functools import singledispatchmethod
 from dataclasses import dataclass
 import copy

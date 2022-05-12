@@ -1,5 +1,4 @@
 from functools import singledispatchmethod
-from automates.utils.misc import uuid
 import typing
 
 from automates.program_analysis.CAST2GrFN.cast import CAST
@@ -9,7 +8,6 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Assignment,
     Attribute,
     BinaryOp,
-    BinaryOperator,
     Boolean,
     Call,
     ClassDef,
@@ -27,12 +25,9 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Number,
     Set,
     String,
-    SourceRef,
     Subscript,
     Tuple,
     UnaryOp,
-    UnaryOperator,
-    VarType,
     Var,
 )
 
@@ -45,7 +40,6 @@ class CASTTypeError(TypeError):
     Args:
         Exception: An exception that occurred during execution.
     """
-    pass
 
 class CastToAnnotatedCastVisitor():
     '''

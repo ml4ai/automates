@@ -1,13 +1,10 @@
 from functools import singledispatchmethod
-from dataclasses import dataclass
 from collections import defaultdict
 import copy
 
 
 from typing import Dict
 
-from automates.utils.misc import uuid
-from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.visitors.annotated_cast import *
 
 def merge_variables(input_vars: Dict, updated_vars: Dict) -> Dict:
