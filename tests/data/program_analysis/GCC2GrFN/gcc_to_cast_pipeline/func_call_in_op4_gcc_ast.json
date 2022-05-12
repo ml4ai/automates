@@ -1,0 +1,1134 @@
+{
+  "mainInputFilename": "func_call_in_op4.c",
+  "functions": [
+    {
+      "id": 4294964968,
+      "name": "func",
+      "mangledName": "_Z4funci",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 1,
+      "decl_col_start": 5,
+      "file": "func_call_in_op4.c",
+      "line_start": 1,
+      "line_end": 5,
+      "parameters": [
+        {
+          "name": "x",
+          "id": 4294964969,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 1,
+          "col_start": 14,
+          "file": "func_call_in_op4.c"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "name": "y",
+          "id": 4294964966,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964956,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 2,
+              "col_start": 9,
+              "file": "func_call_in_op4.c",
+              "operator": "mult_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "y",
+                "line_start": 2,
+                "col_start": 9,
+                "file": "func_call_in_op4.c"
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964969,
+                  "name": "x",
+                  "line_start": 1,
+                  "col_start": 14,
+                  "file": "func_call_in_op4.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 4,
+              "col_start": 12,
+              "file": "func_call_in_op4.c",
+              "operator": "var_decl",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964956,
+                "line_start": 4,
+                "col_start": 12,
+                "file": "func_call_in_op4.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964966,
+                  "name": "y",
+                  "line_start": 2,
+                  "col_start": 9,
+                  "file": "func_call_in_op4.c"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 4,
+              "col_start": 12,
+              "file": "func_call_in_op4.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964956,
+                "line_start": 4,
+                "col_start": 12,
+                "file": "func_call_in_op4.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    },
+    {
+      "id": 4294964963,
+      "name": "func2",
+      "mangledName": "_Z5func2ii",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 7,
+      "decl_col_start": 5,
+      "file": "func_call_in_op4.c",
+      "line_start": 7,
+      "line_end": 10,
+      "parameters": [
+        {
+          "name": "x",
+          "id": 4294964965,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 7,
+          "col_start": 15,
+          "file": "func_call_in_op4.c"
+        },
+        {
+          "name": "y",
+          "id": 4294964964,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 7,
+          "col_start": 22,
+          "file": "func_call_in_op4.c"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "name": "z",
+          "id": 4294964961,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964954,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 8,
+              "col_start": 9,
+              "file": "func_call_in_op4.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964961,
+                "name": "z",
+                "line_start": 8,
+                "col_start": 9,
+                "file": "func_call_in_op4.c"
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964965,
+                  "name": "x",
+                  "line_start": 7,
+                  "col_start": 15,
+                  "file": "func_call_in_op4.c"
+                },
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964964,
+                  "name": "y",
+                  "line_start": 7,
+                  "col_start": 22,
+                  "file": "func_call_in_op4.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 9,
+              "col_start": 12,
+              "file": "func_call_in_op4.c",
+              "operator": "var_decl",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964954,
+                "line_start": 9,
+                "col_start": 12,
+                "file": "func_call_in_op4.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964961,
+                  "name": "z",
+                  "line_start": 8,
+                  "col_start": 9,
+                  "file": "func_call_in_op4.c"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 9,
+              "col_start": 12,
+              "file": "func_call_in_op4.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964954,
+                "line_start": 9,
+                "col_start": 12,
+                "file": "func_call_in_op4.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    },
+    {
+      "id": 4294964960,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 12,
+      "decl_col_start": 5,
+      "file": "func_call_in_op4.c",
+      "line_start": 12,
+      "line_end": 15,
+      "variableDeclarations": [
+        {
+          "name": "z",
+          "id": 4294964957,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "x",
+          "id": 4294964958,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964952,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 13,
+              "col_start": 9,
+              "file": "func_call_in_op4.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964958,
+                "name": "x",
+                "line_start": 13,
+                "col_start": 9,
+                "file": "func_call_in_op4.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 3
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 14,
+              "col_start": 37,
+              "file": "func_call_in_op4.c",
+              "lhs": {
+                "ssa_id": 1,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294964968,
+                  "mangledName": "_Z4funci",
+                  "name": "func",
+                  "line_start": 1,
+                  "col_start": 5,
+                  "file": "func_call_in_op4.c"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 14,
+              "col_start": 32,
+              "file": "func_call_in_op4.c",
+              "operator": "mult_expr",
+              "lhs": {
+                "ssa_id": 2,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "operands": [
+                {
+                  "ssa_id": 1,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 14,
+              "col_start": 26,
+              "file": "func_call_in_op4.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "ssa_id": 3,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964958,
+                  "name": "x",
+                  "line_start": 13,
+                  "col_start": 9,
+                  "file": "func_call_in_op4.c"
+                },
+                {
+                  "ssa_id": 2,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 14,
+              "col_start": 26,
+              "file": "func_call_in_op4.c",
+              "lhs": {
+                "ssa_id": 4,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      },
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      },
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294964963,
+                  "mangledName": "_Z5func2ii",
+                  "name": "func2",
+                  "line_start": 7,
+                  "col_start": 5,
+                  "file": "func_call_in_op4.c"
+                }
+              },
+              "arguments": [
+                {
+                  "ssa_id": 3,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 7
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 14,
+              "col_start": 19,
+              "file": "func_call_in_op4.c",
+              "operator": "mult_expr",
+              "lhs": {
+                "ssa_id": 5,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "operands": [
+                {
+                  "ssa_id": 4,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 14,
+              "col_start": 15,
+              "file": "func_call_in_op4.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "ssa_id": 6,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964958,
+                  "name": "x",
+                  "line_start": 13,
+                  "col_start": 9,
+                  "file": "func_call_in_op4.c"
+                },
+                {
+                  "ssa_id": 5,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 14,
+              "col_start": 51,
+              "file": "func_call_in_op4.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964957,
+                "name": "z",
+                "line_start": 14,
+                "col_start": 9,
+                "file": "func_call_in_op4.c"
+              },
+              "operands": [
+                {
+                  "ssa_id": 6,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": -1
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 15,
+              "col_start": 1,
+              "file": "func_call_in_op4.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964952,
+                "line_start": 15,
+                "col_start": 1,
+                "file": "func_call_in_op4.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 15,
+              "col_start": 1,
+              "file": "func_call_in_op4.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964952,
+                "line_start": 15,
+                "col_start": 1,
+                "file": "func_call_in_op4.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+  ],
+  "recordTypes": [
+  ]
+}

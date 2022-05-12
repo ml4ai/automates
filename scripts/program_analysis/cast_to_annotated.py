@@ -1,4 +1,5 @@
 import sys
+import dill
 
 from automates.program_analysis.CAST2GrFN.ann_cast.cast_to_annotated_cast import (
     CastToAnnotatedCastVisitor
@@ -46,6 +47,10 @@ def main():
     print("\nCalling VariableVersionPass-------------------")
     VariableVersionPass(annotated_cast)
 
+    # NOTE: CASTToAGraphVisitor uses misc.uuid, so placing it here means
+    # that the generated GrFN uuids will not be consistent with GrFN uuids
+    # created during test runtime. So, do not use these GrFN jsons as expected 
+    # json for testing
     agraph = CASTToAGraphVisitor(annotated_cast)
     pdf_file_name = f"{f_name}-AnnCast.pdf"
     agraph.to_pdf(pdf_file_name)
@@ -66,6 +71,11 @@ def main():
 
     grfn_agraph = grfn.to_AGraph()
     grfn_agraph.draw(f"{f_name}--AC-GrFN.pdf", prog="dot")
+
+    print("\nGenerating pickled AnnCast nodes-----------------")
+    pickled_file_name = f"{f_name}--AnnCast.pickled"
+    with open(pickled_file_name,"wb") as pkfile:
+        dill.dump(annotated_cast, pkfile)
 
 
 if __name__ == "__main__":

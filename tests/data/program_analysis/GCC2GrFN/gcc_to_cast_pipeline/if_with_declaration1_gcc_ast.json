@@ -1,0 +1,465 @@
+{
+  "mainInputFilename": "if_with_declaration1.c",
+  "functions": [
+    {
+      "id": 4294964969,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 1,
+      "decl_col_start": 5,
+      "file": "if_with_declaration1.c",
+      "line_start": 1,
+      "line_end": 12,
+      "variableDeclarations": [
+        {
+          "name": "y",
+          "id": 4294964965,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "y",
+          "id": 4294964966,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "x",
+          "id": 4294964967,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964961,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 7,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 2,
+              "col_start": 9,
+              "file": "if_with_declaration1.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964967,
+                "name": "x",
+                "line_start": 2,
+                "col_start": 9,
+                "file": "if_with_declaration1.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            },
+            {
+              "type": "conditional",
+              "line_start": 4,
+              "col_start": 5,
+              "file": "if_with_declaration1.c",
+              "operator": "le_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964967,
+                  "name": "x",
+                  "line_start": 2,
+                  "col_start": 9,
+                  "file": "if_with_declaration1.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ],
+              "trueLabel": 3,
+              "falseLabel": 4
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 2,
+              "target": 3
+            },
+            {
+              "flags": 512,
+              "source": 2,
+              "target": 4
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 5,
+              "col_start": 13,
+              "file": "if_with_declaration1.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "y",
+                "line_start": 5,
+                "col_start": 13,
+                "file": "if_with_declaration1.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964967,
+                  "name": "x",
+                  "line_start": 2,
+                  "col_start": 9,
+                  "file": "if_with_declaration1.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 5
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 3,
+              "target": 5
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            4
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 8,
+              "col_start": 13,
+              "file": "if_with_declaration1.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964965,
+                "name": "y",
+                "line_start": 8,
+                "col_start": 13,
+                "file": "if_with_declaration1.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964967,
+                  "name": "x",
+                  "line_start": 2,
+                  "col_start": 9,
+                  "file": "if_with_declaration1.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": -1
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 4,
+              "target": 5
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            5
+          ],
+          "parents": [
+            3,
+            4
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 11,
+              "col_start": 12,
+              "file": "if_with_declaration1.c",
+              "operator": "var_decl",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964961,
+                "line_start": 11,
+                "col_start": 12,
+                "file": "if_with_declaration1.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964967,
+                  "name": "x",
+                  "line_start": 2,
+                  "col_start": 9,
+                  "file": "if_with_declaration1.c"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 5,
+              "target": 6
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 5,
+          "dominators": [
+            0,
+            2,
+            5,
+            6
+          ],
+          "parents": [
+            5
+          ],
+          "parentsNearestCommonDom": 5,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 0,
+              "col_start": 0,
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964961,
+                "line_start": 11,
+                "col_start": 12,
+                "file": "if_with_declaration1.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 6,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            6
+          ],
+          "parentsNearestCommonDom": 6,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+  ],
+  "recordTypes": [
+  ]
+}

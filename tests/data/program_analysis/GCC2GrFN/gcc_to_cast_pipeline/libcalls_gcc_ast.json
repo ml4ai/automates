@@ -1,0 +1,1296 @@
+{
+  "mainInputFilename": "libcalls.c",
+  "functions": [
+    {
+      "id": 4294957875,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 4,
+      "decl_col_start": 5,
+      "file": "libcalls.c",
+      "line_start": 4,
+      "line_end": 11,
+      "variableDeclarations": [
+        {
+          "name": "z",
+          "id": 4294957872,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "name": "x",
+          "id": 4294957873,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294957862,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 5,
+              "col_start": 9,
+              "file": "libcalls.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294957873,
+                "name": "x",
+                "line_start": 5,
+                "col_start": 9,
+                "file": "libcalls.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 64
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 8,
+              "col_start": 13,
+              "file": "libcalls.c",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294957872,
+                "name": "z",
+                "line_start": 6,
+                "col_start": 12,
+                "file": "libcalls.c"
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294957867,
+                  "mangledName": "_ZSt4sqrtIiEN9__gnu_cxx11__enable_ifIXsrSt12__is_integerIT_E7__valueEdE6__typeES3_",
+                  "name": "sqrt",
+                  "line_start": 475,
+                  "col_start": 5,
+                  "file": "/usr/lib/gcc/x86_64-pc-linux-gnu/10.3.0/include/c++/cmath"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294957873,
+                  "name": "x",
+                  "line_start": 5,
+                  "col_start": 9,
+                  "file": "libcalls.c"
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 10,
+              "col_start": 11,
+              "file": "libcalls.c",
+              "lhs": null,
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "pointer_type",
+                        "size": 64,
+                        "baseType": {
+                          "type": "integer_type",
+                          "size": 8,
+                          "unsigned": false
+                        }
+                      }
+                    ],
+                    "variableArguments": true
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "pointer_type",
+                        "size": 64,
+                        "baseType": {
+                          "type": "integer_type",
+                          "size": 8,
+                          "unsigned": false
+                        }
+                      }
+                    ],
+                    "variableArguments": true
+                  },
+                  "id": 4294966051,
+                  "mangledName": "printf",
+                  "name": "printf",
+                  "line_start": 356,
+                  "col_start": 12,
+                  "file": "/usr/include/stdio.h"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "addr_expr",
+                  "type": {
+                    "type": "pointer_type",
+                    "size": 64,
+                    "baseType": {
+                      "type": "array_type",
+                      "size": 144,
+                      "componentType": {
+                        "type": "integer_type",
+                        "size": 8,
+                        "unsigned": false
+                      },
+                      "lbound": 0,
+                      "ubound": 17
+                    }
+                  },
+                  "value": {
+                    "code": "string_cst",
+                    "type": {
+                      "type": "array_type",
+                      "size": 144,
+                      "componentType": {
+                        "type": "integer_type",
+                        "size": 8,
+                        "unsigned": false
+                      },
+                      "lbound": 0,
+                      "ubound": 17
+                    },
+                    "value": "Value of z is %f\u000a\u0000",
+                    "type": {
+                      "type": "array_type",
+                      "size": 144,
+                      "componentType": {
+                        "type": "integer_type",
+                        "size": 8,
+                        "unsigned": false
+                      },
+                      "lbound": 0,
+                      "ubound": 17
+                    }
+                  }
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294957872,
+                  "name": "z",
+                  "line_start": 6,
+                  "col_start": 12,
+                  "file": "libcalls.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 11,
+              "col_start": 1,
+              "file": "libcalls.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294957862,
+                "line_start": 11,
+                "col_start": 1,
+                "file": "libcalls.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 11,
+              "col_start": 1,
+              "file": "libcalls.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294957862,
+                "line_start": 11,
+                "col_start": 1,
+                "file": "libcalls.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    },
+    {
+      "id": 4294957867,
+      "name": "sqrt",
+      "mangledName": "_ZSt4sqrtIiEN9__gnu_cxx11__enable_ifIXsrSt12__is_integerIT_E7__valueEdE6__typeES3_",
+      "weak": true,
+      "inline": true,
+      "public": true,
+      "decl_line_start": 475,
+      "decl_col_start": 5,
+      "file": "/usr/lib/gcc/x86_64-pc-linux-gnu/10.3.0/include/c++/cmath",
+      "line_start": 0,
+      "line_end": 476,
+      "parameters": [
+        {
+          "name": "__x",
+          "id": 4294957866,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 475,
+          "col_start": 14,
+          "file": "/usr/lib/gcc/x86_64-pc-linux-gnu/10.3.0/include/c++/cmath"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "id": 4294957860,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 476,
+              "col_start": 28,
+              "file": "/usr/lib/gcc/x86_64-pc-linux-gnu/10.3.0/include/c++/cmath",
+              "operator": "float_expr",
+              "lhs": {
+                "ssa_id": 1,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294957866,
+                  "name": "__x",
+                  "line_start": 475,
+                  "col_start": 14,
+                  "file": "/usr/lib/gcc/x86_64-pc-linux-gnu/10.3.0/include/c++/cmath"
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 476,
+              "col_start": 28,
+              "file": "/usr/lib/gcc/x86_64-pc-linux-gnu/10.3.0/include/c++/cmath",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294957860,
+                "line_start": 476,
+                "col_start": 32,
+                "file": "/usr/lib/gcc/x86_64-pc-linux-gnu/10.3.0/include/c++/cmath"
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294966470,
+                  "mangledName": "sqrt",
+                  "name": "__builtin_sqrt"
+                }
+              },
+              "arguments": [
+                {
+                  "ssa_id": 1,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 476,
+              "col_start": 32,
+              "file": "/usr/lib/gcc/x86_64-pc-linux-gnu/10.3.0/include/c++/cmath",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294957860,
+                "line_start": 476,
+                "col_start": 32,
+                "file": "/usr/lib/gcc/x86_64-pc-linux-gnu/10.3.0/include/c++/cmath"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "real_type",
+        "size": 64
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+    {
+      "id": 4294958195,
+      "name": "stderr",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "pointer_type",
+        "size": 64,
+        "baseType": {
+          "type": "record_type",
+          "size": 1728,
+          "id": "0x7f4c55465150"
+        }
+      },
+      "const": false,
+      "line_start": 145,
+      "col_start": 14,
+      "file": "/usr/include/stdio.h"
+    },
+    {
+      "id": 4294958196,
+      "name": "stdout",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "pointer_type",
+        "size": 64,
+        "baseType": {
+          "type": "record_type",
+          "size": 1728,
+          "id": "0x7f4c55465150"
+        }
+      },
+      "const": false,
+      "line_start": 144,
+      "col_start": 14,
+      "file": "/usr/include/stdio.h"
+    },
+    {
+      "id": 4294958197,
+      "name": "stdin",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "pointer_type",
+        "size": 64,
+        "baseType": {
+          "type": "record_type",
+          "size": 1728,
+          "id": "0x7f4c55465150"
+        }
+      },
+      "const": false,
+      "line_start": 143,
+      "col_start": 14,
+      "file": "/usr/include/stdio.h"
+    },
+    {
+      "id": 4294960360,
+      "name": "signgam",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      },
+      "const": false,
+      "line_start": 854,
+      "col_start": 12,
+      "file": "/usr/include/math.h"
+    }
+  ],
+  "recordTypes": [
+    {
+      "id": "0x7f4c55465150",
+      "union": false,
+      "name": "_IO_FILE",
+      "size": 1728,
+      "fields": [
+        {
+          "id": 4294958250,
+          "name": "_flags",
+          "offset": 0,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 51,
+          "col_start": 7,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958249,
+          "name": "_IO_read_ptr",
+          "offset": 64,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 54,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958248,
+          "name": "_IO_read_end",
+          "offset": 128,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 55,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958247,
+          "name": "_IO_read_base",
+          "offset": 192,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 56,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958246,
+          "name": "_IO_write_base",
+          "offset": 256,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 57,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958245,
+          "name": "_IO_write_ptr",
+          "offset": 320,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 58,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958244,
+          "name": "_IO_write_end",
+          "offset": 384,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 59,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958243,
+          "name": "_IO_buf_base",
+          "offset": 448,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 60,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958242,
+          "name": "_IO_buf_end",
+          "offset": 512,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 61,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958241,
+          "name": "_IO_save_base",
+          "offset": 576,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 64,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958240,
+          "name": "_IO_backup_base",
+          "offset": 640,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 65,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958239,
+          "name": "_IO_save_end",
+          "offset": 704,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 66,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958238,
+          "name": "_markers",
+          "offset": 768,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "record_type",
+              "id": "0x7f4c554655e8"
+            }
+          },
+          "line_start": 68,
+          "col_start": 22,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958237,
+          "name": "_chain",
+          "offset": 832,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "record_type",
+              "size": 1728,
+              "id": "0x7f4c55465150"
+            }
+          },
+          "line_start": 70,
+          "col_start": 20,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958236,
+          "name": "_fileno",
+          "offset": 896,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 72,
+          "col_start": 7,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958235,
+          "name": "_flags2",
+          "offset": 928,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 73,
+          "col_start": 7,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958234,
+          "name": "_old_offset",
+          "offset": 960,
+          "size": 64,
+          "type": {
+            "type": "integer_type",
+            "size": 64,
+            "unsigned": false
+          },
+          "line_start": 74,
+          "col_start": 11,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958233,
+          "name": "_cur_column",
+          "offset": 1024,
+          "size": 16,
+          "type": {
+            "type": "integer_type",
+            "size": 16,
+            "unsigned": true
+          },
+          "line_start": 77,
+          "col_start": 18,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958232,
+          "name": "_vtable_offset",
+          "offset": 1040,
+          "size": 8,
+          "type": {
+            "type": "integer_type",
+            "size": 8,
+            "unsigned": false
+          },
+          "line_start": 78,
+          "col_start": 15,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958231,
+          "name": "_shortbuf",
+          "offset": 1048,
+          "size": 8,
+          "type": {
+            "type": "array_type",
+            "size": 8,
+            "componentType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            },
+            "lbound": 0,
+            "ubound": 0
+          },
+          "line_start": 79,
+          "col_start": 8,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958230,
+          "name": "_lock",
+          "offset": 1088,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "void_type"
+            }
+          },
+          "line_start": 81,
+          "col_start": 15,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958229,
+          "name": "_offset",
+          "offset": 1152,
+          "size": 64,
+          "type": {
+            "type": "integer_type",
+            "size": 64,
+            "unsigned": false
+          },
+          "line_start": 89,
+          "col_start": 13,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958228,
+          "name": "_codecvt",
+          "offset": 1216,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "record_type",
+              "id": "0x7f4c55465690"
+            }
+          },
+          "line_start": 91,
+          "col_start": 23,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958227,
+          "name": "_wide_data",
+          "offset": 1280,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "record_type",
+              "id": "0x7f4c55465738"
+            }
+          },
+          "line_start": 92,
+          "col_start": 25,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958226,
+          "name": "_freeres_list",
+          "offset": 1344,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "record_type",
+              "size": 1728,
+              "id": "0x7f4c55465150"
+            }
+          },
+          "line_start": 93,
+          "col_start": 20,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958225,
+          "name": "_freeres_buf",
+          "offset": 1408,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "void_type"
+            }
+          },
+          "line_start": 94,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958224,
+          "name": "__pad5",
+          "offset": 1472,
+          "size": 64,
+          "type": {
+            "type": "integer_type",
+            "size": 64,
+            "unsigned": true
+          },
+          "line_start": 95,
+          "col_start": 10,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958223,
+          "name": "_mode",
+          "offset": 1536,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 96,
+          "col_start": 7,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294958222,
+          "name": "_unused2",
+          "offset": 1568,
+          "size": 160,
+          "type": {
+            "type": "array_type",
+            "size": 160,
+            "componentType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            },
+            "lbound": 0,
+            "ubound": 19
+          },
+          "line_start": 98,
+          "col_start": 8,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        }
+      ]
+    },
+    {
+      "id": "0x7f4c554655e8",
+      "union": false,
+      "name": "_IO_marker",
+      "fields": [
+      ]
+    },
+    {
+      "id": "0x7f4c55465690",
+      "union": false,
+      "name": "_IO_codecvt",
+      "fields": [
+      ]
+    },
+    {
+      "id": "0x7f4c55465738",
+      "union": false,
+      "name": "_IO_wide_data",
+      "fields": [
+      ]
+    }
+  ]
+}

@@ -1,0 +1,886 @@
+{
+  "mainInputFilename": "cscope.c",
+  "functions": [
+    {
+      "id": 4294964967,
+      "name": "func",
+      "mangledName": "_Z4funci",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 2,
+      "decl_col_start": 5,
+      "file": "cscope.c",
+      "line_start": 2,
+      "line_end": 5,
+      "parameters": [
+        {
+          "name": "x",
+          "id": 4294964968,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 2,
+          "col_start": 14,
+          "file": "cscope.c"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "id": 4294964959,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 3,
+              "col_start": 10,
+              "file": "cscope.c",
+              "operator": "var_decl",
+              "lhs": {
+                "ssa_id": 1,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964969,
+                  "name": "g",
+                  "mangledName": "g",
+                  "line_start": 1,
+                  "col_start": 5,
+                  "file": "cscope.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 3,
+              "col_start": 10,
+              "file": "cscope.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "ssa_id": 2,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964968,
+                  "name": "x",
+                  "line_start": 2,
+                  "col_start": 14,
+                  "file": "cscope.c"
+                },
+                {
+                  "ssa_id": 1,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 3,
+              "col_start": 6,
+              "file": "cscope.c",
+              "operator": "ssa_name",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964969,
+                "name": "g",
+                "mangledName": "g",
+                "line_start": 1,
+                "col_start": 5,
+                "file": "cscope.c"
+              },
+              "operands": [
+                {
+                  "ssa_id": 2,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 4,
+              "col_start": 12,
+              "file": "cscope.c",
+              "operator": "var_decl",
+              "lhs": {
+                "ssa_id": 3,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964969,
+                  "name": "g",
+                  "mangledName": "g",
+                  "line_start": 1,
+                  "col_start": 5,
+                  "file": "cscope.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 4,
+              "col_start": 13,
+              "file": "cscope.c",
+              "operator": "mult_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964959,
+                "line_start": 4,
+                "col_start": 13,
+                "file": "cscope.c"
+              },
+              "operands": [
+                {
+                  "ssa_id": 3,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 4,
+              "col_start": 13,
+              "file": "cscope.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964959,
+                "line_start": 4,
+                "col_start": 13,
+                "file": "cscope.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    },
+    {
+      "id": 4294964965,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 6,
+      "decl_col_start": 5,
+      "file": "cscope.c",
+      "line_start": 6,
+      "line_end": 14,
+      "variableDeclarations": [
+        {
+          "name": "z",
+          "id": 4294964962,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "i",
+          "id": 4294964963,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964955,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 2,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 7,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "superloops": [
+          ],
+          "children": [
+            1
+          ]
+        },
+        {
+          "num": 1,
+          "headerBB": 3,
+          "depth": 1,
+          "numLatches": 1,
+          "latchBBs": [
+            4
+          ],
+          "numNodes": 2,
+          "loopBody": [
+            3,
+            4
+          ],
+          "immediateSuperloop": 0,
+          "superloops": [
+            0
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 7,
+              "col_start": 8,
+              "file": "cscope.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964963,
+                "name": "i",
+                "line_start": 7,
+                "col_start": 8,
+                "file": "cscope.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 1,
+          "loopHeader": true,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2,
+            4
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "conditional",
+              "line_start": 9,
+              "col_start": 13,
+              "file": "cscope.c",
+              "operator": "gt_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964963,
+                  "name": "i",
+                  "line_start": 7,
+                  "col_start": 8,
+                  "file": "cscope.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 9
+                }
+              ],
+              "trueLabel": 5,
+              "falseLabel": 4
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 3,
+              "target": 5
+            },
+            {
+              "flags": 512,
+              "source": 3,
+              "target": 4
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "loopFatherNum": 1,
+          "loopHeader": false,
+          "immediateDominatorIndex": 3,
+          "dominators": [
+            0,
+            2,
+            3,
+            4
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+            {
+              "type": "call",
+              "line_start": 10,
+              "col_start": 15,
+              "file": "cscope.c",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964962,
+                "name": "z",
+                "line_start": 8,
+                "col_start": 8,
+                "file": "cscope.c"
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294964967,
+                  "mangledName": "_Z4funci",
+                  "name": "func",
+                  "line_start": 2,
+                  "col_start": 5,
+                  "file": "cscope.c"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964963,
+                  "name": "i",
+                  "line_start": 7,
+                  "col_start": 8,
+                  "file": "cscope.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 11,
+              "col_start": 9,
+              "file": "cscope.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964963,
+                "name": "i",
+                "line_start": 7,
+                "col_start": 8,
+                "file": "cscope.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964963,
+                  "name": "i",
+                  "line_start": 7,
+                  "col_start": 8,
+                  "file": "cscope.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 3
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 4,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 3,
+          "dominators": [
+            0,
+            2,
+            3,
+            5
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 13,
+              "col_start": 11,
+              "file": "cscope.c",
+              "operator": "var_decl",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964955,
+                "line_start": 13,
+                "col_start": 11,
+                "file": "cscope.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964962,
+                  "name": "z",
+                  "line_start": 8,
+                  "col_start": 8,
+                  "file": "cscope.c"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 5,
+              "target": 6
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 5,
+          "dominators": [
+            0,
+            2,
+            3,
+            5,
+            6
+          ],
+          "parents": [
+            5
+          ],
+          "parentsNearestCommonDom": 5,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 0,
+              "col_start": 0,
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964955,
+                "line_start": 13,
+                "col_start": 11,
+                "file": "cscope.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 6,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            6
+          ],
+          "parentsNearestCommonDom": 6,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+    {
+      "id": 4294964969,
+      "name": "g",
+      "mangledName": "g",
+      "public": true,
+      "extern": false,
+      "type": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      },
+      "const": true,
+      "value": {
+        "code": "integer_cst",
+        "type": {
+          "type": "integer_type",
+          "size": 32,
+          "unsigned": false
+        },
+        "value": 0
+      },
+      "line_start": 1,
+      "col_start": 5,
+      "file": "cscope.c"
+    }
+  ],
+  "recordTypes": [
+  ]
+}

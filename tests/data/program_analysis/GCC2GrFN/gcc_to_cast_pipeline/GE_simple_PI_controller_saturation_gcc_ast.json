@@ -1,0 +1,3369 @@
+{
+  "mainInputFilename": "GE_simple_PI_controller_saturation.c",
+  "functions": [
+    {
+      "id": 4294964484,
+      "name": "PI_calc",
+      "mangledName": "_Z7PI_calcddddd",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 12,
+      "decl_col_start": 8,
+      "file": "GE_simple_PI_controller_saturation.c",
+      "line_start": 13,
+      "line_end": 19,
+      "parameters": [
+        {
+          "name": "Input_dmd",
+          "id": 4294964489,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          },
+          "line_start": 12,
+          "col_start": 23,
+          "file": "GE_simple_PI_controller_saturation.c"
+        },
+        {
+          "name": "Input_sensed",
+          "id": 4294964488,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          },
+          "line_start": 12,
+          "col_start": 41,
+          "file": "GE_simple_PI_controller_saturation.c"
+        },
+        {
+          "name": "Kp_M",
+          "id": 4294964487,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          },
+          "line_start": 12,
+          "col_start": 62,
+          "file": "GE_simple_PI_controller_saturation.c"
+        },
+        {
+          "name": "Ki_M",
+          "id": 4294964486,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          },
+          "line_start": 12,
+          "col_start": 75,
+          "file": "GE_simple_PI_controller_saturation.c"
+        },
+        {
+          "name": "timestep",
+          "id": 4294964485,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          },
+          "line_start": 12,
+          "col_start": 88,
+          "file": "GE_simple_PI_controller_saturation.c"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "name": "error",
+          "id": 4294964482,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "id": 4294964453,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 14,
+              "col_start": 10,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "minus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964482,
+                "name": "error",
+                "line_start": 14,
+                "col_start": 10,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964489,
+                  "name": "Input_dmd",
+                  "line_start": 12,
+                  "col_start": 23,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964488,
+                  "name": "Input_sensed",
+                  "line_start": 12,
+                  "col_start": 41,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 16,
+              "col_start": 49,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "mult_expr",
+              "lhs": {
+                "ssa_id": 1,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964485,
+                  "name": "timestep",
+                  "line_start": 12,
+                  "col_start": 88,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964482,
+                  "name": "error",
+                  "line_start": 14,
+                  "col_start": 10,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 16,
+              "col_start": 39,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "var_decl",
+              "lhs": {
+                "ssa_id": 2,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964490,
+                  "name": "integrator_state",
+                  "mangledName": "integrator_state",
+                  "line_start": 3,
+                  "col_start": 8,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 16,
+              "col_start": 39,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "ssa_id": 3,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "operands": [
+                {
+                  "ssa_id": 1,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                },
+                {
+                  "ssa_id": 2,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 16,
+              "col_start": 20,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "ssa_name",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964490,
+                "name": "integrator_state",
+                "mangledName": "integrator_state",
+                "line_start": 3,
+                "col_start": 8,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "ssa_id": 3,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 18,
+              "col_start": 15,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "mult_expr",
+              "lhs": {
+                "ssa_id": 4,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964482,
+                  "name": "error",
+                  "line_start": 14,
+                  "col_start": 10,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964487,
+                  "name": "Kp_M",
+                  "line_start": 12,
+                  "col_start": 62,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 18,
+              "col_start": 39,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "var_decl",
+              "lhs": {
+                "ssa_id": 5,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964490,
+                  "name": "integrator_state",
+                  "mangledName": "integrator_state",
+                  "line_start": 3,
+                  "col_start": 8,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 18,
+              "col_start": 39,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "mult_expr",
+              "lhs": {
+                "ssa_id": 6,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964486,
+                  "name": "Ki_M",
+                  "line_start": 12,
+                  "col_start": 75,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "ssa_id": 5,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 18,
+              "col_start": 40,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964453,
+                "line_start": 18,
+                "col_start": 40,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "ssa_id": 4,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                },
+                {
+                  "ssa_id": 6,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 18,
+              "col_start": 40,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964453,
+                "line_start": 18,
+                "col_start": 40,
+                "file": "GE_simple_PI_controller_saturation.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "real_type",
+        "size": 64
+      }
+    },
+    {
+      "id": 4294964479,
+      "name": "plant_model",
+      "mangledName": "_Z11plant_modeldd",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 24,
+      "decl_col_start": 8,
+      "file": "GE_simple_PI_controller_saturation.c",
+      "line_start": 25,
+      "line_end": 27,
+      "parameters": [
+        {
+          "name": "input",
+          "id": 4294964481,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          },
+          "line_start": 24,
+          "col_start": 27,
+          "file": "GE_simple_PI_controller_saturation.c"
+        },
+        {
+          "name": "gain",
+          "id": 4294964480,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          },
+          "line_start": 24,
+          "col_start": 41,
+          "file": "GE_simple_PI_controller_saturation.c"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "id": 4294964451,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 26,
+              "col_start": 16,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "mult_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964451,
+                "line_start": 26,
+                "col_start": 16,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964481,
+                  "name": "input",
+                  "line_start": 24,
+                  "col_start": 27,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964480,
+                  "name": "gain",
+                  "line_start": 24,
+                  "col_start": 41,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 26,
+              "col_start": 16,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964451,
+                "line_start": 26,
+                "col_start": 16,
+                "file": "GE_simple_PI_controller_saturation.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "real_type",
+        "size": 64
+      }
+    },
+    {
+      "id": 4294964474,
+      "name": "saturate",
+      "mangledName": "_Z8saturateddd",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 43,
+      "decl_col_start": 8,
+      "file": "GE_simple_PI_controller_saturation.c",
+      "line_start": 44,
+      "line_end": 53,
+      "parameters": [
+        {
+          "name": "input",
+          "id": 4294964477,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          },
+          "line_start": 43,
+          "col_start": 24,
+          "file": "GE_simple_PI_controller_saturation.c"
+        },
+        {
+          "name": "lower_threshold",
+          "id": 4294964476,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          },
+          "line_start": 43,
+          "col_start": 38,
+          "file": "GE_simple_PI_controller_saturation.c"
+        },
+        {
+          "name": "upper_threshold",
+          "id": 4294964475,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          },
+          "line_start": 43,
+          "col_start": 62,
+          "file": "GE_simple_PI_controller_saturation.c"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "name": "output",
+          "id": 4294964472,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "id": 4294964443,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 9,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "conditional",
+              "line_start": 46,
+              "col_start": 3,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "gt_expr",
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964477,
+                  "name": "input",
+                  "line_start": 43,
+                  "col_start": 24,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964475,
+                  "name": "upper_threshold",
+                  "line_start": 43,
+                  "col_start": 62,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ],
+              "trueLabel": 3,
+              "falseLabel": 4
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 2,
+              "target": 3
+            },
+            {
+              "flags": 512,
+              "source": 2,
+              "target": 4
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 47,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "parm_decl",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964472,
+                "name": "output",
+                "line_start": 45,
+                "col_start": 10,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964475,
+                  "name": "upper_threshold",
+                  "line_start": 43,
+                  "col_start": 62,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 7
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 3,
+              "target": 7
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            4
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "conditional",
+              "line_start": 48,
+              "col_start": 8,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "lt_expr",
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964477,
+                  "name": "input",
+                  "line_start": 43,
+                  "col_start": 24,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964476,
+                  "name": "lower_threshold",
+                  "line_start": 43,
+                  "col_start": 38,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ],
+              "trueLabel": 5,
+              "falseLabel": 6
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 4,
+              "target": 5
+            },
+            {
+              "flags": 512,
+              "source": 4,
+              "target": 6
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 4,
+          "dominators": [
+            0,
+            2,
+            4,
+            5
+          ],
+          "parents": [
+            4
+          ],
+          "parentsNearestCommonDom": 4,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 49,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "parm_decl",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964472,
+                "name": "output",
+                "line_start": 45,
+                "col_start": 10,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964476,
+                  "name": "lower_threshold",
+                  "line_start": 43,
+                  "col_start": 38,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 7
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 5,
+              "target": 7
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 4,
+          "dominators": [
+            0,
+            2,
+            4,
+            6
+          ],
+          "parents": [
+            4
+          ],
+          "parentsNearestCommonDom": 4,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 51,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "parm_decl",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964472,
+                "name": "output",
+                "line_start": 45,
+                "col_start": 10,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964477,
+                  "name": "input",
+                  "line_start": 43,
+                  "col_start": 24,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 6,
+              "target": 7
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            7
+          ],
+          "parents": [
+            3,
+            5,
+            6
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 52,
+              "col_start": 10,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "var_decl",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964443,
+                "line_start": 52,
+                "col_start": 10,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964472,
+                  "name": "output",
+                  "line_start": 45,
+                  "col_start": 10,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 7,
+              "target": 8
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 7,
+          "dominators": [
+            0,
+            2,
+            7,
+            8
+          ],
+          "parents": [
+            7
+          ],
+          "parentsNearestCommonDom": 7,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 52,
+              "col_start": 10,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964443,
+                "line_start": 52,
+                "col_start": 10,
+                "file": "GE_simple_PI_controller_saturation.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 8,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            8
+          ],
+          "parentsNearestCommonDom": 8,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "real_type",
+        "size": 64
+      }
+    },
+    {
+      "id": 4294964469,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 57,
+      "decl_col_start": 5,
+      "file": "GE_simple_PI_controller_saturation.c",
+      "line_start": 58,
+      "line_end": 99,
+      "parameters": [
+        {
+          "name": "argc",
+          "id": 4294964471,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 57,
+          "col_start": 14,
+          "file": "GE_simple_PI_controller_saturation.c"
+        },
+        {
+          "name": "argv",
+          "id": 4294964470,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "pointer_type",
+              "size": 64,
+              "baseType": {
+                "type": "integer_type",
+                "size": 8,
+                "unsigned": false
+              }
+            }
+          },
+          "line_start": 57,
+          "col_start": 27,
+          "file": "GE_simple_PI_controller_saturation.c"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "name": "i",
+          "id": 4294964456,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "upper_threshold",
+          "id": 4294964457,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "name": "lower_threshold",
+          "id": 4294964458,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "name": "plant_gain",
+          "id": 4294964459,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "name": "sensed_output",
+          "id": 4294964460,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "name": "plant_command",
+          "id": 4294964461,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "name": "desired_output",
+          "id": 4294964462,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "name": "num_steps",
+          "id": 4294964463,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "Kp_M",
+          "id": 4294964464,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "name": "Ki_M",
+          "id": 4294964465,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "name": "time_step",
+          "id": 4294964466,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "name": "t_final",
+          "id": 4294964467,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "id": 4294964439,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 2,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 7,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "superloops": [
+          ],
+          "children": [
+            1
+          ]
+        },
+        {
+          "num": 1,
+          "headerBB": 3,
+          "depth": 1,
+          "numLatches": 1,
+          "latchBBs": [
+            4
+          ],
+          "numNodes": 2,
+          "loopBody": [
+            3,
+            4
+          ],
+          "immediateSuperloop": 0,
+          "superloops": [
+            0
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 60,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "real_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964467,
+                "name": "t_final",
+                "line_start": 60,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "4059200000000000",
+                  "decimal": "1.005e+2"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 61,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "real_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964466,
+                "name": "time_step",
+                "line_start": 61,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "3f8eb851eb851eb8",
+                  "decimal": "1.5e-2"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 63,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "real_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964465,
+                "name": "Ki_M",
+                "line_start": 63,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "4034000000000000",
+                  "decimal": "2.0e+1"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 64,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "real_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964464,
+                "name": "Kp_M",
+                "line_start": 64,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "4052c00000000000",
+                  "decimal": "7.5e+1"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 66,
+              "col_start": 29,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "rdiv_expr",
+              "lhs": {
+                "ssa_id": 1,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964467,
+                  "name": "t_final",
+                  "line_start": 60,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964466,
+                  "name": "time_step",
+                  "line_start": 61,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 66,
+              "col_start": 9,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "fix_trunc_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964463,
+                "name": "num_steps",
+                "line_start": 66,
+                "col_start": 9,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "ssa_id": 1,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 68,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "real_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964462,
+                "name": "desired_output",
+                "line_start": 68,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "4024000000000000",
+                  "decimal": "1.0e+1"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 73,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "real_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964459,
+                "name": "plant_gain",
+                "line_start": 73,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "3f847ae147ae147b",
+                  "decimal": "1.0e-2"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 75,
+              "col_start": 19,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "real_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964460,
+                "name": "sensed_output",
+                "line_start": 71,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "0000000000000000",
+                  "decimal": "0.0"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 77,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "real_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964458,
+                "name": "lower_threshold",
+                "line_start": 77,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "0000000000000000",
+                  "decimal": "0.0"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 78,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "real_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964457,
+                "name": "upper_threshold",
+                "line_start": 78,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "real_cst",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "bits": "4091300000000000",
+                  "decimal": "1.1e+3"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 84,
+              "col_start": 14,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964456,
+                "name": "i",
+                "line_start": 84,
+                "col_start": 14,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 1,
+          "loopHeader": true,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2,
+            4
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "conditional",
+              "line_start": 84,
+              "col_start": 23,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "ge_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964456,
+                  "name": "i",
+                  "line_start": 84,
+                  "col_start": 14,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964463,
+                  "name": "num_steps",
+                  "line_start": 66,
+                  "col_start": 9,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ],
+              "trueLabel": 5,
+              "falseLabel": 4
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 3,
+              "target": 5
+            },
+            {
+              "flags": 512,
+              "source": 3,
+              "target": 4
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "loopFatherNum": 1,
+          "loopHeader": false,
+          "immediateDominatorIndex": 3,
+          "dominators": [
+            0,
+            2,
+            3,
+            4
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+            {
+              "type": "call",
+              "line_start": 88,
+              "col_start": 31,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "lhs": {
+                "ssa_id": 2,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294964484,
+                  "mangledName": "_Z7PI_calcddddd",
+                  "name": "PI_calc",
+                  "line_start": 12,
+                  "col_start": 8,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964462,
+                  "name": "desired_output",
+                  "line_start": 68,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964460,
+                  "name": "sensed_output",
+                  "line_start": 71,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964464,
+                  "name": "Kp_M",
+                  "line_start": 64,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964465,
+                  "name": "Ki_M",
+                  "line_start": 63,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964466,
+                  "name": "time_step",
+                  "line_start": 61,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 88,
+              "col_start": 31,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964461,
+                "name": "plant_command",
+                "line_start": 70,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294964474,
+                  "mangledName": "_Z8saturateddd",
+                  "name": "saturate",
+                  "line_start": 43,
+                  "col_start": 8,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              },
+              "arguments": [
+                {
+                  "ssa_id": 2,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964458,
+                  "name": "lower_threshold",
+                  "line_start": 77,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964457,
+                  "name": "upper_threshold",
+                  "line_start": 78,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 90,
+              "col_start": 34,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294964460,
+                "name": "sensed_output",
+                "line_start": 71,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      },
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294964479,
+                  "mangledName": "_Z11plant_modeldd",
+                  "name": "plant_model",
+                  "line_start": 24,
+                  "col_start": 8,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964461,
+                  "name": "plant_command",
+                  "line_start": 70,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964459,
+                  "name": "plant_gain",
+                  "line_start": 73,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 93,
+              "col_start": 30,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "float_expr",
+              "lhs": {
+                "ssa_id": 3,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964456,
+                  "name": "i",
+                  "line_start": 84,
+                  "col_start": 14,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 93,
+              "col_start": 13,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "mult_expr",
+              "lhs": {
+                "ssa_id": 4,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964466,
+                  "name": "time_step",
+                  "line_start": 61,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "ssa_id": 3,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 93,
+              "col_start": 13,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "lhs": null,
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "pointer_type",
+                        "size": 64,
+                        "baseType": {
+                          "type": "integer_type",
+                          "size": 8,
+                          "unsigned": false
+                        }
+                      }
+                    ],
+                    "variableArguments": true
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "pointer_type",
+                        "size": 64,
+                        "baseType": {
+                          "type": "integer_type",
+                          "size": 8,
+                          "unsigned": false
+                        }
+                      }
+                    ],
+                    "variableArguments": true
+                  },
+                  "id": 4294966051,
+                  "mangledName": "printf",
+                  "name": "printf",
+                  "line_start": 356,
+                  "col_start": 12,
+                  "file": "/usr/include/stdio.h"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "addr_expr",
+                  "type": {
+                    "type": "pointer_type",
+                    "size": 64,
+                    "baseType": {
+                      "type": "array_type",
+                      "size": 96,
+                      "componentType": {
+                        "type": "integer_type",
+                        "size": 8,
+                        "unsigned": false
+                      },
+                      "lbound": 0,
+                      "ubound": 11
+                    }
+                  },
+                  "value": {
+                    "code": "string_cst",
+                    "type": {
+                      "type": "array_type",
+                      "size": 96,
+                      "componentType": {
+                        "type": "integer_type",
+                        "size": 8,
+                        "unsigned": false
+                      },
+                      "lbound": 0,
+                      "ubound": 11
+                    },
+                    "value": "%f, %f, %f\u000a\u0000",
+                    "type": {
+                      "type": "array_type",
+                      "size": 96,
+                      "componentType": {
+                        "type": "integer_type",
+                        "size": 8,
+                        "unsigned": false
+                      },
+                      "lbound": 0,
+                      "ubound": 11
+                    }
+                  }
+                },
+                {
+                  "ssa_id": 4,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964461,
+                  "name": "plant_command",
+                  "line_start": 70,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294964460,
+                  "name": "sensed_output",
+                  "line_start": 71,
+                  "col_start": 12,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 84,
+              "col_start": 5,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964456,
+                "name": "i",
+                "line_start": 84,
+                "col_start": 14,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964456,
+                  "name": "i",
+                  "line_start": 84,
+                  "col_start": 14,
+                  "file": "GE_simple_PI_controller_saturation.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 3
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 4,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 3,
+          "dominators": [
+            0,
+            2,
+            3,
+            5
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 98,
+              "col_start": 12,
+              "file": "GE_simple_PI_controller_saturation.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964439,
+                "line_start": 98,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 5,
+              "target": 6
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 5,
+          "dominators": [
+            0,
+            2,
+            3,
+            5,
+            6
+          ],
+          "parents": [
+            5
+          ],
+          "parentsNearestCommonDom": 5,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 0,
+              "col_start": 0,
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964439,
+                "line_start": 98,
+                "col_start": 12,
+                "file": "GE_simple_PI_controller_saturation.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 6,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            6
+          ],
+          "parentsNearestCommonDom": 6,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+    {
+      "id": 4294964490,
+      "name": "integrator_state",
+      "mangledName": "integrator_state",
+      "public": true,
+      "extern": false,
+      "type": {
+        "type": "real_type",
+        "size": 64
+      },
+      "const": true,
+      "value": {
+        "code": "real_cst",
+        "type": {
+          "type": "real_type",
+          "size": 64
+        },
+        "bits": "0000000000000000",
+        "decimal": "0.0"
+      },
+      "line_start": 3,
+      "col_start": 8,
+      "file": "GE_simple_PI_controller_saturation.c"
+    },
+    {
+      "id": 4294964816,
+      "name": "stderr",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "pointer_type",
+        "size": 64,
+        "baseType": {
+          "type": "record_type",
+          "size": 1728,
+          "id": "0x7fd4f8103498"
+        }
+      },
+      "const": false,
+      "line_start": 145,
+      "col_start": 14,
+      "file": "/usr/include/stdio.h"
+    },
+    {
+      "id": 4294964817,
+      "name": "stdout",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "pointer_type",
+        "size": 64,
+        "baseType": {
+          "type": "record_type",
+          "size": 1728,
+          "id": "0x7fd4f8103498"
+        }
+      },
+      "const": false,
+      "line_start": 144,
+      "col_start": 14,
+      "file": "/usr/include/stdio.h"
+    },
+    {
+      "id": 4294964818,
+      "name": "stdin",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "pointer_type",
+        "size": 64,
+        "baseType": {
+          "type": "record_type",
+          "size": 1728,
+          "id": "0x7fd4f8103498"
+        }
+      },
+      "const": false,
+      "line_start": 143,
+      "col_start": 14,
+      "file": "/usr/include/stdio.h"
+    }
+  ],
+  "recordTypes": [
+    {
+      "id": "0x7fd4f8103498",
+      "union": false,
+      "name": "_IO_FILE",
+      "size": 1728,
+      "fields": [
+        {
+          "id": 4294964874,
+          "name": "_flags",
+          "offset": 0,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 51,
+          "col_start": 7,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964873,
+          "name": "_IO_read_ptr",
+          "offset": 64,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 54,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964872,
+          "name": "_IO_read_end",
+          "offset": 128,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 55,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964871,
+          "name": "_IO_read_base",
+          "offset": 192,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 56,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964870,
+          "name": "_IO_write_base",
+          "offset": 256,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 57,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964869,
+          "name": "_IO_write_ptr",
+          "offset": 320,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 58,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964868,
+          "name": "_IO_write_end",
+          "offset": 384,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 59,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964867,
+          "name": "_IO_buf_base",
+          "offset": 448,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 60,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964866,
+          "name": "_IO_buf_end",
+          "offset": 512,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 61,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964865,
+          "name": "_IO_save_base",
+          "offset": 576,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 64,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964864,
+          "name": "_IO_backup_base",
+          "offset": 640,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 65,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964863,
+          "name": "_IO_save_end",
+          "offset": 704,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            }
+          },
+          "line_start": 66,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964862,
+          "name": "_markers",
+          "offset": 768,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "record_type",
+              "id": "0x7fd4f8103690"
+            }
+          },
+          "line_start": 68,
+          "col_start": 22,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964861,
+          "name": "_chain",
+          "offset": 832,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "record_type",
+              "size": 1728,
+              "id": "0x7fd4f8103498"
+            }
+          },
+          "line_start": 70,
+          "col_start": 20,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964860,
+          "name": "_fileno",
+          "offset": 896,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 72,
+          "col_start": 7,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964859,
+          "name": "_flags2",
+          "offset": 928,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 73,
+          "col_start": 7,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964858,
+          "name": "_old_offset",
+          "offset": 960,
+          "size": 64,
+          "type": {
+            "type": "integer_type",
+            "size": 64,
+            "unsigned": false
+          },
+          "line_start": 74,
+          "col_start": 11,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964857,
+          "name": "_cur_column",
+          "offset": 1024,
+          "size": 16,
+          "type": {
+            "type": "integer_type",
+            "size": 16,
+            "unsigned": true
+          },
+          "line_start": 77,
+          "col_start": 18,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964856,
+          "name": "_vtable_offset",
+          "offset": 1040,
+          "size": 8,
+          "type": {
+            "type": "integer_type",
+            "size": 8,
+            "unsigned": false
+          },
+          "line_start": 78,
+          "col_start": 15,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964855,
+          "name": "_shortbuf",
+          "offset": 1048,
+          "size": 8,
+          "type": {
+            "type": "array_type",
+            "size": 8,
+            "componentType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            },
+            "lbound": 0,
+            "ubound": 0
+          },
+          "line_start": 79,
+          "col_start": 8,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964854,
+          "name": "_lock",
+          "offset": 1088,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "void_type"
+            }
+          },
+          "line_start": 81,
+          "col_start": 15,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964853,
+          "name": "_offset",
+          "offset": 1152,
+          "size": 64,
+          "type": {
+            "type": "integer_type",
+            "size": 64,
+            "unsigned": false
+          },
+          "line_start": 89,
+          "col_start": 13,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964852,
+          "name": "_codecvt",
+          "offset": 1216,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "record_type",
+              "id": "0x7fd4f8103738"
+            }
+          },
+          "line_start": 91,
+          "col_start": 23,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964851,
+          "name": "_wide_data",
+          "offset": 1280,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "record_type",
+              "id": "0x7fd4f81037e0"
+            }
+          },
+          "line_start": 92,
+          "col_start": 25,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964850,
+          "name": "_freeres_list",
+          "offset": 1344,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "record_type",
+              "size": 1728,
+              "id": "0x7fd4f8103498"
+            }
+          },
+          "line_start": 93,
+          "col_start": 20,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964849,
+          "name": "_freeres_buf",
+          "offset": 1408,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "void_type"
+            }
+          },
+          "line_start": 94,
+          "col_start": 9,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964848,
+          "name": "__pad5",
+          "offset": 1472,
+          "size": 64,
+          "type": {
+            "type": "integer_type",
+            "size": 64,
+            "unsigned": true
+          },
+          "line_start": 95,
+          "col_start": 10,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964847,
+          "name": "_mode",
+          "offset": 1536,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 96,
+          "col_start": 7,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        },
+        {
+          "id": 4294964846,
+          "name": "_unused2",
+          "offset": 1568,
+          "size": 160,
+          "type": {
+            "type": "array_type",
+            "size": 160,
+            "componentType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": false
+            },
+            "lbound": 0,
+            "ubound": 19
+          },
+          "line_start": 98,
+          "col_start": 8,
+          "file": "/usr/include/bits/types/struct_FILE.h"
+        }
+      ]
+    },
+    {
+      "id": "0x7fd4f8103690",
+      "union": false,
+      "name": "_IO_marker",
+      "fields": [
+      ]
+    },
+    {
+      "id": "0x7fd4f8103738",
+      "union": false,
+      "name": "_IO_codecvt",
+      "fields": [
+      ]
+    },
+    {
+      "id": "0x7fd4f81037e0",
+      "union": false,
+      "name": "_IO_wide_data",
+      "fields": [
+      ]
+    }
+  ]
+}

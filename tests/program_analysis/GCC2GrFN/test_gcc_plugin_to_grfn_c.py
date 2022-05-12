@@ -13,7 +13,7 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
 GCC_PLUGIN_IMAGE = "automates/program_analysis/gcc_plugin/plugin/ast_dump.so"
-TEST_DATA_DIR = "tests/data/program_analysis/GCC2GrFN/gcc_plugin_to_grfn_c"
+TEST_DATA_DIR = "tests/data/program_analysis/GCC2GrFN/legacy_gcc_to_grfn"
 
 
 def cleanup():

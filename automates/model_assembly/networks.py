@@ -822,7 +822,7 @@ class GrFNSubgraph:
             return "navyblue"
         elif type_str == "CallContainer":
             return "purple"
-        elif type_str == "Module":
+        elif type_str == "ModuleContainer":
             return "grey"
         else:
             raise TypeError(f"Unrecognized subgraph type: {type_str}")
@@ -1137,11 +1137,29 @@ class GroundedFunctionNetwork(nx.DiGraph):
         return self.__str__()
 
     def __eq__(self, other) -> bool:
+        # FUTURE: for debugging and testing purposes
+        # it might be good to convert to loop e.g.
+#         for edge in self.hyper_edges:
+#             if edge not in other.hyper_edges:
+#                 print(f"\nSelf HEs:")
+#                 for e in self.hyper_edges:
+#                     print(f"{e}")
+#                     print(f"Input uids: {[v.uid for v in e.inputs]}")
+#                     print(f"Output uids: {[v.uid for v in e.outputs]}")
+#                 print(f"\n\nOther HEs:")
+#                 for e in other.hyper_edges:
+#                     print(f"{e}")
+#                     print(f"Input uids: {[v.uid for v in e.inputs]}")
+#                     print(f"Output uids: {[v.uid for v in e.outputs]}")
+#                 return False
+# 
+#         return True
+
         return (
-            set(self.hyper_edges) == set(other.hyper_edges)
-            and set(self.subgraphs) == set(other.subgraphs)
-            and set(self.inputs) == set(other.inputs)
-            and set(self.outputs) == set(other.outputs)
+            self.hyper_edges == other.hyper_edges
+            and list(self.subgraphs) == list(other.subgraphs)
+            and self.inputs == other.inputs
+            and self.outputs == other.outputs
         )
 
     def __str__(self):

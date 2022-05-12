@@ -49,6 +49,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "antlr4-python3-runtime==4.8",
+        "dill==0.3.4",
         "Flask==1.1.1",
         "flask_codemirror==1.1",
         "flask_wtf==0.14.3",

@@ -1,8 +1,9 @@
 import typing
 from functools import singledispatchmethod
 import networkx as nx
-import uuid
 
+# import uuid from misc instead of standard library to allow manipulating the uuid random seed
+from automates.utils.misc import uuid
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 from automates.model_assembly.metadata import LambdaType
@@ -277,7 +278,7 @@ class ToGrfnPass:
         parent = subgraph
         # make a new subgraph for this If Container
         type = "CallContainer"
-        border_color = "purple"
+        border_color = GrFNSubgraph.get_border_color(type)
         metadata = create_container_metadata(node.grfn_con_src_ref)
         nodes = []
         parent_str = parent.uid if parent is not None else None
@@ -669,7 +670,7 @@ class ToGrfnPass:
     @_visit.register
     def visit_module(self, node: AnnCastModule, subgraph: GrFNSubgraph):
         type = "ModuleContainer"
-        border_color = "grey"
+        border_color = GrFNSubgraph.get_border_color(type)
         metadata = create_container_metadata(node.grfn_con_src_ref)
         nodes = []
         occs = 0

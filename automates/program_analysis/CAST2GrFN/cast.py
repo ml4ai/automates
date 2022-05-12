@@ -1,5 +1,6 @@
 import ast
 import json
+import difflib
 import typing
 import networkx as nx
 
@@ -124,8 +125,6 @@ class CAST(object):
         if len(self.nodes) != len(other.nodes):
             return False
 
-        compare_nodes = lambda n1, n2, comparator: comparator(n1, n2)
-
         for i, node in enumerate(self.nodes):
             other_node = other.nodes[i]
             if isinstance(node, Name):
@@ -133,11 +132,15 @@ class CAST(object):
             else:
                 comparator = lambda n1, n2: n1 == n2
 
-            if not compare_nodes(node, other_node, comparator):
-                print(f"**Self node **\n")
-                print(f"{node}")
-                print(f"\n**Other node**\n")
-                print(f"{other_node}")
+            if not comparator(node, other_node):
+                # printing diff to help locating difference
+                print(f"CAST __eq__ failed:")
+                self_lines = str(node).splitlines()
+                other_lines = str(other_node).splitlines()
+                for i, diff in enumerate(difflib.ndiff(self_lines, other_lines)):
+                    if diff[0]==' ': 
+                        continue
+                    print(f"Line {i}: {diff}")
                 return False
 
         return True

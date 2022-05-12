@@ -20,6 +20,7 @@ import os
 import subprocess
 import json
 import argparse
+import dill
 
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 from automates.program_analysis.CAST2GrFN.visitors.cast_to_agraph_visitor import (
@@ -30,13 +31,7 @@ from automates.utils import misc
 from automates.program_analysis.CAST2GrFN.ann_cast.cast_to_annotated_cast import (
     CastToAnnotatedCastVisitor
 )
-from automates.program_analysis.CAST2GrFN.ann_cast.id_collapse_pass import IdCollapsePass
-from automates.program_analysis.CAST2GrFN.ann_cast.container_scope_pass import ContainerScopePass
-from automates.program_analysis.CAST2GrFN.ann_cast.variable_version_pass import VariableVersionPass
-from automates.program_analysis.CAST2GrFN.ann_cast.grfn_var_creation_pass import GrfnVarCreationPass
-from automates.program_analysis.CAST2GrFN.ann_cast.grfn_assignment_pass import GrfnAssignmentPass
-from automates.program_analysis.CAST2GrFN.ann_cast.lambda_expression_pass import LambdaExpressionPass
-from automates.program_analysis.CAST2GrFN.ann_cast.to_grfn_pass import ToGrfnPass
+from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_utility import run_all_ann_cast_passes
 
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
 GCC_PLUGIN_IMAGE_DIR = "automates/program_analysis/gcc_plugin/plugin/"
@@ -147,6 +142,7 @@ def run_gcc_pipeline():
     # Load json of each files ast
     ast_jsons = [json.load(open(a)) for a in ast_file_names]
 
+
     print("Turning GCC AST into CAST...")
     make_legacy_cast = False
     if args.legacy:
@@ -154,16 +150,19 @@ def run_gcc_pipeline():
     cast = GCC2CAST(ast_jsons, make_legacy_cast).to_cast()
     json.dump(cast.to_json_object(), open(f"{program_name}--CAST.json", "w+"))
 
+
+    # NOTE: CASTToAGraphVisitor uses misc.uuid, so resetting the random seed must
+    # be called after this to ensure consistent uuids for testing
     if args.CASTgraph:
         V = CASTToAGraphVisitor(cast)
         V.to_pdf(program_name + "--CAST.pdf")
+
+    # Before generating GrFN, set the seed to generate uuids consistently
+    misc.rd.seed(0)
     
     # if we are making legacy CAST, run the legacy pipeline
     if make_legacy_cast:
         print("Transforming CAST into GrFN...")
-        # Set random seed to 0 for UUID generation for consistent results in
-        # GrFN generation for tests
-        misc.rd.seed(0)
         grfn = cast.to_GrFN()
         grfn.to_json_file(f"{program_name}--GrFN.json")
 
@@ -184,25 +183,12 @@ def run_gcc_pipeline():
         print("GrFn execution results:")
         pprint(result)
 
-
     # otherwise use the AnnCast -> GrFN pipeline
     else:
         visitor = CastToAnnotatedCastVisitor(cast)
         annotated_cast = visitor.generate_annotated_cast()
         print("Transforming CAST to AnnCAST and running passes...")
-        IdCollapsePass(annotated_cast)
-        ContainerScopePass(annotated_cast)
-        VariableVersionPass(annotated_cast)
-
-        print("Saving AnnCAST pdf...")
-        agraph = CASTToAGraphVisitor(annotated_cast)
-        pdf_file_name = f"{program_name}-AnnCast.pdf"
-        agraph.to_pdf(pdf_file_name)
-
-        GrfnVarCreationPass(annotated_cast)
-        GrfnAssignmentPass(annotated_cast)
-        LambdaExpressionPass(annotated_cast)
-        ToGrfnPass(annotated_cast)
+        run_all_ann_cast_passes(annotated_cast, verbose=True)
 
         print("Saving GrFN pdf and json...")
         grfn = annotated_cast.get_grfn()
@@ -211,7 +197,19 @@ def run_gcc_pipeline():
         grfn_agraph = grfn.to_AGraph()
         grfn_agraph.draw(f"{program_name}--GrFN.pdf", prog="dot")
 
-        # TODO: Add in GrFN Execution
+        # NOTE: CASTToAGraphVisitor uses misc.uuid, so it should be called after
+        # ToGrfnPass so that GrFN uuids are consistent for testing
+        print("Saving AnnCAST pdf...")
+        agraph = CASTToAGraphVisitor(annotated_cast)
+        pdf_file_name = f"{program_name}-AnnCast.pdf"
+        agraph.to_pdf(pdf_file_name)
+
+        print("\nGenerating pickled AnnCast -----------------")
+        pickled_file_name = f"{program_name}--AnnCast.pickled"
+        with open(pickled_file_name,"wb") as pkfile:
+            dill.dump(annotated_cast, pkfile)
+
+        # FUTURE: Add in GrFN Execution
         # print("Executing GrFN...")
         # inputs = {}
         # result = grfn(inputs)

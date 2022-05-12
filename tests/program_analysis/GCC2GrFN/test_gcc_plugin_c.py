@@ -26,10 +26,9 @@ from typing import List
 # an object.  This allows us to access fields with dots instead of dictionary like access.
 # I.e. we can write `json.field1.field2` instead of `json["field1"]["field2"]`
 
-TEST_DATA_DIR = "tests/data/program_analysis/GCC2GrFN/gcc_plugin_c"
+TEST_DATA_DIR = "tests/data/program_analysis/GCC2GrFN/gcc_to_cast_pipeline"
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin"
 GCC_PLUGIN_IMAGE = "automates/program_analysis/gcc_plugin/plugin/ast_dump.so"
-GCC_TEST_DATA_DIRECTORY = "tests/data/program_analysis/GCC2GrFN/gcc_plugin"
 
 # global identifiers such as `stdin`, `stdout`, `stderr`
 # can be added to the AST by including system header files
