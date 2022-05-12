@@ -40,6 +40,8 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+
 from automates.model_assembly.metadata import (
         LambdaType, TypedMetadata, CodeSpanReference, Domain, ProvenanceData, 
         VariableFromSource, MetadataMethod, VariableCreationReason
@@ -54,17 +56,6 @@ from automates.model_assembly.networks import (
     GroundedFunctionNetwork,
     GenericNode
 )
-
-
-# flag deciding whether or not to use GE's interpretation of From Source 
-# when populating metadata information
-# 
-# For GE, all instances of a variable which exists in the source code should 
-# be considered from source.  
-# We think this loses information about the GrFN variables we create to facilitate
-# transition between interfaces. That is, we create many GrFN variables which
-# do not literally exist in source, and so don't consider those to be from source
-FROM_SOURCE_FOR_GE = True
 
 # used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
 CON_STR_SEP = "."
@@ -82,9 +73,7 @@ IFEXPR = "if-expr"
 MODULE_SCOPE = "module"
 
 VAR_INIT_VERSION = 0
-# TODO: better name for exit version?
 VAR_EXIT_VERSION = 1
-
 
 # the variable versions for loop interface are extended 
 # to include `LOOP_VAR_UPDATED_VERSION`
@@ -95,6 +84,25 @@ VAR_EXIT_VERSION = 1
 # and bot_interface_in accepts `VAR_EXIT_VERSION` which is consistent
 # with other containers
 LOOP_VAR_UPDATED_VERSION = 2
+
+@dataclass
+class GrfnContainerSrcRef:
+    """
+    Used to track the line begin, line end, and source file for ModelIf and Loop
+    Containers.  This data will eventually be added to the containers metadata
+    """
+    line_begin: typing.Optional[int]
+    line_end: typing.Optional[int]
+    source_file_name: typing.Optional[str]
+
+@dataclass
+class GrfnAssignment():  
+        assignment_node: LambdaNode
+        assignment_type: LambdaType
+        # inputs and outputs map fullid to GrFN Var uid
+        inputs: typing.Dict[str, str] = field(default_factory=dict)
+        outputs: typing.Dict[str, str] = field(default_factory=dict)
+        lambda_expr: str = ""
 
 def cast_op_to_str(op):
     op_map = {
@@ -291,16 +299,6 @@ def create_lambda_node_metadata(source_refs):
     metadata = [CodeSpanReference.from_air_data(code_span_data)]
 
     return metadata
-
-@dataclass
-class GrfnContainerSrcRef:
-    """
-    Used to track the line begin, line end, and source file for ModelIf and Loop
-    Containers.  This data will eventually be added to the containers metadata
-    """
-    line_begin: typing.Optional[int]
-    line_end: typing.Optional[int]
-    source_file_name: typing.Optional[str]
 
 def create_container_metadata(grfn_src_ref: GrfnContainerSrcRef):
     src_ref_dict = {}
@@ -572,13 +570,3 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
     # we fill in the metadata later with a call to add_metadata_to_grfn_var()
     metadata = []
     return VariableNode(uid, identifier, metadata)
-
-@dataclass
-class GrfnAssignment():  
-        assignment_node: LambdaNode
-        assignment_type: LambdaType
-        # inputs and outputs map fullid to GrFN Var uid
-        inputs: typing.Dict[str, str] = field(default_factory=dict)
-        outputs: typing.Dict[str, str] = field(default_factory=dict)
-        lambda_expr: str = ""
-# TODO: move all/most above code to a utility file
