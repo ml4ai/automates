@@ -7,8 +7,8 @@ from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 
 class IdCollapsePass:
-    def __init__(self, ann_cast: AnnCast):
-        self.ann_cast = ann_cast
+    def __init__(self, pipeline_state: PipelineState):
+        self.pipeline_state = pipeline_state
         # cache Call nodes so after visiting we can determine which Call's have associated
         # FunctionDefs
         # this dict maps call container name to the AnnCastCall node
@@ -20,15 +20,15 @@ class IdCollapsePass:
         # dict mapping collapsed function id to number of invocations
         # used to populate `invocation_index` of AnnCastCall nodes
         self.func_invocation_counter = defaultdict(int)
-        for node in self.ann_cast.nodes:
+        for node in self.pipeline_state.nodes:
             at_module_scope = False
             self.visit(node, at_module_scope)
-        self.nodes = self.ann_cast.nodes
+        self.nodes = self.pipeline_state.nodes
         self.determine_function_defs_for_calls()
         self.store_highest_id()
 
     def store_highest_id(self):
-        self.ann_cast.collapsed_id_counter = self.collapsed_id_counter
+        self.pipeline_state.collapsed_id_counter = self.collapsed_id_counter
 
     def collapse_id(self, id: int) -> int:
         """
@@ -53,7 +53,7 @@ class IdCollapsePass:
     def determine_function_defs_for_calls(self):
         for call_name, call in self.cached_call_nodes.items():
             func_id = call.func.id
-            call.has_func_def = self.ann_cast.func_def_exists(func_id)
+            call.has_func_def = self.pipeline_state.func_def_exists(func_id)
             
             # DEBUGGING:
             print(f"{call_name} has FunctionDef: {call.has_func_def}")
@@ -133,7 +133,7 @@ class IdCollapsePass:
     def visit_function_def(self, node: AnnCastFunctionDef, at_module_scope):
         # collapse the function id
         node.name.id = self.collapse_id(node.name.id)
-        self.ann_cast.func_id_to_def[node.name.id] = node
+        self.pipeline_state.func_id_to_def[node.name.id] = node
 
         at_module_scope = False
         self.visit_node_list(node.func_args, at_module_scope)
@@ -169,7 +169,7 @@ class IdCollapsePass:
     @_visit.register
     def visit_module(self, node: AnnCastModule, at_module_scope):
         # we cache the module node in the AnnCast object
-        self.ann_cast.module_node = node
+        self.pipeline_state.module_node = node
         at_module_scope = True
         self.visit_node_list(node.body, at_module_scope)
 
@@ -180,7 +180,7 @@ class IdCollapsePass:
         # we consider name nodes at the module scope to be globals
         # and store them in the `used_vars` attribute of the module_node
         if at_module_scope:
-            self.ann_cast.module_node.used_vars[node.id] = node.name
+            self.pipeline_state.module_node.used_vars[node.id] = node.name
 
     @_visit.register
     def visit_number(self, node: AnnCastNumber, at_module_scope):

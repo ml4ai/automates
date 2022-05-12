@@ -118,12 +118,12 @@ def lambda_for_loop_condition(condition_in, lambda_body):
     return lambda_expr
 
 class LambdaExpressionPass:
-    def __init__(self, ann_cast: AnnCast):
-        self.ann_cast = ann_cast
-        self.nodes = self.ann_cast.nodes
+    def __init__(self, pipeline_state: PipelineState):
+        self.pipeline_state = pipeline_state
+        self.nodes = self.pipeline_state.nodes
         # Any other state variables that are needed during
         # the pass
-        for node in self.ann_cast.nodes:
+        for node in self.pipeline_state.nodes:
             self.visit(node)
 
     def visit(self, node: AnnCastNode) -> str:

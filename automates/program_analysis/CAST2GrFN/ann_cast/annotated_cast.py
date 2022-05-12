@@ -55,7 +55,6 @@ from automates.model_assembly.networks import (
     GenericNode
 )
 
-GENERATE_GRFN_2_2 = False
 
 # flag deciding whether or not to use GE's interpretation of From Source 
 # when populating metadata information
@@ -438,7 +437,7 @@ def func_def_ret_val_name(node) -> str:
 def specialized_global_name(node, var_name) -> str:
     """
     Parameters: 
-        - node: a (AnnCast)FunctionDef 
+        - node: a AnnCastFunctionDef 
         - var_name: the variable name for the global
     Returns the specialized global name for FunctionDef `func_def_node` 
     """
@@ -584,8 +583,9 @@ class GrfnAssignment():
         lambda_expr: str = ""
 # TODO: move all/most above code to a utility file
 
-class AnnCast:
-    def __init__(self, ann_nodes: typing.List):
+class PipelineState:
+    def __init__(self, ann_nodes: typing.List, grfn2_2: bool):
+        self.GENERATE_GRFN_2_2 = grfn2_2
         self.nodes = ann_nodes
         # populated after IdCollapsePass, and used to give ids to GrFN condition variables
         self.collapsed_id_counter = 0
@@ -711,12 +711,12 @@ class AnnCast:
 
     def equiv(self, other): 
         """
-        Check if this AnnCast is equivalent to another AnnCast
+        Check if the PipelineState nodes are equivalent to other's
         Used in the test suite
         """
-        # FUTURE: once the AnnCast nodes attribute stores multiple modules,
+        # FUTURE: once the PiplelineState nodes attribute stores multiple modules,
         # we may need to check that the ordering is consistent.  Currently,
-        # CAST and AnnCast only have a single module, so this is not a concern
+        # CAST and the AnnnotatedCast nodes only have a single module, so this is not a concern
         for i, node in enumerate(self.nodes):
             if not node.equiv(other.nodes[i]):
                 # printing diff to help locating difference

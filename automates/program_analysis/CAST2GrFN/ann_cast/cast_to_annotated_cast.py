@@ -62,7 +62,7 @@ class CastToAnnotatedCastVisitor():
     def visit_node_list(self, node_list: typing.List[AstNode]):
         return [self.visit(node) for node in node_list]
 
-    def generate_annotated_cast(self):
+    def generate_annotated_cast(self, grfn_2_2: bool=False):
         nodes = self.cast.nodes
         print(len(nodes))
         print("top nodes are:")
@@ -75,7 +75,7 @@ class CastToAnnotatedCastVisitor():
         for node in nodes:
             annotated_cast.append(self.visit(node))
 
-        return AnnCast(annotated_cast)
+        return PipelineState(annotated_cast, grfn_2_2)
 
     def visit(self, node: AstNode) -> AnnCastNode:
         # type(node) is a string which looks like

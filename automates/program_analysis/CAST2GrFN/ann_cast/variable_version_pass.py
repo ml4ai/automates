@@ -7,15 +7,15 @@ from automates.model_assembly.metadata import VariableCreationReason
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 class VariableVersionPass:
-    def __init__(self, ann_cast: AnnCast):
-        self.ann_cast = ann_cast
-        self.nodes = self.ann_cast.nodes
+    def __init__(self, pipeline_state: PipelineState):
+        self.pipeline_state = pipeline_state
+        self.nodes = self.pipeline_state.nodes
 
         # dict mapping container scopes strs to dicts which
         # map Name id to highest version in that container scope
         self.con_scope_to_highest_var_vers = {}
 
-        for node in self.ann_cast.nodes:
+        for node in self.pipeline_state.nodes:
             # when visitor starts, assign_lhs is False
             self.visit(node, False)
 
@@ -65,7 +65,7 @@ class VariableVersionPass:
         version = self.con_scope_to_highest_var_vers[con_scopestr][id]
         grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
         fullid = build_fullid(var_name, id, version, con_scopestr)
-        self.ann_cast.store_grfn_var(fullid, grfn_var)
+        self.pipeline_state.store_grfn_var(fullid, grfn_var)
 
     def incr_vars_in_con_scope(self, scopestr, vars):
         """
@@ -80,7 +80,7 @@ class VariableVersionPass:
         Adds a bot interface metadata to interface_vars 
         """
         for fullid in interface_vars.values():
-            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            grfn_var = self.pipeline_state.get_grfn_var(fullid)
             # See comment above declaration for `FROM_SOURCE_FOR_GE` 
             from_source = True if FROM_SOURCE_FOR_GE else False
             from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.BOT_IFACE_INTRO)
@@ -120,7 +120,7 @@ class VariableVersionPass:
         self.incr_version_in_con_scope(con_scopestr, id, var_name)
         new_version = self.con_scope_to_highest_var_vers[con_scopestr][id]
         new_fullid = build_fullid(var_name, id, new_version, con_scopestr)
-        grfn_var = self.ann_cast.get_grfn_var(new_fullid)
+        grfn_var = self.pipeline_state.get_grfn_var(new_fullid)
         from_source_mdata = generate_from_source_metadata(False, VariableCreationReason.DUMMY_ASSIGN)
         add_metadata_to_grfn_var(grfn_var, from_source_mdata)
 
@@ -134,8 +134,8 @@ class VariableVersionPass:
         dummy_assignment.outputs[new_fullid] = grfn_var.uid
 
         # add dummy assignment to function def node
-        assert(self.ann_cast.is_con_scopestr_func_def(con_scopestr))
-        func_def_node = self.ann_cast.func_def_node_from_scopestr(con_scopestr)
+        assert(self.pipeline_state.is_con_scopestr_func_def(con_scopestr))
+        func_def_node = self.pipeline_state.func_def_node_from_scopestr(con_scopestr)
 
         func_def_node.dummy_grfn_assignments.append(dummy_assignment)
 
@@ -157,8 +157,8 @@ class VariableVersionPass:
             # we call fix_for_python_gcc_declaration_distinction
             # this creates a dummy assignment to the variable in the FunctionDef container
             # most likely, this is not the ideal long term solution
-            scopestr_is_func = self.ann_cast.is_con_scopestr_func_def(con_scopestr)
-            local_var = scopestr_is_func and self.ann_cast.is_var_local_to_func(con_scopestr, id)
+            scopestr_is_func = self.pipeline_state.is_con_scopestr_func_def(con_scopestr)
+            local_var = scopestr_is_func and self.pipeline_state.is_var_local_to_func(con_scopestr, id)
             if local_var and highest_ver == VAR_INIT_VERSION:
                 self.fix_for_python_gcc_declaration_distinction(con_scopestr, id, var_name)
                 # update highest ver after the dummy assignment
@@ -267,7 +267,7 @@ class VariableVersionPass:
             # build and store GrFN variables for argument and parameter
             arg_grfn_var = create_grfn_var(arg_name, id, version, arg_con_scopestr)
             arg_fullid = build_fullid(arg_name, id, version, arg_con_scopestr)
-            self.ann_cast.store_grfn_var(arg_fullid, arg_grfn_var)
+            self.pipeline_state.store_grfn_var(arg_fullid, arg_grfn_var)
             # store arg_fullid
             node.arg_index_to_fullid[i] = arg_fullid
             # create From Source metadata for the GrFN var
@@ -277,7 +277,7 @@ class VariableVersionPass:
 
             param_grfn_var = create_grfn_var(param_name, id, version, param_con_scopestr)
             param_fullid = build_fullid(param_name, id, version, param_con_scopestr)
-            self.ann_cast.store_grfn_var(param_fullid, param_grfn_var)
+            self.pipeline_state.store_grfn_var(param_fullid, param_grfn_var)
             # store param_fullid
             node.param_index_to_fullid[i] = param_fullid
             # store metadata in paramter GrFN Var
@@ -301,7 +301,7 @@ class VariableVersionPass:
         """
         # Create new GrFN for return value for bot interface in and bot interface out
         var_name = func_def_ret_val_name(node)
-        id = self.ann_cast.next_collapsed_id()
+        id = self.pipeline_state.next_collapsed_id()
         version = VAR_INIT_VERSION
 
         # interior container scope
@@ -309,7 +309,7 @@ class VariableVersionPass:
 
         in_ret_val = create_grfn_var(var_name, id, version, func_scopestr)
         in_fullid = build_fullid(var_name, id, version, func_scopestr)
-        self.ann_cast.store_grfn_var(in_fullid, in_ret_val)
+        self.pipeline_state.store_grfn_var(in_fullid, in_ret_val)
         # create From Source metadata for the GrFN var
         from_source = False
         from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.FUNC_RET_VAL)
@@ -321,7 +321,7 @@ class VariableVersionPass:
         enclosing_scopestr = con_scope_to_str(enclosing_con)
         out_ret_val = create_grfn_var(var_name, id, version, enclosing_scopestr)
         out_fullid = build_fullid(var_name, id, version, enclosing_scopestr)
-        self.ann_cast.store_grfn_var(out_fullid, out_ret_val)
+        self.pipeline_state.store_grfn_var(out_fullid, out_ret_val)
         # create From Source metadata for the GrFN var
         add_metadata_to_grfn_var(out_ret_val, from_source_mdata)
 
@@ -376,7 +376,7 @@ class VariableVersionPass:
             version = VAR_INIT_VERSION
             init_fullid = build_fullid(var_name, id, version, func_scopestr)
             init_global = create_grfn_var(var_name, id, version, func_scopestr)
-            self.ann_cast.store_grfn_var(init_fullid, init_global)
+            self.pipeline_state.store_grfn_var(init_fullid, init_global)
             node.top_interface_out[id] = init_fullid
             # See comment above declaration for `FROM_SOURCE_FOR_GE` 
             from_source = True if FROM_SOURCE_FOR_GE else False
@@ -440,7 +440,7 @@ class VariableVersionPass:
             specialized_name = specialized_global_name(node, var_name)
             in_fullid = build_fullid(specialized_name, id, version, enclosing_scopestr)
             in_global = create_grfn_var(specialized_name, id, version, enclosing_scopestr)
-            self.ann_cast.store_grfn_var(in_fullid, in_global)
+            self.pipeline_state.store_grfn_var(in_fullid, in_global)
             node.top_interface_in[id] = in_fullid
             # create From Source metadata for the GrFN var
             # See comment above declaration for `FROM_SOURCE_FOR_GE` 
@@ -450,7 +450,7 @@ class VariableVersionPass:
             # interior top global
             out_fullid = build_fullid(var_name, id, version, func_scopestr)
             out_global = create_grfn_var(var_name, id, version, func_scopestr)
-            self.ann_cast.store_grfn_var(out_fullid, out_global)
+            self.pipeline_state.store_grfn_var(out_fullid, out_global)
             node.top_interface_out[id] = out_fullid
             # create From Source metadata for the GrFN var
             # See comment above declaration for `FROM_SOURCE_FOR_GE` 
@@ -472,7 +472,7 @@ class VariableVersionPass:
             specialized_name = specialized_global_name(node, var_name)
             out_fullid = build_fullid(specialized_name, id, version, enclosing_scopestr)
             out_global = create_grfn_var(specialized_name, id, version, enclosing_scopestr)
-            self.ann_cast.store_grfn_var(out_fullid, out_global)
+            self.pipeline_state.store_grfn_var(out_fullid, out_global)
             node.bot_interface_out[id] = out_fullid
             # create From Source metadata for the GrFN var
             # See comment above declaration for `FROM_SOURCE_FOR_GE` 
@@ -509,20 +509,20 @@ class VariableVersionPass:
             arg_con_scopestr = con_scope_to_str(node.func.con_scope)
 
             # parameter name and scopestr
-            func_def = self.ann_cast.func_def_node_from_id(node.func.id)
+            func_def = self.pipeline_state.func_def_node_from_id(node.func.id)
             param = func_def.func_args[i]
             assert(isinstance(param, AnnCastVar))
             param_name = param.val.name
             param_con_scopestr = con_scope_to_str(node.func.con_scope + [call_con_name])
 
             # argument and parameter share id, and start with initial version
-            id = self.ann_cast.next_collapsed_id()
+            id = self.pipeline_state.next_collapsed_id()
             version = VAR_INIT_VERSION
 
             # build and store GrFN variables for argument and parameter
             arg_grfn_var = create_grfn_var(arg_name, id, version, arg_con_scopestr)
             arg_fullid = build_fullid(arg_name, id, version, arg_con_scopestr)
-            self.ann_cast.store_grfn_var(arg_fullid, arg_grfn_var)
+            self.pipeline_state.store_grfn_var(arg_fullid, arg_grfn_var)
             # store arg_fullid
             node.arg_index_to_fullid[i] = arg_fullid
             # create From Source metadata for the GrFN var
@@ -532,7 +532,7 @@ class VariableVersionPass:
 
             param_grfn_var = create_grfn_var(param_name, id, version, param_con_scopestr)
             param_fullid = build_fullid(param_name, id, version, param_con_scopestr)
-            self.ann_cast.store_grfn_var(param_fullid, param_grfn_var)
+            self.pipeline_state.store_grfn_var(param_fullid, param_grfn_var)
             # store param_fullid
             node.param_index_to_fullid[i] = param_fullid
             # create From Source metadata for the GrFN var
@@ -570,13 +570,13 @@ class VariableVersionPass:
             param_con_scopestr = con_scope_to_str(node.func.con_scope + [call_con_name])
             
             # argument and parameter share id, and start with initial version
-            id = self.ann_cast.next_collapsed_id()
+            id = self.pipeline_state.next_collapsed_id()
             version = VAR_INIT_VERSION
 
             # build and store GrFN variables for argument and parameter
             arg_grfn_var = create_grfn_var(arg_name, id, version, arg_con_scopestr)
             arg_fullid = build_fullid(arg_name, id, version, arg_con_scopestr)
-            self.ann_cast.store_grfn_var(arg_fullid, arg_grfn_var)
+            self.pipeline_state.store_grfn_var(arg_fullid, arg_grfn_var)
             # store arg_fullid
             node.arg_index_to_fullid[i] = arg_fullid
             # create From Source metadata for the GrFN var
@@ -586,7 +586,7 @@ class VariableVersionPass:
 
             param_grfn_var = create_grfn_var(param_name, id, version, param_con_scopestr)
             param_fullid = build_fullid(param_name, id, version, param_con_scopestr)
-            self.ann_cast.store_grfn_var(param_fullid, param_grfn_var)
+            self.pipeline_state.store_grfn_var(param_fullid, param_grfn_var)
             # store param_fullid
             node.param_index_to_fullid[i] = param_fullid
             # create From Source metadata for the GrFN var
@@ -610,7 +610,7 @@ class VariableVersionPass:
         """
         # Create new GrFN for return value for bot interface in and bot interface out
         var_name = call_ret_val_name(node)
-        id = self.ann_cast.next_collapsed_id()
+        id = self.pipeline_state.next_collapsed_id()
         version = VAR_INIT_VERSION
 
         # interior container scope
@@ -618,7 +618,7 @@ class VariableVersionPass:
 
         in_ret_val = create_grfn_var(var_name, id, version, call_con_scopestr)
         in_fullid = build_fullid(var_name, id, version, call_con_scopestr)
-        self.ann_cast.store_grfn_var(in_fullid, in_ret_val)
+        self.pipeline_state.store_grfn_var(in_fullid, in_ret_val)
         # create From Source metadata for the GrFN var
         from_source = False
         from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.FUNC_RET_VAL)
@@ -628,7 +628,7 @@ class VariableVersionPass:
         con_scopestr = con_scope_to_str(node.func.con_scope)
         out_ret_val = create_grfn_var(var_name, id, version, con_scopestr)
         out_fullid = build_fullid(var_name, id, version, con_scopestr)
-        self.ann_cast.store_grfn_var(out_fullid, out_ret_val)
+        self.pipeline_state.store_grfn_var(out_fullid, out_ret_val)
         add_metadata_to_grfn_var(out_ret_val, from_source_mdata)
 
         # store created fullid and grfn_id in node's ret_val
@@ -667,13 +667,13 @@ class VariableVersionPass:
             
 
             # argument and parameter share id, and start with initial version
-            id = self.ann_cast.next_collapsed_id()
+            id = self.pipeline_state.next_collapsed_id()
             version = VAR_INIT_VERSION
 
             # build and store GrFN variables for argument and parameter
             arg_grfn_var = create_grfn_var(arg_name, id, version, arg_con_scopestr)
             arg_fullid = build_fullid(arg_name, id, version, arg_con_scopestr)
-            self.ann_cast.store_grfn_var(arg_fullid, arg_grfn_var)
+            self.pipeline_state.store_grfn_var(arg_fullid, arg_grfn_var)
             # store arg_fullid
             node.arg_index_to_fullid[i] = arg_fullid
             # create From Source metadata for the GrFN var
@@ -683,7 +683,7 @@ class VariableVersionPass:
 
             param_grfn_var = create_grfn_var(param_name, id, version, param_con_scopestr)
             param_fullid = build_fullid(param_name, id, version, param_con_scopestr)
-            self.ann_cast.store_grfn_var(param_fullid, param_grfn_var)
+            self.pipeline_state.store_grfn_var(param_fullid, param_grfn_var)
             # store param_fullid
             node.param_index_to_fullid[i] = param_fullid
             add_metadata_from_name_node(param_grfn_var, param.val)
@@ -709,7 +709,7 @@ class VariableVersionPass:
         """
         # Create new GrFN for return value for bot interface in and bot interface out
         var_name = call_ret_val_name(node)
-        id = self.ann_cast.next_collapsed_id()
+        id = self.pipeline_state.next_collapsed_id()
         version = VAR_INIT_VERSION
 
         # interior container scope
@@ -717,7 +717,7 @@ class VariableVersionPass:
 
         in_ret_val = create_grfn_var(var_name, id, version, call_con_scopestr)
         in_fullid = build_fullid(var_name, id, version, call_con_scopestr)
-        self.ann_cast.store_grfn_var(in_fullid, in_ret_val)
+        self.pipeline_state.store_grfn_var(in_fullid, in_ret_val)
         # create From Source metadata for the GrFN var
         from_source = False
         from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.FUNC_RET_VAL)
@@ -727,7 +727,7 @@ class VariableVersionPass:
         con_scopestr = con_scope_to_str(node.func.con_scope)
         out_ret_val = create_grfn_var(var_name, id, version, con_scopestr)
         out_fullid = build_fullid(var_name, id, version, con_scopestr)
-        self.ann_cast.store_grfn_var(out_fullid, out_ret_val)
+        self.pipeline_state.store_grfn_var(out_fullid, out_ret_val)
         # create From Source metadata for the GrFN var
         add_metadata_to_grfn_var(out_ret_val, from_source_mdata)
 
@@ -787,7 +787,7 @@ class VariableVersionPass:
             version = VAR_INIT_VERSION
             call_init_fullid = build_fullid(var_name, id, version, call_con_scopestr)
             call_init_global = create_grfn_var(var_name, id, version, call_con_scopestr)
-            self.ann_cast.store_grfn_var(call_init_fullid, call_init_global)
+            self.pipeline_state.store_grfn_var(call_init_fullid, call_init_global)
             node.top_interface_out[id] = call_init_fullid
             # See comment above declaration for `FROM_SOURCE_FOR_GE` 
             from_source = True if FROM_SOURCE_FOR_GE else False
@@ -796,13 +796,13 @@ class VariableVersionPass:
 
             # alias the func copies init version
             func_copy_init_fullid = build_fullid(var_name, id, version, copied_func_scopestr)
-            self.ann_cast.alias_grfn_vars(func_copy_init_fullid, call_init_fullid)
+            self.pipeline_state.alias_grfn_vars(func_copy_init_fullid, call_init_fullid)
     
         for id, var_name in node.bot_interface_vars.items():
             version = VAR_EXIT_VERSION
             exit_fullid = build_fullid(var_name, id, version, call_con_scopestr)
             exit_global = create_grfn_var(var_name, id, version, call_con_scopestr)
-            self.ann_cast.store_grfn_var(exit_fullid, exit_global)
+            self.pipeline_state.store_grfn_var(exit_fullid, exit_global)
             node.bot_interface_in[id] = exit_fullid
             # we intentionally do not add metadata to the GrFN variable here, since
             # the highest version from the copied FunctionDef will be aliased to this
@@ -826,7 +826,7 @@ class VariableVersionPass:
         # that are modified by this call
         # the calling container scope is stored in the Call's AnnCastName node
         calling_scopestr = con_scope_to_str(node.func.con_scope)
-        func_def = self.ann_cast.func_def_node_from_id(node.func.id)
+        func_def = self.pipeline_state.func_def_node_from_id(node.func.id)
 
         # TODO: if we only want globals which are accessed before modification in to come 
         # into the top interface, then we need to rethink the top interface of Loop and ModelIf
@@ -848,10 +848,10 @@ class VariableVersionPass:
 # 
 #             # currently, the module scope does not have interfaces, so we 
 #             # skip the module scope as well
-#             if scopestr == MODULE_SCOPE or not self.ann_cast.is_container(scopestr):
+#             if scopestr == MODULE_SCOPE or not self.pipeline_state.is_container(scopestr):
 #                 continue
 # 
-#             container_node = self.ann_cast.con_node_from_scopestr(scopestr)
+#             container_node = self.pipeline_state.con_node_from_scopestr(scopestr)
 #  
 #             for id, var_name in node.top_interface_vars.items():
 #                 container_node.top_interface_vars[id] = var_name
@@ -879,7 +879,7 @@ class VariableVersionPass:
             version = VAR_INIT_VERSION
             init_fullid = build_fullid(var_name, id, version, call_con_scopestr)
             init_global = create_grfn_var(var_name, id, version, call_con_scopestr)
-            self.ann_cast.store_grfn_var(init_fullid, init_global)
+            self.pipeline_state.store_grfn_var(init_fullid, init_global)
             node.top_interface_out[id] = init_fullid
             # See comment above declaration for `FROM_SOURCE_FOR_GE` 
             from_source = True if FROM_SOURCE_FOR_GE else False
@@ -890,7 +890,7 @@ class VariableVersionPass:
             version = VAR_EXIT_VERSION
             exit_fullid = build_fullid(var_name, id, version, call_con_scopestr)
             exit_global = create_grfn_var(var_name, id, version, call_con_scopestr)
-            self.ann_cast.store_grfn_var(exit_fullid, exit_global)
+            self.pipeline_state.store_grfn_var(exit_fullid, exit_global)
             node.bot_interface_in[id] = exit_fullid
             # See comment above declaration for `FROM_SOURCE_FOR_GE` 
             from_source = True if FROM_SOURCE_FOR_GE else False
@@ -970,7 +970,7 @@ class VariableVersionPass:
             self.call_top_interface_args_with_func_def(node)
             self.add_globals_to_call_interfaces(node)
             func_node = node.func.id
-            func_def_node = self.ann_cast.func_def_node_from_id(func_node)
+            func_def_node = self.pipeline_state.func_def_node_from_id(func_node)
             node.has_ret_val = func_def_node.has_ret_val
         # if we do not have the FunctionDef, we will not add any globals to the interfaces
         else:
@@ -1178,8 +1178,8 @@ class VariableVersionPass:
         # we check if this node's version is VAR_INIT_VERSION 
         # Note: we also skip the module container scope since these attributes 
         # are only needed to create interfaces, and the module does not currently have an interface
-#         if self.ann_cast.is_global_var(node.id) and con_scopestr != MODULE_SCOPE:
-#             func_node = self.ann_cast.func_def_node_from_scopestr(node.base_func_scopestr)
+#         if self.pipeline_state.is_global_var(node.id) and con_scopestr != MODULE_SCOPE:
+#             func_node = self.pipeline_state.func_def_node_from_scopestr(node.base_func_scopestr)
 # 
 #             if node.version == VAR_INIT_VERSION:  # only occurs on RHS
 #                 func_node.globals_accessed_before_mod[node.id] = node.name
@@ -1192,7 +1192,7 @@ class VariableVersionPass:
 #             # due to GrFN 2.2 FunctionDef copying, we need to also propagate up the
 #             # globals accessed before modification and modified globals to 
 #             # scopes higher than base_func_scopestr
-#             if GENERATE_GRFN_2_2:
+#             if self.pipeline_state.GENERATE_GRFN_2_2:
 #                 scopestr = ""
 #                 for index, name in enumerate(node.con_scope):
 #                     # add separator between container scope component names
@@ -1201,11 +1201,11 @@ class VariableVersionPass:
 #                     scopestr += f"{name}"
 # 
 #                     # skip if scopestr is not a function scope
-#                     if scopestr not in self.ann_cast.func_con_scopestr_to_id:
+#                     if scopestr not in self.pipeline_state.func_con_scopestr_to_id:
 #                         continue
 # 
 #                     # otherwise, add to correct globals tracking dict
-#                     func_node = self.ann_cast.func_def_node_from_scopestr(scopestr)
+#                     func_node = self.pipeline_state.func_def_node_from_scopestr(scopestr)
 # 
 #                     if node.version == VAR_INIT_VERSION:  # only occurs on RHS
 #                         func_node.globals_accessed_before_mod[node.id] = node.name

@@ -4,12 +4,12 @@ import typing
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 class GrfnAssignmentPass:
-    def __init__(self, ann_cast: AnnCast):
-        self.ann_cast = ann_cast
-        self.nodes = self.ann_cast.nodes
+    def __init__(self, pipeline_state: PipelineState):
+        self.pipeline_state = pipeline_state
+        self.nodes = self.pipeline_state.nodes
         # Any other state variables that are needed during
         # the pass
-        for node in self.ann_cast.nodes:
+        for node in self.pipeline_state.nodes:
             add_to = {}
             self.visit(node, add_to)
 
@@ -81,14 +81,14 @@ class GrfnAssignmentPass:
 
         # add ret_val to add_to dict
         for id, fullid in node.out_ret_val.items():
-            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            grfn_var = self.pipeline_state.get_grfn_var(fullid)
             add_to[fullid] = grfn_var.uid
             
         # populate `arg_assignments` attribute of node
         for i, n in enumerate(node.arguments):
             # grab GrFN variable for argument
             arg_fullid = node.arg_index_to_fullid[i]
-            arg_grfn_var = self.ann_cast.get_grfn_var(arg_fullid)
+            arg_grfn_var = self.pipeline_state.get_grfn_var(arg_fullid)
             
             # create GrfnAssignment based on assignment type
             metadata = create_lambda_node_metadata(node.source_refs)
@@ -114,14 +114,14 @@ class GrfnAssignmentPass:
         assert isinstance(node.func, AnnCastName)
         # add ret_val to add_to dict
         for id, fullid in node.out_ret_val.items():
-            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            grfn_var = self.pipeline_state.get_grfn_var(fullid)
             add_to[fullid] = grfn_var.uid
             
         # populate `arg_assignments` attribute of node
         for i, n in enumerate(node.arguments):
             # grab GrFN variable for argument
             arg_fullid = node.arg_index_to_fullid[i]
-            arg_grfn_var = self.ann_cast.get_grfn_var(arg_fullid)
+            arg_grfn_var = self.pipeline_state.get_grfn_var(arg_fullid)
             
             # create GrfnAssignment based on assignment type
             metadata = create_lambda_node_metadata(node.source_refs)
@@ -205,7 +205,7 @@ class GrfnAssignmentPass:
         self.visit(node.value, node.grfn_assignment.inputs)
 
         for id, fullid in node.owning_func_def.in_ret_val.items():
-            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            grfn_var = self.pipeline_state.get_grfn_var(fullid)
             node.grfn_assignment.outputs[fullid] = grfn_var.uid
 
         # DEBUGGING

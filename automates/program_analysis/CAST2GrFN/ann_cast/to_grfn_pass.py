@@ -34,20 +34,20 @@ def grfn_subgraph(uid, namespace, scope, basename, occurences, parent, type, nod
 
 
 class ToGrfnPass:
-    def __init__(self, ann_cast: AnnCast):
-        self.ann_cast = ann_cast
-        self.nodes = self.ann_cast.nodes
+    def __init__(self, pipeline_state: PipelineState):
+        self.pipeline_state = pipeline_state
+        self.nodes = self.pipeline_state.nodes
         self.network = nx.DiGraph()
         self.subgraphs = nx.DiGraph()
         self.hyper_edges = []
 
         # populate network with variable nodes
-        for grfn_var in self.ann_cast.grfn_id_to_grfn_var.values():
+        for grfn_var in self.pipeline_state.grfn_id_to_grfn_var.values():
             self.network.add_node(grfn_var, **grfn_var.get_kwargs())
 
         # the fullid of a AnnCastName node is a string which includes its 
         # variable name, numerical id, version, and scope
-        for node in self.ann_cast.nodes:
+        for node in self.pipeline_state.nodes:
             # TODO: fix None
             self.visit(node, None)
 
@@ -61,8 +61,8 @@ class ToGrfnPass:
         con_name = "GrFN"
         identifier = ContainerIdentifier(ns, scope, con_name)
 
-        # store GrFN in AnnCast
-        self.ann_cast.grfn = GroundedFunctionNetwork(grfn_uid, identifier, timestamp, 
+        # store GrFN in PipelineState
+        self.pipeline_state.grfn = GroundedFunctionNetwork(grfn_uid, identifier, timestamp, 
                                         self.network, self.hyper_edges, self.subgraphs,
                                         type_defs, metadata)
 
@@ -131,15 +131,15 @@ class ToGrfnPass:
         self.network.add_node(condition_node, **condition_node.get_kwargs())
         inputs = []
         for var_id, fullid in condition_in.items():
-            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+            grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+            grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
             self.network.add_edge(grfn_var, condition_node)
             inputs.append(grfn_var)
 
         outputs = []
         for var_id, fullid in condition_out.items():
-            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+            grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+            grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
             self.network.add_edge(condition_node, grfn_var)
             outputs.append(grfn_var)
             
@@ -164,11 +164,11 @@ class ToGrfnPass:
 
         # values for decision in are two element dicts with keys IFBODY and ELSEBODY
         for var_id, fullid in decision_in.items():
-            if_grfn_id = self.ann_cast.fullid_to_grfn_id[fullid[IFBODY]]
-            if_grfn_var = self.ann_cast.grfn_id_to_grfn_var[if_grfn_id]
+            if_grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid[IFBODY]]
+            if_grfn_var = self.pipeline_state.grfn_id_to_grfn_var[if_grfn_id]
 
-            else_grfn_id = self.ann_cast.fullid_to_grfn_id[fullid[ELSEBODY]]
-            else_grfn_var = self.ann_cast.grfn_id_to_grfn_var[else_grfn_id]
+            else_grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid[ELSEBODY]]
+            else_grfn_var = self.pipeline_state.grfn_id_to_grfn_var[else_grfn_id]
 
             self.network.add_edge(if_grfn_var, decision_node)
             self.network.add_edge(else_grfn_var, decision_node)
@@ -181,8 +181,8 @@ class ToGrfnPass:
 
         outputs = []
         for var_id, fullid in decision_out.items():
-            grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-            grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+            grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+            grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
             self.network.add_edge(decision_node, grfn_var)
             outputs.append(grfn_var)
             
@@ -204,13 +204,13 @@ class ToGrfnPass:
         # accumulate inputs to assignment node
         inputs = []
         for fullid in grfn_assignment.inputs.keys():
-            input = self.ann_cast.get_grfn_var(fullid)
+            input = self.pipeline_state.get_grfn_var(fullid)
             inputs.append(input)
             subgraph_nodes.append(input)
         # accumulate outputs from assignment node 
         outputs = []
         for fullid in grfn_assignment.outputs.keys():
-            output = self.ann_cast.get_grfn_var(fullid)
+            output = self.pipeline_state.get_grfn_var(fullid)
             outputs.append(output)
             subgraph_nodes.append(output)
 
@@ -299,15 +299,15 @@ class ToGrfnPass:
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             inputs = []
             for var_id, fullid in node.top_interface_in.items():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(grfn_var, top_interface)
                 inputs.append(grfn_var)
 
             outputs = []
             for var_id, fullid in node.top_interface_out.items():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(top_interface, grfn_var)
                 outputs.append(grfn_var)
 
@@ -323,15 +323,15 @@ class ToGrfnPass:
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             inputs = []
             for var_id, fullid in node.bot_interface_in.items():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(grfn_var, bot_interface)
                 inputs.append(grfn_var)
 
             outputs = []
             for var_id, fullid in node.bot_interface_out.items():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(bot_interface, grfn_var)
                 outputs.append(grfn_var)
 
@@ -371,15 +371,15 @@ class ToGrfnPass:
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             inputs = []
             for fullid in node.top_interface_in.values():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(grfn_var, top_interface)
                 inputs.append(grfn_var)
 
             outputs = []
             for fullid in node.top_interface_out.values():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(top_interface, grfn_var)
                 outputs.append(grfn_var)
 
@@ -396,15 +396,15 @@ class ToGrfnPass:
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             inputs = []
             for fullid in node.bot_interface_in.values():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(grfn_var, bot_interface)
                 inputs.append(grfn_var)
 
             outputs = []
             for fullid in node.bot_interface_out.values():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(bot_interface, grfn_var)
                 outputs.append(grfn_var)
 
@@ -439,7 +439,7 @@ class ToGrfnPass:
     def visit_function_def(self, node: AnnCastFunctionDef, subgraph: GrFNSubgraph):
         # for GrFN 2.2, we create function containers at call sites,
         # so we skip all functions except "main"
-        if GENERATE_GRFN_2_2 and not is_func_def_main(node):
+        if self.pipeline_state.GENERATE_GRFN_2_2 and not is_func_def_main(node):
             return
 
         parent = subgraph
@@ -463,9 +463,9 @@ class ToGrfnPass:
             top_interface = self.create_interface_node(node.top_interface_lambda)
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             # collect input GrFN VariableNodes
-            inputs = list(map(self.ann_cast.get_grfn_var, node.top_interface_in.values()))
+            inputs = list(map(self.pipeline_state.get_grfn_var, node.top_interface_in.values()))
             # collect output GrFN VariableNodes 
-            outputs = list(map(self.ann_cast.get_grfn_var, node.top_interface_out.values()))
+            outputs = list(map(self.pipeline_state.get_grfn_var, node.top_interface_out.values()))
             self.add_grfn_edges(inputs, top_interface, outputs)
 
             # add inputs to parent graph
@@ -486,9 +486,9 @@ class ToGrfnPass:
             bot_interface = self.create_interface_node(node.bot_interface_lambda)
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             # collect input GrFN VariableNodes
-            inputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_in.values()))
+            inputs = list(map(self.pipeline_state.get_grfn_var, node.bot_interface_in.values()))
             # collect output GrFN VariableNodes 
-            outputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_out.values()))
+            outputs = list(map(self.pipeline_state.get_grfn_var, node.bot_interface_out.values()))
             self.add_grfn_edges(inputs, bot_interface, outputs)
 
             # add interface node and inputs to subraph
@@ -531,13 +531,13 @@ class ToGrfnPass:
             top_interface = self.create_loop_top_interface(node.top_interface_lambda)
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             # collect initial GrFN VariableNodes
-            grfn_initial = map(self.ann_cast.get_grfn_var, node.top_interface_initial.values())
+            grfn_initial = map(self.pipeline_state.get_grfn_var, node.top_interface_initial.values())
             # collect updated GrFN VariableNodes 
-            grfn_updated = map(self.ann_cast.get_grfn_var, node.top_interface_updated.values())
+            grfn_updated = map(self.pipeline_state.get_grfn_var, node.top_interface_updated.values())
             # combine initial and updated for inputs to loop top interface
             inputs = list(grfn_initial) + list(grfn_updated)
             # collect ouput GrFN VariableNodes
-            outputs = list(map(self.ann_cast.get_grfn_var, node.top_interface_out.values()))
+            outputs = list(map(self.pipeline_state.get_grfn_var, node.top_interface_out.values()))
             self.add_grfn_edges(inputs, top_interface, outputs)
 
             # add interface node, updated variables, and output variables to subgraph
@@ -555,9 +555,9 @@ class ToGrfnPass:
             bot_interface = self.create_interface_node(node.bot_interface_lambda)
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             # collect input GrFN VariableNodes
-            inputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_in.values()))
+            inputs = list(map(self.pipeline_state.get_grfn_var, node.bot_interface_in.values()))
             # collect ouput GrFN VariableNodes
-            outputs = list(map(self.ann_cast.get_grfn_var, node.bot_interface_out.values()))
+            outputs = list(map(self.pipeline_state.get_grfn_var, node.bot_interface_out.values()))
             self.add_grfn_edges(inputs, bot_interface, outputs)
 
             # bot interface includes input and bot interface
@@ -606,15 +606,15 @@ class ToGrfnPass:
             self.network.add_node(top_interface, **top_interface.get_kwargs())
             inputs = []
             for var_id, fullid in node.top_interface_in.items():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(grfn_var, top_interface)
                 inputs.append(grfn_var)
 
             outputs = []
             for var_id, fullid in node.top_interface_out.items():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(top_interface, grfn_var)
                 outputs.append(grfn_var)
 
@@ -642,15 +642,15 @@ class ToGrfnPass:
             self.network.add_node(bot_interface, **bot_interface.get_kwargs())
             inputs = []
             for var_id, fullid in node.bot_interface_in.items():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(grfn_var, bot_interface)
                 inputs.append(grfn_var)
 
             outputs = []
             for var_id, fullid in node.bot_interface_out.items():
-                grfn_id = self.ann_cast.fullid_to_grfn_id[fullid]
-                grfn_var = self.ann_cast.grfn_id_to_grfn_var[grfn_id]
+                grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
+                grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
                 self.network.add_edge(bot_interface, grfn_var)
                 outputs.append(grfn_var)
 
