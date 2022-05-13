@@ -210,10 +210,8 @@ class VariableVersionPass:
         # populate "inside" of interfaces
         con_scopestr = con_scope_to_str(node.con_scope)
         # populate top interface updated
-        # these are versions variables which are accessed before modified, and then subsequently modified
-        is_modified = lambda id: id in node.modified_vars
-        accessed_then_modified = filter(is_modified, node.vars_accessed_before_mod.keys())
-        node.top_interface_updated_vars = {id : node.modified_vars[id] for id in accessed_then_modified}
+        # these are all modified variables
+        node.top_interface_updated_vars = node.modified_vars
         for id, var_name in node.top_interface_updated_vars.items():
             version = LOOP_VAR_UPDATED_VERSION
             fullid = build_fullid(var_name, id, version, con_scopestr)

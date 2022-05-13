@@ -71,7 +71,7 @@ class GrfnVarCreationPass:
     #     """
     #     self.pipeline_state.fullid_to_grfn_id[src_fullid] = self.pipeline_state.fullid_to_grfn_id[tgt_fullid]
         
-    def alias_copied_func_body_init_vers(self, node: AnnCastCall, call_con_scopestr: str):
+    def alias_copied_func_body_init_vers(self, node: AnnCastCall):
         """
         Precondition: This should be called after visiting copied function body.
         This is used for GrFN 2.2 generation.
@@ -110,7 +110,7 @@ class GrfnVarCreationPass:
             # we create GrFN variables with call_fullid during VariableVersionPass
             self.pipeline_state.alias_grfn_vars(func_fullid, call_fullid)
 
-    def alias_copied_func_body_highest_vers(self, node: AnnCastFunctionDef, call_con_scopestr: str):
+    def alias_copied_func_body_highest_vers(self, node: AnnCastCall):
         """
         Precondition: This should be called after visiting copied function body.
         This is used for GrFN 2.2 generation.
@@ -118,14 +118,16 @@ class GrfnVarCreationPass:
         Aliases highest version variables from the function body to
         `VAR_EXIT_VERSION` of calling container sccope.
         """
-        con_scopestr = con_scope_to_str(node.con_scope)
+        func_def_copy = node.func_def_copy
+        call_con_scopestr = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
+        func_con_scopestr = con_scope_to_str(func_def_copy.con_scope)
 
         # alias `VAR_EXIT_VERSION` variables in call_con_scopestr
         # to the highest version occuring the func body
         exit_version = VAR_EXIT_VERSION
         for id, var_name in node.bot_interface_vars.items():
-            body_version = node.body_highest_var_vers[id]
-            body_fullid = build_fullid(var_name, id, body_version, con_scopestr)
+            body_version = func_def_copy.body_highest_var_vers[id]
+            body_fullid = build_fullid(var_name, id, body_version, func_con_scopestr)
             exit_fullid = build_fullid(var_name, id, exit_version, call_con_scopestr)
             self.pipeline_state.alias_grfn_vars(exit_fullid, body_fullid)
 
@@ -448,14 +450,13 @@ class GrfnVarCreationPass:
 
     def visit_call_grfn_2_2(self, node: AnnCastCall):
         assert isinstance(node.func, AnnCastName)
-        call_con_scopestr = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
         # alias GrFN variables before visiting children
-        self.alias_copied_func_body_init_vers(node, call_con_scopestr)
-        self.alias_copied_func_body_highest_vers(node.func_def_copy, call_con_scopestr)
+        self.alias_copied_func_body_init_vers(node)
+        self.alias_copied_func_body_highest_vers(node)
 
         self.visit_node_list(node.arguments)
-
         self.visit_function_def_copy(node.func_def_copy)
+
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef):
         pass

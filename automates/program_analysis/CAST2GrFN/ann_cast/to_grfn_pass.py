@@ -4,6 +4,7 @@ from functools import singledispatchmethod
 import networkx as nx
 from automates.model_assembly.metadata import LambdaType
 from automates.model_assembly.networks import (
+    GenericNode,
     GrFNLoopSubgraph,
     GrFNSubgraph,
     GroundedFunctionNetwork,
@@ -24,10 +25,6 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     is_func_def_main,
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-
-# import uuid from misc instead of standard library to allow manipulating the uuid random seed
-from automates.utils.misc import uuid
-
 
 def grfn_subgraph(uid, namespace, scope, basename, occurences, parent, type, nodes):
     pass
@@ -51,7 +48,7 @@ class ToGrfnPass:
             self.visit(node, subgraph=None)
 
         # build GrFN
-        grfn_uid = str(uuid.uuid4())
+        grfn_uid = GenericNode.create_node_id()
         timestamp = "timestamp"
         type_defs = []
         metadata = []
@@ -82,7 +79,7 @@ class ToGrfnPass:
     def create_interface_node(self, lambda_expr):
         # we should never create an interface node if we have an empty lambda expr
         assert(len(lambda_expr) > 0)
-        lambda_uuid = str(uuid.uuid4())
+        lambda_uuid = GenericNode.create_node_id()
         lambda_str = lambda_expr
         lambda_func = load_lambda_function(lambda_str)
         # FUTURE: decide on metadata for interface nodes
@@ -97,7 +94,7 @@ class ToGrfnPass:
     def create_loop_top_interface(self, lambda_expr):
         # we should never create an interface node if we have an empty lambda expr
         assert(len(lambda_expr) > 0)
-        lambda_uuid = str(uuid.uuid4())
+        lambda_uuid = GenericNode.create_node_id()
         lambda_str = lambda_expr
         lambda_func = load_lambda_function(lambda_str)
         # FUTURE: decide on metadata for interface nodes
@@ -129,7 +126,7 @@ class ToGrfnPass:
         self.hyper_edges.append(HyperEdge(inputs, lambda_node, outputs))
 
     def create_condition_node(self, condition_in, condition_out, lambda_expr,  subgraph: GrFNSubgraph):
-        lambda_uuid = str(uuid.uuid4())
+        lambda_uuid = GenericNode.create_node_id()
         lambda_str = lambda_expr
         lambda_func = load_lambda_function(lambda_str)
         # FUTURE: decide on metadata for condition nodes
@@ -148,8 +145,7 @@ class ToGrfnPass:
         subgraph.nodes.extend(inputs + [condition_node] + outputs)
 
     def create_decision_node(self, decision_in, decision_out, condition_var, lambda_expr, subgraph: GrFNSubgraph):
-        # TODO: correct values for these
-        lambda_uuid = str(uuid.uuid4())
+        lambda_uuid = GenericNode.create_node_id()
         lambda_str = lambda_expr
         lambda_func = load_lambda_function(lambda_str)
         # FUTURE: decide on metadata for decision nodes
@@ -244,7 +240,6 @@ class ToGrfnPass:
     def visit_boolean(self, node: AnnCastBoolean, subgraph: GrFNSubgraph):
         pass
 
-    # TODO: Update
     @_visit.register    
     def visit_call(self, node: AnnCastCall, subgraph: GrFNSubgraph):
         if node.is_grfn_2_2:
@@ -263,10 +258,10 @@ class ToGrfnPass:
         nodes = []
         parent_str = parent.uid if parent is not None else None
         occs = 0
-        uid = str(uuid.uuid4())
+        uid = GenericNode.create_node_id()
         ns = "default-ns"
-        scope = con_scope_to_str(node.func.con_scope)
-        basename = call_container_name(node)
+        scope = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
+        basename = scope
         subgraph = GrFNSubgraph(uid, ns, scope, basename,
                                 occs, parent_str, type, border_color, nodes, metadata)
 
@@ -313,10 +308,10 @@ class ToGrfnPass:
         nodes = []
         parent_str = parent.uid if parent is not None else None
         occs = node.invocation_index
-        uid = str(uuid.uuid4())
+        uid = GenericNode.create_node_id()
         ns = "default-ns"
-        scope = con_scope_to_str(node.func.con_scope)
-        basename = call_container_name(node)
+        scope = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
+        basename = scope
         subgraph = GrFNSubgraph(uid, ns, scope, basename,
                                 occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
@@ -384,7 +379,7 @@ class ToGrfnPass:
         nodes = []
         parent_str = parent.uid if parent is not None else None
         occs = 0
-        uid = str(uuid.uuid4())
+        uid = GenericNode.create_node_id()
         ns = "default-ns"
         scope = con_scope_to_str(node.con_scope)
         basename = scope
@@ -445,8 +440,7 @@ class ToGrfnPass:
         nodes = []
         parent_str = parent.uid if parent is not None else None
         occs = 0
-        uid = str(uuid.uuid4())
-        # TODO: Document namespace naming somewhere and that it might need to be updated
+        uid = GenericNode.create_node_id()
         ns = "default-ns"
         scope = con_scope_to_str(node.con_scope)
         basename = scope
@@ -510,8 +504,7 @@ class ToGrfnPass:
         nodes = []
         parent_str = parent.uid if parent is not None else None
         occs = 0
-        uid = str(uuid.uuid4())
-        # TODO: figure out naming scheme
+        uid = GenericNode.create_node_id()
         ns = "default-ns"
         scope = con_scope_to_str(node.con_scope)
         basename = scope
@@ -572,7 +565,7 @@ class ToGrfnPass:
         nodes = []
         occs = 0
         parent_str = None
-        uid = str(uuid.uuid4())
+        uid = GenericNode.create_node_id()
         ns = "default-ns"
         scope = MODULE_SCOPE
         basename = MODULE_SCOPE
