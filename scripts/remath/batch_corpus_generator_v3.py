@@ -8,14 +8,37 @@ import subprocess
 from pathlib import Path
 from dataclasses import dataclass, field
 import timeit
+import multiprocessing
 
 import gen_c_prog_v3 as gen_c_prog
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
-from batch_tokenize_instructions import TokenSet, extract_tokens_from_instr_file
+from batch_tokenize_instructions_v3 import extract_tokens_and_save  # TokenSet, extract_tokens_from_instr_file
 
+
+# -----------------------------------------------------------------------------
+# Multiprocessing-safe Progress Log
+# -----------------------------------------------------------------------------
+
+LOCK = multiprocessing.Lock()
+
+
+PROGRESS_LOG_FILENAME = 'log_progress.txt'
+
+
+def log_progress(log_path, instance_id):
+    LOCK.acquire()
+    with open(log_path, 'a') as file:
+        file.write(f'{instance_id}\n')
+    LOCK.release()
+
+
+# -----------------------------------------------------------------------------
+# Config
+# -----------------------------------------------------------------------------
 
 @dataclass
 class Config:
+    log_progress_root: str = ''
     corpus_root: str = ''
     num_samples: int = 1
     num_padding: int = 7
@@ -59,6 +82,7 @@ def missing_config_message():
     print("appropriate absolute path within a string:")
     print("{")
 
+    print("  \"log_progress_root\": \"<str> absolute path to the location the progress log will be stored\"")
     print("  \"corpus_root\": \"<str> absolute path to top-level root directory for the corpus\"")
     print("  \"num_samples\": \"<int> number of samples to generate\"")
     print("  \"num_padding\": \"<int> number of 0's to pad to the left of the filename sample index\"")
@@ -113,6 +137,10 @@ def load_config():
     with open('config.json', 'r') as json_file:
         cdata = json.load(json_file)
         missing_fields = list()
+        if 'log_progress_root' not in cdata:
+            missing_fields.append('log_progress_root')
+        else:
+            config.log_progress_root = cdata['log_progress_root']
         if 'corpus_root' not in cdata:
             missing_fields.append('corpus_root')
         else:
@@ -217,11 +245,12 @@ def get_gcc_version(gcc_path):
         return 'gcc-' + version_str.split('\n')[0].split(' ')[2], 'gcc'
 
 
-def try_compile(config: Config, src_filepath: str):
+def try_compile(config: Config, src_filepath: str, verbose: bool = False):
     """
     Attempts to compile binary from source using GCC with GCC-ast-dump plugin.
     :param config:
     :param src_filepath: C program source file path
+    :param verbose:
     :return:
     """
     gcc_version, compiler_type = get_gcc_version(config.gcc)
@@ -230,13 +259,18 @@ def try_compile(config: Config, src_filepath: str):
 
     dst_filepath = os.path.splitext(src_filepath)[0] + binary_postfix
 
-    # print('try_compile() cwd:', os.getcwd())
-
+    # CTM 2022-05-10: Adding -lm to link the math lib
     command_list = [config.gcc, f'-fplugin={config.gcc_plugin_filepath}',
-                    '-C', '-x', 'c++', '-O0', src_filepath, '-o', dst_filepath]
-    print(command_list)
+                    '-C', '-x', 'c++', '-O0', '-lm', src_filepath, '-o', dst_filepath]
+
+    if verbose:
+        print(f'try_compile() cwd {os.getcwd()}')
+        print(f'              command_list: {command_list}')
 
     result = subprocess.run(command_list, stdout=subprocess.PIPE)
+
+    if verbose:
+        print(f'              result={result}')
 
     return result, dst_filepath
 
@@ -245,7 +279,7 @@ def gcc_ast_to_cast(filename_base: str, verbose_p: bool = False):
     ast_filename = filename_base + '_gcc_ast.json'
     ast_json = json.load(open(ast_filename))
     if verbose_p:
-        print("Translate GCC AST into CAST:")
+        print("gcc_ast_to_cast(): Translate GCC AST into CAST...")
     cast = GCC2CAST([ast_json]).to_cast()
     cast_filename = filename_base + '--CAST.json'
     json.dump(cast.to_json_object(), open(cast_filename, "w"))
@@ -269,28 +303,35 @@ def failure(location, _result, sample_prog_str, filename_src, filename_uuid_c):
     # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
 
 
-def finalize(config: Config, token_set: TokenSet):
+def finalize(config: Config):  # , token_set: TokenSet):  ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
     token_set_summary_filepath = os.path.join(config.stage_root, 'tokens_summary.txt')
     original_stdout = sys.stdout
     time_end = timeit.default_timer()
     total_time = time_end - config.time_start
     with open(token_set_summary_filepath, 'w') as fout:
         sys.stdout = fout
-        token_set.print()
-        print(f'total time: {config.time_start} {time_end} {total_time}')
-        print('iteration_times:')
-        print(config.iteration_times)
+        # token_set.print()
+        print(f'finalize(): total time: {config.time_start} {time_end} {total_time}')
+        print(f'            iteration_times: {config.iteration_times}')
         sys.stdout = original_stdout
 
 
-def try_generate(config: Config, i: int, token_set: TokenSet):
+def try_generate(config: Config, i: int,  # token_set: TokenSet,  ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+                 verbose=False):
+
+    if verbose:
+        print('try_generate(): i={i}')
+
+    log_progress_path = os.path.join(config.log_progress_root, PROGRESS_LOG_FILENAME)
 
     time_start = timeit.default_timer()
 
     num_str = f'{i}'.zfill(config.num_padding)
     filename_base = f'{config.base_name}_{num_str}'
     filename_src = filename_base + '.c'
+
     filename_src_stats = filename_base + '_stats.txt'
+
     filename_bin = ''
     filename_gcc_ast = ''
     filename_cast = ''
@@ -318,16 +359,21 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         filename_base_uuid = f'{filename_base}_{temp_uuid}'
         filename_uuid_c = filename_base_uuid + '.c'
 
+        if verbose:
+            print(f'    attempt={attempt} : {filename_uuid_c}')
+
         # generate candidate source code
         sample_prog, sample_program_str = \
             gen_c_prog.generate_and_save_program(filename_src)
 
         # save sample stats
-        with open(filename_src_stats, 'w') as stats_file:
-            stats_file.write(gen_c_prog.ExprSeqSampleStats(sample_prog).to_string())
+        # TODO CTM 2022-05-10: implement new stats collection and call here...
+        #  When re-introduce, need to update function mv_files, below
+        # with open(filename_src_stats, 'w') as stats_file:
+        #     stats_file.write(gen_c_prog.ExprSeqSampleStats(sample_prog).to_string())
 
         # compile candidate
-        result, filename_bin = try_compile(config=config, src_filepath=filename_src)  # filepath_uuid_c)
+        result, filename_bin = try_compile(config=config, src_filepath=filename_src, verbose=verbose)  # filepath_uuid_c)
 
         if result.returncode != 0:
             failure('COMPILE', result, sample_program_str, filename_src, filename_uuid_c)
@@ -338,21 +384,21 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
             # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
             continue
 
-        # TODO: Possibly skip this ?
-        # execute_candidate
-        result = subprocess.run([f'./{filename_bin}'], stdout=subprocess.PIPE)
-
-        if result.returncode != 0:
-            failure('EXECUTE', result, sample_program_str, filename_src, filename_uuid_c)
-            # print(f'FAILURE - EXECUTE - {result.returncode}')
-            # print(f'CWD: {os.getcwd()}')
-            # print(f'listdir: {os.listdir()}')
-            # log_failure(filename_src, f'execution return {result.returncode}')
-            # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
-            continue
+        # CTM 2022-05-10: For now, skipping execution test
+        # # execute_candidate
+        # result = subprocess.run([f'./{filename_bin}'], stdout=subprocess.PIPE)
+        #
+        # if result.returncode != 0:
+        #     failure('EXECUTE', result, sample_program_str, filename_src, filename_uuid_c)
+        #     # print(f'FAILURE - EXECUTE - {result.returncode}')
+        #     # print(f'CWD: {os.getcwd()}')
+        #     # print(f'listdir: {os.listdir()}')
+        #     # log_failure(filename_src, f'execution return {result.returncode}')
+        #     # subprocess.call(['cp ' + filename_src + ' ' + filename_uuid_c])
+        #     continue
 
         # gcc ast to CAST
-        filename_gcc_ast, filename_cast = gcc_ast_to_cast(filename_base)
+        filename_gcc_ast, filename_cast = gcc_ast_to_cast(filename_base, verbose_p=verbose)
 
         # run Ghidra
         filename_ghidra_instructions = filename_bin + '-instructions.txt'
@@ -394,15 +440,20 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
     if success:
         # extract bin input tokens from ghidra instructions
         filename_bin_tokens = f'{config.corpus_input_tokens_root}/{filename_bin}__tokens.txt'
-        extract_tokens_from_instr_file(token_set=token_set,
-                                       _src_filepath=filename_ghidra_instructions,
-                                       _dst_filepath=filename_bin_tokens,
-                                       execute_p=True,
-                                       verbose_p=False)
+
+        extract_tokens_and_save(_src_filepath=filename_ghidra_instructions,
+                                _dst_filepath=filename_bin_tokens)
+
+        # CTM 2022-05-10: the old method:
+        # extract_tokens_from_instr_file(token_set=token_set,
+        #                                _src_filepath=filename_ghidra_instructions,
+        #                                _dst_filepath=filename_bin_tokens,
+        #                                execute_p=True,
+        #                                verbose_p=False)
 
         # move files to respective locations:
-        mv_files(config, token_set,
-                 filename_src, filename_src_stats,
+        mv_files(config,  # token_set,  ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+                 filename_src,  filename_src_stats,
                  filename_bin, filename_gcc_ast, filename_cast,
                  filename_ghidra_instructions,
                  filename_tokens_output)
@@ -410,6 +461,10 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         # Update the counter file
         with open('counter.txt', 'w') as counter_file:
             counter_file.write(f'{i}, {config.num_padding}')
+
+        # Log progress!
+        log_progress(log_progress_path, num_str)
+
         print('Success')
 
         time_end = timeit.default_timer()
@@ -423,20 +478,24 @@ def try_generate(config: Config, i: int, token_set: TokenSet):
         with open('iteration_times.txt', 'a') as it_file:
             it_file.write(f'{time_elapsed} ')
         config.iteration_times.append(time_elapsed)
-        finalize(config, token_set)  # save current token_set before bailing
+
+        # save current token_set before bailing
+        finalize(config)  # TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+        # finalize(config, token_set)
+
         raise Exception(f"ERROR try_generate(): failed to generate a viable program after {attempt} tries.")
 
 
-def mv_files(config, token_set,
-             filename_src, filename_src_stats,
+def mv_files(config,  # token_set, ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+             filename_src,  filename_src_stats,
              filename_bin, filename_gcc_ast, filename_cast,
              filename_ghidra_instructions,
              filename_tokens_output):
-    filenames = (filename_src, filename_src_stats,
+    filenames = (filename_src,  # filename_src_stats,  ## TODO CTM 2022-05-10: turning off mv of _stats file for now
                  filename_bin, filename_gcc_ast, filename_cast,
                  filename_ghidra_instructions,
                  filename_tokens_output)
-    dest_paths = (config.src_root, config.src_root,
+    dest_paths = (config.src_root,  # config.src_root,  ## TODO CTM 2022-05-10: turning off mv of _stats file for now
                   config.bin_root, config.cast_root, config.cast_root,
                   config.ghidra_instructions_root,
                   config.corpus_output_tokens_root)
@@ -444,12 +503,13 @@ def mv_files(config, token_set,
         dest_filepath = os.path.join(dest_path, src_filename)
         result = subprocess.run(['mv', src_filename, dest_filepath], stdout=subprocess.PIPE)
         if result.returncode != 0:
-            finalize(config, token_set)
+            finalize(config)  # TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+            # finalize(config, token_set)
             raise Exception(f"ERROR mv_files(): failed mv {src_filename} --> {dest_filepath}\n"
                             f"  current directory: {os.getcwd()}")
 
 
-def generate_corpus(start=0, num_samples=None, corpus_root=None):
+def generate_corpus(start=0, num_samples=None, corpus_root=None, verbose=False):
     config = load_config()
 
     config.time_start = timeit.default_timer()
@@ -476,7 +536,7 @@ def generate_corpus(start=0, num_samples=None, corpus_root=None):
                  config.corpus_output_tokens_root):
         Path(path).mkdir(parents=True, exist_ok=False)
 
-    token_set = TokenSet()
+    # token_set = TokenSet()  ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
 
     original_working_dir = os.getcwd()
     os.chdir(config.stage_root)
@@ -490,8 +550,10 @@ def generate_corpus(start=0, num_samples=None, corpus_root=None):
         raise Exception(f"ERROR: Cannot find cast_to_token_cast.py: {config.cast_to_token_cast_filepath}")
 
     for i in range(start, start + config.num_samples):
-        try_generate(config=config, i=i, token_set=token_set)
-    finalize(config, token_set)
+        try_generate(config=config, i=i,  # token_set=token_set, ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+                     verbose=verbose)
+    finalize(config)  ## TODO CTM 2022-05-10: update once new version of TokenSet is implemented
+    # finalize(config, token_set)
     os.chdir(original_working_dir)
 
 
