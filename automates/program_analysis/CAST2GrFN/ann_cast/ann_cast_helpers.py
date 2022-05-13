@@ -17,15 +17,14 @@ from automates.model_assembly.networks import GenericNode, LambdaNode, VariableN
 from automates.model_assembly.structures import VariableIdentifier
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
-from automates.utils.misc import uuid
 
+# FUTURE: it is possible to change these separators as needed as long as they don't collide/overlap
 # used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
-CON_STR_SEP = "."
+CON_STR_SEP = "::"
 # delimiter for fullids
-FULLID_SEP = ":"
+FULLID_SEP = "."
 
-# TODO: do we need to add any other characters to ensure the name 
-# is an illegal identifier
+# NOTE: we use hyphens between names to create illegal identifiers to prevent name collisions
 LOOPBODY = "loop-body"
 ELSEBODY = "else-body"
 IFBODY = "if-body"
@@ -94,24 +93,7 @@ def cast_op_to_str(op):
     return op_map[op] if op in op_map else None
 
 # Metadata functions
-# TODO: Remove
-# From Source Creastion Reason constants
-# class CreationReason(str, Enum):
-#     TOP_IFACE_INTRO = "Variable Introduced for Top Interface"
-#     BOT_IFACE_INTRO = "Variable Introduced for Bot Interface"
-#     FUNC_RET_VAL = "Function Return Value"
-#     FUNC_ARG = "Function Argument"
-#     COND_VAR = "Variable Introduced for Conditional Expression"
-#     DUP_GLOBAL = "Duplicated Global for FunctionDef Container"
-#     DUMMY_ASSIGN = "Dummy Assignment for Interface Propagation"
-
-
 def source_ref_dict(source_ref: SourceRef):
-    # We want the following fields in the GrFN Metadata
-    # line_begin=source_ref.row_start,
-    # line_end=source_ref.row_end,
-    # col_start=source_ref.col_start,
-    # col_end=source_ref.col_end,
     to_return = dict()
     to_return["line_begin"] = source_ref.row_start
     to_return["line_end"] = source_ref.row_end
@@ -162,7 +144,9 @@ def combine_source_refs(source_refs: typing.List[SourceRef]):
     return SourceRef(source_file_name, col_start, col_end, row_start, row_end)
 
 def generate_domain_metadata():
-    # TODO: this needs to be updated
+    # FUTURE: this is metadata needs to be updated  
+    # This is just default data that is often incorrect.  
+    # We borrowed this default from the legacy AIR -> GrFN pipeline
     data = dict()
     data["type"] = "domain"
     data["provenance"] = ProvenanceData.from_data({
@@ -192,7 +176,9 @@ def generate_variable_node_span_metadata(source_refs):
     src_ref_dict = {}
     file_ref = ""
     if source_refs:
-        # TODO: decide which element of source_refs we want to use
+        # FUTURE: the source_refs attribute of CAST nodes is a list.  Because
+        # of this, it may be good to combine/consolidate source_refs that have multiple
+        # elements.  For now, we just take the first source_ref
         src_ref = source_refs[0]
         src_ref_dict = source_ref_dict(src_ref)
         file_ref = src_ref.source_file_name
@@ -219,7 +205,7 @@ def add_metadata_from_name_node(grfn_var, name_node):
 def add_metadata_to_grfn_var(grfn_var, from_source_mdata=None, span_mdata=None, domain_mdata=None):
     if from_source_mdata is None:
         from_source = True
-        from_source_mdata = generate_from_source_metadata(True, VariableCreationReason.UNKNOWN)
+        from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.UNKNOWN)
     
     # if this GrFN variable is from source, and we don't have span metadata, create
     # an blank SourceRef for its span metadata
@@ -228,13 +214,6 @@ def add_metadata_to_grfn_var(grfn_var, from_source_mdata=None, span_mdata=None, 
         span_mdata = generate_variable_node_span_metadata(source_refs)
 
     if domain_mdata is None:
-        # TODO: this is copied from C2AVarialble.to_AIR
-        # note sure if we need to use it
-        domain = {
-            "type": "type",  # TODO what is this field?
-            "mutable": False,  # TODO probably only mutable if object/list/dict type
-            "name": "Number",  # TODO probably only mutable if object/list/dict type
-        }
         domain_mdata = generate_domain_metadata()
 
     new_metadata = [from_source_mdata, domain_mdata, span_mdata]
@@ -248,7 +227,9 @@ def create_lambda_node_metadata(source_refs):
     src_ref_dict = {}
     file_ref = ""
     if source_refs:
-        # TODO: decide which element of source_refs we want to use
+        # FUTURE: the source_refs attribute of CAST nodes is a list.  Because
+        # of this, it may be good to combine/consolidate source_refs that have multiple
+        # elements.  For now, we just take the first source_ref
         src_ref = source_refs[0]
         src_ref_dict = source_ref_dict(src_ref)
         file_ref = src_ref.source_file_name
@@ -340,43 +321,47 @@ def make_cond_var_name(con_scopestr):
     """
     Make a condition variable name from the scope string `con_scopestr`
     """
-    var_name = "".join(re.findall("if\d*\.",con_scopestr))
-    var_name = var_name.replace(".","_").replace("if","")
-    return "COND_" + var_name[:-1]
+    # FUTURE: potentially add scoping info
+    return "COND"
 
 def make_loop_exit_name(con_scopestr):
     """
     Makes a Loop exit variable to be used for GrFN condition node
     """
-    # TODO: do we want any loop context in the name?
-    return "Exit"
+    # FUTURE: potentially add scoping info
+    return "EXIT"
 
 def is_literal_assignment(node):
     """
     Check if the node is a Number, Boolean, or String
     This may need to updated later
     """
+    # FUTURE: may need to augment this list e.g. AnnCastList/AnnCastDict etc
     if isinstance(node, (AnnCastNumber, AnnCastBoolean, AnnCastString)):
         return True
 
     return False
-
 
 def is_func_def_main(node) -> bool:
     """
     Parameter: AnnCastFuncitonDef
     Checks if node is the FunctionDef for "main"
     """
-    # TODO: this may need to be extended for Python
+    # FUTURE: this may need to be extended or adjusted for Python
     MAIN_FUNC_DEF_NAME = "main"
     return node.name.name == MAIN_FUNC_DEF_NAME
 
-def function_container_name(node) -> str:
-    # TODO: Maybe change this to take an FunctionDef instead of Name node?
-    # That might make more sense when calling it
+def func_def_container_name(node) -> str:
+    """
+    Parameter: AnnCastFunctionDef
+    Returns function container name in the form "name_id"
+    """
+    return func_container_name_from_name_node(node.name)
+
+def func_container_name_from_name_node(node) -> str:
     """
     Parameter: AnnCastNameNode
-    Returns function container name in the form "name#id"
+    Returns function container name in the form "name_id"
     """
     return f"{node.name}_id{node.id}"
 
@@ -385,14 +370,14 @@ def func_def_argument_name(node, arg_index: int) -> str:
     Returns the FunctionDef argument name for argument with index `arg_index`
     Used for the AnnCastCall's top interface in
     """
-    return f"{function_container_name(node.name)}_arg{arg_index}"
+    return f"{func_def_container_name(node)}_arg{arg_index}"
 
 def func_def_ret_val_name(node) -> str:
     """
     Returns the FunctionDef return value name
     Used for the AnnCastCall's bot interface out
     """
-    return f"{function_container_name(node.name)}_ret_val"
+    return f"{func_def_container_name(node)}_ret_val"
 
 def specialized_global_name(node, var_name) -> str:
     """
@@ -401,7 +386,7 @@ def specialized_global_name(node, var_name) -> str:
         - var_name: the variable name for the global
     Returns the specialized global name for FunctionDef `func_def_node` 
     """
-    return f"{function_container_name(node.name)}_{var_name}"
+    return f"{func_def_container_name(node)}_{var_name}"
 
 
 def call_argument_name(node, arg_index: int) -> str:
@@ -409,28 +394,32 @@ def call_argument_name(node, arg_index: int) -> str:
     Returns the call site argument name for argument with index `arg_index`
     Used for the AnnCastCall's top interface in
     """
-    return f"{function_container_name(node.func)}_call{node.invocation_index}_arg{arg_index}"
+    func_con_name = func_container_name_from_name_node(node.func)
+    return f"{func_con_name}_call{node.invocation_index}_arg{arg_index}"
 
 def call_param_name(node, arg_index: int) -> str:
     """
     Returns the call site parameter name for argument with index `arg_index`
     Used for the AnnCastCall's top interface in
     """
-    return f"{function_container_name(node.func)}_call{node.invocation_index}_param{arg_index}"
+    func_con_name = func_container_name_from_name_node(node.func)
+    return f"{func_con_name}_call{node.invocation_index}_param{arg_index}"
 
 def call_container_name(node) -> str:
     """
     Returns the call site container name
     Used for the AnnCastCall's top interface out and bot interface in
     """
-    return f"{function_container_name(node.func)}_call{node.invocation_index}"
+    func_con_name = func_container_name_from_name_node(node.func)
+    return f"{func_con_name}_call{node.invocation_index}"
 
 def call_ret_val_name(node) -> str:
     """
     Returns the call site return value name
     Used for the AnnCastCall's bot interface out
     """
-    return f"{function_container_name(node.func)}_call{node.invocation_index}_ret_val"
+    func_con_name = func_container_name_from_name_node(node.func)
+    return f"{func_con_name}_call{node.invocation_index}_ret_val"
 
 
 def ann_cast_name_to_fullid(node):
@@ -486,7 +475,6 @@ def create_grfn_literal_node(metadata: typing.List):
     Creates a GrFN `LambdaNode` with type `LITERAL` and metadata `metadata`.
     The created node has an empty lambda expression (`func_str` attribute)
     """
-    # lambda_uuid = str(uuid.uuid4())
     lambda_uuid = GenericNode.create_node_id()
     # we fill out lambda expression in a later pass
     lambda_str = ""
@@ -500,7 +488,7 @@ def create_grfn_assign_node(metadata: typing.List):
     Creates a GrFN `LambdaNode` with type `ASSIGN` and metadata `metadata`.
     The created node has an empty lambda expression (`func_str` attribute)
     """
-    lambda_uuid = str(uuid.uuid4())
+    lambda_uuid = GenericNode.create_node_id()
     # we fill out lambda expression in a later pass
     lambda_str = ""
     lambda_func = lambda: None
@@ -519,14 +507,9 @@ def create_grfn_var(var_name:str, id: int, version: int, con_scopestr: str):
     """
     Creates a GrFN `VariableNode` using the parameters
     """
-    # TODO: update the namespace and scope we provide, e.g. use :: instead of . as delimiter?
     identifier = VariableIdentifier("default_ns", con_scopestr, var_name, version)
 
-    # TODO: change this uid to a UUID and
-    # replace the calls to uuid4() in later passes with 
-    # GenericNode.create_node_id() 
-    # uid = GenericNode.create_node_id()
-    uid = build_fullid(var_name, id, version, con_scopestr)
+    uid = GenericNode.create_node_id()
     
     # we initialize the GrFN VariableNode with an empty metadata list.
     # we fill in the metadata later with a call to add_metadata_to_grfn_var()
