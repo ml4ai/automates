@@ -17,7 +17,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     combine_grfn_con_src_refs,
     combine_source_refs,
     con_scope_to_str,
-    function_container_name,
+    func_def_container_name,
     var_dict_to_str,
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
@@ -30,9 +30,9 @@ class AssignSide(Enum):
 
 
 class ContainerData:
-    modified_vars: typing.Dict[id, str]
-    vars_accessed_before_mod: typing.Dict[id, str]
-    used_vars: typing.Dict[id, str]
+    modified_vars: typing.Dict[int, str]
+    vars_accessed_before_mod: typing.Dict[int, str]
+    used_vars: typing.Dict[int, str]
 
     def __init__(self):
         self.modified_vars = {}
@@ -383,7 +383,7 @@ class ContainerScopePass:
         node.grfn_con_src_ref = grfn_src_ref
 
         # Modify scope to include the function name
-        funcscope = enclosing_con_scope + [function_container_name(node.name)]
+        funcscope = enclosing_con_scope + [func_def_container_name(node)]
 
         self.initialize_con_scope_data(funcscope, node)
         node.con_scope = funcscope
