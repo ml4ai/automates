@@ -141,9 +141,10 @@ class LambdaExpressionPass:
         Useful for debugging/development.  For example,
         printing the nodes that are visited
         """
-        # debug printing
-        class_name = node.__class__.__name__
-        print(f"\nProcessing node type {class_name}")
+        # print current node being visited.  
+        # this can be useful for debugging 
+        # class_name = node.__class__.__name__
+        # print(f"\nProcessing node type {class_name}")
 
         # call internal visit
         return self._visit(node)
@@ -183,7 +184,7 @@ class LambdaExpressionPass:
 
     @_visit.register
     def visit_boolean(self, node: AnnCastBoolean) -> str:
-        # TODO: Currently, when parsing a declaration statement like
+        # FUTURE: Currently, when parsing a declaration statement like
         #   `bool b;`
         # gcc_ast_to_cast makes a CAST node assignment and assigns "None" to `b`
         # This assignment does not make sense.  The underlying issue is that there are no
@@ -217,21 +218,22 @@ class LambdaExpressionPass:
         node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
 
 
-        # DEBUGGING
-        print(f"Call GrFN 2.2 {node.func.name}")
-        print(f"\t Args Expressions:")
-        for arg in node.arg_assignments.values():
-            print(f"\t\t{arg.lambda_expr}")
-        print(f"\t Top Interface:")
-        print(f"\t\t{node.top_interface_lambda}")
-        print(f"FunctionDefCopy {node.func_def_copy.name.name}")
-        print(f"\t Body Expressions:")
-        for e in body_expr:
-            print(f"\t\t{e}")
-        print(f"\t Bot Interface:")
-        print(f"\t\t{node.bot_interface_lambda}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"Call GrFN 2.2 {node.func.name}")
+            print(f"\t Args Expressions:")
+            for arg in node.arg_assignments.values():
+                print(f"\t\t{arg.lambda_expr}")
+            print(f"\t Top Interface:")
+            print(f"\t\t{node.top_interface_lambda}")
+            print(f"FunctionDefCopy {node.func_def_copy.name.name}")
+            print(f"\t Body Expressions:")
+            for e in body_expr:
+                print(f"\t\t{e}")
+            print(f"\t Bot Interface:")
+            print(f"\t\t{node.bot_interface_lambda}")
 
-    def visit_call_no_func_def(self, node: AnnCastCall):
+    def visit_call_without_func_copy(self, node: AnnCastCall):
         # example for argument lambda expression
         #   Call: func(x + 3, y * 2)
         # GrfnAssignment with index 0 corresponds to the assignment arg_0 = x + 3
@@ -248,24 +250,26 @@ class LambdaExpressionPass:
         # bot interface lambda
         node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
 
-        # DEBUGGING
-        print(f"Call No FuncDef{node.func.name}")
-        print(f"\t Args Expressions:")
-        for arg in node.arg_assignments.values():
-            print(f"\t\t{arg.lambda_expr}")
-        print(f"\t Top Interface:")
-        print(f"\t\t{node.top_interface_lambda}")
-        print(f"\t Bot Interface:")
-        print(f"\t\t{node.bot_interface_lambda}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"Call No FuncDef{node.func.name}")
+            print(f"\t Args Expressions:")
+            for arg in node.arg_assignments.values():
+                print(f"\t\t{arg.lambda_expr}")
+            print(f"\t Top Interface:")
+            print(f"\t\t{node.top_interface_lambda}")
+            print(f"\t Bot Interface:")
+            print(f"\t\t{node.bot_interface_lambda}")
 
     @_visit.register
     def visit_call(self, node: AnnCastCall) -> str:
         if node.is_grfn_2_2:
             self.visit_call_grfn_2_2(node)
-        # The GrFN for grfn2.2 function calls without function bodies
-        # is handled in the new GrFN 3.0 style
+        # in the case of GrFN 2.3 style Call or 
+        # if this Call does not have FunctionDef 
+        # the Call node lambda expression has the same form
         else:
-            self.visit_call_no_func_def(node)
+            self.visit_call_without_func_copy(node)
         if node.has_ret_val:
             assert(len(node.out_ret_val) == 1)
             ret_val_fullid = list(node.out_ret_val.values())[0]
@@ -294,19 +298,21 @@ class LambdaExpressionPass:
     def visit_function_def(self, node: AnnCastFunctionDef) -> str:
         node.top_interface_lambda = lambda_for_interface(node.top_interface_in)
         # NOTE: we do not visit node.func_args because those parameters are 
-        # includes in the outputs of the top interface
+        # included in the outputs of the top interface lambda
         body_expr = self.visit_node_list(node.body)
         node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
         
-        # DEBUGGING
-        print(f"FunctionDef {node.name.name}")
-        print(f"\t Top Interface:")
-        print(f"\t\t{node.top_interface_lambda}")
-        print(f"\t Body Expressions:")
-        for e in body_expr:
-            print(f"\t\t{e}")
-        print(f"\t Bot Interface:")
-        print(f"\t\t{node.bot_interface_lambda}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"FunctionDef {node.name.name}")
+            print(f"\t Top Interface:")
+            print(f"\t\t{node.top_interface_lambda}")
+            print(f"\t Body Expressions:")
+            for e in body_expr:
+                print(f"\t\t{e}")
+            print(f"\t Bot Interface:")
+            print(f"\t\t{node.bot_interface_lambda}")
+
         return node.expr_str
 
     @_visit.register
@@ -316,7 +322,6 @@ class LambdaExpressionPass:
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop) -> str:
-        
         # top interface lambda
         node.top_interface_lambda = lambda_for_loop_top_interface(node.top_interface_initial, 
                                                                  node.top_interface_updated)
@@ -325,24 +330,23 @@ class LambdaExpressionPass:
         loop_expr = self.visit(node.expr)
         node.condition_lambda = lambda_for_loop_condition(node.condition_in, loop_expr)
 
-
         body_expr = self.visit_node_list(node.body)
 
         node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
         
-        # DEBUGGING
-        print(f"Loop ")
-        print(f"\t Loop Top Interface:")
-        print(f"\t\t{node.top_interface_lambda}")
-        print(f"\t Loop Expression:")
-        print(f"\t\t{node.condition_lambda}")
-        print(f"\t Body Expressions:")
-        for e in body_expr:
-            print(f"\t\t{e}")
-        print(f"\t Loop Bot Interface:")
-        print(f"\t\t{node.bot_interface_lambda}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"Loop ")
+            print(f"\t Loop Top Interface:")
+            print(f"\t\t{node.top_interface_lambda}")
+            print(f"\t Loop Expression:")
+            print(f"\t\t{node.condition_lambda}")
+            print(f"\t Body Expressions:")
+            for e in body_expr:
+                print(f"\t\t{e}")
+            print(f"\t Loop Bot Interface:")
+            print(f"\t\t{node.bot_interface_lambda}")
 
-        # What to return?  Loops don't have a resulting value.
         return node.expr_str
 
     @_visit.register
@@ -372,22 +376,24 @@ class LambdaExpressionPass:
         # bot interface lambda
         node.bot_interface_lambda = lambda_for_interface(node.bot_interface_in)
 
-        # DEBUGGING
-        print(f"If ")
-        print(f"\t If Top Interface:")
-        print(f"\t\t{node.top_interface_lambda}")
-        print(f"\t If Expression:")
-        print(f"\t\t{node.condition_lambda}")
-        print(f"\t Body Expressions:")
-        for e in body_expr:
-            print(f"\t\t{e}")
-        print(f"\t OrElse Expressions:")
-        for e in or_else_expr:
-            print(f"\t\t{e}")
-        print(f"\t If Decision Lambda:")
-        print(f"\t\t{node.decision_lambda}")
-        print(f"\t If Bot Interface:")
-        print(f"\t\t{node.bot_interface_lambda}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"If ")
+            print(f"\t If Top Interface:")
+            print(f"\t\t{node.top_interface_lambda}")
+            print(f"\t If Expression:")
+            print(f"\t\t{node.condition_lambda}")
+            print(f"\t Body Expressions:")
+            for e in body_expr:
+                print(f"\t\t{e}")
+            print(f"\t OrElse Expressions:")
+            for e in or_else_expr:
+                print(f"\t\t{e}")
+            print(f"\t If Decision Lambda:")
+            print(f"\t\t{node.decision_lambda}")
+            print(f"\t If Bot Interface:")
+            print(f"\t\t{node.bot_interface_lambda}")
+
         return node.expr_str
 
     @_visit.register
@@ -398,18 +404,19 @@ class LambdaExpressionPass:
         lambda_expr = lambda_for_grfn_assignment(node.grfn_assignment, val)
         node.grfn_assignment.lambda_expr = lambda_expr
         node.expr_str = lambda_expr
-        # TODO: do we need to return an empty string?
+
         return node.expr_str
 
     @_visit.register
     def visit_module(self, node: AnnCastModule) -> str:
         body_expr = self.visit_node_list(node.body)
 
-        # DEBUGGING
-        print(f"Module")
-        print(f"\t Body Expressions:")
-        for e in body_expr:
-            print(f"\t\t{e}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"Module")
+            print(f"\t Body Expressions:")
+            for e in body_expr:
+                print(f"\t\t{e}")
 
         return node.expr_str
 

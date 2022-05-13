@@ -26,9 +26,6 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
-def grfn_subgraph(uid, namespace, scope, basename, occurences, parent, type, nodes):
-    pass
-
 
 class ToGrfnPass:
     def __init__(self, pipeline_state: PipelineState):
@@ -201,9 +198,10 @@ class ToGrfnPass:
         Useful for debugging/development.  For example,
         printing the nodes that are visited
         """
-        # debug printing
-        class_name = node.__class__.__name__
-        print(f"\nProcessing node type {class_name}")
+        # print current node being visited.  
+        # this can be useful for debugging 
+        # class_name = node.__class__.__name__
+        # print(f"\nProcessing node type {class_name}")
 
         # call internal visit
         return self._visit(node, subgraph)

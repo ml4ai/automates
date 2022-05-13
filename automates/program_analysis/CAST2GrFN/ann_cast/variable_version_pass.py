@@ -52,14 +52,12 @@ class VariableVersionPass:
         If the scope is the module, then use a defaultdict starting at zero
         otherwise, create a dictionary mapping each of the ids to zero
         """
-        # TODO: Could we ever have a container with no modified or accessed variables?
-        #       Maybe a debugging function that only prints?
-        # Yes, if the module container
-        # assert(len(var_ids) > 0)
         self.con_scope_to_highest_var_vers[con_scopestr] = {}
         for id in var_ids:
             self.con_scope_to_highest_var_vers[con_scopestr][id] = 0
-        print(f"initialized highest_vars_vers_dict {self.con_scope_to_highest_var_vers[con_scopestr]}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"initialized highest_vars_vers_dict {self.con_scope_to_highest_var_vers[con_scopestr]}")
                        
 
     def get_highest_ver_in_con_scope(self, con_scopestr, id):
@@ -79,16 +77,11 @@ class VariableVersionPass:
 
         Also creates a GrFN variable for the newly added version
         """
-        if id in self.con_scope_to_highest_var_vers[con_scopestr]:
-            self.con_scope_to_highest_var_vers[con_scopestr][id] += 1
-        # otherwise, add it as version VAR_INIT_VERSION
-        else:
-            self.con_scope_to_highest_var_vers[con_scopestr][id] = VAR_INIT_VERSION
-
-        # TODO: test moving this code block into the if, it seems like we don't 
-        # need to create INIT_VERSION GrFN variables here since we create those for interfaces
-        # during GrfnVarCreationPass
-        # Create a GrFN variable for the newly created version
+        # NOTE: we should have added id to con_scope_to_highest_var_vers when we call
+        # init_highest_var_vers_dict
+        # if this does not happen, some logic has failed
+        assert(id in self.con_scope_to_highest_var_vers[con_scopestr])
+        self.con_scope_to_highest_var_vers[con_scopestr][id] += 1
         version = self.con_scope_to_highest_var_vers[con_scopestr][id]
         grfn_var = create_grfn_var(var_name, id, version, con_scopestr)
         fullid = build_fullid(var_name, id, version, con_scopestr)
@@ -257,7 +250,8 @@ class VariableVersionPass:
             node.top_interface_out[id] = fullid
         # populate bot interface in
         # by convention, the bot interface in takes version VAR_EXIT_VERSION variables
-        # these versions are produced by the Decision node (which is done during GrFN Variable Creation)
+        # these versions are produced by the Decision node 
+        # and they are created during GrfnVariableCreationPass
         for id, var_name in node.bot_interface_vars.items():
             version = VAR_EXIT_VERSION
             fullid = build_fullid(var_name, id, version, con_scopestr)
@@ -312,10 +306,12 @@ class VariableVersionPass:
             node.top_interface_in[id] = arg_fullid
             node.top_interface_out[id] = param_fullid
 
-        print(f"For FunctionDef {node.name.name}")
-        print("After func_def_top_iface_args():")
-        print(f"\ttop_interface_in = {node.top_interface_in}")
-        print(f"\ttop_interface_out = {node.top_interface_out}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"For FunctionDef {node.name.name}")
+            print("After func_def_top_iface_args():")
+            print(f"\ttop_interface_in = {node.top_interface_in}")
+            print(f"\ttop_interface_out = {node.top_interface_out}")
 
     def func_def_ret_val_creation(self, node: AnnCastFunctionDef):
         """
@@ -357,10 +353,12 @@ class VariableVersionPass:
         node.bot_interface_in[id] = in_fullid
         node.bot_interface_out[id] = out_fullid
 
-        print(f"For FunctionDef {node.name.name}")
-        print("\tAfter func_def_ret_val_creation():")
-        print(f"\ttop_interface_in = {node.top_interface_in}")
-        print(f"\ttop_interface_out = {node.top_interface_out}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"For FunctionDef {node.name.name}")
+            print("\tAfter func_def_ret_val_creation():")
+            print(f"\ttop_interface_in = {node.top_interface_in}")
+            print(f"\ttop_interface_out = {node.top_interface_out}")
 
     def add_globals_to_main_func_def_interfaces(self, node: AnnCastFunctionDef):
         """
@@ -377,11 +375,7 @@ class VariableVersionPass:
         enclosing_scopestr = con_scope_to_str(enclosing_con_scope)
 
         # add globals to exterior interfaces
-        # TODO: if we only want globals which are accessed before modification in to come 
-        # into the top interface, then we need to rethink the top interface of Loop and ModelIf
-        # containers, since their top interfaces are all used variables
-        # add global variables to top_interface_in
-        # these are all used globals
+        # add global variables to top_interface_in these are all used globals
         node.top_interface_vars = node.used_globals
         self.populate_interface(enclosing_scopestr, node.top_interface_vars, node.top_interface_in)
         # the bot interface globals are all modified globals
@@ -415,10 +409,12 @@ class VariableVersionPass:
             exit_fullid = build_fullid(var_name, id, version, func_scopestr)
             node.bot_interface_in[id] = exit_fullid
 
-        print(f"For FunctionDef {node.name.name}")
-        print("\tAfter add_globals_to_main_func_def_interfaces():")
-        print(f"\ttop_interface_in = {node.top_interface_in}")
-        print(f"\ttop_interface_out = {node.top_interface_out}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"For FunctionDef {node.name.name}")
+            print("\tAfter add_globals_to_main_func_def_interfaces():")
+            print(f"\ttop_interface_in = {node.top_interface_in}")
+            print(f"\ttop_interface_out = {node.top_interface_out}")
 
     def add_globals_to_non_main_func_def_interfaces(self, node: AnnCastFunctionDef):
         """
@@ -437,25 +433,17 @@ class VariableVersionPass:
         # interior container scope
         func_scopestr = con_scope_to_str(node.con_scope)
 
-        # TODO: if we only want globals which are accessed before modification in to come 
-        # into the top interface, then we need to rethink the top interface of Loop and ModelIf
-        # containers, since their top interfaces are all used variables
-
         # add global variables to top_interface_in
         # these are all used globals
         node.top_interface_vars = node.used_globals
         # the bot interface globals are all modified globals
         node.bot_interface_vars = node.modified_globals
 
-        # we create specialized globals for this function def,
-        # but only in the enclosing scope.
+        # we create specialized globals for this function def, in the enclosing scope.
         # this is to accomodate interfaces, since they expect the same id 
         # on either side
-        # TODO: maybe don't have to alias this way?
-        # To have the assignments in the FunctionDef link up correclty, 
-        # this route requires aliasing these specialized globals
-        # to the "true" globals appearing in the FunctionDef
-        # For now, we simply create VAR_INIT_VERSION interior globals
+        # this is similar to how we handle arguments from enclosing scope linking to
+        # parameters in the interior of a container
 
         # create specialized globals for top interface
         # by convention the top interface produces version VAR_INIT_VERSION variables
@@ -505,14 +493,16 @@ class VariableVersionPass:
             from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.DUP_GLOBAL)
             add_metadata_to_grfn_var(out_global, from_source_mdata)
 
-        print(f"For FunctionDef {node.name.name}")
-        print("\tAfter add_globals_to_non_main_func_def_interfaces():")
-        print(f"\ttop_interface_in = {node.top_interface_in}")
-        print(f"\ttop_interface_out = {node.top_interface_out}")
-        print(f"\ttop_interface_vars = {node.top_interface_vars}")
-        print(f"\tbot_interface_in = {node.bot_interface_in}")
-        print(f"\tbot_interface_out = {node.bot_interface_out}")
-        print(f"\tbot_interface_vars = {node.bot_interface_vars}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"For FunctionDef {node.name.name}")
+            print("\tAfter add_globals_to_non_main_func_def_interfaces():")
+            print(f"\ttop_interface_in = {node.top_interface_in}")
+            print(f"\ttop_interface_out = {node.top_interface_out}")
+            print(f"\ttop_interface_vars = {node.top_interface_vars}")
+            print(f"\tbot_interface_in = {node.bot_interface_in}")
+            print(f"\tbot_interface_out = {node.bot_interface_out}")
+            print(f"\tbot_interface_vars = {node.bot_interface_vars}")
 
     def call_top_interface_args_with_func_def(self, node: AnnCastCall):
         """
@@ -567,9 +557,11 @@ class VariableVersionPass:
             node.top_interface_in[id] = arg_fullid
             node.top_interface_out[id] = param_fullid
 
-        print("After create_call_args_and_params():")
-        print(f"\ttop_interface_in = {node.top_interface_in}")
-        print(f"\ttop_interface_out = {node.top_interface_out}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print("After create_call_args_and_params():")
+            print(f"\ttop_interface_in = {node.top_interface_in}")
+            print(f"\ttop_interface_out = {node.top_interface_out}")
 
     def call_top_interface_args_with_no_func_def(self, node: AnnCastCall):
         """
@@ -622,9 +614,11 @@ class VariableVersionPass:
             node.top_interface_in[id] = arg_fullid
             node.top_interface_out[id] = param_fullid
 
-        print("After create_call_args_and_params():")
-        print(f"\ttop_interface_in = {node.top_interface_in}")
-        print(f"\ttop_interface_out = {node.top_interface_out}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print("After create_call_args_and_params():")
+            print(f"\ttop_interface_in = {node.top_interface_in}")
+            print(f"\ttop_interface_out = {node.top_interface_out}")
 
     def populate_call_bot_interface_with_ret_val(self, node: AnnCastCall):
         """
@@ -690,7 +684,6 @@ class VariableVersionPass:
             param_name = param.val.name
             param_con_scopestr = con_scope_to_str(node.func.con_scope + [call_con_name])
             
-
             # argument and parameter share id, and start with initial version
             id = self.pipeline_state.next_collapsed_id()
             version = VAR_INIT_VERSION
@@ -718,9 +711,11 @@ class VariableVersionPass:
             node.top_interface_out[id] = param_fullid
 
 
-        print("After create_call_args_and_params():")
-        print(f"\ttop_interface_in = {node.top_interface_in}")
-        print(f"\ttop_interface_out = {node.top_interface_out}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print("After create_call_args_and_params():")
+            print(f"\ttop_interface_in = {node.top_interface_in}")
+            print(f"\ttop_interface_out = {node.top_interface_out}")
 
     def grfn_2_2_call_ret_val_creation(self, node: AnnCastCall):
         """
@@ -728,9 +723,6 @@ class VariableVersionPass:
         One is in the interior of the container and links
         to the bot interface in.  The other is outside the container and
         links to the bot interface out.
-
-        Note: the ret_val variables going through the Call's bot interface
-        are consistent between GrFN 2.2 and GrFN 3
         """
         # Create new GrFN for return value for bot interface in and bot interface out
         var_name = call_ret_val_name(node)
@@ -785,10 +777,6 @@ class VariableVersionPass:
         # the calling container scope is stored in the Call's AnnCastName node
         calling_scopestr = con_scope_to_str(node.func.con_scope)
 
-        # TODO: if we only want globals which are accessed before modification in to come 
-        # into the top interface, then we need to rethink the top interface of Loop and ModelIf
-        # containers, since their top interfaces are all used variables
-
         # add globals to exterior interfaces
         # add global variables to top_interface_in
         # these are all used globals
@@ -834,9 +822,11 @@ class VariableVersionPass:
             # variable, and the metadata for this GrFN variable will be populated from 
             # that highest version
 
-        print("After adding globals for GrFN 2.2 call ():")
-        print(f"\ttop_interface_in = {node.top_interface_in}")
-        print(f"\tbot_interface_out = {node.bot_interface_out}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print("After adding globals for GrFN 2.2 call ():")
+            print(f"\ttop_interface_in = {node.top_interface_in}")
+            print(f"\tbot_interface_out = {node.bot_interface_out}")
 
     def add_globals_to_call_interfaces(self, node: AnnCastCall):
         """
@@ -853,37 +843,9 @@ class VariableVersionPass:
         calling_scopestr = con_scope_to_str(node.func.con_scope)
         func_def = self.pipeline_state.func_def_node_from_id(node.func.id)
 
-        # TODO: if we only want globals which are accessed before modification in to come 
-        # into the top interface, then we need to rethink the top interface of Loop and ModelIf
-        # containers, since their top interfaces are all used variables
-
         # add globals to exterior interfaces
         # top interface globals are globals which are accessed before modification
         node.top_interface_vars = func_def.used_globals
-
-        # we need to propagate up top_interface_vars to all valid enclosing container scopes
-#         scopestr = ""
-#         for index, name in enumerate(node.func.con_scope):
-#             # add separator between container scope component names
-#             scopestr2 = CON_STR_SEP.join(node.func.con_scope[:index+1])
-#             if index != 0:
-#                 scopestr += f"{CON_STR_SEP}"
-#             scopestr += f"{name}"
-#             assert(scopestr2 == scopestr)
-# 
-#             # currently, the module scope does not have interfaces, so we 
-#             # skip the module scope as well
-#             if scopestr == MODULE_SCOPE or not self.pipeline_state.is_container(scopestr):
-#                 continue
-# 
-#             container_node = self.pipeline_state.con_node_from_scopestr(scopestr)
-#  
-#             for id, var_name in node.top_interface_vars.items():
-#                 container_node.top_interface_vars[id] = var_name
-#                 # we need to add this variable to the containers highest_vars_vers_dict
-#                 # if its not already in it
-#                 if not self.is_var_in_con_scope(scopestr, id):
-#                     self.incr_vars_in_con_scope(scopestr, {id: var_name})
 
         # add global variables to top_interface_in
         self.populate_interface(calling_scopestr, node.top_interface_vars, node.top_interface_in)
@@ -922,17 +884,17 @@ class VariableVersionPass:
             from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.BOT_IFACE_INTRO)
             add_metadata_to_grfn_var(exit_global, from_source_mdata)
 
-        print("After adding globals for GrFN 2.3 call ():")
-        print(f"\ttop_interface_in = {node.top_interface_in}")
-        print(f"\tbot_interface_out = {node.bot_interface_out}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print("After adding globals for GrFN 2.3 call ():")
+            print(f"\ttop_interface_in = {node.top_interface_in}")
+            print(f"\tbot_interface_out = {node.bot_interface_out}")
 
     def visit(self, node: AnnCastNode, assign_lhs: bool):
-        # type(node) is a string which looks like
-        # "class '<path.to.class.ClassName>'"
-        class_name = str(type(node))
-        last_dot = class_name.rfind(".")
-        class_name = class_name[last_dot + 1 : -2]
-        print(f"\nProcessing node type {class_name}")
+        # print current node being visited.  
+        # this can be useful for debugging 
+        # class_name = node.__class__.__name__
+        # print(f"\nProcessing node type {class_name}")
         return self._visit(node, assign_lhs)
 
     @singledispatchmethod
@@ -951,7 +913,6 @@ class VariableVersionPass:
 
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment, assign_lhs: bool):
-        # TODO: what if the rhs has side-effects
         self.visit(node.right, assign_lhs)
         assert isinstance(node.left, AnnCastVar)
         self.visit(node.left, True)
@@ -972,7 +933,6 @@ class VariableVersionPass:
     def visit_boolean(self, node: AnnCastBoolean, assign_lhs: bool):
         pass
 
-    # TODO: Update
     @_visit.register
     def visit_call(self, node: AnnCastCall, assign_lhs: bool):
         assert isinstance(node.func, AnnCastName)
@@ -1021,18 +981,17 @@ class VariableVersionPass:
         # add return value to bot interface out if function_copy has a ret_val
         if node.func_def_copy.has_ret_val:
             self.grfn_2_2_call_ret_val_creation(node)
-
-        # we visit the FunctionDef copy first, so that we know
-        # the global variables which are accessed before they are modified
-        # this allows us to correctly set up the top interface
+        
+        # we visit the function def copy to version globals appearing in its body
         call_assign_lhs = False
         self.visit_function_def_copy(node.func_def_copy, call_assign_lhs)
+
+        # add globals to call interface
         self.add_globals_to_grfn_2_2_call_interfaces(node)
     
 
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef, assign_lhs: bool):
-    # TODO: How to handle class definitions?
         pass
 
     @_visit.register
@@ -1059,9 +1018,10 @@ class VariableVersionPass:
         # store highest var version
         node.body_highest_var_vers = self.con_scope_to_highest_var_vers[con_scopestr]
 
-        # DEBUGGING
-        print(f"\nFor FUNCTION COPY: {con_scopestr}")
-        print(f"  BodyHighestVers: {node.body_highest_var_vers}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"\nFor FUNCTION COPY: {con_scopestr}")
+            print(f"  BodyHighestVers: {node.body_highest_var_vers}")
 
     @_visit.register
     def visit_function_def(self, node: AnnCastFunctionDef, assign_lhs: bool):
@@ -1095,9 +1055,10 @@ class VariableVersionPass:
         else: 
             self.add_globals_to_non_main_func_def_interfaces(node)
 
-        # DEBUGGING
-        print(f"\nFor FUNCTION: {con_scopestr}")
-        print(f"  BodyHighestVers: {node.body_highest_var_vers}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"\nFor FUNCTION: {con_scopestr}")
+            print(f"  BodyHighestVers: {node.body_highest_var_vers}")
 
     @_visit.register
     def visit_list(self, node: AnnCastList, assign_lhs: bool):
@@ -1128,10 +1089,11 @@ class VariableVersionPass:
         # populate all of this loops interfaces
         self.populate_loop_interfaces(node)
 
-        # DEBUGGING
-        print(f"\nFor LOOP: {con_scope_to_str(node.con_scope)}")
-        print(f"  ExprHighestVers: {node.expr_highest_var_vers}")
-        print(f"  BodyHighestVers: {node.body_highest_var_vers}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"\nFor LOOP: {con_scope_to_str(node.con_scope)}")
+            print(f"  ExprHighestVers: {node.expr_highest_var_vers}")
+            print(f"  BodyHighestVers: {node.body_highest_var_vers}")
 
     @_visit.register
     def visit_model_break(self, node: AnnCastModelBreak, assign_lhs: bool):
@@ -1172,11 +1134,12 @@ class VariableVersionPass:
         # populate interfaces
         self.populate_model_if_interfaces(node)
 
-        # DEBUGGING
-        print(f"\nFor IF: {con_scope_to_str(node.con_scope)}")
-        print(f"  ExprHighestVers: {node.expr_highest_var_vers}")
-        print(f"  IfBodyHighestVers: {node.ifbody_highest_var_vers}")
-        print(f"  ElseBodyHighestVers: {node.elsebody_highest_var_vers}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"\nFor IF: {con_scope_to_str(node.con_scope)}")
+            print(f"  ExprHighestVers: {node.expr_highest_var_vers}")
+            print(f"  IfBodyHighestVers: {node.ifbody_highest_var_vers}")
+            print(f"  ElseBodyHighestVers: {node.elsebody_highest_var_vers}")
 
     @_visit.register
     def visit_return(self, node: AnnCastModelReturn, assign_lhs: bool):
@@ -1196,49 +1159,6 @@ class VariableVersionPass:
             self.incr_version_in_con_scope(con_scopestr, node.id, node.name)
 
         node.version = self.get_highest_ver_in_con_scope(con_scopestr, node.id)
-
-        # we determine the globals which are either modified or accessed before modification here,
-        # and store them in the associated FunctionDef node.
-        # To determine whether the global is accessed before its modified, 
-        # we check if this node's version is VAR_INIT_VERSION 
-        # Note: we also skip the module container scope since these attributes 
-        # are only needed to create interfaces, and the module does not currently have an interface
-#         if self.pipeline_state.is_global_var(node.id) and con_scopestr != MODULE_SCOPE:
-#             func_node = self.pipeline_state.func_def_node_from_scopestr(node.base_func_scopestr)
-# 
-#             if node.version == VAR_INIT_VERSION:  # only occurs on RHS
-#                 func_node.globals_accessed_before_mod[node.id] = node.name
-#             # if we are assigning to the global, then it is modified
-#             elif assign_lhs:
-#                 func_node.modified_globals[node.id] = node.name
-#             # no matter what, add to used_globals dict
-#             func_node.used_globals[node.id] = node.name
-# 
-#             # due to GrFN 2.2 FunctionDef copying, we need to also propagate up the
-#             # globals accessed before modification and modified globals to 
-#             # scopes higher than base_func_scopestr
-#             if self.pipeline_state.GENERATE_GRFN_2_2:
-#                 scopestr = ""
-#                 for index, name in enumerate(node.con_scope):
-#                     # add separator between container scope component names
-#                     if index != 0:
-#                         scopestr += f"{CON_STR_SEP}"
-#                     scopestr += f"{name}"
-# 
-#                     # skip if scopestr is not a function scope
-#                     if scopestr not in self.pipeline_state.func_con_scopestr_to_id:
-#                         continue
-# 
-#                     # otherwise, add to correct globals tracking dict
-#                     func_node = self.pipeline_state.func_def_node_from_scopestr(scopestr)
-# 
-#                     if node.version == VAR_INIT_VERSION:  # only occurs on RHS
-#                         func_node.globals_accessed_before_mod[node.id] = node.name
-#                     # if we are assigning to the global, then it is modified
-#                     elif assign_lhs:
-#                         func_node.modified_globals[node.id] = node.name
-#                     # no matter what, add to used_globals dict
-#                     func_node.used_globals[node.id] = node.name
 
     @_visit.register
     def visit_number(self, node: AnnCastNumber, assign_lhs: bool):

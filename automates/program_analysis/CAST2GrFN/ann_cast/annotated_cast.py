@@ -30,12 +30,12 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
-
 from automates.model_assembly.networks import GroundedFunctionNetwork, VariableNode
 
 class PipelineState:
     def __init__(self, ann_nodes: typing.List, grfn2_2: bool):
         self.GENERATE_GRFN_2_2 = grfn2_2
+        self.PRINT_DEBUGGING_INFO = False
         self.nodes = ann_nodes
         # populated after IdCollapsePass, and used to give ids to GrFN condition variables
         self.collapsed_id_counter = 0
@@ -49,7 +49,9 @@ class PipelineState:
         # the fullid of a AnnCastName node is a string which includes its 
         # variable name, numerical id, version, and scope
         self.fullid_to_grfn_id = {}
-        # TODO: do we need to store multiple modules?
+        # `module_node` is simply a reference to the AnnCastModule node
+        # FUTURE: to handle multiple modules for Python this will need to be extended
+        # for the most part, the module node is used to determine globals
         self.module_node = None
         # GrFN stored after ToGrfnPass
         self.grfn: typing.Optional[GroundedFunctionNetwork] = None
@@ -197,8 +199,6 @@ class PipelineState:
 class AnnCastNode(AstNode):
     def __init__(self,*args, **kwargs):
         super().__init__(self)
-        self.incoming_vars = {}
-        self.outgoing_vars = {}
         self.expr_str: str = ""
 
     def to_dict(self):
@@ -366,29 +366,6 @@ class AnnCastCall(AnnCastNode):
     def __str__(self):
         return Call.__str__(self)
 
-
-class AnnCastClassDef(AnnCastNode):
-    def __init__(self, name, bases, func, fields, source_refs):
-        super().__init__(self)
-        self.name = name
-        self.bases = bases
-        self.func = func
-        self.fields = fields
-        self.source_refs = node.source_refs
-
-    def to_dict(self):
-        result = super().to_dict()
-        # FUTURE: add attributes to result
-        return result
-
-    def equiv(self, other):
-        if not isinstance(other, AnnCastClassDef):
-            return False
-        return self.to_dict() == other.to_dict()
-        
-    def __str__(self):
-        return ClassDef.__str__(self)
-
 class AnnCastDict(AnnCastNode):
     def __init__(self, keys, values, source_refs):
         super().__init__(self)
@@ -436,27 +413,12 @@ class AnnCastFunctionDef(AnnCastNode):
         self.body = body
         self.source_refs = source_refs
 
-        # TODO:
-        # How does this example work with interfaces? 
-        # How does g1 get added to func2's imported_globals?
-        # int g1 = 1;
-        # int func1() {
-        #     func2();
-        # }
-        #
-        # int func2() {
-        #     g1 = 0;
-        # }
-        #
-        # int main() {
-        #     func1();
-        # }
         self.con_scope: typing.List
 
         # For CAST coming from C, we determine if the function 
         # has a return value by looking for a CAST Return node.
         # We do this during the ContainerScopePass.
-        # TODO: What should be done with CAST coming from Python? 
+        # FUTURE: What should be done with CAST coming from Python? 
         # In Python, every function returns something, 
         # either None or the explicit return value
         self.has_ret_val: bool = False
@@ -512,6 +474,7 @@ class AnnCastFunctionDef(AnnCastNode):
         result["body"] = [node.to_dict() for node in self.body]
         result["con_scope"] = self.con_scope
         result["has_ret_val"] = self.has_ret_val
+        # FUTURE: add attributes to enhance test coverage
         return result
 
     def equiv(self, other):
@@ -590,7 +553,7 @@ class AnnCastLoop(AnnCastNode):
         self.body_highest_var_vers = {}
 
         # dicts mapping a Name id to variable string name
-        # for variables used in the if expr
+        # for variables used in the Loop expr
         self.expr_vars_accessed_before_mod = {}
         self.expr_modified_vars = {}
         self.expr_used_vars = {}
@@ -608,8 +571,6 @@ class AnnCastLoop(AnnCastNode):
         self.condition_out = {}
         # GrFN VariableNode for the condition node
         self.condition_var = None
-        # TODO: decide type of exit
-        self.exit = None
 
         # GrFN lambda expressions
         self.top_interface_lambda: str
@@ -624,6 +585,7 @@ class AnnCastLoop(AnnCastNode):
         result["body"] = [node.to_dict() for node in self.body]
         result["con_scope"] = self.con_scope
         result["base_func_scopestr"] = self.base_func_scopestr
+        # FUTURE: add attributes to enhance test coverage
         return result
 
     def equiv(self, other):
@@ -727,6 +689,7 @@ class AnnCastModelIf(AnnCastNode):
         result["orelse"] = [node.to_dict() for node in self.orelse]
         result["con_scope"] = self.con_scope
         result["base_func_scopestr"] = self.base_func_scopestr
+        # FUTURE: add attributes to enhance test coverage
         return result
 
     def equiv(self, other):
@@ -781,8 +744,8 @@ class AnnCastModule(AnnCastNode):
         result = super().to_dict()
         result["name"] = str(self.name)
         result["body"] = [node.to_dict() for node in self.body]
-        #TODO: add the modified, accessed_before_mod, and used_vars?
         result["con_scope"] = self.con_scope
+        # FUTURE: add attributes to enhance test coverage
         return result
 
     def equiv(self, other):

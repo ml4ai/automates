@@ -18,11 +18,13 @@ from automates.model_assembly.structures import VariableIdentifier
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
 
-# FUTURE: it is possible to change these separators as needed as long as they don't collide/overlap
+# NOTE: the GrFN json loading seems to rely on "." as the separator for container scopes
+# For the Annotated Cast pipeline, it is fine to change these separators as long as they
+# don't collide
 # used in ContainerScopePass functions `con_scope_to_str()` and `visit_name()`
-CON_STR_SEP = "::"
+CON_STR_SEP = "."
 # delimiter for fullids
-FULLID_SEP = "."
+FULLID_SEP = ":"
 
 # NOTE: we use hyphens between names to create illegal identifiers to prevent name collisions
 LOOPBODY = "loop-body"

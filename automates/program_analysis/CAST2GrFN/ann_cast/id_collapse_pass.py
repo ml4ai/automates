@@ -57,16 +57,15 @@ class IdCollapsePass:
             func_id = call.func.id
             call.has_func_def = self.pipeline_state.func_def_exists(func_id)
             
-            # DEBUGGING:
-            print(f"{call_name} has FunctionDef: {call.has_func_def}")
+            # DEBUG printing
+            if self.pipeline_state.PRINT_DEBUGGING_INFO:
+                print(f"{call_name} has FunctionDef: {call.has_func_def}")
 
     def visit(self, node: AnnCastNode, at_module_scope):
-        # type(node) is a string which looks like
-        # "class '<path.to.class.ClassName>'"
-        class_name = str(type(node))
-        last_dot = class_name.rfind(".")
-        class_name = class_name[last_dot + 1 : -2]
-        print(f"\nProcessing node type {class_name}")
+        # print current node being visited.  
+        # this can be useful for debugging 
+        # class_name = node.__class__.__name__
+        # print(f"\nProcessing node type {class_name}")
         return self._visit(node, at_module_scope)
 
     def visit_node_list(self, node_list: typing.List[AnnCastNode], at_module_scope):

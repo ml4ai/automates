@@ -35,8 +35,10 @@ class GrfnVarCreationPass:
         # variable name, numerical id, version, and scope
         for node in self.pipeline_state.nodes:
             self.visit(node)
-
-        self.print_created_grfn_vars()
+        
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            self.print_created_grfn_vars()
 
     def visit(self, node: AnnCastNode):
         """
@@ -44,16 +46,16 @@ class GrfnVarCreationPass:
         Useful for debugging/development.  For example,
         printing the nodes that are visited
         """
-        # debug printing
-        class_name = node.__class__.__name__
-        print(f"\nProcessing node type {class_name}")
+        # print current node being visited.  
+        # this can be useful for debugging 
+        # class_name = node.__class__.__name__
+        # print(f"\nProcessing node type {class_name}")
 
         # call internal visit
         return self._visit(node)
 
     def visit_node_list(self, node_list: typing.List[AnnCastNode]):
         return [self.visit(node) for node in node_list]
-
 
     def get_grfn_var_for_name_node(self, node: AnnCastName):
         """
@@ -63,14 +65,6 @@ class GrfnVarCreationPass:
         fullid = ann_cast_name_to_fullid(node)
         return self.pipeline_state.grfn_id_to_grfn_var[self.pipeline_state.fullid_to_grfn_id[fullid]]
 
-
-    # def alias_grfn_vars(self, src_fullid: str, tgt_fullid: str):
-    #     """
-    #     Put the GrFN id associated with `tgt_fullid` into dict `fullid_to_grfn_id` for key
-    #     `src_fullid` 
-    #     """
-    #     self.pipeline_state.fullid_to_grfn_id[src_fullid] = self.pipeline_state.fullid_to_grfn_id[tgt_fullid]
-        
     def alias_copied_func_body_init_vers(self, node: AnnCastCall):
         """
         Precondition: This should be called after visiting copied function body.
@@ -86,16 +80,10 @@ class GrfnVarCreationPass:
         # alias `VAR_INIT_VERSION` variables in call_con_scopestr
         # to the `VAR_INIT_VERSION` version occuring the func body
         version = VAR_INIT_VERSION
-        # NOTE: if we change to globals which are accessed before modification
-        #       this loop should be changed as well
         # we alias globals which are used for the top interface
         for id, var_name in node.top_interface_vars.items():
             body_fullid = build_fullid(var_name, id, version, func_con_scopestr)
             call_fullid = build_fullid(var_name, id, version, call_con_scopestr)
-            # TODO: do we want this?
-            # don't try to alias, if VAR_INIT_VERSION is never used in the body
-            # if not self.pipeline_state.grfn_var_exists(body_fullid):
-            #     continue
             # we create GrFN variables with call_fullid during VariableVersionPass
             self.pipeline_state.alias_grfn_vars(body_fullid, call_fullid)
 
@@ -197,44 +185,6 @@ class GrfnVarCreationPass:
             from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.BOT_IFACE_INTRO)
             add_metadata_to_grfn_var(grfn_var, from_source_mdata)
 
-    def setup_loop_condition(self, node: AnnCastLoop):
-        """
-        Creates a GrFN `VariableNode` for the condtion variable of 
-        this Loop container.  Populates the `condition_in` and `condition_out`
-        attributes based on the loop expr's used variables and the newly
-        created GrFN condition variable.
-        """
-        loop_scopestr = con_scope_to_str(node.con_scope)
-        expr_scopestr = con_scope_to_str(node.con_scope + [LOOPEXPR])
-
-        # inputs to condition node are the highest versions of used variables of the expr
-        for id, var_name in node.expr_used_vars.items():
-            highest_ver = node.expr_highest_var_vers[id]
-            fullid = build_fullid(var_name, id, highest_ver, expr_scopestr)
-            node.condition_in[id] = fullid
-
-        # build condition variable
-        cond_name = make_loop_exit_name(loop_scopestr)
-        # use new collapsed id
-        cond_id = self.pipeline_state.next_collapsed_id()
-        cond_version = VAR_INIT_VERSION
-        cond_fullid = build_fullid(cond_name, cond_id, cond_version, loop_scopestr)
-        cond_var = create_grfn_var(cond_name, cond_id, cond_version, loop_scopestr)
-        # mark the node as an exit
-        cond_var.is_exit = True
-        self.pipeline_state.fullid_to_grfn_id[cond_fullid] = cond_var.uid
-        self.pipeline_state.grfn_id_to_grfn_var[cond_var.uid] = cond_var
-        # create From Source metadata for the GrFN var
-        from_source = False
-        from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.COND_VAR)
-        add_metadata_to_grfn_var(cond_var, from_source_mdata)
-
-        # cache condtiional variable
-        node.condition_var = cond_var
-
-        # ouput of condition node is new condition var
-        node.condition_out[cond_id] = cond_fullid
-
     def setup_model_if_condition(self, node: AnnCastModelIf):
         """
         Creates a GrFN `VariableNode` for the condtion variable of 
@@ -258,8 +208,7 @@ class GrfnVarCreationPass:
         cond_version = VAR_INIT_VERSION
         cond_fullid = build_fullid(cond_name, cond_id, cond_version, if_scopestr)
         cond_var = create_grfn_var(cond_name, cond_id, cond_version, if_scopestr)
-        self.pipeline_state.fullid_to_grfn_id[cond_fullid] = cond_var.uid
-        self.pipeline_state.grfn_id_to_grfn_var[cond_var.uid] = cond_var
+        self.pipeline_state.store_grfn_var(cond_fullid, cond_var)
         # create From Source metadata for the GrFN var
         from_source = False
         from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.COND_VAR)
@@ -302,7 +251,6 @@ class GrfnVarCreationPass:
         for id, var_name in node.bot_interface_vars.items():
             fullid = build_fullid(var_name, id, out_version, if_scopestr)
             node.decision_out[id] = fullid
-        
 
     def create_grfn_vars_loop(self, node: AnnCastLoop):
         """
@@ -388,14 +336,49 @@ class GrfnVarCreationPass:
         # alias `LOOP_VAR_UPDATED_VERSION` modified variables 
         # to the highest version occuring the loop body
         updated_version = LOOP_VAR_UPDATED_VERSION
-        # NOTE: bot_interface_vars is the same as modified_vars
-        for id, var_name in node.bot_interface_vars.items():
+        for id, var_name in node.modified_vars.items():
             body_version = node.body_highest_var_vers[id]
             body_scopestr = con_scopestr + CON_STR_SEP + LOOPBODY
             body_fullid = build_fullid(var_name, id, body_version, body_scopestr)
             updated_fullid = build_fullid(var_name, id, updated_version, con_scopestr)
             self.pipeline_state.alias_grfn_vars(updated_fullid, body_fullid)
 
+    def setup_loop_condition(self, node: AnnCastLoop):
+        """
+        Creates a GrFN `VariableNode` for the condtion variable of 
+        this Loop container.  Populates the `condition_in` and `condition_out`
+        attributes based on the loop expr's used variables and the newly
+        created GrFN condition variable.
+        """
+        loop_scopestr = con_scope_to_str(node.con_scope)
+        expr_scopestr = con_scope_to_str(node.con_scope + [LOOPEXPR])
+
+        # inputs to condition node are the highest versions of used variables of the expr
+        for id, var_name in node.expr_used_vars.items():
+            highest_ver = node.expr_highest_var_vers[id]
+            fullid = build_fullid(var_name, id, highest_ver, expr_scopestr)
+            node.condition_in[id] = fullid
+
+        # build condition variable
+        cond_name = make_loop_exit_name(loop_scopestr)
+        # use new collapsed id
+        cond_id = self.pipeline_state.next_collapsed_id()
+        cond_version = VAR_INIT_VERSION
+        cond_fullid = build_fullid(cond_name, cond_id, cond_version, loop_scopestr)
+        cond_var = create_grfn_var(cond_name, cond_id, cond_version, loop_scopestr)
+        # mark the node as an exit
+        cond_var.is_exit = True
+        self.pipeline_state.store_grfn_var(cond_fullid, cond_var)
+        # create From Source metadata for the GrFN var
+        from_source = False
+        from_source_mdata = generate_from_source_metadata(from_source, VariableCreationReason.COND_VAR)
+        add_metadata_to_grfn_var(cond_var, from_source_mdata)
+
+        # cache condtiional variable
+        node.condition_var = cond_var
+
+        # ouput of condition node is new condition var
+        node.condition_out[cond_id] = cond_fullid
 
     def print_created_grfn_vars(self):
         print("Created the follwing GrFN variables")
@@ -406,7 +389,6 @@ class GrfnVarCreationPass:
             grfn_var = self.pipeline_state.grfn_id_to_grfn_var[grfn_id]
             print(f"{fullid:<70}{grfn_id:<70}{grfn_var.identifier.index:<2}")
 
-
     @singledispatchmethod
     def _visit(self, node: AnnCastNode):
         """
@@ -416,9 +398,6 @@ class GrfnVarCreationPass:
 
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment):
-        # TODO: what if the rhs has side-effects
-        # IDEA: add inputs/outputs dict to AnnCastAssignment,
-        # populate those here.  This could make to_grfn_pass of Assignment nodes easier
         self.visit(node.right)
         assert isinstance(node.left, AnnCastVar)
         self.visit(node.left)
@@ -439,7 +418,6 @@ class GrfnVarCreationPass:
     def visit_boolean(self, node: AnnCastBoolean):
         pass
 
-    # TODO: Update and decide how to do aliasing
     @_visit.register
     def visit_call(self, node: AnnCastCall):
         if node.is_grfn_2_2:
@@ -485,9 +463,9 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_loop(self, node: AnnCastLoop):
         self.create_grfn_vars_loop(node)
-        # visit children
         self.alias_loop_expr_highest_vers(node)
         self.alias_loop_body_highest_vers(node)
+        # visit children
         self.visit(node.expr)
         self.setup_loop_condition(node)
         self.visit_node_list(node.body)
@@ -516,10 +494,11 @@ class GrfnVarCreationPass:
         # populate node.decision_in, node.decision_out
         self.setup_model_if_decision(node)
 
-        # DEBUGGING
-        print("ModelIf Interface vars")
-        print(f"    top_interface_out: {node.top_interface_out}")
-        print(f"    bot_interface_out: {node.bot_interface_out}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print("ModelIf Interface vars")
+            print(f"    top_interface_out: {node.top_interface_out}")
+            print(f"    bot_interface_out: {node.bot_interface_out}")
 
     @_visit.register
     def visit_model_return(self, node: AnnCastModelReturn):
@@ -535,8 +514,7 @@ class GrfnVarCreationPass:
         # if we haven't already created the GrFN `VariableNode`, create it
         if fullid not in self.pipeline_state.fullid_to_grfn_id:
             grfn_var = create_grfn_var_from_name_node(node)
-            self.pipeline_state.fullid_to_grfn_id[fullid] = grfn_var.uid
-            self.pipeline_state.grfn_id_to_grfn_var[grfn_var.uid] = grfn_var
+            self.pipeline_state.store_grfn_var(fullid, grfn_var)
 
         # now, store the grfn_id in the nane node
         node.grfn_id = self.pipeline_state.fullid_to_grfn_id[fullid]
