@@ -1,15 +1,25 @@
-from functools import singledispatchmethod
 import typing
+from functools import singledispatchmethod
 
+from automates.model_assembly.metadata import LambdaType
+from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
+    GrfnAssignment,
+    ann_cast_name_to_fullid,
+    create_grfn_assign_node,
+    create_grfn_literal_node,
+    create_lambda_node_metadata,
+    is_literal_assignment,
+)
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
+
 class GrfnAssignmentPass:
-    def __init__(self, ann_cast: AnnCast):
-        self.ann_cast = ann_cast
-        self.nodes = self.ann_cast.nodes
+    def __init__(self, pipeline_state: PipelineState):
+        self.pipeline_state = pipeline_state
+        self.nodes = self.pipeline_state.nodes
         # Any other state variables that are needed during
         # the pass
-        for node in self.ann_cast.nodes:
+        for node in self.pipeline_state.nodes:
             add_to = {}
             self.visit(node, add_to)
 
@@ -19,9 +29,10 @@ class GrfnAssignmentPass:
         When visiting variable nodes, we add the variable to this `add_to` dict.
         When visiting call nodes, we add the function return value to this `add_to` dict.
         """
-        # debug printing
-        class_name = node.__class__.__name__
-        print(f"\nProcessing node type {class_name}")
+        # print current node being visited.  
+        # this can be useful for debugging 
+        # class_name = node.__class__.__name__
+        # print(f"\nProcessing node type {class_name}")
 
         # call internal visit
         return self._visit(node, add_to)
@@ -51,10 +62,11 @@ class GrfnAssignmentPass:
         assert isinstance(node.left, AnnCastVar)
         self.visit(node.left, node.grfn_assignment.outputs)
 
-        # DEBUGGING
-        print(f"GrFN {node.grfn_assignment.assignment_type} after visiting children:")
-        print(f"     grfn_assignment.inputs:  {node.grfn_assignment.inputs}")
-        print(f"     grfn_assignment.outputs: {node.grfn_assignment.outputs}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"GrFN {node.grfn_assignment.assignment_type} after visiting children:")
+            print(f"     grfn_assignment.inputs:  {node.grfn_assignment.inputs}")
+            print(f"     grfn_assignment.outputs: {node.grfn_assignment.outputs}")
 
     @_visit.register
     def visit_attribute(self, node: AnnCastAttribute, add_to: typing.Dict):
@@ -72,7 +84,6 @@ class GrfnAssignmentPass:
     def visit_boolean(self, node: AnnCastBoolean, add_to: typing.Dict):
         pass
 
-    # TODO: Update
     @_visit.register
     def visit_call(self, node: AnnCastCall, add_to: typing.Dict):
         if node.is_grfn_2_2:
@@ -81,14 +92,14 @@ class GrfnAssignmentPass:
 
         # add ret_val to add_to dict
         for id, fullid in node.out_ret_val.items():
-            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            grfn_var = self.pipeline_state.get_grfn_var(fullid)
             add_to[fullid] = grfn_var.uid
             
         # populate `arg_assignments` attribute of node
         for i, n in enumerate(node.arguments):
             # grab GrFN variable for argument
             arg_fullid = node.arg_index_to_fullid[i]
-            arg_grfn_var = self.ann_cast.get_grfn_var(arg_fullid)
+            arg_grfn_var = self.pipeline_state.get_grfn_var(arg_fullid)
             
             # create GrfnAssignment based on assignment type
             metadata = create_lambda_node_metadata(node.source_refs)
@@ -105,23 +116,24 @@ class GrfnAssignmentPass:
             node.arg_assignments[i] = arg_assignment
 
 
-        # DEBUGGING
-        print(f"Call after processing arguments:")
-        for pos, grfn_assignment in node.arg_assignments.items():
-            print(f"     {pos} : {str(grfn_assignment)}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"Call after processing arguments:")
+            for pos, grfn_assignment in node.arg_assignments.items():
+                print(f"     {pos} : {str(grfn_assignment)}")
 
     def visit_call_grfn_2_2(self, node: AnnCastCall, add_to: typing.Dict):
         assert isinstance(node.func, AnnCastName)
         # add ret_val to add_to dict
         for id, fullid in node.out_ret_val.items():
-            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            grfn_var = self.pipeline_state.get_grfn_var(fullid)
             add_to[fullid] = grfn_var.uid
             
         # populate `arg_assignments` attribute of node
         for i, n in enumerate(node.arguments):
             # grab GrFN variable for argument
             arg_fullid = node.arg_index_to_fullid[i]
-            arg_grfn_var = self.ann_cast.get_grfn_var(arg_fullid)
+            arg_grfn_var = self.pipeline_state.get_grfn_var(arg_fullid)
             
             # create GrfnAssignment based on assignment type
             metadata = create_lambda_node_metadata(node.source_refs)
@@ -139,13 +151,11 @@ class GrfnAssignmentPass:
 
         self.visit_function_def(node.func_def_copy, {})
 
-        # DEBUGGING
-        print(f"Call after processing arguments:")
-        for pos, grfn_assignment in node.arg_assignments.items():
-            print(f"     {pos} : {str(grfn_assignment)}")
-
-
-
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"Call after processing arguments:")
+            for pos, grfn_assignment in node.arg_assignments.items():
+                print(f"     {pos} : {str(grfn_assignment)}")
 
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef, add_to: typing.Dict):
@@ -161,9 +171,9 @@ class GrfnAssignmentPass:
 
     @_visit.register
     def visit_function_def(self, node: AnnCastFunctionDef, add_to: typing.Dict):
-        # TODO: decide what to do for function parameters this is likely needed for non GrFN2.2 generation
-        # self.visit_node_list(node.func_args)
-        # TODO: do we need to pass in an emtpy dict for `add_to`?
+        # linking function arguments to formal parameters through the top 
+        # interface is handled during VariableVersionPass, so we don't need to visit
+        # func_args here
         self.visit_node_list(node.body, add_to)
 
     @_visit.register
@@ -172,7 +182,6 @@ class GrfnAssignmentPass:
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, add_to: typing.Dict):
-        # TODO: do we need to pass in an emtpy dict for `add_to`?
         self.visit(node.expr, add_to)
         self.visit_node_list(node.body, add_to)
 
@@ -186,7 +195,6 @@ class GrfnAssignmentPass:
 
     @_visit.register
     def visit_model_if(self, node: AnnCastModelIf, add_to: typing.Dict):
-        # TODO: do we need to pass in an emtpy dict for `add_to`?
         self.visit(node.expr, add_to)
         self.visit_node_list(node.body, add_to)
         self.visit_node_list(node.orelse, add_to)
@@ -199,19 +207,18 @@ class GrfnAssignmentPass:
             node.grfn_assignment = GrfnAssignment(create_grfn_literal_node(metadata), LambdaType.LITERAL)
         else:
             node.grfn_assignment = GrfnAssignment(create_grfn_assign_node(metadata), LambdaType.ASSIGN)
-            
-
 
         self.visit(node.value, node.grfn_assignment.inputs)
 
         for id, fullid in node.owning_func_def.in_ret_val.items():
-            grfn_var = self.ann_cast.get_grfn_var(fullid)
+            grfn_var = self.pipeline_state.get_grfn_var(fullid)
             node.grfn_assignment.outputs[fullid] = grfn_var.uid
 
-        # DEBUGGING
-        print(f"GrFN RETURN with type {node.grfn_assignment.assignment_type} after visiting children:")
-        print(f"     grfn_assignment.inputs:  {node.grfn_assignment.inputs}")
-        print(f"     grfn_assignment.outputs: {node.grfn_assignment.outputs}")
+        # DEBUG printing
+        if self.pipeline_state.PRINT_DEBUGGING_INFO:
+            print(f"GrFN RETURN with type {node.grfn_assignment.assignment_type} after visiting children:")
+            print(f"     grfn_assignment.inputs:  {node.grfn_assignment.inputs}")
+            print(f"     grfn_assignment.outputs: {node.grfn_assignment.outputs}")
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, add_to: typing.Dict):

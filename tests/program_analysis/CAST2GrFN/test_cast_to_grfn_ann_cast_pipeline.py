@@ -6,7 +6,7 @@ from pathlib import Path
 import automates.utils.misc as misc
 from automates.program_analysis.CAST2GrFN.cast import CAST
 from automates.program_analysis.CAST2GrFN.ann_cast.cast_to_annotated_cast import CastToAnnotatedCastVisitor
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import AnnCast
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import PipelineState
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_utility import *
 from automates.model_assembly.networks import GroundedFunctionNetwork
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
@@ -47,11 +47,11 @@ def run_ann_cast_pipeline(path_to_cast_json: str) -> GroundedFunctionNetwork:
     misc.rd.seed(0)
 
     cast_visitor = CastToAnnotatedCastVisitor(cast)
-    ann_cast = cast_visitor.generate_annotated_cast()
+    pipeline_state = cast_visitor.generate_annotated_cast()
 
-    run_all_ann_cast_passes(ann_cast, verbose=False)
+    run_all_ann_cast_passes(pipeline_state, verbose=False)
 
-    return ann_cast.get_grfn()
+    return pipeline_state.get_grfn()
 
 def check_grfn_equality(grfn1, grfn2) -> bool:
     # FUTURE: we should also check execution results

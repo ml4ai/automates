@@ -1,14 +1,16 @@
-from functools import singledispatchmethod
-from collections import defaultdict
 import typing
+from collections import defaultdict
+from functools import singledispatchmethod
 
-from automates.utils.misc import uuid
+from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
+    call_container_name,
+)
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 
 class IdCollapsePass:
-    def __init__(self, ann_cast: AnnCast):
-        self.ann_cast = ann_cast
+    def __init__(self, pipeline_state: PipelineState):
+        self.pipeline_state = pipeline_state
         # cache Call nodes so after visiting we can determine which Call's have associated
         # FunctionDefs
         # this dict maps call container name to the AnnCastCall node
@@ -20,15 +22,15 @@ class IdCollapsePass:
         # dict mapping collapsed function id to number of invocations
         # used to populate `invocation_index` of AnnCastCall nodes
         self.func_invocation_counter = defaultdict(int)
-        for node in self.ann_cast.nodes:
+        for node in self.pipeline_state.nodes:
             at_module_scope = False
             self.visit(node, at_module_scope)
-        self.nodes = self.ann_cast.nodes
+        self.nodes = self.pipeline_state.nodes
         self.determine_function_defs_for_calls()
         self.store_highest_id()
 
     def store_highest_id(self):
-        self.ann_cast.collapsed_id_counter = self.collapsed_id_counter
+        self.pipeline_state.collapsed_id_counter = self.collapsed_id_counter
 
     def collapse_id(self, id: int) -> int:
         """
@@ -53,18 +55,17 @@ class IdCollapsePass:
     def determine_function_defs_for_calls(self):
         for call_name, call in self.cached_call_nodes.items():
             func_id = call.func.id
-            call.has_func_def = self.ann_cast.func_def_exists(func_id)
+            call.has_func_def = self.pipeline_state.func_def_exists(func_id)
             
-            # DEBUGGING:
-            print(f"{call_name} has FunctionDef: {call.has_func_def}")
+            # DEBUG printing
+            if self.pipeline_state.PRINT_DEBUGGING_INFO:
+                print(f"{call_name} has FunctionDef: {call.has_func_def}")
 
     def visit(self, node: AnnCastNode, at_module_scope):
-        # type(node) is a string which looks like
-        # "class '<path.to.class.ClassName>'"
-        class_name = str(type(node))
-        last_dot = class_name.rfind(".")
-        class_name = class_name[last_dot + 1 : -2]
-        print(f"\nProcessing node type {class_name}")
+        # print current node being visited.  
+        # this can be useful for debugging 
+        # class_name = node.__class__.__name__
+        # print(f"\nProcessing node type {class_name}")
         return self._visit(node, at_module_scope)
 
     def visit_node_list(self, node_list: typing.List[AnnCastNode], at_module_scope):
@@ -133,7 +134,7 @@ class IdCollapsePass:
     def visit_function_def(self, node: AnnCastFunctionDef, at_module_scope):
         # collapse the function id
         node.name.id = self.collapse_id(node.name.id)
-        self.ann_cast.func_id_to_def[node.name.id] = node
+        self.pipeline_state.func_id_to_def[node.name.id] = node
 
         at_module_scope = False
         self.visit_node_list(node.func_args, at_module_scope)
@@ -169,7 +170,7 @@ class IdCollapsePass:
     @_visit.register
     def visit_module(self, node: AnnCastModule, at_module_scope):
         # we cache the module node in the AnnCast object
-        self.ann_cast.module_node = node
+        self.pipeline_state.module_node = node
         at_module_scope = True
         self.visit_node_list(node.body, at_module_scope)
 
@@ -180,7 +181,7 @@ class IdCollapsePass:
         # we consider name nodes at the module scope to be globals
         # and store them in the `used_vars` attribute of the module_node
         if at_module_scope:
-            self.ann_cast.module_node.used_vars[node.id] = node.name
+            self.pipeline_state.module_node.used_vars[node.id] = node.name
 
     @_visit.register
     def visit_number(self, node: AnnCastNumber, at_module_scope):

@@ -37,7 +37,7 @@ GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
 GCC_PLUGIN_IMAGE_DIR = "automates/program_analysis/gcc_plugin/plugin/"
 
 
-def get_args(args=sys.argv[1:]):
+def get_args():
     parser = argparse.ArgumentParser(description="Parses command.")
     parser.add_argument("-i", "--inputs", help="Your input file(s).", nargs="*")
     parser.add_argument(
@@ -55,7 +55,10 @@ def get_args(args=sys.argv[1:]):
     parser.add_argument("-L", "--legacy", 
             help="Generate legacy CAST for the legacy CAST -> AIR -> GrFN pipeline",
             action="store_true")
-    options = parser.parse_args(args)
+    parser.add_argument("--grfn_2_2", 
+            help="Generate GrFN 2.2 for the CAST -> Annotated Cast -> GrFN pipeline",
+            action="store_true")
+    options = parser.parse_args()
     return options
 
 
@@ -186,12 +189,12 @@ def run_gcc_pipeline():
     # otherwise use the AnnCast -> GrFN pipeline
     else:
         visitor = CastToAnnotatedCastVisitor(cast)
-        annotated_cast = visitor.generate_annotated_cast()
+        pipeline_state = visitor.generate_annotated_cast(args.grfn_2_2)
         print("Transforming CAST to AnnCAST and running passes...")
-        run_all_ann_cast_passes(annotated_cast, verbose=True)
+        run_all_ann_cast_passes(pipeline_state, verbose=True)
 
         print("Saving GrFN pdf and json...")
-        grfn = annotated_cast.get_grfn()
+        grfn = pipeline_state.get_grfn()
         grfn.to_json_file(f"{program_name}--GrFN.json")
 
         grfn_agraph = grfn.to_AGraph()
@@ -200,14 +203,14 @@ def run_gcc_pipeline():
         # NOTE: CASTToAGraphVisitor uses misc.uuid, so it should be called after
         # ToGrfnPass so that GrFN uuids are consistent for testing
         print("Saving AnnCAST pdf...")
-        agraph = CASTToAGraphVisitor(annotated_cast)
+        agraph = CASTToAGraphVisitor(pipeline_state)
         pdf_file_name = f"{program_name}-AnnCast.pdf"
         agraph.to_pdf(pdf_file_name)
 
         print("\nGenerating pickled AnnCast -----------------")
         pickled_file_name = f"{program_name}--AnnCast.pickled"
         with open(pickled_file_name,"wb") as pkfile:
-            dill.dump(annotated_cast, pkfile)
+            dill.dump(pipeline_state, pkfile)
 
         # FUTURE: Add in GrFN Execution
         # print("Executing GrFN...")

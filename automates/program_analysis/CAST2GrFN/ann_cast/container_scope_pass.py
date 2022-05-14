@@ -1,11 +1,27 @@
-from functools import singledispatchmethod
-from collections import defaultdict
 import copy
 import typing
+from collections import defaultdict
 from enum import Enum
+from functools import singledispatchmethod
 
-
+from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
+    CON_STR_SEP,
+    ELSEBODY,
+    IFBODY,
+    IFEXPR,
+    LOOPBODY,
+    LOOPEXPR,
+    MODULE_SCOPE,
+    GrfnContainerSrcRef,
+    call_container_name,
+    combine_grfn_con_src_refs,
+    combine_source_refs,
+    con_scope_to_str,
+    func_def_container_name,
+    var_dict_to_str,
+)
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+
 
 class AssignSide(Enum):
     NEITHER = 0
@@ -14,9 +30,9 @@ class AssignSide(Enum):
 
 
 class ContainerData:
-    modified_vars: typing.Dict[id, str]
-    vars_accessed_before_mod: typing.Dict[id, str]
-    used_vars: typing.Dict[id, str]
+    modified_vars: typing.Dict[int, str]
+    vars_accessed_before_mod: typing.Dict[int, str]
+    used_vars: typing.Dict[int, str]
 
     def __init__(self):
         self.modified_vars = {}
@@ -25,8 +41,8 @@ class ContainerData:
 
 
 class ContainerScopePass:
-    def __init__(self, ann_cast: AnnCast):
-        self.ann_cast = ann_cast
+    def __init__(self, pipeline_state: PipelineState):
+        self.pipeline_state = pipeline_state
         # dicts mapping container scope strs to the if/loop count inside
         # the container
         self.if_count = defaultdict(int)
@@ -37,21 +53,20 @@ class ContainerScopePass:
         self.con_str_to_con_data = {}
         self.calls_to_process = list()
 
-        for node in self.ann_cast.nodes:
+        for node in self.pipeline_state.nodes:
             # assign_side is False at the start of our visitor
             base_scopestr = ""
             enclosing_con_scope = []
             self.visit(node, base_scopestr, enclosing_con_scope, AssignSide.NEITHER)
-        self.nodes = self.ann_cast.nodes
+        self.nodes = self.pipeline_state.nodes
 
         # add cached container data to container nodes
         self.add_container_data_to_nodes()
  
         # save the dict mapping container scope to AnnCastNode
-        self.ann_cast.con_scopestr_to_node = self.con_str_to_node
+        self.pipeline_state.con_scopestr_to_node = self.con_str_to_node
 
         self.propagate_globals_through_calls()
-        print("Done")
 
     def next_if_scope(self, enclosing_con_scope):
         scopestr = con_scope_to_str(enclosing_con_scope)
@@ -67,7 +82,7 @@ class ContainerScopePass:
 
     def propagate_globals_through_calls(self):
         for call_node in self.calls_to_process:
-            func_def = self.ann_cast.func_def_node_from_id(call_node.func.id)
+            func_def = self.pipeline_state.func_def_node_from_id(call_node.func.id)
 
             # propagate up used variables to enclosing container scopes
             scopestr = ""
@@ -79,12 +94,12 @@ class ContainerScopePass:
                 scopestr += f"{name}"
                 assert(scopestr == scopestr2)
 
-                if scopestr == MODULE_SCOPE or not self.ann_cast.is_container(scopestr):
+                if scopestr == MODULE_SCOPE or not self.pipeline_state.is_container(scopestr):
                     continue
 
-                container_node = self.ann_cast.con_node_from_scopestr(scopestr)
+                container_node = self.pipeline_state.con_node_from_scopestr(scopestr)
 
-                if self.ann_cast.is_con_scopestr_func_def(scopestr):
+                if self.pipeline_state.is_con_scopestr_func_def(scopestr):
                     container_node.used_globals.update(func_def.used_globals)
                     container_node.modified_globals.update(func_def.modified_globals)
                     container_node.globals_accessed_before_mod.update(func_def.globals_accessed_before_mod)
@@ -103,13 +118,15 @@ class ContainerScopePass:
 
     def add_container_data_to_nodes(self):
         for scopestr, data in self.con_str_to_con_data.items():
-            print(f"For scopestr: {scopestr} found data with")
-            modified_vars = var_dict_to_str("  Modified: ", data.modified_vars)
-            print(modified_vars)
-            vars_accessed_before_mod = var_dict_to_str("  Accessed: ", data.vars_accessed_before_mod)
-            print(vars_accessed_before_mod)
-            used_vars = var_dict_to_str("  Used: ", data.vars_accessed_before_mod)
-            print(used_vars)
+            # DEBUG printing
+            if self.pipeline_state.PRINT_DEBUGGING_INFO:
+                print(f"For scopestr: {scopestr} found data with")
+                modified_vars = var_dict_to_str("  Modified: ", data.modified_vars)
+                print(modified_vars)
+                vars_accessed_before_mod = var_dict_to_str("  Accessed: ", data.vars_accessed_before_mod)
+                print(vars_accessed_before_mod)
+                used_vars = var_dict_to_str("  Used: ", data.vars_accessed_before_mod)
+                print(used_vars)
 
             # Note: for the ModelIf.Expr and Loop.Expr nodes,
             # we put the ModelIf and Loop nodes respectively in
@@ -138,7 +155,7 @@ class ContainerScopePass:
 
             # if the container is a FunctionDef, we want to store how globals are used
             if isinstance(container, AnnCastFunctionDef):
-                all_globals = self.ann_cast.all_globals_dict()
+                all_globals = self.pipeline_state.all_globals_dict()
                 for id, name in all_globals.items():
                     if id in container.vars_accessed_before_mod:
                         container.globals_accessed_before_mod[id] = name
@@ -147,10 +164,9 @@ class ContainerScopePass:
                     if id in container.used_vars:
                         container.used_globals[id] = name
 
-                print("Globals added")
-            
-            # DEBUGGING:
-            print(container.grfn_con_src_ref)
+            # DEBUG printing
+            if self.pipeline_state.PRINT_DEBUGGING_INFO:
+                print(container.grfn_con_src_ref)
 
     def initialize_con_scope_data(self, con_scope: typing.List, node):
         """
@@ -167,12 +183,11 @@ class ContainerScopePass:
     def visit(
             self, node: AnnCastNode, base_func_scopestr: str, enclosing_con_scope: typing.List, assign_side: AssignSide
     ):
-        # type(node) is a string which looks like
-        # "class '<path.to.class.ClassName>'"
-        class_name = str(type(node))
-        last_dot = class_name.rfind(".")
-        class_name = class_name[last_dot + 1 : -2]
-        print(f"\nProcessing node type {class_name}")
+        # print current node being visited.  
+        # this can be useful for debugging 
+        # class_name = node.__class__.__name__
+        # print(f"\nProcessing node type {class_name}")
+
         children_src_ref = self._visit(node, base_func_scopestr, enclosing_con_scope, assign_side)
         if children_src_ref is None:
             children_src_ref = GrfnContainerSrcRef(None, None, None)
@@ -212,7 +227,6 @@ class ContainerScopePass:
     def visit_assignment(
         self, node: AnnCastAssignment, base_func_scopestr, enclosing_con_scope, assign_side
     ):
-        # TODO: what if the rhs has side-effects
         right_src_ref = self.visit(node.right, base_func_scopestr, enclosing_con_scope, AssignSide.RIGHT)
         assert isinstance(node.left, AnnCastVar)
         left_src_ref = self.visit(node.left, base_func_scopestr, enclosing_con_scope, AssignSide.LEFT)
@@ -241,51 +255,19 @@ class ContainerScopePass:
     def visit_call(self, node: AnnCastCall, base_func_scopestr, enclosing_con_scope, assign_side):
         assert isinstance(node.func, AnnCastName)
         # if this call is on the RHS of an assignment, then it should have a ret val
+        # FUTURE: this logic is not sufficient to determine 
+        # all cases that a Call node should have a ret val
         if assign_side == AssignSide.RIGHT:
             node.has_ret_val = True
 
         node.func.con_scope = enclosing_con_scope
         # if we are trying to generate GrFN 2.2 and this call has an associated
         # FunctionDef, make a GrFN 2.2 container for it
-        if GENERATE_GRFN_2_2 and node.has_func_def:
+        if self.pipeline_state.GENERATE_GRFN_2_2 and node.has_func_def:
             node.is_grfn_2_2 = True
             return self.visit_call_grfn_2_2(node, base_func_scopestr, enclosing_con_scope, assign_side)
 
-        # Code that works, but does not allow recursive functions
-        # the children GrFN source ref for the call node is the src ref of the call's arguments
-#         args_src_ref = self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_side)
-# 
-#         # we make a func_def copy for both GrFN2.2 and non 2.2 Calls
-#         # for non 2.2 calls, the copied function def allows us to easily propagate 
-#         # globals to enclosing scopes which are needed for the Call's interfaces
-#         node.func_def_copy = copy.deepcopy(self.ann_cast.func_id_to_def[node.func.id])
-#         calling_scope = enclosing_con_scope + [call_container_name(node)]
-#         
-#         # for GrFN 2.2, the copied FunctionDef container will be a subcontainer of the container
-#         # for base_func_scopestr
-#         if node.is_grfn_2_2:
-#             # make a new id for the copy's Name node, and store in func_id_to_def
-#             node.func_def_copy.name.id = self.ann_cast.next_collapsed_id()
-#             self.ann_cast.func_id_to_def[node.func_def_copy.name.id] = node.func_def_copy
-#             self.visit_function_def(node.func_def_copy, base_func_scopestr, calling_scope, AssignSide.NEITHER)
-#         # for non GrFN 2.2 calls, we use calling_scopestr for base_func_scopestr 
-#         # this ensures no locals from the FunctionDef body are propagated up to enclosing scopes
-#         # instead only globals are propagated
-#         else:
-#             calling_scopestr = con_scope_to_str(calling_scope)
-#             self.visit_function_def(node.func_def_copy, calling_scopestr, calling_scope, AssignSide.NEITHER) 
-# 
-#             # For GrFN 2.2 calls, we store a GrfnContainerSrcRef for them
-#             grfn_src_ref = GrfnContainerSrcRef(None, None, None)
-#             if node.source_refs is not None:
-#                 src_ref = combine_source_refs(node.source_refs)
-#                 grfn_src_ref = GrfnContainerSrcRef(line_begin=src_ref.row_start, line_end=src_ref.row_end,
-#                                                    source_file_name=src_ref.source_file_name)
-#             node.grfn_con_src_ref = grfn_src_ref
-# 
-#         return args_src_ref
-#         
-        # otherwise, this Call should not be treated as a non GrFN 2.2 call,
+        # otherwise, this Call should not be treated as a GrFN 2.2 call,
         # so we store a GrfnContainerSrcRef for it
         grfn_src_ref = GrfnContainerSrcRef(None, None, None)
         if node.source_refs is not None:
@@ -298,15 +280,6 @@ class ContainerScopePass:
         if node.has_func_def:
             self.calls_to_process.append(node)
 
-        # # globals which are used by this Call's FunctionDef while be added to the Call's interface
-        # # so, we need to propagate the use of these globals to enclosing containers
-        # # to do this, we visit the body of the associated FunctionDef, and the propagation occurs in visit_name()
-        # func_def = self.ann_cast.func_def_node_from_id(node.func.id)
-        # call_con_scopestr = con_scope_to_str(enclosing_con_scope + [call_container_name(node)])
-        # # in this call to visit_node_list we use call_con_scope for base_func_scopestr 
-        # # this ensures no locals from the FunctionDef body are propagated up to enclosing scopes
-        # # instead only globals are propagated
-        # self.visit_node_list(func_def.body, call_con_scopestr, enclosing_con_scope, AssignSide.NEITHER)
         # For a call, we do not care about the arguments source refs
         return self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_side)
 
@@ -316,30 +289,32 @@ class ContainerScopePass:
         # the children GrFN source ref for the call node is the src ref of the call's arguments
         args_src_ref = self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_side)
 
-        node.func_def_copy = copy.deepcopy(self.ann_cast.func_id_to_def[node.func.id])
+        node.func_def_copy = copy.deepcopy(self.pipeline_state.func_id_to_def[node.func.id])
         # make a new id for the copy's Name node, and store in func_id_to_def
-        node.func_def_copy.name.id = self.ann_cast.next_collapsed_id()
-        self.ann_cast.func_id_to_def[node.func_def_copy.name.id] = node.func_def_copy
+        node.func_def_copy.name.id = self.pipeline_state.next_collapsed_id()
+        self.pipeline_state.func_id_to_def[node.func_def_copy.name.id] = node.func_def_copy
         calling_scope = enclosing_con_scope + [call_container_name(node)]
         call_assign_side = AssignSide.NEITHER
         self.visit_function_def(node.func_def_copy, base_func_scopestr, calling_scope, call_assign_side)
 
         return args_src_ref
 
-    # TODO: What to do for classes about modified/accessed vars?
+    # FUTURE: decide how to handle a ClassDef's accessed, modified, and used variables
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef, base_func_scopestr, enclosing_con_scope, assign_side):
         # we believe the start of the container should not be on either side of an assignment
         assert(assign_side == AssignSide.NEITHER)
-        # We do not visit the name because it is a string
+        # we do not visit the name because it is a string
         assert isinstance(node.name, str)
         classscope = enclosing_con_scope + [node.name]
+        # NOTE:
         # node.bases is a list of strings
         # node.funcs is a list of Vars
+        # node.fields is a list of Vars
+
         # ClassDef's reset the `base_func_scopestr`
         base_scopestr = con_scope_to_str(classscope)
         funcs_src_ref = self.visit_node_list(node.funcs, base_scopestr, classscope, assign_side)
-        # node.fields is a list of Vars
         fields_src_ref = self.visit_node_list(node.fields, base_scopestr, classscope, assign_side)
 
         return combine_grfn_con_src_refs([funcs_src_ref, fields_src_ref])
@@ -367,7 +342,7 @@ class ContainerScopePass:
         node.grfn_con_src_ref = grfn_src_ref
 
         # Modify scope to include the function name
-        funcscope = enclosing_con_scope + [function_container_name(node.name)]
+        funcscope = enclosing_con_scope + [func_def_container_name(node)]
 
         self.initialize_con_scope_data(funcscope, node)
         node.con_scope = funcscope
@@ -375,7 +350,7 @@ class ContainerScopePass:
         base_scopestr = con_scope_to_str(funcscope)
 
         # Cache function container scopestr for use during Variable Version pass
-        self.ann_cast.func_con_scopestr_to_id[base_scopestr] = node.name.id
+        self.pipeline_state.func_con_scopestr_to_id[base_scopestr] = node.name.id
 
         # Each argument is a AnnCastVar node
         # Initialize each Name and visit to modify its scope
@@ -400,10 +375,9 @@ class ContainerScopePass:
         loopscope = self.next_loop_scope(enclosing_con_scope)
         self.initialize_con_scope_data(loopscope, node)
         node.con_scope = loopscope
-        # TODO: What if expr has side-effects?
-        loopexprscope = loopscope + [LOOPEXPR]
         # we store an additional ContainerData for the loop expression, but
         # we store the Loop node in `self.con_str_to_node`         
+        loopexprscope = loopscope + [LOOPEXPR]
         self.initialize_con_scope_data(loopexprscope, node)
         expr_src_ref = self.visit(node.expr, base_func_scopestr, loopexprscope, assign_side)
 
@@ -434,10 +408,9 @@ class ContainerScopePass:
         self.initialize_con_scope_data(ifscope, node)
         node.con_scope = ifscope
 
-        # TODO-what if the condition has a side-effect?
-        ifexprscope = ifscope + [IFEXPR]
         # we store an additional ContainerData for the if expression, but
         # we store the ModelIf node in `self.con_str_to_node`         
+        ifexprscope = ifscope + [IFEXPR]
         self.initialize_con_scope_data(ifexprscope, node)
         expr_src_ref = self.visit(node.expr, base_func_scopestr, ifexprscope, assign_side)
 
@@ -455,7 +428,7 @@ class ContainerScopePass:
     @_visit.register
     def visit_return(self, node: AnnCastModelReturn, base_func_scopestr, enclosing_con_scope, assign_side):
         # store the owning FunctionDef, and mark it as having a return value
-        function_def = self.ann_cast.func_def_node_from_scopestr(base_func_scopestr)
+        function_def = self.pipeline_state.func_def_node_from_scopestr(base_func_scopestr)
         node.owning_func_def = function_def
         node.owning_func_def.has_ret_val = True
 
@@ -467,7 +440,7 @@ class ContainerScopePass:
         assert(assign_side == AssignSide.NEITHER)
         module_con_scope = [MODULE_SCOPE]
         node.con_scope = module_con_scope
-        # modulde resets the `base_func_scopestr`
+        # module resets the `base_func_scopestr`
         base_scopestr = con_scope_to_str(module_con_scope)
         # initialize container data for module which will store global variables
         self.initialize_con_scope_data(module_con_scope, node)
@@ -487,23 +460,18 @@ class ContainerScopePass:
         # to the associated container data if either
         #  1. the container scopestr extends base_func_scopestr
         #  2. this Name node is a global variable
-        scopestr = ""
         for index, name in enumerate(enclosing_con_scope):
-            scopestr2 = CON_STR_SEP.join(enclosing_con_scope[:index+1])
             # add separator between container scope component names
-            if index != 0:
-                scopestr += f"{CON_STR_SEP}"
-            scopestr += f"{name}"
-            assert(scopestr == scopestr2)
+            scopestr = CON_STR_SEP.join(enclosing_con_scope[:index+1])
             
             # if this Name node is a global, or if the scopestr extends base_func_scopestr
             # we will add the node to scopestr's container data
             # otherwise, we skip it
-            # this check is more complex than we would like because of GrFN 2.2 copied function defs
-            # we would like to stop propagation of variable use at the base_func_scopestr, but
-            # because of copied function defs we cannot.  globals which are used in a copied function
-            # def must be propagated above the base_func_scopestr
-            if not (self.ann_cast.is_global_var(node.id) or scopestr.startswith(base_func_scopestr)):
+            # we must do a compound check to propagate globals correctly
+            # we would like to stop propagation of variable use at base_func_scopestr, but  
+            # this would only be correct for function locals.  global use must be propagated above
+            # base_func_scopestr
+            if not (self.pipeline_state.is_global_var(node.id) or scopestr.startswith(base_func_scopestr)):
                 continue
 
             # fill in container data if this is a cached container str

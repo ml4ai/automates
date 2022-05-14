@@ -1,5 +1,5 @@
 
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import AnnCast
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import PipelineState
 from automates.program_analysis.CAST2GrFN.ann_cast.id_collapse_pass import IdCollapsePass
 from automates.program_analysis.CAST2GrFN.ann_cast.container_scope_pass import ContainerScopePass
 from automates.program_analysis.CAST2GrFN.ann_cast.variable_version_pass import VariableVersionPass
@@ -28,13 +28,13 @@ ANN_CAST_PASS_ORDER = [
         "ToGrfnPass"
         ]
 
-def run_all_ann_cast_passes(ann_cast: AnnCast, verbose=True):
+def run_all_ann_cast_passes(pipeline_state: PipelineState, verbose=True):
     """
-    Runs all passes on `ann_cast`, mutating it and populating
+    Runs all passes on `pipeline_state`, mutating it and populating
     pass information
     """
     for pass_name in ANN_CAST_PASS_ORDER:
         if verbose:
-            print(f"Running AnnCast Pass: {pass_name}")
+            print(f"Running Annotated Cast Pass: {pass_name}")
             print(f"{'*'*20}")
-        ANN_CAST_ALL_PASSES[pass_name](ann_cast)
+        ANN_CAST_ALL_PASSES[pass_name](pipeline_state)

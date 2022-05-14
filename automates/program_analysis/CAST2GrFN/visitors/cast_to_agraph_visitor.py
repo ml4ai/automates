@@ -5,8 +5,6 @@ from automates.utils.misc import uuid
 
 from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.cast import CAST
-from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
     Assignment,
@@ -38,6 +36,13 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     VarType,
     Var,
 )
+from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
+        var_dict_to_str,
+        interface_to_str,
+        decision_in_to_str,
+)
+
 
 
 class CASTTypeError(TypeError):
