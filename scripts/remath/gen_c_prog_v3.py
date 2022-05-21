@@ -452,6 +452,36 @@ CONFIG_1 = GeneratorConfig(
 )
 
 
+CONFIG_2 = GeneratorConfig(
+    map_typecat_to_type=MAP_TYPECAT_TO_TYPE,
+
+    main_default_cli=False,  # flag for whether main includes default cli arguments: argc, argv
+
+    globals_num=(0, 4),
+    globals_prob_set=0.2,  # prob global gets set in each function
+
+    functions_num=(2, 2),
+    function_arguments_num=(1, 8),
+    functions_allow_recursive_calls=True,  # flag for whether to allow recursive fn calls
+
+    expressions_num=(8, 8),
+    operators_num=(1, 6),
+    operators_primitive=OP_DEFINITIONS,
+    create_new_var_prob=0.2,
+
+    conditional_prob=1.0,          # probability of creating conditionals
+    conditionals_num=(4, 4),       # when creating conditionals, how many?
+    conditional_else_prob=0.5,     # probability that a conditional has an else branch
+    conditional_nesting_level=3,   # 1 = no nesting, otherwise (>1) nesting up to level depth
+    conditional_return_prob=0.25,  # TODO: Not yet being used
+
+    loop_prob=1.0,                 # probability of creating loops
+    loop_num=(3, 3),               # when creating loops, how many?
+    loop_for_prob=0.5,             # probability that loop is a for-loop (otherwise while)
+    loop_while_nesting_level=3
+)
+
+
 """
 TODO 
 () Think through when functions should be called: 
@@ -2432,8 +2462,8 @@ def debug_test_sample_and_complete_expression_trees():
         print(f'  {i} : {var_decl}')
 
 
-def debug_test_program_spec_sample(verbose=False):
-    prog = ProgramSpec(params=CONFIG_1)
+def debug_test_program_spec_sample(config_params=CONFIG_1, verbose=False):
+    prog = ProgramSpec(params=config_params)
     prog.sample(verbose=False)
 
     # print()
@@ -2535,7 +2565,7 @@ def check_properties(prog_spec: ProgramSpec):
 # Main
 # -----------------------------------------------------------------------------
 
-def main():
+def main(config_params=CONFIG_1):
     # prog = ProgramSpec(params=CONFIG_1)
     # prog.sample()
 
@@ -2608,7 +2638,7 @@ def main():
     # debug_ensure_expression_at_least_one_var_per_operator()
     # debug_test_sample_expression_trees()
     # debug_test_sample_and_complete_expression_trees()
-    prog = debug_test_program_spec_sample()
+    prog = debug_test_program_spec_sample(config_params=config_params, verbose=True)
 
     violations = check_properties(prog)
 
@@ -2625,7 +2655,7 @@ def main():
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    for i in range(1000):
+    for i in range(1):
         print(f'{i}')
-        main()
+        main(config_params=CONFIG_2)
 
