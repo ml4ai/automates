@@ -17,6 +17,9 @@ function_name: <fn_name>
 token_sequence
 [<List of tCAST tokens>]
 
+parameter_tokens_map
+<parameter_token>:<original_parameter_name>
+
 
 variable_tokens_map
 <variable_token>:<original_variable_name>
