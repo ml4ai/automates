@@ -81,7 +81,7 @@ class IdCollapsePass:
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment, at_module_scope):
         self.visit(node.right, at_module_scope)
-        assert isinstance(node.left, AnnCastVar)
+        assert isinstance(node.left, AnnCastVar), f"id_collapse_pass.py - visit_assignment: node.left is of type {type(node.left)}"
         self.visit(node.left, at_module_scope)
 
     @_visit.register
