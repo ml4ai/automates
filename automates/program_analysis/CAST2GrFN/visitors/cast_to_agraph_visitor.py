@@ -18,6 +18,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Expr,
     FunctionDef,
     List,
+    LiteralValue,
     Loop,
     ModelBreak,
     ModelContinue,
@@ -26,8 +27,10 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+    ScalarType,
     Set,
     String,
+    StructureType,
     SourceRef,
     Subscript,
     Tuple,
@@ -35,6 +38,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     UnaryOperator,
     VarType,
     Var,
+    ValueConstructor
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
@@ -546,6 +550,36 @@ class CASTToAGraphVisitor(CASTVisitor):
             self.G.add_edge(body_uid, n)
 
         return node_uid
+
+    @visit.register
+    def _(self, node: LiteralValue):
+        if node.value_type == ScalarType.INTEGER:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"Integer: {node.value}")
+            return node_uid
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"abstractFloat: {node.value}")
+            return node_uid
+        elif node.value_type == StructureType.LIST:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"List")
+            return node_uid
+        elif node.value_type == "List[Any]":
+            node_uid = uuid.uuid4()
+            if isinstance(node.value, ValueConstructor):
+                dim = node.value.dim
+                init_val = node.value.initial_value["value"] 
+                if isinstance(node.value.size, LiteralValue):
+                    size = node.value.size.value
+                else: 
+                    size = node.value.size.name
+
+                self.G.add_node(node_uid, label=f"List: Dim: {node.value.dim}, Init_Val: [{init_val}], Size: {size} ")
+
+            return node_uid
+        else:
+            assert False, f"cast_to_agraph_visitor LiteralValue: type not supported yet {type(node)}"
 
     @visit.register
     def _(self, node: AnnCastLoop):

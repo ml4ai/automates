@@ -14,6 +14,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Expr,
     FunctionDef,
     List,
+    LiteralValue,
     Loop,
     ModelBreak,
     ModelContinue,

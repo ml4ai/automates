@@ -17,6 +17,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Expr,
     FunctionDef,
     List,
+    LiteralValue,
     Loop,
     ModelBreak,
     ModelContinue,
@@ -25,8 +26,10 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+    ScalarType,
     Set,
     String,
+    StructureType,
     SourceRef,
     Subscript,
     Tuple,
@@ -34,6 +37,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     UnaryOperator,
     VarType,
     Var,
+    ValueConstructor
 )
 from automates.program_analysis.CAST2GrFN.visitors import (
     CASTToAIRVisitor,
@@ -63,6 +67,7 @@ CAST_NODES_TYPES_LIST = [
     FunctionDef,
     List,
     Loop,
+    LiteralValue,
     ModelBreak,
     ModelContinue,
     ModelIf,
@@ -70,8 +75,10 @@ CAST_NODES_TYPES_LIST = [
     Module,
     Name,
     Number,
+    ScalarType,
     Set,
     String,
+    StructureType,
     SourceRef,
     Subscript,
     Tuple,
@@ -79,6 +86,7 @@ CAST_NODES_TYPES_LIST = [
     UnaryOperator,
     VarType,
     Var,
+    ValueConstructor
 ]
 
 

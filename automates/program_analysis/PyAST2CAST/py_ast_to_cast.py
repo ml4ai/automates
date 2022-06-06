@@ -1,9 +1,11 @@
-from typing import Type, Union
+from typing import Literal, Type, Union
 import ast
 import os 
 import copy
 import sys
 from functools import singledispatchmethod
+
+from numpy import source
 
 from automates.utils.misc import uuid
 from scripts.program_analysis.astpp import parseprint
@@ -20,6 +22,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Expr,
     FunctionDef,
     List,
+    LiteralValue,
     Loop,
     ModelBreak,
     ModelContinue,
@@ -28,15 +31,20 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+    ScalarType,
     Set,
     String,
+    StructureType,
     SourceRef,
+    SourceCodeDataType,
     Subscript,
     Tuple,
     UnaryOp,
     UnaryOperator,
     VarType,
     Var,
+    ValueConstructor,
+    source_code_data_type,
     source_ref,
 )
 
@@ -250,22 +258,103 @@ class PyASTToCAST():
             Assignment: An assignment CAST node
         """
 
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+
         left = []
         right = []
 
         if len(node.targets) == 1: # x = 1, or maybe x = y, in general x = {expression}
+
+            if isinstance(node.targets[0], ast.Subscript): # List subscript nodes get replaced out by
+                                                           # A function call to a "list_set"
+                sub_node = node.targets[0]
+                val = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)[0]
+                idx =  self.visit(sub_node.slice, prev_scope_id_dict, curr_scope_id_dict)[0]
+                list_name = self.visit(sub_node.value, prev_scope_id_dict, curr_scope_id_dict)[0]
+
+                # In the case we're calling a function that doesn't have an identifier already
+                # This should only be the case for built-in python functions (i.e print, len, etc...)
+                # Otherwise it would be an error to call a function before it is defined
+                # (An ID would exist for a user-defined function here even if it isn't visited yet because of deferment)
+                unique_name = construct_unique_name(self.filenames[-1], "_list_set")
+                if unique_name not in prev_scope_id_dict.keys():
+
+                    # If a built-in is called, then it gets added to the global dictionary if
+                    # it hasn't been called before. This is to maintain one consistent ID per built-in 
+                    # function
+                    if unique_name not in self.global_identifier_dict.keys():
+                        self.insert_next_id(self.global_identifier_dict, unique_name)
+
+                    prev_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
+
+                args = [list_name, idx, val]
+                return [Call(Name("_list_set", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref)]
+
+            if isinstance(node.value, ast.Subscript):
+
+                # In the case we're calling a function that doesn't have an identifier already
+                # This should only be the case for built-in python functions (i.e print, len, etc...)
+                # Otherwise it would be an error to call a function before it is defined
+                # (An ID would exist for a user-defined function here even if it isn't visited yet because of deferment)
+                unique_name = construct_unique_name(self.filenames[-1], "_list_get")
+                if unique_name not in prev_scope_id_dict.keys():
+
+                    # If a built-in is called, then it gets added to the global dictionary if
+                    # it hasn't been called before. This is to maintain one consistent ID per built-in 
+                    # function
+                    if unique_name not in self.global_identifier_dict.keys():
+                        self.insert_next_id(self.global_identifier_dict, unique_name)
+
+                    prev_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
+
+                var_name = self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict)[0]
+                idx = self.visit(node.value.slice, prev_scope_id_dict, curr_scope_id_dict)[0]
+                val = self.visit(node.value.value, prev_scope_id_dict, curr_scope_id_dict)[0]
+                args = [val, idx]
+                return [Assignment(var_name, Call(Name("_list_get", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref), source_refs=ref)]
+
+            if isinstance(node.value, ast.BinOp): # Checking if we have an assignment of the form
+                                                  # x = LIST * NUM or x = NUM * LIST 
+                binop = node.value
+                list_node = None
+                operand = None
+                if isinstance(binop.left, ast.List):
+                    list_node = binop.left
+                    operand = binop.right
+                elif isinstance(binop.right, ast.List):
+                    list_node = binop.right 
+                    operand = binop.left
+
+                if list_node is not None:
+                    cons = ValueConstructor()
+                    lit_type = "AbstractFloat" if type(list_node.elts[0].value) == float else "Integer"
+                    cons.initial_value = {"literal_type": lit_type, "value": list_node.elts[0].value}
+                    cons.size = self.visit(operand, prev_scope_id_dict, curr_scope_id_dict)[0]
+                    cons.dim = 1
+            
+                    to_ret = LiteralValue(value_type="List[Any]", value=cons)
+
+                    #print(to_ret)
+                    l_visit = self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict)
+                    left.extend(l_visit)
+                    return [Assignment(left[0], to_ret, source_refs=ref)]
+
+
+
+
+
             l_visit = self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict)
             r_visit = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)
             left.extend(l_visit)
             right.extend(r_visit)
-        elif len(node.targets) > 1: # x = y = z = ... {Expression} (multiple expressions)
+        elif len(node.targets) > 1: # x = y = z = ... {Expression} (multiple assignments in one line)
             left.extend(self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict))
             node.targets = node.targets[1:]
             right.extend(self.visit(node, prev_scope_id_dict, curr_scope_id_dict))
         else:
             raise ValueError(f"Unexpected number of targets for node: {len(node.targets)}")
 
-        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        #ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         
         if isinstance(node.value, ast.DictComp):
             to_ret = []
@@ -309,7 +398,6 @@ class PyASTToCAST():
         print(f"global_scope: {self.global_identifier_dict}")
         print("---------------------------------")
         
-
 
         # foo.bar.x, foo.bar().x, etc..
         # (multiple layers of attributes)
@@ -740,14 +828,16 @@ class PyASTToCAST():
         """
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        if isinstance(node.value,(int,float)):
-            return [Number(node.value,source_refs=ref)]
+        if isinstance(node.value,(int)):
+            return [LiteralValue(ScalarType.INTEGER, node.value)]
+        elif isinstance(node.value,(float)):
+            return [LiteralValue(ScalarType.ABSTRACTFLOAT, node.value)]
         elif isinstance(node.value,str):
-            return [String(node.value,source_refs=ref)]
+            return [LiteralValue(StructureType.LIST, node.value)]
         elif isinstance(node.value,bool):
-            return [Boolean(node.value,source_refs=ref)]
+            return [LiteralValue(ScalarType.BOOLEAN, node.value)]
         elif node.value is None:
-            return [Number(None,source_refs=ref)]
+            return [LiteralValue(None, None)]
         else:
             raise TypeError(f"Type {node.value} not supported")
 
@@ -1403,7 +1493,7 @@ class PyASTToCAST():
 
 
     @visit.register
-    def visit_List(self, node:ast.List, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
+    def visit_List(self, node: ast.List, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """Visits a PyAST List node. Which is used to represent Python lists.
 
         Args:
@@ -1418,9 +1508,13 @@ class PyASTToCAST():
             to_ret = []
             for piece in node.elts:
                 to_ret.extend(self.visit(piece, prev_scope_id_dict, curr_scope_id_dict))
-            return [List(to_ret,source_refs=ref)]
+            # TODO: How to represent computations like '[0.0] * 1000' in some kind of type constructing system
+            # and then how could we store that in these LiteralValue nodes? 
+            return [LiteralValue(StructureType.SEQ,to_ret)]
+            #return [List(to_ret,source_refs=ref)]
         else:
-            return [List([],source_refs=ref)]
+            return [LiteralValue(StructureType.SEQ,[])]
+            #return [List([],source_refs=ref)]
 
     @visit.register
     def visit_Module(self, node: ast.Module, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):

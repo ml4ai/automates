@@ -7,6 +7,9 @@ import json
 from automates.program_analysis.PyAST2CAST import py_ast_to_cast
 from automates.program_analysis.CAST2GrFN import cast 
 from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
+from automates.program_analysis.CAST2GrFN.visitors.cast_to_agraph_visitor import (
+    CASTToAGraphVisitor,
+)
 
 if len(sys.argv) < 2:
     print("USAGE: python3 python2cast.py PYTHON_FILE_NAME [--astpp] [--legacy] [--rawjson] [--stdout]")
@@ -53,6 +56,13 @@ C.source_refs = [SourceRef(file_name, None, None, 1, line_count)]
 
 os.chdir(old_path)
 out_cast = cast.CAST([C], "python")
+
+V = CASTToAGraphVisitor(out_cast)
+last_slash_idx = file_name.rfind("/")
+file_ending_idx = file_name.rfind(".")
+pdf_file_name = f"{file_name[last_slash_idx + 1 : file_ending_idx]}.pdf"
+V.to_pdf(pdf_file_name)
+
 # Then, print CAST as JSON
 if '--rawjson' in sys.argv:
     print(json.dumps(out_cast.to_json_object(),sort_keys=True,indent=None))
