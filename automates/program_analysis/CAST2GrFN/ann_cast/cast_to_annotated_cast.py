@@ -15,6 +15,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Expr,
     FunctionDef,
     List,
+    LiteralValue,
     Loop,
     ModelBreak,
     ModelContinue,
@@ -137,6 +138,10 @@ class CastToAnnotatedCastVisitor():
     def visit_list(self, node: List):
         values = self.visit_node_list(node.values)
         return AnnCastList(values, node.source_refs)
+
+    @_visit.register
+    def visit_LiteralValue(self, node: LiteralValue):
+        return AnnCastLiteralValue(node.value_type, node.value, node.source_code_data_type, node.source_refs)
 
     @_visit.register
     def visit_loop(self, node: Loop):

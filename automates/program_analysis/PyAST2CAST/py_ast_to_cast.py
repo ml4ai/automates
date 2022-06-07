@@ -334,6 +334,8 @@ class PyASTToCAST():
             
                     to_ret = LiteralValue(value_type="List[Any]", value=cons)
 
+                    # TODO
+
                     #print(to_ret)
                     l_visit = self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict)
                     left.extend(l_visit)

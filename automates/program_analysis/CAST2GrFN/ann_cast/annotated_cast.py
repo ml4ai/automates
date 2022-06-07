@@ -1,6 +1,8 @@
 import typing
 import difflib
 
+from numpy import source
+
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -23,11 +25,13 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+#    ScalarType,
     Set,
     String,
     Subscript,
     Tuple,
     UnaryOp,
+#    ValueConstructor,
     Var,
 )
 
@@ -527,6 +531,27 @@ class AnnCastClassDef(AnnCastNode):
         
     def __str__(self):
         return ClassDef.__str__(self)
+
+class AnnCastLiteralValue(AnnCastNode):
+    def __init__(self, value_type, value, source_code_data_type, source_refs):
+        super().__init__(self)
+        self.value_type = value_type
+        self.value = value 
+        self.source_code_data_type = source_code_data_type
+        self.source_refs = source_refs
+
+    def to_dict(self):
+        result = super().to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastLiteralValue):
+            return False
+        return self.to_dict() == other.to_dict()
+
+    def __str__(self):
+        return LiteralValue.__str__(self)
+
 
 class AnnCastLoop(AnnCastNode):
     def __init__(self, expr, body, source_refs):
