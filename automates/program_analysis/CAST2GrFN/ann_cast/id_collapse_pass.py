@@ -6,7 +6,10 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     call_container_name,
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-
+from automates.program_analysis.CAST2GrFN.model.cast import ( 
+    ScalarType,
+    ValueConstructor,
+)
 
 class IdCollapsePass:
     def __init__(self, pipeline_state: PipelineState):
@@ -64,8 +67,8 @@ class IdCollapsePass:
     def visit(self, node: AnnCastNode, at_module_scope):
         # print current node being visited.  
         # this can be useful for debugging 
-        # class_name = node.__class__.__name__
-        # print(f"\nProcessing node type {class_name}")
+        class_name = node.__class__.__name__
+        print(f"\nProcessing node type {class_name}")
         return self._visit(node, at_module_scope)
 
     def visit_node_list(self, node_list: typing.List[AnnCastNode], at_module_scope):
@@ -81,7 +84,9 @@ class IdCollapsePass:
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment, at_module_scope):
         self.visit(node.right, at_module_scope)
-        assert isinstance(node.left, AnnCastVar)
+        # The AnnCastTuple is added to handle scenarios where an assignment
+        # is made by assigning to a tuple of values, as opposed to one singular value
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple), f"id_collapse: visit_assigment: node.left is not AnnCastVar it is {type(node.left)}"
         self.visit(node.left, at_module_scope)
 
     @_visit.register
@@ -96,10 +101,6 @@ class IdCollapsePass:
 
         # visit RHS second
         self.visit(node.right, at_module_scope)
-
-    @_visit.register
-    def visit_boolean(self, node: AnnCastBoolean, at_module_scope):
-        pass
 
     @_visit.register
     def visit_call(self, node: AnnCastCall, at_module_scope):
@@ -123,10 +124,6 @@ class IdCollapsePass:
         self.visit_node_list(node.fields, at_module_scope)
 
     @_visit.register
-    def visit_dict(self, node: AnnCastDict, at_module_scope):
-        pass
-
-    @_visit.register
     def visit_expr(self, node: AnnCastExpr, at_module_scope):
         self.visit(node.expr, at_module_scope)
 
@@ -141,8 +138,22 @@ class IdCollapsePass:
         self.visit_node_list(node.body, at_module_scope)
 
     @_visit.register
-    def visit_list(self, node: AnnCastList, at_module_scope):
-        self.visit_node_list(node.values, at_module_scope)
+    def visit_literal_value(self, node: AnnCastLiteralValue, at_module_scope):
+        if node.value_type == 'List[Any]':
+            # operator - string
+            # size - Var node or a LiteralValue node (for number)
+            # initial_value - LiteralValue node
+            val = node.value
+            self.visit(val.size, at_module_scope) 
+
+            # List literal doesn't need to add any other changes
+            # to the anncast at this pass
+
+        elif node.value_type == ScalarType.INTEGER:
+            pass
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            pass
+        pass
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, at_module_scope):
@@ -184,6 +195,31 @@ class IdCollapsePass:
             self.pipeline_state.module_node.used_vars[node.id] = node.name
 
     @_visit.register
+    def visit_subscript(self, node: AnnCastSubscript, at_module_scope):
+        pass
+
+    @_visit.register
+    def visit_unaryop(self, node: AnnCastUnaryOp, at_module_scope):
+        self.visit(node.value, at_module_scope)
+
+    @_visit.register
+    def visit_var(self, node: AnnCastVar, at_module_scope):
+        self.visit(node.val, at_module_scope)
+
+    ### Old visitors for literal values
+    @_visit.register
+    def visit_boolean(self, node: AnnCastBoolean, at_module_scope):
+        pass
+
+    @_visit.register
+    def visit_dict(self, node: AnnCastDict, at_module_scope):
+        pass
+    
+    @_visit.register
+    def visit_list(self, node: AnnCastList, at_module_scope):
+        self.visit_node_list(node.values, at_module_scope)
+
+    @_visit.register
     def visit_number(self, node: AnnCastNumber, at_module_scope):
         pass
 
@@ -196,17 +232,7 @@ class IdCollapsePass:
         pass
 
     @_visit.register
-    def visit_subscript(self, node: AnnCastSubscript, at_module_scope):
-        pass
-
-    @_visit.register
     def visit_tuple(self, node: AnnCastTuple, at_module_scope):
-        pass
+        # Tuple of vars: Visit them all to collapse IDs, nothing else to be done I think
+        self.visit_node_list(node.values, at_module_scope)
 
-    @_visit.register
-    def visit_unaryop(self, node: AnnCastUnaryOp, at_module_scope):
-        self.visit(node.value, at_module_scope)
-
-    @_visit.register
-    def visit_var(self, node: AnnCastVar, at_module_scope):
-        self.visit(node.val, at_module_scope)

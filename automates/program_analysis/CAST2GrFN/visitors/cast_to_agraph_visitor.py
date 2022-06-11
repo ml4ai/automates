@@ -563,19 +563,22 @@ class CASTToAGraphVisitor(CASTVisitor):
             return node_uid
         elif node.value_type == StructureType.LIST:
             node_uid = uuid.uuid4()
-            self.G.add_node(node_uid, label=f"List")
+            self.G.add_node(node_uid, label=f"List: {node.value}")
             return node_uid
         elif node.value_type == "List[Any]":
             node_uid = uuid.uuid4()
             if isinstance(node.value, ValueConstructor):
-                dim = node.value.dim
-                init_val = node.value.initial_value["value"] 
+                op = node.value.operator
+                init_val = node.value.initial_value.value 
                 if isinstance(node.value.size, LiteralValue):
                     size = node.value.size.value
+                    id = -1
                 else: 
                     size = node.value.size.name
+                    id = node.value.size.id
 
-                self.G.add_node(node_uid, label=f"List: Dim: {node.value.dim}, Init_Val: [{init_val}], Size: {size} ")
+                #self.G.add_node(node_uid, label=f"List: Init_Val: [{init_val}], Size: {size} ")
+                self.G.add_node(node_uid, label=f"List: [{init_val}] {op} {size} (id: {id})")
 
             return node_uid
         else:

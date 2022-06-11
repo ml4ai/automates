@@ -21,7 +21,10 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     var_dict_to_str,
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-
+from automates.program_analysis.CAST2GrFN.model.cast import ( 
+    ScalarType,
+    ValueConstructor,
+)
 
 class AssignSide(Enum):
     NEITHER = 0
@@ -228,7 +231,9 @@ class ContainerScopePass:
         self, node: AnnCastAssignment, base_func_scopestr, enclosing_con_scope, assign_side
     ):
         right_src_ref = self.visit(node.right, base_func_scopestr, enclosing_con_scope, AssignSide.RIGHT)
-        assert isinstance(node.left, AnnCastVar)
+        # The AnnCastTuple is added to handle scenarios where an assignment
+        # is made by assigning to a tuple of values, as opposed to one singular value
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple), f"container_scope: visit_assigment: node.left is not AnnCastVar or AnnCastTuple it is {type(node.left)}"
         left_src_ref = self.visit(node.left, base_func_scopestr, enclosing_con_scope, AssignSide.LEFT)
 
         return combine_grfn_con_src_refs([right_src_ref, left_src_ref])
@@ -364,6 +369,27 @@ class ContainerScopePass:
     @_visit.register
     def visit_list(self, node: AnnCastList, base_func_scopestr, enclosing_con_scope, assign_side):
         return self.visit_node_list(node.values, base_func_scopestr, enclosing_con_scope, assign_side)
+
+    @_visit.register
+    def visit_literal_value(self, node: AnnCastLiteralValue, base_func_scopestr, enclosing_con_scope, assign_side):
+        if node.value_type == 'List[Any]':
+            # val has
+            # operator - string
+            # size - Var node or a LiteralValue node (for number)
+            # initial_value - LiteralValue node
+            val = node.value
+            
+            # visit size's anncast name node
+            self.visit(val.size, base_func_scopestr, enclosing_con_scope, assign_side) 
+
+            # List literal doesn't need to add any other changes
+            # to the anncast at this pass
+
+        elif node.value_type == ScalarType.INTEGER:
+            pass
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            pass
+        pass
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, base_func_scopestr, enclosing_con_scope, assign_side):
@@ -506,9 +532,9 @@ class ContainerScopePass:
         pass
 
     @_visit.register
-    def visit_tuple(self, node: AnnCastTuple, assign_side):
-        pass
-
+    def visit_tuple(self, node: AnnCastTuple, base_func_scopestr, enclosing_con_scope, assign_side):
+        self.visit_node_list(node.values, base_func_scopestr, enclosing_con_scope, assign_side)
+        
     @_visit.register
     def visit_unary_op(self, node: AnnCastUnaryOp, base_func_scopestr, enclosing_con_scope, assign_side):
         return self.visit(node.value, base_func_scopestr, enclosing_con_scope, assign_side)

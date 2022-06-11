@@ -11,7 +11,10 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     is_literal_assignment,
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-
+from automates.program_analysis.CAST2GrFN.model.cast import ( 
+    ScalarType,
+    ValueConstructor,
+)
 
 class GrfnAssignmentPass:
     def __init__(self, pipeline_state: PipelineState):
@@ -59,7 +62,9 @@ class GrfnAssignmentPass:
             node.grfn_assignment = GrfnAssignment(create_grfn_assign_node(metadata), LambdaType.ASSIGN)
             
         self.visit(node.right, node.grfn_assignment.inputs)
-        assert isinstance(node.left, AnnCastVar)
+        # The AnnCastTuple is added to handle scenarios where an assignment
+        # is made by assigning to a tuple of values, as opposed to one singular value
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple), f"container_scope: visit_assigment: node.left is not AnnCastVar or AnnCastTuple it is {type(node.left)}"
         self.visit(node.left, node.grfn_assignment.outputs)
 
         # DEBUG printing
@@ -177,6 +182,27 @@ class GrfnAssignmentPass:
         self.visit_node_list(node.body, add_to)
 
     @_visit.register
+    def visit_literal_value(self, node: AnnCastLiteralValue, add_to: typing.Dict):
+        if node.value_type == 'List[Any]':
+            # val has
+            # operator - string
+            # size - Var node or a LiteralValue node (for number)
+            # initial_value - LiteralValue node
+            val = node.value
+            
+            # visit size's anncast name node
+            self.visit(val.size, add_to) 
+
+            # List literal doesn't need to add any other changes
+            # to the anncast at this pass
+
+        elif node.value_type == ScalarType.INTEGER:
+            pass
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            pass
+        pass
+
+    @_visit.register
     def visit_list(self, node: AnnCastList, add_to: typing.Dict):
         self.visit_node_list(node.values, add_to)
 
@@ -250,7 +276,7 @@ class GrfnAssignmentPass:
 
     @_visit.register
     def visit_tuple(self, node: AnnCastTuple, add_to: typing.Dict):
-        pass
+        self.visit_node_list(node.values, add_to)
 
     @_visit.register
     def visit_unary_op(self, node: AnnCastUnaryOp, add_to: typing.Dict):

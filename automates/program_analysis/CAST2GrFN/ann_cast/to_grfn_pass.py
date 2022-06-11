@@ -25,6 +25,10 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     is_func_def_main,
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.model.cast import ( 
+    ScalarType,
+    ValueConstructor,
+)
 
 
 class ToGrfnPass:
@@ -423,6 +427,10 @@ class ToGrfnPass:
 
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
+    
+    @_visit.register
+    def visit_literal_value(self, node: AnnCastLiteralValue, subgraph: GrFNSubgraph):
+        pass
 
     @_visit.register
     def visit_list(self, node: AnnCastList, subgraph: GrFNSubgraph):
@@ -595,7 +603,7 @@ class ToGrfnPass:
 
     @_visit.register
     def visit_tuple(self, node: AnnCastTuple, subgraph: GrFNSubgraph):
-        pass
+        self.visit_node_list(node.values, subgraph)
 
     @_visit.register
     def visit_unary_op(self, node: AnnCastUnaryOp, subgraph: GrFNSubgraph):

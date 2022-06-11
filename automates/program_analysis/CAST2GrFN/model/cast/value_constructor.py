@@ -30,6 +30,7 @@ class ValueConstructor(AstNode):
     """
     swagger_types = {
         'dim': 'object',
+        'operator': 'object',
         'size': 'object',
         'initial_value': 'object'
     }
@@ -38,20 +39,24 @@ class ValueConstructor(AstNode):
 
     attribute_map = {
         'dim': 'dim',
+        'operator': 'operator',
         'size': 'size',
         'initial_value': 'initial_value'
     }
     if hasattr(AstNode, "attribute_map"):
         attribute_map.update(AstNode.attribute_map)
 
-    def __init__(self, dim=None, size=None, initial_value=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, dim=None, operator=None, size=None, initial_value=None, *args, **kwargs):  # noqa: E501
         """ValueConstructor - a model defined in Swagger"""  # noqa: E501
         self._dim = None
+        self._operator = None
         self._size = None
         self._initial_value = None
         self.discriminator = None
         if dim is not None:
             self.dim = dim
+        if operator is not None:
+            self.operator = operator
         if size is not None:
             self.size = size
         if initial_value is not None:
@@ -78,6 +83,27 @@ class ValueConstructor(AstNode):
         """
 
         self._dim = dim
+
+    @property
+    def operator(self):
+        """Gets the operator of this ValueConstructor.  # noqa: E501
+
+
+        :return: The operator of this ValueConstructor.  # noqa: E501
+        :rtype: object
+        """
+        return self._operator
+
+    @operator.setter
+    def operator(self, operator):
+        """Sets the operator of this ValueConstructor.
+
+
+        :param operator: The operator of this ValueConstructor.  # noqa: E501
+        :type: object
+        """
+
+        self._operator = operator
 
     @property
     def size(self):

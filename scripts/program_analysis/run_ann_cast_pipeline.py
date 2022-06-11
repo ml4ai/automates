@@ -67,9 +67,9 @@ def main():
     # that the generated GrFN uuids will not be consistent with GrFN uuids
     # created during test runtime. So, do not use these GrFN jsons as expected 
     # json for testing
-    agraph = CASTToAGraphVisitor(pipeline_state)
-    pdf_file_name = f"{f_name}-AnnCast.pdf"
-    agraph.to_pdf(pdf_file_name)
+    #agraph = CASTToAGraphVisitor(pipeline_state)
+    #pdf_file_name = f"{f_name}-AnnCast.pdf"
+    #agraph.to_pdf(pdf_file_name)
 
     print("\nCalling GrfnVarCreationPass-------------------")
     GrfnVarCreationPass(pipeline_state)

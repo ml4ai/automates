@@ -10,6 +10,10 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     lambda_var_from_fullid,
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.model.cast import ( 
+    ScalarType,
+    ValueConstructor,
+)
 
 
 def lambda_for_grfn_assignment(grfn_assignment: GrfnAssignment, lambda_body: str) -> str:
@@ -316,6 +320,33 @@ class LambdaExpressionPass:
         return node.expr_str
 
     @_visit.register
+    def visit_literal_value(self, node: AnnCastLiteralValue) -> str:
+        if node.value_type == 'List[Any]':
+            # val has
+            # operator - string
+            # size - Var node or a LiteralValue node (for number)
+            # initial_value - dictionary holding a literal_value (or perhaps a Var)
+            val = node.value
+            
+            # visit size's anncast name node
+            size_str = self.visit(val.size) 
+            init_val = self.visit(val.initial_value)
+            op = val.operator
+
+            to_ret = f"[{init_val}] {op} {size_str}"
+            #print(to_ret) # NOTE: remove when not needed
+            node.expr_str = to_ret
+            return node.expr_str
+
+        elif node.value_type == ScalarType.INTEGER:
+            node.expr_str = str(node.value)
+            return node.expr_str
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            node.expr_str = str(node.value)
+            return node.expr_str
+        return node.expr_str
+
+    @_visit.register
     def visit_list(self, node: AnnCastList) -> str:
         node.expr_str = "list()"
         return node.expr_str
@@ -448,6 +479,9 @@ class LambdaExpressionPass:
 
     @_visit.register
     def visit_tuple(self, node: AnnCastTuple) -> str:
+        pieces = self.visit_node_list(node.values)
+        node.expr_str = f"({', '.join(pieces)})"
+
         return node.expr_str
 
     @_visit.register

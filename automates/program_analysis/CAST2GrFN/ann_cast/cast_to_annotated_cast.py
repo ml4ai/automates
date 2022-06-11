@@ -1,6 +1,8 @@
 from functools import singledispatchmethod
 import typing
 
+from numpy import ScalarType
+
 from automates.program_analysis.CAST2GrFN.cast import CAST
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
@@ -24,6 +26,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+    ScalarType,
     Set,
     String,
     Subscript,
@@ -140,8 +143,15 @@ class CastToAnnotatedCastVisitor():
         return AnnCastList(values, node.source_refs)
 
     @_visit.register
-    def visit_LiteralValue(self, node: LiteralValue):
-        return AnnCastLiteralValue(node.value_type, node.value, node.source_code_data_type, node.source_refs)
+    def visit_literal_value(self, node: LiteralValue):
+        if node.value_type == 'List[Any]':
+            node.value.size = self.visit(node.value.size) # Turns the cast var into annCast
+            node.value.initial_value = self.visit(node.value.initial_value) # Turns the literalValue into annCast
+            return AnnCastLiteralValue(node.value_type, node.value, node.source_code_data_type, node.source_refs)
+        elif node.value_type == ScalarType.INTEGER:
+            return AnnCastLiteralValue(node.value_type, node.value, node.source_code_data_type, node.source_refs)
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            return AnnCastLiteralValue(node.value_type, node.value, node.source_code_data_type, node.source_refs)
 
     @_visit.register
     def visit_loop(self, node: Loop):

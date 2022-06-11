@@ -93,6 +93,41 @@ def get_node_name(ast_node):
     else:
         raise TypeError(f"Type {type(ast_node)} not supported")
 
+def get_op(operator):
+    ops = {
+        ast.Add: BinaryOperator.ADD,
+        ast.Sub: BinaryOperator.SUB,
+        ast.Mult: BinaryOperator.MULT,
+        ast.Div: BinaryOperator.DIV,
+        ast.FloorDiv: BinaryOperator.FLOORDIV,
+        ast.Mod: BinaryOperator.MOD,
+        ast.Pow: BinaryOperator.POW,
+        ast.LShift: BinaryOperator.LSHIFT,
+        ast.RShift: BinaryOperator.RSHIFT,
+        ast.BitOr: BinaryOperator.BITOR,
+        ast.BitAnd: BinaryOperator.BITAND,
+        ast.BitXor: BinaryOperator.BITXOR,
+        ast.And: BinaryOperator.AND,
+        ast.Or: BinaryOperator.OR,
+        ast.Eq: BinaryOperator.EQ,
+        ast.NotEq: BinaryOperator.NOTEQ,
+        ast.Lt: BinaryOperator.LT,
+        ast.LtE: BinaryOperator.LTE,
+        ast.Gt: BinaryOperator.GT,
+        ast.GtE: BinaryOperator.GTE,
+        ast.In: BinaryOperator.IN,
+        ast.NotIn: BinaryOperator.NOTIN,
+        ast.UAdd: UnaryOperator.UADD,
+        ast.USub: UnaryOperator.USUB,
+        ast.Not: UnaryOperator.NOT,
+        ast.Invert: UnaryOperator.INVERT,
+    }
+    
+    if type(operator) in ops.keys():
+        return ops[type(operator)]
+    return None
+
+
 
 class PyASTToCAST():
     """Class PyASTToCast
@@ -167,7 +202,7 @@ class PyASTToCAST():
         self.id_count += 1
         return new_id_to_insert
 
-    def insert_alias(self, original: String, alias: String):
+    def insert_alias(self, originString, alias: String):
         """ Inserts an alias into a dictionary that keeps track of aliases for 
             names that are aliased. For example, the following import
             import numpy as np
@@ -327,22 +362,20 @@ class PyASTToCAST():
 
                 if list_node is not None:
                     cons = ValueConstructor()
-                    lit_type = "AbstractFloat" if type(list_node.elts[0].value) == float else "Integer"
-                    cons.initial_value = {"literal_type": lit_type, "value": list_node.elts[0].value}
+                    lit_type = ScalarType.ABSTRACTFLOAT if type(list_node.elts[0].value) == float else ScalarType.INTEGER
+                    cons.dim = None
+                    t = get_op(binop.op)
+                    cons.operator = "*" if get_op(binop.op) == 'Mult' else "+" if get_op(binop.op) == 'Add' else None
                     cons.size = self.visit(operand, prev_scope_id_dict, curr_scope_id_dict)[0]
-                    cons.dim = 1
+                    cons.initial_value = LiteralValue(value_type=lit_type, value=list_node.elts[0].value, source_code_data_type=None) 
             
-                    to_ret = LiteralValue(value_type="List[Any]", value=cons)
-
-                    # TODO
+                    # TODO: Source code data type metadata
+                    to_ret = LiteralValue(value_type="List[Any]", value=cons, source_code_data_type=None)
 
                     #print(to_ret)
                     l_visit = self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict)
                     left.extend(l_visit)
                     return [Assignment(left[0], to_ret, source_refs=ref)]
-
-
-
 
 
             l_visit = self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict)
@@ -601,22 +634,8 @@ class PyASTToCAST():
                       operation (arithmetic or bitwise)
         """
 
-        ops = {
-            ast.Add: BinaryOperator.ADD,
-            ast.Sub: BinaryOperator.SUB,
-            ast.Mult: BinaryOperator.MULT,
-            ast.Div: BinaryOperator.DIV,
-            ast.FloorDiv: BinaryOperator.FLOORDIV,
-            ast.Mod: BinaryOperator.MOD,
-            ast.Pow: BinaryOperator.POW,
-            ast.LShift: BinaryOperator.LSHIFT,
-            ast.RShift: BinaryOperator.RSHIFT,
-            ast.BitOr: BinaryOperator.BITOR,
-            ast.BitAnd: BinaryOperator.BITAND,
-            ast.BitXor: BinaryOperator.BITXOR,
-        }
         left = self.visit(node.left, prev_scope_id_dict, curr_scope_id_dict)
-        op = ops[type(node.op)]
+        op = get_op(node.op)
         right = self.visit(node.right, prev_scope_id_dict, curr_scope_id_dict)
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
@@ -830,14 +849,14 @@ class PyASTToCAST():
         """
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        if isinstance(node.value,(int)):
+        if isinstance(node.value,int):
             return [LiteralValue(ScalarType.INTEGER, node.value)]
-        elif isinstance(node.value,(float)):
+        elif isinstance(node.value,float):
             return [LiteralValue(ScalarType.ABSTRACTFLOAT, node.value)]
-        elif isinstance(node.value,str):
-            return [LiteralValue(StructureType.LIST, node.value)]
         elif isinstance(node.value,bool):
             return [LiteralValue(ScalarType.BOOLEAN, node.value)]
+        elif isinstance(node.value,str):
+            return [LiteralValue(StructureType.LIST, node.value)]
         elif node.value is None:
             return [LiteralValue(None, None)]
         else:
