@@ -1536,8 +1536,8 @@ class PyASTToCAST():
                 # We construct the unique name for the case that
                 # An assignment to a global happens in the global scope
                 # (i.e. a loop at the global level)
-                # Check if it's in the previous scope not as a global
-                # then check if it's the previous scope as a global
+                # Check if it's in the previous scope not as a global (general case when in a function)
+                # then check if it's in the previous scope as a global (when we're at the global scope)
                 unique_name = construct_unique_name(self.filenames[-1], node.id)
                 if node.id in prev_scope_id_dict:
                     curr_scope_id_dict[node.id] = prev_scope_id_dict[node.id]
