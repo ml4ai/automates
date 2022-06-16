@@ -1458,6 +1458,9 @@ class PyASTToCAST():
             # It becomes
             #   "module_name.var_name" -> ID
             # in the dictionary
+            # If an assign happens at the global level, then we must also make sure to 
+            # Update the global dictionary at this time so that the IDs are defined
+            # and are correct
             if isinstance(piece, ast.Assign):
                 var_name = get_node_name(to_add[0])
 
@@ -1465,6 +1468,7 @@ class PyASTToCAST():
                 del curr_scope_id_dict[var_name]
                 unique_name = construct_unique_name(self.filenames[-1], var_name)
                 curr_scope_id_dict[unique_name] = temp_id
+                merge_dicts(curr_scope_id_dict, self.global_identifier_dict)
 
             if isinstance(to_add,Module):
                 body.extend([to_add])
@@ -1528,8 +1532,16 @@ class PyASTToCAST():
 
             
             if node.id not in curr_scope_id_dict:
+                # We construct the unique name for the case that
+                # An assignment to a global happens in the global scope
+                # (i.e. a loop at the global level)
+                # Check if it's in the previous scope not as a global (general case when in a function)
+                # then check if it's in the previous scope as a global (when we're at the global scope)
+                unique_name = construct_unique_name(self.filenames[-1], node.id)
                 if node.id in prev_scope_id_dict:
                     curr_scope_id_dict[node.id] = prev_scope_id_dict[node.id]
+                elif unique_name in prev_scope_id_dict:
+                    curr_scope_id_dict[node.id] = prev_scope_id_dict[unique_name]
                 else:
                     self.insert_next_id(curr_scope_id_dict,node.id)
 
