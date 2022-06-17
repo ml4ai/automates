@@ -57,7 +57,7 @@ setup(
         "matplotlib==3.3.4",
         "networkx==2.5",
         "nltk==3.6.6",
-        "notebook==6.4.10",
+        "notebook==6.4.12",
         "numpy==1.21",
         "pandas==1.2.2",
         "plotly==4.5.4",
