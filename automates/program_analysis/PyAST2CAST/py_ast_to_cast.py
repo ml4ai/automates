@@ -367,10 +367,10 @@ class PyASTToCAST():
                     t = get_op(binop.op)
                     cons.operator = "*" if get_op(binop.op) == 'Mult' else "+" if get_op(binop.op) == 'Add' else None
                     cons.size = self.visit(operand, prev_scope_id_dict, curr_scope_id_dict)[0]
-                    cons.initial_value = LiteralValue(value_type=lit_type, value=list_node.elts[0].value, source_code_data_type=["Python","3.8","Float"]) 
+                    cons.initial_value = LiteralValue(value_type=lit_type, value=list_node.elts[0].value, source_code_data_type=["Python","3.8","Float"], source_ref=ref) 
             
                     # TODO: Source code data type metadata
-                    to_ret = LiteralValue(value_type="List[Any]", value=cons, source_code_data_type=["Python","3.8","List"])
+                    to_ret = LiteralValue(value_type="List[Any]", value=cons, source_code_data_type=["Python","3.8","List"], source_ref=ref)
 
                     #print(to_ret)
                     l_visit = self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict)
@@ -851,15 +851,15 @@ class PyASTToCAST():
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         source_code_data_type = ["Python","3.8",str(type(node.value))]
         if isinstance(node.value,int):
-            return [LiteralValue(ScalarType.INTEGER, node.value, source_code_data_type)]
+            return [LiteralValue(ScalarType.INTEGER, node.value, source_code_data_type, ref)]
         elif isinstance(node.value,float):
-            return [LiteralValue(ScalarType.ABSTRACTFLOAT, node.value, source_code_data_type)]
+            return [LiteralValue(ScalarType.ABSTRACTFLOAT, node.value, source_code_data_type, ref)]
         elif isinstance(node.value,bool):
-            return [LiteralValue(ScalarType.BOOLEAN, node.value, source_code_data_type)]
+            return [LiteralValue(ScalarType.BOOLEAN, node.value, source_code_data_type, ref)]
         elif isinstance(node.value,str):
-            return [LiteralValue(StructureType.LIST, node.value, source_code_data_type)]
+            return [LiteralValue(StructureType.LIST, node.value, source_code_data_type, ref)]
         elif node.value is None:
-            return [LiteralValue(None, None, None)]
+            return [LiteralValue(None, None, source_code_data_type, ref)]
         else:
             raise TypeError(f"Type {str(type(node.value))} not supported")
 
@@ -983,7 +983,7 @@ class PyASTToCAST():
         iter_var = Assignment(Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref), 
                     Call(Name(name="iter", id=iter_id, source_refs=ref),[iterable],source_refs=ref), source_refs=ref)
 
-        loop_cond = LiteralValue(ScalarType.BOOLEAN, True, ["Python", "3.8", "boolean"])
+        loop_cond = LiteralValue(ScalarType.BOOLEAN, True, ["Python", "3.8", "boolean"], ref)
 
         loop_assign = Assignment(target,Call(Name(name="next", id=next_id, source_refs=ref),
                     [Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref)], 
@@ -1461,10 +1461,10 @@ class PyASTToCAST():
                 to_ret.extend(self.visit(piece, prev_scope_id_dict, curr_scope_id_dict))
             # TODO: How to represent computations like '[0.0] * 1000' in some kind of type constructing system
             # and then how could we store that in these LiteralValue nodes? 
-            return [LiteralValue(StructureType.LIST,to_ret, source_code_data_type)]
+            return [LiteralValue(StructureType.LIST, to_ret, source_code_data_type, ref)]
             #return [List(to_ret,source_refs=ref)]
         else:
-            return [LiteralValue(StructureType.LIST,[], source_code_data_type)]
+            return [LiteralValue(StructureType.LIST, [], source_code_data_type, ref)]
             #return [List([],source_refs=ref)]
 
     @visit.register
@@ -1661,9 +1661,9 @@ class PyASTToCAST():
             to_ret = []
             for piece in node.elts:
                 to_ret.extend(self.visit(piece, prev_scope_id_dict, curr_scope_id_dict))
-            return [LiteralValue(StructureType.SET, to_ret, source_code_data_type)]
+            return [LiteralValue(StructureType.SET, to_ret, source_code_data_type, ref)]
         else:
-            return [LiteralValue(StructureType.SET, to_ret, source_code_data_type)]
+            return [LiteralValue(StructureType.SET, to_ret, source_code_data_type, ref)]
 
     @visit.register
     def visit_Subscript(self, node: ast.Subscript, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):

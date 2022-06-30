@@ -14,6 +14,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.grfn_var_creation_pass import
 from automates.program_analysis.CAST2GrFN.ann_cast.grfn_assignment_pass import GrfnAssignmentPass
 from automates.program_analysis.CAST2GrFN.ann_cast.lambda_expression_pass import LambdaExpressionPass
 from automates.program_analysis.CAST2GrFN.ann_cast.to_grfn_pass import ToGrfnPass
+from automates.program_analysis.CAST2GrFN.ann_cast.to_gromet_pass import ToGrometPass
 
 
 def get_args():
@@ -79,6 +80,11 @@ def main():
 
     print("\nCalling LambdaExpressionPass-------------------")
     LambdaExpressionPass(pipeline_state)
+
+    print("\nCalling ToGrometPass-----------------------")
+    ToGrometPass(pipeline_state)
+
+    assert False
 
     print("\nCalling ToGrfnPass-------------------")
     ToGrfnPass(pipeline_state)

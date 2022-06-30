@@ -17,7 +17,7 @@ from automates.model_assembly.networks import (
     UnpackNode,
     PackNode,
 )
-from automates.model_assembly.networks import (
+from automates.model_assembly.gromet import (
     GrometFN,
     GrometExpression,
 )
@@ -44,7 +44,9 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 class ToGrometPass:
     def __init__(self, pipeline_state: PipelineState):
         self.pipeline_state = pipeline_state
-        #self.nodes = self.pipeline_state.nodes
+        self.nodes = self.pipeline_state.nodes
+
+        self.gromet_collection = []
         #self.network = nx.DiGraph()
         #self.subgraphs = nx.DiGraph()
         #self.hyper_edges = []
@@ -284,11 +286,11 @@ class ToGrometPass:
         # self.visit_grfn_assignment(node.grfn_assignment, subgraph)
 
     @_visit.register
-    def visit_attribute(self, node: AnnCastAttribute, subgraph: GrFNSubgraph):
+    def visit_attribute(self, node: AnnCastAttribute, subgraph: GrometFN):
         pass
 
     @_visit.register
-    def visit_binary_op(self, node: AnnCastBinaryOp, subgraph: GrFNSubgraph):
+    def visit_binary_op(self, node: AnnCastBinaryOp, subgraph: GrometFN):
         # visit LHS first
         self.visit(node.left, subgraph)
 
@@ -299,11 +301,11 @@ class ToGrometPass:
         self.visit(node.right, subgraph)
 
     @_visit.register
-    def visit_boolean(self, node: AnnCastBoolean, subgraph: GrFNSubgraph):
+    def visit_boolean(self, node: AnnCastBoolean, subgraph: GrometFN):
         pass
 
     @_visit.register    
-    def visit_call(self, node: AnnCastCall, subgraph: GrFNSubgraph):
+    def visit_call(self, node: AnnCastCall, subgraph: GrometFN):
         if node.is_grfn_2_2:
             self.visit_call_grfn_2_2(node, subgraph)
             return 
@@ -410,18 +412,18 @@ class ToGrometPass:
 
 
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef, subgraph: GrFNSubgraph):
+    def visit_class_def(self, node: AnnCastClassDef, subgraph: GrometFN):
         pass
 
     @_visit.register
-    def visit_dict(self, node: AnnCastDict, subgraph: GrFNSubgraph):
+    def visit_dict(self, node: AnnCastDict, subgraph: GrometFN):
         pass
 
     @_visit.register
-    def visit_expr(self, node: AnnCastExpr, subgraph: GrFNSubgraph):
+    def visit_expr(self, node: AnnCastExpr, subgraph: GrometFN):
         self.visit(node.expr, subgraph)
 
-    def visit_function_def_copy(self, node: AnnCastFunctionDef, subgraph: GrFNSubgraph):
+    def visit_function_def_copy(self, node: AnnCastFunctionDef, subgraph: GrometFN):
         for dummy_assignment in node.dummy_grfn_assignments:
             self.visit_grfn_assignment(dummy_assignment, subgraph)
 
@@ -429,7 +431,7 @@ class ToGrometPass:
         self.visit_node_list(node.body, subgraph)
 
     @_visit.register
-    def visit_function_def(self, node: AnnCastFunctionDef, subgraph: GrFNSubgraph):
+    def visit_function_def(self, node: AnnCastFunctionDef, subgraph: GrometFN):
         # for GrFN 2.2, we create function containers at call sites,
         # so we skip all functions except "main"
         if self.pipeline_state.GENERATE_GRFN_2_2 and not is_func_def_main(node):
@@ -491,7 +493,7 @@ class ToGrometPass:
         self.subgraphs.add_edge(parent, subgraph)
     
     @_visit.register
-    def visit_literal_value(self, node: AnnCastLiteralValue, subgraph: GrFNSubgraph):
+    def visit_literal_value(self, node: AnnCastLiteralValue, subgraph: GrometFN):
         # Create the GroMEt literal value (A type of Function box)
         # This will have a single outport (the little blank box)
         # What we dont determine here is the wiring to whatever variable this 
@@ -501,11 +503,11 @@ class ToGrometPass:
         pass
 
     @_visit.register
-    def visit_list(self, node: AnnCastList, subgraph: GrFNSubgraph):
+    def visit_list(self, node: AnnCastList, subgraph: GrometFN):
         self.visit_node_list(node.values, subgraph)
 
     @_visit.register
-    def visit_loop(self, node: AnnCastLoop, subgraph: GrFNSubgraph):
+    def visit_loop(self, node: AnnCastLoop, subgraph: GrometFN):
         parent = subgraph
         # make a new subgraph for this If Container
         type = "LoopContainer"
@@ -562,15 +564,15 @@ class ToGrometPass:
             parent.nodes.extend(outputs)
 
     @_visit.register
-    def visit_model_break(self, node: AnnCastModelBreak, subgraph: GrFNSubgraph):
+    def visit_model_break(self, node: AnnCastModelBreak, subgraph: GrometFN):
         pass
 
     @_visit.register
-    def visit_model_continue(self, node: AnnCastModelContinue, subgraph: GrFNSubgraph):
+    def visit_model_continue(self, node: AnnCastModelContinue, subgraph: GrometFN):
         pass
 
     @_visit.register
-    def visit_model_if(self, node: AnnCastModelIf, subgraph: GrFNSubgraph):
+    def visit_model_if(self, node: AnnCastModelIf, subgraph: GrometFN):
         parent = subgraph
         # make a new subgraph for this If Container
         type = "CondContainer"
@@ -628,13 +630,13 @@ class ToGrometPass:
             parent.nodes.extend(outputs)
 
     @_visit.register
-    def visit_model_return(self, node: AnnCastModelReturn, subgraph: GrFNSubgraph):
+    def visit_model_return(self, node: AnnCastModelReturn, subgraph: GrometFN):
         self.visit(node.value, subgraph)
 
         self.visit_grfn_assignment(node.grfn_assignment, subgraph)
 
     @_visit.register
-    def visit_module(self, node: AnnCastModule, subgraph: GrFNSubgraph):
+    def visit_module(self, node: AnnCastModule, subgraph: GrometFN):
         """
         type = "ModuleContainer"
         border_color = GrFNSubgraph.get_border_color(type)
@@ -658,43 +660,45 @@ class ToGrometPass:
         # Have a FN constructor to build the GroMEt FN
         # and pass this FN to maintain a 'nesting' approach (boxes within boxes)
         # instead of passing a GrFNSubgraph through the visitors
+        new_gromet = GrometFN()
 
         """
         subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
                                 occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
         """
+        self.gromet_collection.append(new_gromet)
         
         self.visit_node_list(node.body, subgraph)
 
     @_visit.register
-    def visit_name(self, node: AnnCastName, subgraph: GrFNSubgraph):
+    def visit_name(self, node: AnnCastName, subgraph: GrometFN):
         pass
 
     @_visit.register
-    def visit_number(self, node: AnnCastNumber, subgraph: GrFNSubgraph):
+    def visit_number(self, node: AnnCastNumber, subgraph: GrometFN):
         pass
 
     @_visit.register
-    def visit_set(self, node: AnnCastSet, subgraph: GrFNSubgraph):
+    def visit_set(self, node: AnnCastSet, subgraph: GrometFN):
         pass
 
     @_visit.register
-    def visit_string(self, node: AnnCastString, subgraph: GrFNSubgraph):
+    def visit_string(self, node: AnnCastString, subgraph: GrometFN):
         pass
 
     @_visit.register
-    def visit_subscript(self, node: AnnCastSubscript, subgraph: GrFNSubgraph):
+    def visit_subscript(self, node: AnnCastSubscript, subgraph: GrometFN):
         pass
 
     @_visit.register
-    def visit_tuple(self, node: AnnCastTuple, subgraph: GrFNSubgraph):
+    def visit_tuple(self, node: AnnCastTuple, subgraph: GrometFN):
         self.visit_node_list(node.values, subgraph)
 
     @_visit.register
-    def visit_unary_op(self, node: AnnCastUnaryOp, subgraph: GrFNSubgraph):
+    def visit_unary_op(self, node: AnnCastUnaryOp, subgraph: GrometFN):
         self.visit(node.value, subgraph)
 
     @_visit.register
-    def visit_var(self, node: AnnCastVar, subgraph: GrFNSubgraph):
+    def visit_var(self, node: AnnCastVar, subgraph: GrometFN):
         self.visit(node.val, subgraph)
