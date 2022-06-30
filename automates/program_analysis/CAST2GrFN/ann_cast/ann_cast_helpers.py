@@ -13,7 +13,7 @@ from automates.model_assembly.metadata import (
     VariableCreationReason,
     VariableFromSource,
 )
-from automates.model_assembly.networks import GenericNode, LambdaNode, VariableNode
+from automates.model_assembly.networks import GenericNode, LambdaNode, VariableNode, PackNode, UnpackNode
 from automates.model_assembly.structures import VariableIdentifier
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
@@ -339,7 +339,7 @@ def is_literal_assignment(node):
     This may need to updated later
     """
     # FUTURE: may need to augment this list e.g. AnnCastList/AnnCastDict etc
-    if isinstance(node, (AnnCastNumber, AnnCastBoolean, AnnCastString)):
+    if isinstance(node, (AnnCastNumber, AnnCastBoolean, AnnCastString, AnnCastLiteralValue)):
         return True
 
     return False
@@ -498,6 +498,29 @@ def create_grfn_assign_node(metadata: typing.List):
     return LambdaNode(lambda_uuid, lambda_type,
                       lambda_str, lambda_func, metadata)
     
+def create_grfn_pack_node(metadata: typing.List):
+    """
+    Creates a GrFN `LambdaNode` with type `PACK` and metadata `metadata`.
+    """
+    lambda_uuid = GenericNode.create_node_id()
+    lambda_str = ""
+    lambda_func = lambda: None
+    lambda_type = LambdaType.PACK
+    return PackNode(lambda_uuid, lambda_type,
+                      lambda_str, lambda_func, metadata, "", "")
+
+
+def create_grfn_unpack_node(metadata: typing.List):
+    """
+    Creates a GrFN `LambdaNode` with type `UNPACK` and metadata `metadata`.
+    """
+    lambda_uuid = GenericNode.create_node_id()
+    lambda_str = ""
+    lambda_func = lambda: None
+    lambda_type = LambdaType.UNPACK
+    return UnpackNode(lambda_uuid, lambda_type,
+                      lambda_str, lambda_func, metadata, "", "")
+
 def create_grfn_var_from_name_node(node):
     """
     Creates a GrFN `VariableNode` for this `AnnCastName` node.

@@ -1,4 +1,5 @@
 import copy
+from tkinter import E
 import typing
 from collections import defaultdict
 from enum import Enum
@@ -188,8 +189,8 @@ class ContainerScopePass:
     ):
         # print current node being visited.  
         # this can be useful for debugging 
-        # class_name = node.__class__.__name__
-        # print(f"\nProcessing node type {class_name}")
+        #class_name = node.__class__.__name__
+        #print(f"\nProcessing node type {class_name}")
 
         children_src_ref = self._visit(node, base_func_scopestr, enclosing_con_scope, assign_side)
         if children_src_ref is None:

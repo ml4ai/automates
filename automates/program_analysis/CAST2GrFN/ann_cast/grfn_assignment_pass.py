@@ -1,5 +1,8 @@
+from ast import Lambda
 import typing
 from functools import singledispatchmethod
+
+from numpy import isin
 
 from automates.model_assembly.metadata import LambdaType
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
@@ -7,6 +10,8 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     ann_cast_name_to_fullid,
     create_grfn_assign_node,
     create_grfn_literal_node,
+    create_grfn_pack_node,
+    create_grfn_unpack_node,
     create_lambda_node_metadata,
     is_literal_assignment,
 )
@@ -58,6 +63,8 @@ class GrfnAssignmentPass:
         metadata = create_lambda_node_metadata(node.source_refs)
         if is_literal_assignment(node.right):
             node.grfn_assignment = GrfnAssignment(create_grfn_literal_node(metadata), LambdaType.LITERAL)
+        elif isinstance(node.left, AnnCastTuple):
+            node.grfn_assignment = GrfnAssignment(create_grfn_unpack_node(metadata), LambdaType.UNPACK)
         else:
             node.grfn_assignment = GrfnAssignment(create_grfn_assign_node(metadata), LambdaType.ASSIGN)
             
@@ -231,6 +238,8 @@ class GrfnAssignmentPass:
         metadata = create_lambda_node_metadata(node.source_refs)
         if is_literal_assignment(node.value):
             node.grfn_assignment = GrfnAssignment(create_grfn_literal_node(metadata), LambdaType.LITERAL)
+        elif isinstance(node.value, AnnCastTuple):
+            node.grfn_assignment = GrfnAssignment(create_grfn_pack_node(metadata), LambdaType.PACK)
         else:
             node.grfn_assignment = GrfnAssignment(create_grfn_assign_node(metadata), LambdaType.ASSIGN)
 

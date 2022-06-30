@@ -304,7 +304,7 @@ class PyASTToCAST():
                                                            # A function call to a "list_set"
                 sub_node = node.targets[0]
                 val = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)[0]
-                idx =  self.visit(sub_node.slice, prev_scope_id_dict, curr_scope_id_dict)[0]
+                idx = self.visit(sub_node.slice, prev_scope_id_dict, curr_scope_id_dict)[0]
                 list_name = self.visit(sub_node.value, prev_scope_id_dict, curr_scope_id_dict)[0]
 
                 # In the case we're calling a function that doesn't have an identifier already
@@ -323,7 +323,7 @@ class PyASTToCAST():
                     prev_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
 
                 args = [list_name, idx, val]
-                return [Call(Name("_list_set", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref)]
+                return [Assignment(Var(val=list_name, type="Any", source_refs=ref), Call(Name("_list_set", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref), source_refs=ref)]
 
             if isinstance(node.value, ast.Subscript):
 
@@ -367,10 +367,10 @@ class PyASTToCAST():
                     t = get_op(binop.op)
                     cons.operator = "*" if get_op(binop.op) == 'Mult' else "+" if get_op(binop.op) == 'Add' else None
                     cons.size = self.visit(operand, prev_scope_id_dict, curr_scope_id_dict)[0]
-                    cons.initial_value = LiteralValue(value_type=lit_type, value=list_node.elts[0].value, source_code_data_type=None) 
+                    cons.initial_value = LiteralValue(value_type=lit_type, value=list_node.elts[0].value, source_code_data_type=["Python","3.8","Float"]) 
             
                     # TODO: Source code data type metadata
-                    to_ret = LiteralValue(value_type="List[Any]", value=cons, source_code_data_type=None)
+                    to_ret = LiteralValue(value_type="List[Any]", value=cons, source_code_data_type=["Python","3.8","List"])
 
                     #print(to_ret)
                     l_visit = self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict)
@@ -849,18 +849,19 @@ class PyASTToCAST():
         """
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        source_code_data_type = ["Python","3.8",str(type(node.value))]
         if isinstance(node.value,int):
-            return [LiteralValue(ScalarType.INTEGER, node.value)]
+            return [LiteralValue(ScalarType.INTEGER, node.value, source_code_data_type)]
         elif isinstance(node.value,float):
-            return [LiteralValue(ScalarType.ABSTRACTFLOAT, node.value)]
+            return [LiteralValue(ScalarType.ABSTRACTFLOAT, node.value, source_code_data_type)]
         elif isinstance(node.value,bool):
-            return [LiteralValue(ScalarType.BOOLEAN, node.value)]
+            return [LiteralValue(ScalarType.BOOLEAN, node.value, source_code_data_type)]
         elif isinstance(node.value,str):
-            return [LiteralValue(StructureType.LIST, node.value)]
+            return [LiteralValue(StructureType.LIST, node.value, source_code_data_type)]
         elif node.value is None:
-            return [LiteralValue(None, None)]
+            return [LiteralValue(None, None, None)]
         else:
-            raise TypeError(f"Type {node.value} not supported")
+            raise TypeError(f"Type {str(type(node.value))} not supported")
 
     @visit.register
     def visit_Continue(self, node: ast.Continue, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -924,10 +925,11 @@ class PyASTToCAST():
     @visit.register
     def visit_For(self, node: ast.For, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """Visits a PyAST For node, which represents Python for loops.
-        A For loop is different than a While loop, in that we need to do a
-        conversion such that the resulting CAST Loop appropriately captures a
-        node that is more like a While loop (i.e. using a condition to
-        terminate the loop instead of iterating).
+        A For loop needs different handling than a while loop.
+        In particular, a For loop acts on an iterator as opposed to acting on 
+        some kind of condition. In order to make this translation a little easier to handle
+        we leverage the iterator constructs to convert the For loop into a while loop using
+        the iterators.
 
         Args:
             node (ast.For): A PyAST For loop node.
@@ -937,6 +939,7 @@ class PyASTToCAST():
                   loops and While loops.
         """
 
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         
         target = self.visit(node.target, prev_scope_id_dict, curr_scope_id_dict)[0]
         iterable = self.visit(node.iter, prev_scope_id_dict, curr_scope_id_dict)[0]
@@ -952,115 +955,41 @@ class PyASTToCAST():
         # the curr scope which would consist of the loop variables (node.target) and the item
         # we loop over (iter) though the second one shouldn't ever be accessed
         body = []
-        print(curr_scope_id_dict)
         for piece in (node.body + node.orelse):
             body.extend(self.visit(piece, curr_scope_id_dict, loop_scope_id_dict))
-        print(loop_scope_id_dict)
 
         # Once we're out of the loop body we can copy the current scope back
         curr_scope_id_dict = copy.deepcopy(curr_scope_copy)
 
-        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        count_var_name = f"generated_index_{self.var_count}"
-        list_name = f"generated_list_{self.var_count}"
-        self.var_count += 1
-
         # TODO: Mark these as variables that were generated by this script at some point
         # (^ This was a really old request, not sure if it's still needed at this point)
-        count_var_id = self.insert_next_id(curr_scope_id_dict, count_var_name)
+        iterator_name = f"generated_iter_{self.var_count}"
+        self.var_count += 1
 
-        list_var_id = self.insert_next_id(curr_scope_id_dict, list_name)
+        iterator_id = self.insert_next_id(curr_scope_id_dict, iterator_name)
 
-        # Built-ins used: "list", "len"
-        list_id = -1
-        if "list" not in self.global_identifier_dict.keys():
-            list_id = self.insert_next_id(self.global_identifier_dict, "list")
+        # 'iter' and 'next' are python built-ins
+        iter_id = -1
+        if "iter" not in self.global_identifier_dict.keys():
+            iter_id = self.insert_next_id(self.global_identifier_dict, "iter")
         else:
-            list_id = self.global_identifier_dict["list"]
+            iter_id = self.global_identifier_dict["iter"]
 
-        len_id = -1
-        if "len" not in self.global_identifier_dict.keys():
-            len_id = self.insert_next_id(self.global_identifier_dict, "len")
+        if "next" not in self.global_identifier_dict.keys():
+            next_id = self.insert_next_id(self.global_identifier_dict, "next")
         else:
-            len_id = self.global_identifier_dict["len"]
+            next_id = self.global_identifier_dict["next"]
 
-        count_var = Assignment(Var(Name(name=count_var_name, id=count_var_id, source_refs=ref), "float", source_refs=ref), Number(0, source_refs=ref), source_refs=ref)
-        list_var = Assignment(Var(Name(name=list_name, id=list_var_id, source_refs=ref), "list", source_refs=ref), 
-                    Call(Name(name="list", id=list_id, source_refs=ref),[iterable],source_refs=ref), source_refs=ref)
+        iter_var = Assignment(Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref), 
+                    Call(Name(name="iter", id=iter_id, source_refs=ref),[iterable],source_refs=ref), source_refs=ref)
 
-        loop_cond = BinaryOp(
-            BinaryOperator.LT,
-            Name(name=count_var_name, id=count_var_id, source_refs=ref),
-            Call(Name(name="len", id=len_id, source_refs=ref), [Name(name=list_name,id=list_var_id,source_refs=ref)], source_refs=ref),
-            source_refs=ref
-        )
+        loop_cond = LiteralValue(ScalarType.BOOLEAN, True, ["Python", "3.8", "boolean"])
 
-        if isinstance(node.iter,ast.Call):   # For function calls like range(), list(), etc...
-            if isinstance(node.target,ast.Tuple):
-                loop_assign = [Assignment(
-                    Tuple([Var(type="float",val=Name(name=f"{node.val.name}_",id=-1,source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
-                    Subscript(Name(name=list_name, id=list_var_id, source_refs=ref), 
-                    Name(name=count_var_name, id=count_var_id, source_refs=ref),source_refs=ref),
-                    source_refs=ref
-                ),
-                Assignment(
-                    target,
-                    Tuple([Var(type="float",val=Name(name=f"{node.val.name}_",id=-1,source_refs=ref),source_refs=ref) for node in target.values], source_refs=ref),
-                    source_refs=ref
-                )]
-            else:
-                loop_assign = [Assignment(
-                    Var(Name(name=node.target.id,id=curr_scope_id_dict[node.target.id],source_refs=ref), "float", source_refs=ref),
-                    Subscript(Name(name=list_name,id=list_var_id,source_refs=ref), 
-                    Name(name=count_var_name,id=count_var_id,source_refs=ref),source_refs=ref),
-                    source_refs=ref
-                )]
-        elif isinstance(node.iter,ast.Attribute): # For attributes like x.foo_list, x.foo(), etc
-            if isinstance(node.target,ast.Tuple):
-                loop_assign = [Assignment(
-                    Tuple([Var(type="float",val=Name(f"{node.val.name}_",id=-1,source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
-                    Subscript(Name(name=node.iter.value.id,id=curr_scope_id_dict[node.iter.value.id],source_refs=ref), 
-                    Name(count_var_name,source_refs=ref),source_refs=ref),
-                    source_refs=ref
-                ),
-                Assignment(
-                    target,
-                    Tuple([Var(type="float",val=Name(name=f"{node.val.name}_",id=-1,source_refs=ref),source_refs=ref) for node in target.values],source_refs=ref),
-                    source_refs=ref
-                )]
-            else:
-                loop_assign = [Assignment(
-                    Var(Name(name=node.target.id, id=curr_scope_id_dict[node.target.id], source_refs=ref), "float", source_refs=ref),
-                    Subscript(Name(name=list_name, id=list_var_id, source_refs=ref), 
-                    Name(name=count_var_name, id=count_var_id, source_refs=ref), source_refs=ref),
-                    source_refs=ref
-                )]
-        else:
-            if isinstance(node.target,ast.Tuple):
-                loop_assign = [Assignment(
-                    Tuple([Var(type="float", val=Name(name=f"{node.val.name}_", id=-1, source_refs=ref), source_refs=ref) for node in target.values],source_refs=ref),
-                    Subscript(Name(name=node.iter.id, id=curr_scope_id_dict[node.iter.id], source_refs=ref), 
-                    Name(name=count_var_name, id=count_var_id, source_refs=ref), source_refs=ref),
-                    source_refs=ref
-                ),
-                Assignment(
-                    target,
-                    Tuple([Var(type="float", val=Name(name=f"{node.val.name}_", id=-1, source_refs=ref), source_refs=ref) for node in target.values],source_refs=ref),
-                    source_refs=ref
-                )]
-            else:
-                loop_assign = [Assignment(
-                    Var(Name(name=node.target.id, id=curr_scope_id_dict[node.target.id], source_refs=ref), "float", source_refs=ref),
-                    Subscript(Name(name=list_name, id=list_var_id, source_refs=ref), Name(name=count_var_name, id=count_var_id, source_refs=ref), source_refs=ref),
-                    source_refs=ref
-                )]
-        loop_increment = [Assignment(
-            Var(Name(name=count_var_name, id=count_var_id, source_refs=ref), "float", source_refs=ref),
-            BinaryOp(BinaryOperator.ADD, Name(name=count_var_name, id=count_var_id, source_refs=ref), Number(1, source_refs=ref), source_refs=ref),
-            source_refs=ref
-        )]
+        loop_assign = Assignment(target,Call(Name(name="next", id=next_id, source_refs=ref),
+                    [Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref)], 
+                    source_refs=ref), source_refs=ref)
 
-        return [count_var, list_var, Loop(expr=loop_cond, body=loop_assign + body + loop_increment, source_refs=ref)]
+        return [iter_var, Loop(expr=loop_cond, body=[loop_assign] + body, source_refs=ref)]
 
     @visit.register
     def visit_FunctionDef(self, node: ast.FunctionDef, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -1524,6 +1453,7 @@ class PyASTToCAST():
             List: A CAST List node.
         """
 
+        source_code_data_type = ["Python","3.8","List"]
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         if len(node.elts) > 0:
             to_ret = []
@@ -1531,10 +1461,10 @@ class PyASTToCAST():
                 to_ret.extend(self.visit(piece, prev_scope_id_dict, curr_scope_id_dict))
             # TODO: How to represent computations like '[0.0] * 1000' in some kind of type constructing system
             # and then how could we store that in these LiteralValue nodes? 
-            return [LiteralValue(StructureType.SEQ,to_ret)]
+            return [LiteralValue(StructureType.LIST,to_ret, source_code_data_type)]
             #return [List(to_ret,source_refs=ref)]
         else:
-            return [LiteralValue(StructureType.SEQ,[])]
+            return [LiteralValue(StructureType.LIST,[], source_code_data_type)]
             #return [List([],source_refs=ref)]
 
     @visit.register
@@ -1724,15 +1654,16 @@ class PyASTToCAST():
             Set: A CAST Set node.
         """
 
+        source_code_data_type = ["Python","3.8","List"]
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
         if len(node.elts) > 0:
             to_ret = []
             for piece in node.elts:
                 to_ret.extend(self.visit(piece, prev_scope_id_dict, curr_scope_id_dict))
-            return [Set(to_ret,source_refs=ref)]
+            return [LiteralValue(StructureType.SET, to_ret, source_code_data_type)]
         else:
-            return [Set([], source_refs=ref)]
+            return [LiteralValue(StructureType.SET, to_ret, source_code_data_type)]
 
     @visit.register
     def visit_Subscript(self, node: ast.Subscript, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -1984,14 +1915,15 @@ class PyASTToCAST():
             Set: A CAST Tuple node.
         """
 
+        source_code_data_type = ["Python","3.8","List"]
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         if len(node.elts) > 0:
             to_ret = []
             for piece in node.elts:
                 to_ret.extend(self.visit(piece, prev_scope_id_dict, curr_scope_id_dict))
-            return [Tuple(to_ret, source_refs=ref)]
+            return [LiteralValue(StructureType.TUPLE, to_ret, source_code_data_type, source_refs=ref)]
         else:
-            return [Tuple([], source_refs=ref)]
+            return [LiteralValue(StructureType.TUPLE, [], source_code_data_type, source_refs=ref)]
 
     @visit.register
     def visit_Try(self, node:ast.Try, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):

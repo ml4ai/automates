@@ -17,6 +17,10 @@ from automates.model_assembly.networks import (
     UnpackNode,
     PackNode,
 )
+from automates.model_assembly.networks import (
+    GrometFN,
+    GrometExpression,
+)
 from automates.model_assembly.sandbox import load_lambda_function
 from automates.model_assembly.structures import ContainerIdentifier
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
@@ -37,17 +41,21 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 )
 
 
-class ToGrfnPass:
+class ToGrometPass:
     def __init__(self, pipeline_state: PipelineState):
         self.pipeline_state = pipeline_state
-        self.nodes = self.pipeline_state.nodes
-        self.network = nx.DiGraph()
-        self.subgraphs = nx.DiGraph()
-        self.hyper_edges = []
+        #self.nodes = self.pipeline_state.nodes
+        #self.network = nx.DiGraph()
+        #self.subgraphs = nx.DiGraph()
+        #self.hyper_edges = []
+
+        # creating a GroMEt FN object here or a collection of GroMEt FNs
+        # generally, programs are complex, so a collection of GroMEt FNs is usually created
+        # visiting nodes adds FNs 
 
         # populate network with variable nodes
-        for grfn_var in self.pipeline_state.grfn_id_to_grfn_var.values():
-            self.network.add_node(grfn_var, **grfn_var.get_kwargs())
+        #for grfn_var in self.pipeline_state.grfn_id_to_grfn_var.values():
+        #    self.network.add_node(grfn_var, **grfn_var.get_kwargs())
 
         # the fullid of a AnnCastName node is a string which includes its 
         # variable name, numerical id, version, and scope
@@ -55,19 +63,19 @@ class ToGrfnPass:
             self.visit(node, subgraph=None)
 
         # build GrFN
-        grfn_uid = GenericNode.create_node_id()
-        timestamp = "timestamp"
-        type_defs = []
-        metadata = []
-        ns = "default-ns"
-        scope = "default"
-        con_name = "GrFN"
-        identifier = ContainerIdentifier(ns, scope, con_name)
+        # grfn_uid = GenericNode.create_node_id()
+        #timestamp = "timestamp"
+        #type_defs = []
+        #metadata = []
+        #ns = "default-ns"
+        #scope = "default"
+        #con_name = "GrFN"
+        #identifier = ContainerIdentifier(ns, scope, con_name)
 
         # store GrFN in PipelineState
-        self.pipeline_state.grfn = GroundedFunctionNetwork(grfn_uid, identifier, timestamp, 
-                                        self.network, self.hyper_edges, self.subgraphs,
-                                        type_defs, metadata)
+        #self.pipeline_state.grfn = GroundedFunctionNetwork(grfn_uid, identifier, timestamp, 
+        #                                self.network, self.hyper_edges, self.subgraphs,
+        #                                type_defs, metadata)
 
     def grfn_vars_from_fullids(self, fullids: typing.Iterable):
         """
@@ -187,6 +195,8 @@ class ToGrfnPass:
         subgraph.nodes.extend(inputs + [decision_node] + outputs)
 
     def visit_grfn_assignment(self, grfn_assignment: GrfnAssignment, subgraph: GrFNSubgraph):
+        # NOTE: We can perhaps create the call to the GExpression box here
+
         assignment_node = grfn_assignment.assignment_node
         # update func_str and function for assignment node
         assignment_node.func_str = grfn_assignment.lambda_expr
@@ -233,8 +243,45 @@ class ToGrfnPass:
 
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment, subgraph: GrFNSubgraph):
+        # This first visit on the node.right should create a FN
+        # where the outer box is a GExpression (GroMEt Expression)
+        # The purple box on the right in examples (exp0.py)
         self.visit(node.right, subgraph)
-        self.visit_grfn_assignment(node.grfn_assignment, subgraph)
+
+        # One way or another we have a hold of the GEXpression object here.
+        # Whatever's returned by the RHS of the assignment, 
+        # i.e. LiteralValue or primitive operator or function call.
+        # Now we can look at its output port(s)
+
+        # At this point we identified the variable being assigned (i.e. for exp0.py: x)
+        # we need to do some bookkeeping to associate the source CAST/GrFN variable with
+        # the output port of the GroMEt expression call
+
+        # NOTE: x = foo(...) <- foo returns multiple values that get packed
+        # Several conditions for this 
+        # - foo has multiple output ports for returning 
+        #    - multiple output ports but assignment to a single variable, then we introduce a pack
+        #       the result of the pack is a single introduced variable that gets wired to the single 
+        #       variable
+        #    - multiple output ports but assignment to multiple variables, then we wire one-to-one 
+        #       in order, all the output ports of foo to each variable
+        #    - else, if we dont have a one to one matching then it's an error
+        # - foo has a single output port to return a value
+        #    - in the case of a single target variable, then we wire directly one-to-one
+        #    - otherwise if multiple target variables for a single return output port, then it's an error
+
+
+        # GroMEt wiring creation
+        # The creation of the wire between the output port (OP) of the top-level node 
+        # of the tree rooted in node.right needs to be wired to the output port out (OPO)
+        # of the GExpression of this AnnCastAssignment
+
+        # NOTE: A visit_grfn_assignment for GroMEt construction is likely not needed
+        # The work can probably be done at this step in the Assignment visitor
+        # This second visit creates the call to the GExpression that was just created 
+        # in the previous visit above
+        # A box that's contained within the body of a FN
+        # self.visit_grfn_assignment(node.grfn_assignment, subgraph)
 
     @_visit.register
     def visit_attribute(self, node: AnnCastAttribute, subgraph: GrFNSubgraph):
@@ -244,6 +291,9 @@ class ToGrfnPass:
     def visit_binary_op(self, node: AnnCastBinaryOp, subgraph: GrFNSubgraph):
         # visit LHS first
         self.visit(node.left, subgraph)
+
+        # NOTE: Maintain a table of primitive operators that when queried give you back
+        # their signatures that can be used for generating 
 
         # visit RHS second
         self.visit(node.right, subgraph)
@@ -442,6 +492,12 @@ class ToGrfnPass:
     
     @_visit.register
     def visit_literal_value(self, node: AnnCastLiteralValue, subgraph: GrFNSubgraph):
+        # Create the GroMEt literal value (A type of Function box)
+        # This will have a single outport (the little blank box)
+        # What we dont determine here is the wiring to whatever variable this 
+        # literal value goes to (that's up to the parent context)
+        
+        # maybe return GroMEtLiteralValue(...)
         pass
 
     @_visit.register
@@ -579,6 +635,7 @@ class ToGrfnPass:
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, subgraph: GrFNSubgraph):
+        """
         type = "ModuleContainer"
         border_color = GrFNSubgraph.get_border_color(type)
         metadata = create_container_metadata(node.grfn_con_src_ref)
@@ -590,10 +647,24 @@ class ToGrfnPass:
         scope = MODULE_SCOPE
         basename = MODULE_SCOPE
         basename_id = -1
+        """
+        # We create a new GroMEt FN and add it to the GroMEt FN collection
+
+        # Creating a new Function Network (FN) where the outer box is a module
+        # i.e. a gray colored box in the drawings
+        # It's like any FN but it doesn't have any outer ports, or inner/outer port boxes
+        # on it (i.e. little squares on the gray box in a drawing)
+
+        # Have a FN constructor to build the GroMEt FN
+        # and pass this FN to maintain a 'nesting' approach (boxes within boxes)
+        # instead of passing a GrFNSubgraph through the visitors
+
+        """
         subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
                                 occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
-
+        """
+        
         self.visit_node_list(node.body, subgraph)
 
     @_visit.register

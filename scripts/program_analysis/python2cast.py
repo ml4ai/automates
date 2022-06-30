@@ -44,10 +44,16 @@ if '--astpp' in sys.argv:
 
 # 'Root' the current working directory so that it's where the 
 # Source file we're generating CAST for is (for Import statements)
-idx = pyfile_path.rfind("/")
-curr_path = pyfile_path[0:idx]
 old_path = os.getcwd()
-os.chdir(curr_path)
+idx = pyfile_path.rfind("/")
+
+if idx > -1:
+    curr_path = pyfile_path[0:idx]
+    os.chdir(curr_path)
+else:
+    curr_path = "./"+pyfile_path
+
+#os.chdir(curr_path)
 
 # Parse the python program's AST and create the CAST
 contents = ast.parse(file_contents)

@@ -552,10 +552,14 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
-    def _(self, node: LiteralValue):
+    def _(self, node: AnnCastLiteralValue):
         if node.value_type == ScalarType.INTEGER:
             node_uid = uuid.uuid4()
             self.G.add_node(node_uid, label=f"Integer: {node.value}")
+            return node_uid
+        elif node.value_type == ScalarType.BOOLEAN:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"Boolean: {str(node.value)}")
             return node_uid
         elif node.value_type == ScalarType.ABSTRACTFLOAT:
             node_uid = uuid.uuid4()
@@ -563,7 +567,44 @@ class CASTToAGraphVisitor(CASTVisitor):
             return node_uid
         elif node.value_type == StructureType.LIST:
             node_uid = uuid.uuid4()
-            self.G.add_node(node_uid, label=f"List: {node.value}")
+            self.G.add_node(node_uid, label=f"List: [...]")
+            return node_uid
+        elif node.value_type == "List[Any]":
+            node_uid = uuid.uuid4()
+            if isinstance(node.value, ValueConstructor):
+                op = node.value.operator
+                init_val = node.value.initial_value.value 
+                if isinstance(node.value.size, LiteralValue):
+                    size = node.value.size.value
+                    id = -1
+                else: 
+                    size = node.value.size.name
+                    id = node.value.size.id
+
+                #self.G.add_node(node_uid, label=f"List: Init_Val: [{init_val}], Size: {size} ")
+                self.G.add_node(node_uid, label=f"List: [{init_val}] {op} {size} (id: {id})")
+
+            return node_uid
+        else:
+            assert False, f"cast_to_agraph_visitor LiteralValue: type not supported yet {type(node)}"
+
+    @visit.register
+    def _(self, node: LiteralValue):
+        if node.value_type == ScalarType.INTEGER:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"Integer: {node.value}")
+            return node_uid
+        elif node.value_type == ScalarType.BOOLEAN:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"Boolean: {str(node.value)}")
+            return node_uid
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"abstractFloat: {node.value}")
+            return node_uid
+        elif node.value_type == StructureType.LIST:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"List: [...]")
             return node_uid
         elif node.value_type == "List[Any]":
             node_uid = uuid.uuid4()
@@ -899,6 +940,20 @@ class CASTToAGraphVisitor(CASTVisitor):
         self.G.add_node(node_uid, label="Subscript")
         self.G.add_edge(node_uid, value)
         self.G.add_edge(node_uid, s_slice)
+
+        return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastTuple):
+        """Visits a Tuple node. We add all the elements of this
+        tuple (if any) to the graph and return the UID of this node."""
+        values = []
+        if len(node.values) > 0:
+            values = self.visit_list(node.values)
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label="Tuple")
+        for n in values:
+            self.G.add_edge(node_uid, n)
 
         return node_uid
 
