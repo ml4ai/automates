@@ -2,7 +2,7 @@ from os import name
 import pytest
 import random
 
-from automates.program_analysis.CAST2GrFN.model.cast import (
+from automates.program_analysis.CAST import (
     AstNode,
     Assignment,
     Attribute,
@@ -32,7 +32,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
-from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
+from automates.program_analysis.CAST2GrFN.cast_to_air_model import (
     C2ATypeError,
 )
 from automates.program_analysis.CAST2GrFN.cast import CAST

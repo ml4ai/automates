@@ -6,7 +6,7 @@ import astpp
 import json 
 from automates.program_analysis.PyAST2CAST import py_ast_to_cast
 from automates.program_analysis.CAST2GrFN import cast 
-from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
+from automates.program_analysis.CAST import SourceRef
 
 if len(sys.argv) < 2:
     print("USAGE: python3 python2cast.py PYTHON_FILE_NAME [--astpp] [--legacy] [--rawjson] [--stdout]")

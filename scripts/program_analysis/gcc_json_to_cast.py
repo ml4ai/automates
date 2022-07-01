@@ -1,7 +1,7 @@
 import sys
 import json
 
-from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
+from automates.program_analysis.GCC2CAST.gcc_ast_to_cast import GCC2CAST
 from automates.program_analysis.CAST2GrFN.visitors.cast_to_agraph_visitor import CASTToAGraphVisitor
 
 

@@ -3,7 +3,7 @@ import ast
 import json
 
 from automates.program_analysis.PyAST2CAST import py_ast_to_cast
-from automates.program_analysis.CAST2GrFN.model.cast import (
+from automates.program_analysis.CAST import (
     AstNode,
     Assignment,
     Attribute,

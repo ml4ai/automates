@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 from automates.program_analysis.CAST2GrFN.cast import CAST
-from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
+from automates.program_analysis.GCC2CAST.gcc_ast_to_cast import GCC2CAST
 
 # All test data is stored in `TEST_DATA_DIR`
 # Each test uses two files for test data

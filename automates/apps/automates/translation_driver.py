@@ -1,8 +1,8 @@
 import base64
 import json
 
-from automates.program_analysis.GCC2GrFN.gcc_plugin_driver import run_gcc_plugin
-from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
+from automates.program_analysis.GCC2CAST.gcc_plugin_driver import run_gcc_plugin
+from automates.program_analysis.GCC2CAST.gcc_ast_to_cast import GCC2CAST
 
 # Util functions
 def write_out_files(files):

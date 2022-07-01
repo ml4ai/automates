@@ -5,7 +5,7 @@ import random
 
 import automates.model_assembly.networks as networks
 from automates.model_assembly.networks import GroundedFunctionNetwork
-from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
+from automates.program_analysis.GCC2CAST.gcc_ast_to_cast import GCC2CAST
 
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
 GCC_PLUGIN_IMAGE = "automates/program_analysis/gcc_plugin/plugin/ast_dump.so"

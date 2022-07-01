@@ -10,7 +10,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.cast_to_annotated_cast import
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import PipelineState
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_utility import run_all_ann_cast_passes
 from automates.model_assembly.networks import GroundedFunctionNetwork
-from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
+from automates.program_analysis.GCC2CAST.gcc_ast_to_cast import GCC2CAST
 
 # All test data is stored in `TEST_DATA_DIR`
 # Each test uses two files for test data

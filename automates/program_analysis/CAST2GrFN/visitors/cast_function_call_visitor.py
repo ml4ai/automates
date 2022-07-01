@@ -3,7 +3,7 @@ from functools import singledispatchmethod
 
 from automates.program_analysis.CAST2GrFN.visitors.cast_visitor import CASTVisitor
 
-from automates.program_analysis.CAST2GrFN.model.cast import (
+from automates.program_analysis.CAST import (
     AstNode,
     Assignment,
     Attribute,

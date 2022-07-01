@@ -1,6 +1,6 @@
 import automates.program_analysis.CAST2GrFN.visitors.cast_function_call_visitor as call_order
 
-from automates.program_analysis.CAST2GrFN.model.cast import (
+from automates.program_analysis.CAST import (
     AstNode,
     Assignment,
     Attribute,

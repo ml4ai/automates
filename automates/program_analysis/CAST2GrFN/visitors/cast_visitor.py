@@ -1,10 +1,10 @@
 import typing
 from functools import singledispatchmethod
 
-from automates.program_analysis.CAST2GrFN.model.cast import (
+from automates.program_analysis.CAST import (
     AstNode,
 )
-from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
+from automates.program_analysis.CAST2GrFN.cast_to_air_model import (
     C2ATypeError,
 )
 

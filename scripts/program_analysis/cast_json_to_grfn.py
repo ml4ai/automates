@@ -4,7 +4,7 @@ import subprocess
 import json
 import argparse
 
-from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
+from automates.program_analysis.GCC2CAST.gcc_ast_to_cast import GCC2CAST
 from automates.program_analysis.CAST2GrFN.cast import CAST
 
 

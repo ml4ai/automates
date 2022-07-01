@@ -4,7 +4,7 @@ import difflib
 import typing
 import networkx as nx
 
-from automates.program_analysis.CAST2GrFN.model.cast import (
+from automates.program_analysis.CAST import (
     AstNode,
     Assignment,
     Attribute,

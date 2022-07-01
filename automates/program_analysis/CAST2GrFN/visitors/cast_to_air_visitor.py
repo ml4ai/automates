@@ -5,7 +5,7 @@ from datetime import datetime
 
 from .cast_visitor import CASTVisitor
 import automates.program_analysis.CAST2GrFN.visitors.cast_function_call_visitor as call_order
-from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
+from automates.program_analysis.CAST2GrFN.cast_to_air_model import (
     C2AException,
     C2AState,
     C2ALambdaType,
@@ -25,7 +25,7 @@ from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
     C2AValueError,
     build_unique_list_with_order,
 )
-from automates.program_analysis.CAST2GrFN.model.cast import (
+from automates.program_analysis.CAST import (
     AstNode,
     Assignment,
     Attribute,

@@ -16,7 +16,7 @@ from automates.model_assembly.metadata import (
 from automates.model_assembly.networks import GenericNode, LambdaNode, VariableNode
 from automates.model_assembly.structures import VariableIdentifier
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
+from automates.program_analysis.CAST import SourceRef
 
 # NOTE: the GrFN json loading seems to rely on "." as the separator for container scopes
 # For the Annotated Cast pipeline, it is fine to change these separators as long as they
