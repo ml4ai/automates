@@ -36,7 +36,7 @@ To update the SKEMA (AutoMATES) GroMEt schema data model, do the following:
       ```
    must be changed to:
       ```
-      import GrometBox
+      from gromet_box import GrometBox
       ```
    This change must be made manually for the following files:
    - `gromet_box_conditional.py`

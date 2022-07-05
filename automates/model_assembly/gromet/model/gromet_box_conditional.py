@@ -14,7 +14,7 @@ import pprint
 import re  # noqa: F401
 
 import six
-import GrometBox  # noqa: F401,E501
+from gromet_box import GrometBox  # noqa: F401,E501
 
 
 class GrometBoxConditional(GrometBox):
