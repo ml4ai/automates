@@ -1,6 +1,7 @@
 from tkinter import Pack
 import typing
 from functools import singledispatchmethod
+from certifi import contents
 
 import networkx as nx
 from numpy import isin
@@ -21,6 +22,19 @@ from automates.model_assembly.gromet import (
     GrometFN,
     GrometExpression,
 )
+from automates.model_assembly.gromet.model import (
+    function_type,
+    gromet_box_conditional,
+    gromet_box_function,
+    gromet_box_loop,
+    gromet_box,
+    gromet_fn_collection,
+    gromet_fn,
+    gromet_port,
+    gromet_wire,
+    literal_value,
+)
+
 from automates.model_assembly.sandbox import load_lambda_function
 from automates.model_assembly.structures import ContainerIdentifier
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
@@ -46,7 +60,6 @@ class ToGrometPass:
         self.pipeline_state = pipeline_state
         self.nodes = self.pipeline_state.nodes
 
-        self.gromet_collection = []
         #self.network = nx.DiGraph()
         #self.subgraphs = nx.DiGraph()
         #self.hyper_edges = []
@@ -54,6 +67,7 @@ class ToGrometPass:
         # creating a GroMEt FN object here or a collection of GroMEt FNs
         # generally, programs are complex, so a collection of GroMEt FNs is usually created
         # visiting nodes adds FNs 
+        self.gromet_collection = gromet_fn_collection.GrometFNCollection([], [])
 
         # populate network with variable nodes
         #for grfn_var in self.pipeline_state.grfn_id_to_grfn_var.values():
@@ -244,16 +258,34 @@ class ToGrometPass:
         raise NameError(f"Unrecognized node type: {type(node)}")
 
     @_visit.register
-    def visit_assignment(self, node: AnnCastAssignment, subgraph: GrFNSubgraph):
+    def visit_assignment(self, node: AnnCastAssignment, subgraph):
         # This first visit on the node.right should create a FN
         # where the outer box is a GExpression (GroMEt Expression)
         # The purple box on the right in examples (exp0.py)
-        self.visit(node.right, subgraph)
+
+        #new_gromet = gromet_fn.GrometFN()
+        #new_gromet.B = [{"name": "", "type": function_type.FunctionType.EXPRESSION}]
+        # How does this creation of a GrometBoxFunction object play into the overall construction?
+        # Where does it go? 
+        # new_gromet = gromet_box_function.GrometBoxFunction()
+
+        new_gromet = gromet_fn.GrometFN()
+        new_gromet.b = [gromet_box_function(function_type.FunctionType.EXPRESSION)]
+        new_gromet.bf = []
+        new_gromet.pof = []
+        new_gromet.opo = []
+        new_gromet.wfopo = []
+
+        self.gromet_collection.function_networks.append(new_gromet)
+
+        self.visit(node.right, new_gromet)
 
         # One way or another we have a hold of the GEXpression object here.
         # Whatever's returned by the RHS of the assignment, 
         # i.e. LiteralValue or primitive operator or function call.
         # Now we can look at its output port(s)
+
+        # node.left contains info about the variable being assigned
 
         # At this point we identified the variable being assigned (i.e. for exp0.py: x)
         # we need to do some bookkeeping to associate the source CAST/GrFN variable with
@@ -290,11 +322,11 @@ class ToGrometPass:
         pass
 
     @_visit.register
-    def visit_binary_op(self, node: AnnCastBinaryOp, subgraph: GrometFN):
+    def visit_binary_op(self, node: AnnCastBinaryOp, subgraph):
         # visit LHS first
         self.visit(node.left, subgraph)
 
-        # NOTE: Maintain a table of primitive operators that when queried give you back
+        # NOTE/TODO Maintain a table of primitive operators that when queried give you back
         # their signatures that can be used for generating 
 
         # visit RHS second
@@ -306,111 +338,8 @@ class ToGrometPass:
 
     @_visit.register    
     def visit_call(self, node: AnnCastCall, subgraph: GrometFN):
-        if node.is_grfn_2_2:
-            self.visit_call_grfn_2_2(node, subgraph)
-            return 
-
-        self.visit_node_list(node.arguments, subgraph)
-        for index, assignment in node.arg_assignments.items():
-            self.visit_grfn_assignment(assignment, subgraph)
-
-        parent = subgraph
-        # make a new subgraph for this If Container
-        type = "CallContainer"
-        border_color = GrFNSubgraph.get_border_color(type)
-        metadata = create_container_metadata(node.grfn_con_src_ref)
-        nodes = []
-        parent_str = parent.uid if parent is not None else None
-        occs = 0
-        uid = GenericNode.create_node_id()
-        ns = "default-ns"
-        scope = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
-        basename = node.func.name # change from 'scope' to its function name
-        basename_id = node.func.id # NOTE: represents the function's name ID, not the call number (i.e. invocation index)
-        subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
-                                occs, parent_str, type, border_color, nodes, metadata)
-
-        self.subgraphs.add_node(subgraph)
-        self.subgraphs.add_edge(parent, subgraph)
-
-        # build top interface if needed
-        if len(node.top_interface_in) > 0:
-            top_interface = self.create_interface_node(node.top_interface_lambda)
-            self.network.add_node(top_interface, **top_interface.get_kwargs())
-
-            inputs = self.grfn_vars_from_fullids(node.top_interface_in.values())
-            outputs = self.grfn_vars_from_fullids(node.top_interface_out.values())
-            self.add_grfn_edges(inputs, top_interface, outputs)
-
-            # container includes top_interface and top_interface outputs
-            subgraph.nodes.extend([top_interface] + outputs)
-
-        # build bot interface if needed
-        if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node(node.bot_interface_lambda)
-            self.network.add_node(bot_interface, **bot_interface.get_kwargs())
-
-            inputs = self.grfn_vars_from_fullids(node.bot_interface_in.values())
-            outputs = self.grfn_vars_from_fullids(node.bot_interface_out.values())
-            self.add_grfn_edges(inputs, bot_interface, outputs)
-
-            # container includes input and bot interface
-            # the outputs need to be added to the parent subgraph
-            subgraph.nodes.extend(inputs + [bot_interface])
-            parent.nodes.extend(outputs)
+        pass
         
-    def visit_call_grfn_2_2(self, node: AnnCastCall, subgraph: GrFNSubgraph):
-        # assert isinstance(node.func, AnnCastName)
-        self.visit_node_list(node.arguments, subgraph)
-        for assignment in node.arg_assignments.values():
-            self.visit_grfn_assignment(assignment, subgraph)
-
-        parent = subgraph
-        # make a new subgraph for this If Container
-        type = "FuncContainer"
-        border_color = GrFNSubgraph.get_border_color(type)
-        metadata = create_container_metadata(node.func_def_copy.grfn_con_src_ref)
-        nodes = []
-        parent_str = parent.uid if parent is not None else None
-        occs = node.invocation_index
-        uid = GenericNode.create_node_id()
-        ns = "default-ns"
-        scope = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
-        basename = scope
-        subgraph = GrFNSubgraph(uid, ns, scope, basename,
-                                occs, parent_str, type, border_color, nodes, metadata)
-        self.subgraphs.add_node(subgraph)
-        self.subgraphs.add_edge(parent, subgraph)
-
-        # build top interface
-        if len(node.top_interface_in) > 0:
-            top_interface = self.create_interface_node(node.top_interface_lambda)
-            self.network.add_node(top_interface, **top_interface.get_kwargs())
-
-            inputs = self.grfn_vars_from_fullids(node.top_interface_in.values())
-            outputs = self.grfn_vars_from_fullids(node.top_interface_out.values())
-            self.add_grfn_edges(inputs, top_interface, outputs)
-
-            # container includes top_interface and top_interface outputs
-            subgraph.nodes.extend([top_interface] + outputs)
-
-        self.visit_function_def_copy(node.func_def_copy, subgraph)
-
-        # build bot interface
-        if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node(node.bot_interface_lambda)
-            self.network.add_node(bot_interface, **bot_interface.get_kwargs())
-
-            inputs = self.grfn_vars_from_fullids(node.bot_interface_in.values())
-            outputs = self.grfn_vars_from_fullids(node.bot_interface_out.values())
-            self.add_grfn_edges(inputs, bot_interface, outputs)
-
-            # container includes input and bot interface
-            # the outputs need to be added to the parent subgraph
-            subgraph.nodes.extend(inputs + [bot_interface])
-            parent.nodes.extend(outputs)
-
-
     @_visit.register
     def visit_class_def(self, node: AnnCastClassDef, subgraph: GrometFN):
         pass
@@ -424,83 +353,23 @@ class ToGrometPass:
         self.visit(node.expr, subgraph)
 
     def visit_function_def_copy(self, node: AnnCastFunctionDef, subgraph: GrometFN):
-        for dummy_assignment in node.dummy_grfn_assignments:
-            self.visit_grfn_assignment(dummy_assignment, subgraph)
-
-        self.visit_node_list(node.func_args, subgraph)
-        self.visit_node_list(node.body, subgraph)
+        pass
 
     @_visit.register
     def visit_function_def(self, node: AnnCastFunctionDef, subgraph: GrometFN):
-        # for GrFN 2.2, we create function containers at call sites,
-        # so we skip all functions except "main"
-        if self.pipeline_state.GENERATE_GRFN_2_2 and not is_func_def_main(node):
-            return
-
-        parent = subgraph
-        type = "FuncContainer"
-        border_color = GrFNSubgraph.get_border_color(type)
-        metadata = create_container_metadata(node.grfn_con_src_ref)
-        nodes = []
-        parent_str = parent.uid if parent is not None else None
-        occs = 0
-        uid = GenericNode.create_node_id()
-        ns = "default-ns"
-        scope = con_scope_to_str(node.con_scope)
-        basename = node.name.name # was originally assigned to 'scope', changed to node.name.name
-        basename_id = node.name.id # added 
-        subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
-                                occs, parent_str, type, border_color, nodes, metadata)
-
-        self.visit_node_list(node.func_args, subgraph)
-
-        # build top interface if needed
-        if len(node.top_interface_in) > 0:
-            top_interface = self.create_interface_node(node.top_interface_lambda)
-            self.network.add_node(top_interface, **top_interface.get_kwargs())
-
-            inputs = self.grfn_vars_from_fullids(node.top_interface_in.values())
-            outputs = self.grfn_vars_from_fullids(node.top_interface_out.values())
-            self.add_grfn_edges(inputs, top_interface, outputs)
-
-            # add inputs to parent graph
-            parent.nodes.extend(inputs)
-            # add interface node and outputs to subraph
-            subgraph.nodes.extend([top_interface] + outputs)
-        
-        # visit dummy assignments before body
-        for dummy_assignment in node.dummy_grfn_assignments:
-            self.visit_grfn_assignment(dummy_assignment, subgraph)
-
-        # visit body
-        self.visit_node_list(node.body, subgraph)
-
-        # build bot interface if needed
-        if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node(node.bot_interface_lambda)
-            self.network.add_node(bot_interface, **bot_interface.get_kwargs())
-
-            inputs = self.grfn_vars_from_fullids(node.bot_interface_in.values())
-            outputs = self.grfn_vars_from_fullids(node.bot_interface_out.values())
-            self.add_grfn_edges(inputs, bot_interface, outputs)
-
-            # add interface node and inputs to subraph
-            subgraph.nodes.extend([bot_interface] + inputs)
-            # add outputs to parent graph
-            parent.nodes.extend(outputs)
-
-        self.subgraphs.add_node(subgraph)
-        self.subgraphs.add_edge(parent, subgraph)
+        pass
     
     @_visit.register
-    def visit_literal_value(self, node: AnnCastLiteralValue, subgraph: GrometFN):
+    def visit_literal_value(self, node: AnnCastLiteralValue, parent_gromet_fn):
         # Create the GroMEt literal value (A type of Function box)
         # This will have a single outport (the little blank box)
         # What we dont determine here is the wiring to whatever variable this 
         # literal value goes to (that's up to the parent context)
-        
-        # maybe return GroMEtLiteralValue(...)
-        pass
+        parent_gromet_fn.bf.append(gromet_box_function(function_type.FunctionType.LITERALVALUE, contents=None, values=literal_value(node.value_type, node.value)))
+        parent_gromet_fn.pof.append(gromet_port.GrometPort(len(parent_gromet_fn.bf) - 1)) 
+
+        # Perhaps we may need to return something in the future
+        # an idea: the index of where this exists
 
     @_visit.register
     def visit_list(self, node: AnnCastList, subgraph: GrometFN):
@@ -508,60 +377,7 @@ class ToGrometPass:
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, subgraph: GrometFN):
-        parent = subgraph
-        # make a new subgraph for this If Container
-        type = "LoopContainer"
-        border_color = GrFNSubgraph.get_border_color(type)
-        metadata = create_container_metadata(node.grfn_con_src_ref)
-        nodes = []
-        parent_str = parent.uid if parent is not None else None
-        occs = 0
-        uid = GenericNode.create_node_id()
-        ns = "default-ns"
-        scope = con_scope_to_str(node.con_scope)
-        basename = "loop"  # changed from 'scope' to the string 'loop'
-        basename_id = int(node.con_scope[-1][4:]) # stripping out the word 'loop' to obtain a numerical ID
-        subgraph = GrFNLoopSubgraph(uid, ns, scope, basename, basename_id,
-                                occs, parent_str, type, border_color, nodes, metadata)
-        self.subgraphs.add_node(subgraph)
-        self.subgraphs.add_edge(parent, subgraph)
-
-        # build top interface
-        if len(node.top_interface_initial) > 0:
-            top_interface = self.create_loop_top_interface(node.top_interface_lambda)
-            self.network.add_node(top_interface, **top_interface.get_kwargs())
-            # collect initial GrFN VariableNodes
-            grfn_initial = self.grfn_vars_from_fullids(node.top_interface_initial.values())
-            # collect updated GrFN VariableNodes 
-            grfn_updated = self.grfn_vars_from_fullids(node.top_interface_updated.values())
-            # combine initial and updated for inputs to loop top interface
-            inputs = grfn_initial + grfn_updated
-            # collect ouput GrFN VariableNodes
-            outputs = self.grfn_vars_from_fullids(node.top_interface_out.values())
-            self.add_grfn_edges(inputs, top_interface, outputs)
-
-            # add interface node, updated variables, and output variables to subgraph
-            subgraph.nodes.extend([top_interface] + grfn_updated + outputs)
-
-        # visit expr, then setup condition info
-        self.visit(node.expr, subgraph)
-        self.create_condition_node(node.condition_in, node.condition_out, node.condition_lambda, subgraph)
-
-        self.visit_node_list(node.body, subgraph)
-
-        # build bot interface
-        if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node(node.bot_interface_lambda)
-            self.network.add_node(bot_interface, **bot_interface.get_kwargs())
-
-            inputs = self.grfn_vars_from_fullids(node.bot_interface_in.values())
-            outputs = self.grfn_vars_from_fullids(node.bot_interface_out.values())
-            self.add_grfn_edges(inputs, bot_interface, outputs)
-
-            # container includes input and bot interface
-            # the outputs need to be added to the parent subgraph
-            subgraph.nodes.extend(inputs + [bot_interface])
-            parent.nodes.extend(outputs)
+        pass
 
     @_visit.register
     def visit_model_break(self, node: AnnCastModelBreak, subgraph: GrometFN):
@@ -573,62 +389,7 @@ class ToGrometPass:
 
     @_visit.register
     def visit_model_if(self, node: AnnCastModelIf, subgraph: GrometFN):
-        parent = subgraph
-        # make a new subgraph for this If Container
-        type = "CondContainer"
-        border_color = GrFNSubgraph.get_border_color(type)
-        metadata = create_container_metadata(node.grfn_con_src_ref)
-        nodes = []
-        parent_str = parent.uid if parent is not None else None
-        occs = 0
-        uid = GenericNode.create_node_id()
-        ns = "default-ns"
-        scope = con_scope_to_str(node.con_scope) 
-        basename = "if" # changed from 'scope' to the string 'if'
-        basename_id = int(node.con_scope[-1][2:]) # stripping out the word 'if' to obtain a numerical ID
-        subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
-                                occs, parent_str, type, border_color, nodes, metadata)
-        self.subgraphs.add_node(subgraph)
-        self.subgraphs.add_edge(parent, subgraph)
-
-        # build top interface
-        if len(node.top_interface_in) > 0:
-            top_interface = self.create_interface_node(node.top_interface_lambda)
-            self.network.add_node(top_interface, **top_interface.get_kwargs())
-
-            inputs = self.grfn_vars_from_fullids(node.top_interface_in.values())
-            outputs = self.grfn_vars_from_fullids(node.top_interface_out.values())
-            self.add_grfn_edges(inputs, top_interface, outputs)
-
-            # container includes top_interface and top_interface outputs
-            subgraph.nodes.extend([top_interface] + outputs)
-
-        # visit expr, then setup condition info
-        self.visit(node.expr, subgraph)
-        self.create_condition_node(node.condition_in, node.condition_out, node.condition_lambda, subgraph)
-
-        self.visit_node_list(node.body, subgraph)
-        self.visit_node_list(node.orelse, subgraph)
-        
-        condition_var = node.condition_var
-        if len(node.decision_in) > 0:
-            self.create_decision_node(node.decision_in, node.decision_out, 
-                                  condition_var, node.decision_lambda, subgraph)
-
-        # build bot interface
-        if len(node.bot_interface_in) > 0:
-            bot_interface = self.create_interface_node(node.bot_interface_lambda)
-            self.network.add_node(bot_interface, **bot_interface.get_kwargs())
-
-            inputs = self.grfn_vars_from_fullids(node.bot_interface_in.values())
-            outputs = self.grfn_vars_from_fullids(node.bot_interface_out.values())
-            self.add_grfn_edges(inputs, bot_interface, outputs)
-
-            # container includes input and bot interface
-            # the outputs need to be added to the parent subgraph
-            subgraph.nodes.extend(inputs + [bot_interface])
-            parent.nodes.extend(outputs)
-
+        pass
     @_visit.register
     def visit_model_return(self, node: AnnCastModelReturn, subgraph: GrometFN):
         self.visit(node.value, subgraph)
@@ -636,7 +397,7 @@ class ToGrometPass:
         self.visit_grfn_assignment(node.grfn_assignment, subgraph)
 
     @_visit.register
-    def visit_module(self, node: AnnCastModule, subgraph: GrometFN):
+    def visit_module(self, node: AnnCastModule, subgraph):
         """
         type = "ModuleContainer"
         border_color = GrFNSubgraph.get_border_color(type)
@@ -660,16 +421,25 @@ class ToGrometPass:
         # Have a FN constructor to build the GroMEt FN
         # and pass this FN to maintain a 'nesting' approach (boxes within boxes)
         # instead of passing a GrFNSubgraph through the visitors
-        new_gromet = GrometFN()
+        new_gromet = gromet_fn.GrometFN()
+        
+        # Outer module box only has name 'module' and its type 'Module'
+        new_gromet.b = [gromet_box_function(name="module", function_type=function_type.FunctionType.MODULE)]
+        new_gromet.bf = None 
+        new_gromet.pof = None
 
         """
         subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
                                 occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
         """
-        self.gromet_collection.append(new_gromet)
         
-        self.visit_node_list(node.body, subgraph)
+        self.gromet_collection.function_networks.append(new_gromet)
+        # TODO: somewhere in this area we need to add 'new_gromet' to the
+        # overall gromet FN collection, but should we do it before or after the visit?
+        # self.gromet_collection.append(new_gromet)
+        self.visit_node_list(node.body, new_gromet)
+
 
     @_visit.register
     def visit_name(self, node: AnnCastName, subgraph: GrometFN):

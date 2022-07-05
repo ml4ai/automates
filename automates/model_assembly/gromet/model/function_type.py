@@ -29,7 +29,7 @@ class FunctionType(object):
     PREDICATE = "Predicate"
     MODULE = "Module"
     PRIMITIVEOP = "PrimitiveOp"
-    LITERALVLAUE = "LiteralVlaue"
+    LITERALVALUE = "LiteralValue"
     """
     Attributes:
       swagger_types (dict): The key is attribute name
