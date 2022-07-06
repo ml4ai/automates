@@ -84,7 +84,7 @@ def main():
     print("\nCalling ToGrometPass-----------------------")
     ToGrometPass(pipeline_state)
 
-    assert False
+    #assert False
 
     print("\nCalling ToGrfnPass-------------------")
     ToGrfnPass(pipeline_state)
