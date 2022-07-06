@@ -28,29 +28,55 @@ class GrometWire(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'name': 'str',
         'src': 'GrometPort',
         'tgt': 'GrometPort',
         'metadata': 'Metadata'
     }
 
     attribute_map = {
+        'name': 'name',
         'src': 'src',
         'tgt': 'tgt',
         'metadata': 'metadata'
     }
 
-    def __init__(self, src=None, tgt=None, metadata=None):  # noqa: E501
+    def __init__(self, name=None, src=None, tgt=None, metadata=None):  # noqa: E501
         """GrometWire - a model defined in Swagger"""  # noqa: E501
+        self._name = None
         self._src = None
         self._tgt = None
         self._metadata = None
         self.discriminator = None
+        if name is not None:
+            self.name = name
         if src is not None:
             self.src = src
         if tgt is not None:
             self.tgt = tgt
         if metadata is not None:
             self.metadata = metadata
+
+    @property
+    def name(self):
+        """Gets the name of this GrometWire.  # noqa: E501
+
+
+        :return: The name of this GrometWire.  # noqa: E501
+        :rtype: str
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        """Sets the name of this GrometWire.
+
+
+        :param name: The name of this GrometWire.  # noqa: E501
+        :type: str
+        """
+
+        self._name = name
 
     @property
     def src(self):

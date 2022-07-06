@@ -28,6 +28,7 @@ class GrometFN(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'name': 'str',
         'b': 'list[GrometBoxFunction]',
         'opi': 'list[GrometPort]',
         'opo': 'list[GrometPort]',
@@ -63,6 +64,7 @@ class GrometFN(object):
     }
 
     attribute_map = {
+        'name': 'name',
         'b': 'B',
         'opi': 'OPI',
         'opo': 'OPO',
@@ -97,8 +99,9 @@ class GrometFN(object):
         'metadata': 'metadata'
     }
 
-    def __init__(self, b=None, opi=None, opo=None, wopio=None, bf=None, pif=None, pof=None, wfopi=None, wfl=None, wff=None, wfc=None, wfopo=None, w_lcargs=None, w_ccargs=None, bl=None, pil=None, pol=None, w_loop=None, wlopi=None, wll=None, wlf=None, wlc=None, wlopo=None, bc=None, pic=None, poc=None, wcopi=None, wcl=None, wcf=None, wcc=None, wcopo=None, metadata=None):  # noqa: E501
+    def __init__(self, name=None, b=None, opi=None, opo=None, wopio=None, bf=None, pif=None, pof=None, wfopi=None, wfl=None, wff=None, wfc=None, wfopo=None, w_lcargs=None, w_ccargs=None, bl=None, pil=None, pol=None, w_loop=None, wlopi=None, wll=None, wlf=None, wlc=None, wlopo=None, bc=None, pic=None, poc=None, wcopi=None, wcl=None, wcf=None, wcc=None, wcopo=None, metadata=None):  # noqa: E501
         """GrometFN - a model defined in Swagger"""  # noqa: E501
+        self._name = None
         self._b = None
         self._opi = None
         self._opo = None
@@ -132,6 +135,8 @@ class GrometFN(object):
         self._wcopo = None
         self._metadata = None
         self.discriminator = None
+        if name is not None:
+            self.name = name
         if b is not None:
             self.b = b
         if opi is not None:
@@ -196,6 +201,27 @@ class GrometFN(object):
             self.wcopo = wcopo
         if metadata is not None:
             self.metadata = metadata
+
+    @property
+    def name(self):
+        """Gets the name of this GrometFN.  # noqa: E501
+
+
+        :return: The name of this GrometFN.  # noqa: E501
+        :rtype: str
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        """Sets the name of this GrometFN.
+
+
+        :param name: The name of this GrometFN.  # noqa: E501
+        :type: str
+        """
+
+        self._name = name
 
     @property
     def b(self):

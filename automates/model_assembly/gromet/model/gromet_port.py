@@ -28,24 +28,50 @@ class GrometPort(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'name': 'str',
         'box': 'GrometBox',
         'metadata': 'Metadata'
     }
 
     attribute_map = {
+        'name': 'name',
         'box': 'box',
         'metadata': 'metadata'
     }
 
-    def __init__(self, box=None, metadata=None):  # noqa: E501
+    def __init__(self, name=None, box=None, metadata=None):  # noqa: E501
         """GrometPort - a model defined in Swagger"""  # noqa: E501
+        self._name = None
         self._box = None
         self._metadata = None
         self.discriminator = None
+        if name is not None:
+            self.name = name
         if box is not None:
             self.box = box
         if metadata is not None:
             self.metadata = metadata
+
+    @property
+    def name(self):
+        """Gets the name of this GrometPort.  # noqa: E501
+
+
+        :return: The name of this GrometPort.  # noqa: E501
+        :rtype: str
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        """Sets the name of this GrometPort.
+
+
+        :param name: The name of this GrometPort.  # noqa: E501
+        :type: str
+        """
+
+        self._name = name
 
     @property
     def box(self):

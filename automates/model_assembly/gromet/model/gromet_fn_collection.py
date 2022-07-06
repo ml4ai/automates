@@ -28,24 +28,52 @@ class GrometFNCollection(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'name': 'str',
         'function_networks': 'list[GrometFN]',
         'metadata': 'Metadata'
     }
 
     attribute_map = {
+        'name': 'name',
         'function_networks': 'function_networks',
         'metadata': 'metadata'
     }
 
-    def __init__(self, function_networks=None, metadata=None):  # noqa: E501
+    def __init__(self, name=None, function_networks=None, metadata=None):  # noqa: E501
         """GrometFNCollection - a model defined in Swagger"""  # noqa: E501
+        self._name = None
         self._function_networks = None
         self._metadata = None
         self.discriminator = None
+        if name is not None:
+            self.name = name
         if function_networks is not None:
             self.function_networks = function_networks
         if metadata is not None:
             self.metadata = metadata
+
+    @property
+    def name(self):
+        """Gets the name of this GrometFNCollection.  # noqa: E501
+
+        The name of the Function Network Collection.   # noqa: E501
+
+        :return: The name of this GrometFNCollection.  # noqa: E501
+        :rtype: str
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        """Sets the name of this GrometFNCollection.
+
+        The name of the Function Network Collection.   # noqa: E501
+
+        :param name: The name of this GrometFNCollection.  # noqa: E501
+        :type: str
+        """
+
+        self._name = name
 
     @property
     def function_networks(self):
