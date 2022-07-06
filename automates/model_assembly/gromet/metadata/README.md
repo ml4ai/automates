@@ -33,7 +33,7 @@ following:
       ```
    must be changed to:
       ```
-      import Metadata
+      from metadata import Metadata
       ```
    This change must be made manually for any file that import the Metadata 
    module. This includes (as of v0.1.0) the following files:
