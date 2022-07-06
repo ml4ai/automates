@@ -24,6 +24,7 @@ from swagger_client.models.gromet_creation import GrometCreation
 from swagger_client.models.literal_value import LiteralValue
 from swagger_client.models.metadata import Metadata
 from swagger_client.models.provenance import Provenance
+from swagger_client.models.source_code_data_type import SourceCodeDataType
 from swagger_client.models.source_code_reference import SourceCodeReference
 from swagger_client.models.text_definition import TextDefinition
 from swagger_client.models.text_extraction import TextExtraction

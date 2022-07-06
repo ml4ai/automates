@@ -41,7 +41,8 @@ following:
    - `equation_definition.py`
    - `equation_parameter.py`
    - `gromet_creation.py`
-   - `source_code_referenc.py`
+   - `source_code_data_type.py`
+   - `source_code_reference.py`
    - `text_definition.py`
    - `text_parameter.py`
    - `textual_document_collection.py`
