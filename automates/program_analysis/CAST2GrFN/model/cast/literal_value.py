@@ -1,9 +1,9 @@
 # coding: utf-8
 
 """
-    AutoMATES Common Abstract Syntax Tree (CAST) v1
+    SKEMA Common Abstract Syntax Tree (CAST)
 
-    This document outlines the structure of the CAST that will be used as a generic representation of the semantics of a program written in any language. This will be used when creating functions networks from programs using the University of Arizonas program analysis pipeline.    __Generating Class Structure__    To automatically generate Python or Java models corresponding to this document, you can use [swagger-codegen](https://swagger.io/tools/swagger-codegen/). We can use this to generate client code based off of this spec that will also generate the class structure.    1. Install via the method described for your operating system [here](https://github.com/swagger-api/swagger-codegen#Prerequisites). Make sure to install a version after 3.0 that will support openapi 3.  2. Run swagger-codegen with the options in the example below. The URL references where the yaml for this documentation is stored on github. Make sure to replace CURRENT_VERSION with the correct version. To generate Java classes rather, change the `-l python` to `-l java`. Change the value to the `-o` option to the desired output location.       ```      swagger-codegen generate -l python -o ./client -i https://raw.githubusercontent.com/ml4ai/automates-v2/master/docs/source/cast_openapi_v{CURRENT_VERSION}.yaml      ```  3. Once it executes, the client code will be generated at your specified location. For python, the classes will be located in `$OUTPUT_PATH/swagger_client/models/`. For java, they will be located in `$OUTPUT_PATH/src/main/java/io/swagger/client/model/`      # noqa: E501
+    This document outlines the structure of the CAST that will be used as a generic representation of the semantics of a program written in any language. This will be used when creating functions networks from programs using the SKEMA Program Analysis pipeline.   __Generating Class Structure__    To automatically generate Python or Java models corresponding to this document, you can use [swagger-codegen](https://swagger.io/tools/swagger-codegen/). We can use this to generate client code based off of this spec that will also generate the class structure.    1. Install via the method described for your operating system [here](https://github.com/swagger-api/swagger-codegen#Prerequisites). Make sure to install a version after 3.0 that will support openapi 3.  2. Run swagger-codegen with the options in the example below. The URL references where the yaml for this documentation is stored on github. Make sure to replace CURRENT_VERSION with the correct version. To generate Java classes rather, change the `-l python` to `-l java`. Change the value to the `-o` option to the desired output location.       ```      swagger-codegen generate -l python -o ./client -i https://raw.githubusercontent.com/ml4ai/automates-v2/master/docs/source/cast_openapi_v{CURRENT_VERSION}.yaml      ```  3. Once it executes, the client code will be generated at your specified location. For python, the classes will be located in `$OUTPUT_PATH/swagger_client/models/`. For java, they will be located in `$OUTPUT_PATH/src/main/java/io/swagger/client/model/`      # noqa: E501
 
     OpenAPI spec version: 1.2.0
     
@@ -33,7 +33,7 @@ class LiteralValue(AstNode):
     swagger_types = {
         'value_type': 'str',
         'value': 'object',
-        'source_code_data_type': 'list[SourceCodeDataType]'
+        'source_code_data_type': 'list[ComponentsmetadataSourceCodeDataType]'
     }
     if hasattr(AstNode, "swagger_types"):
         swagger_types.update(AstNode.swagger_types)
@@ -108,7 +108,7 @@ class LiteralValue(AstNode):
 
 
         :return: The source_code_data_type of this LiteralValue.  # noqa: E501
-        :rtype: list[SourceCodeDataType]
+        :rtype: list[ComponentsmetadataSourceCodeDataType]
         """
         return self._source_code_data_type
 
@@ -118,7 +118,7 @@ class LiteralValue(AstNode):
 
 
         :param source_code_data_type: The source_code_data_type of this LiteralValue.  # noqa: E501
-        :type: list[SourceCodeDataType]
+        :type: list[ComponentsmetadataSourceCodeDataType]
         """
 
         self._source_code_data_type = source_code_data_type
