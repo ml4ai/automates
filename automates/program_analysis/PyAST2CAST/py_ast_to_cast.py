@@ -980,16 +980,30 @@ class PyASTToCAST():
         else:
             next_id = self.global_identifier_dict["next"]
 
-        iter_var = Assignment(Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref), 
+        iter_var_cast = Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref)
+        iter_var = Assignment(iter_var_cast, 
                     Call(Name(name="iter", id=iter_id, source_refs=ref),[iterable],source_refs=ref), source_refs=ref)
 
-        loop_cond = LiteralValue(ScalarType.BOOLEAN, True, ["Python", "3.8", "boolean"], ref)
+        stop_cond_name = f"sc_{self.var_count}"
+        self.var_count += 1
+        
+        stop_cond_id = self.insert_next_id(curr_scope_id_dict, stop_cond_name)
 
-        loop_assign = Assignment(target,Call(Name(name="next", id=next_id, source_refs=ref),
-                    [Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref)], 
-                    source_refs=ref), source_refs=ref)
+        stop_cond_var_cast = Var(Name(name=stop_cond_name, id=stop_cond_id, source_refs=ref), "boolean", source_refs=ref)
+        stop_cond_var = Assignment(left = stop_cond_var_cast, 
+                    right=LiteralValue(ScalarType.BOOLEAN, False, ["Python", "3.8", "boolean"], ref), source_refs=ref)
 
-        return [iter_var, Loop(expr=loop_cond, body=[loop_assign] + body, source_refs=ref)]
+        # loop_cond = LiteralValue(ScalarType.BOOLEAN, True, ["Python", "3.8", "boolean"], ref)
+        
+        loop_cond = BinaryOp(op=BinaryOperator.NOTEQ, left=stop_cond_var_cast,
+                    right=LiteralValue(ScalarType.BOOLEAN, True, ["Python", "3.8", "boolean"], ref), source_refs=ref)
+
+        loop_assign = Assignment(Tuple([target, iter_var_cast, stop_cond_var_cast]), Call(Name(name="next", id=next_id, source_refs=ref),
+                [Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref), 
+                Var(Name(name=stop_cond_name, id=stop_cond_id, source_refs=ref), "bool", source_refs=ref)], 
+                source_refs=ref), source_refs=ref)
+
+        return [iter_var, stop_cond_var, Loop(expr=loop_cond, body=[loop_assign] + body, source_refs=ref)]
 
     @visit.register
     def visit_FunctionDef(self, node: ast.FunctionDef, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -1915,15 +1929,15 @@ class PyASTToCAST():
             Set: A CAST Tuple node.
         """
 
-        source_code_data_type = ["Python","3.8","List"]
+        #source_code_data_type = ["Python","3.8","List"]
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        if len(node.elts) > 0:
-            to_ret = []
-            for piece in node.elts:
-                to_ret.extend(self.visit(piece, prev_scope_id_dict, curr_scope_id_dict))
-            return [LiteralValue(StructureType.TUPLE, to_ret, source_code_data_type, source_refs=ref)]
-        else:
-            return [LiteralValue(StructureType.TUPLE, [], source_code_data_type, source_refs=ref)]
+        #if len(node.elts) > 0:
+        to_ret = []
+        for piece in node.elts:
+            to_ret.extend(self.visit(piece, prev_scope_id_dict, curr_scope_id_dict))
+        return [Tuple(to_ret, source_refs=ref)]
+        #else:
+         #   return [LiteralValue(StructureType.TUPLE, [], source_code_data_type, source_refs=ref)]
 
     @visit.register
     def visit_Try(self, node:ast.Try, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):

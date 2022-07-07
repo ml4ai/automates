@@ -14,13 +14,14 @@
 from __future__ import absolute_import
 
 # import models into model package
-from function_type import FunctionType
-from gromet_box import GrometBox
-from gromet_box_conditional import GrometBoxConditional
-from gromet_box_function import GrometBoxFunction
-from gromet_box_loop import GrometBoxLoop
-from gromet_fn import GrometFN
-from gromet_fn_collection import GrometFNCollection
-from gromet_port import GrometPort
-from gromet_wire import GrometWire
-from literal_value import LiteralValue
+from automates.model_assembly.gromet.model.function_type import FunctionType
+from  automates.model_assembly.gromet.model.gromet_box import GrometBox
+from automates.model_assembly.gromet.model.gromet_box_conditional import GrometBoxConditional
+from  automates.model_assembly.gromet.model.gromet_box_function import GrometBoxFunction
+from  automates.model_assembly.gromet.model.gromet_box_loop import GrometBoxLoop
+from  automates.model_assembly.gromet.model.gromet_fn import GrometFN
+from  automates.model_assembly.gromet.model.gromet_fn_collection import GrometFNCollection
+from  automates.model_assembly.gromet.model.gromet_port import GrometPort
+from  automates.model_assembly.gromet.model.gromet_wire import GrometWire
+from  automates.model_assembly.gromet.model.literal_value import LiteralValue
+from  automates.model_assembly.gromet.metadata import Metadata

@@ -344,6 +344,9 @@ class LambdaExpressionPass:
         elif node.value_type == ScalarType.ABSTRACTFLOAT:
             node.expr_str = str(node.value)
             return node.expr_str
+        elif node.value_type == ScalarType.BOOLEAN:
+            node.expr_str = str(node.value)
+            return node.expr_str
         return node.expr_str
 
     @_visit.register

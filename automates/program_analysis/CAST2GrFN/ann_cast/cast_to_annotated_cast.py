@@ -72,8 +72,8 @@ class CastToAnnotatedCastVisitor():
     def visit(self, node: AstNode) -> AnnCastNode:
         # print current node being visited.  
         # this can be useful for debugging 
-        class_name = node.__class__.__name__
-        print(f"\nProcessing node type {class_name}")
+        #class_name = node.__class__.__name__
+        #print(f"\nProcessing node type {class_name}")
         return self._visit(node)
 
     @singledispatchmethod
@@ -148,10 +148,7 @@ class CastToAnnotatedCastVisitor():
             node.value.size = self.visit(node.value.size) # Turns the cast var into annCast
             node.value.initial_value = self.visit(node.value.initial_value) # Turns the literalValue into annCast
             return AnnCastLiteralValue(node.value_type, node.value, node.source_code_data_type, node.source_refs)
-        elif node.value_type == ScalarType.INTEGER:
-            return AnnCastLiteralValue(node.value_type, node.value, node.source_code_data_type, node.source_refs)
-        elif node.value_type == ScalarType.ABSTRACTFLOAT:
-            return AnnCastLiteralValue(node.value_type, node.value, node.source_code_data_type, node.source_refs)
+        return AnnCastLiteralValue(node.value_type, node.value, node.source_code_data_type, node.source_refs)
 
     @_visit.register
     def visit_loop(self, node: Loop):
