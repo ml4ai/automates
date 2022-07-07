@@ -41,12 +41,12 @@ class GrometFN(object):
         'wff': 'list[GrometWire]',
         'wfc': 'list[GrometWire]',
         'wfopo': 'list[GrometWire]',
-        'w_lcargs': 'list[GrometWire]',
-        'w_ccargs': 'list[GrometWire]',
+        'wl_cargs': 'list[GrometWire]',
+        'wc_cargs': 'list[GrometWire]',
         'bl': 'list[GrometBoxLoop]',
         'pil': 'list[GrometPort]',
         'pol': 'list[GrometPort]',
-        'w_loop': 'list[GrometPort]',
+        'wl': 'list[GrometPort]',
         'wlopi': 'list[GrometWire]',
         'wll': 'list[GrometWire]',
         'wlf': 'list[GrometWire]',
@@ -65,41 +65,41 @@ class GrometFN(object):
 
     attribute_map = {
         'name': 'name',
-        'b': 'B',
-        'opi': 'OPI',
-        'opo': 'OPO',
-        'wopio': 'WOPIO',
-        'bf': 'BF',
-        'pif': 'PIF',
-        'pof': 'POF',
-        'wfopi': 'WFOPI',
-        'wfl': 'WFL',
-        'wff': 'WFF',
-        'wfc': 'WFC',
-        'wfopo': 'WFOPO',
-        'w_lcargs': 'WLcargs',
-        'w_ccargs': 'WCcargs',
-        'bl': 'BL',
-        'pil': 'PIL',
-        'pol': 'POL',
-        'w_loop': 'WLoop',
-        'wlopi': 'WLOPI',
-        'wll': 'WLL',
-        'wlf': 'WLF',
-        'wlc': 'WLC',
-        'wlopo': 'WLOPO',
-        'bc': 'BC',
-        'pic': 'PIC',
-        'poc': 'POC',
-        'wcopi': 'WCOPI',
-        'wcl': 'WCL',
-        'wcf': 'WCF',
-        'wcc': 'WCC',
-        'wcopo': 'WCOPO',
+        'b': 'b',
+        'opi': 'opi',
+        'opo': 'opo',
+        'wopio': 'wopio',
+        'bf': 'bf',
+        'pif': 'pif',
+        'pof': 'pof',
+        'wfopi': 'wfopi',
+        'wfl': 'wfl',
+        'wff': 'wff',
+        'wfc': 'wfc',
+        'wfopo': 'wfopo',
+        'wl_cargs': 'wl_cargs',
+        'wc_cargs': 'wc_cargs',
+        'bl': 'bl',
+        'pil': 'pil',
+        'pol': 'pol',
+        'wl': 'wl',
+        'wlopi': 'wlopi',
+        'wll': 'wll',
+        'wlf': 'wlf',
+        'wlc': 'wlc',
+        'wlopo': 'wlopo',
+        'bc': 'bc',
+        'pic': 'pic',
+        'poc': 'poc',
+        'wcopi': 'wcopi',
+        'wcl': 'wcl',
+        'wcf': 'wcf',
+        'wcc': 'wcc',
+        'wcopo': 'wcopo',
         'metadata': 'metadata'
     }
 
-    def __init__(self, name=None, b=None, opi=None, opo=None, wopio=None, bf=None, pif=None, pof=None, wfopi=None, wfl=None, wff=None, wfc=None, wfopo=None, w_lcargs=None, w_ccargs=None, bl=None, pil=None, pol=None, w_loop=None, wlopi=None, wll=None, wlf=None, wlc=None, wlopo=None, bc=None, pic=None, poc=None, wcopi=None, wcl=None, wcf=None, wcc=None, wcopo=None, metadata=None):  # noqa: E501
+    def __init__(self, name=None, b=None, opi=None, opo=None, wopio=None, bf=None, pif=None, pof=None, wfopi=None, wfl=None, wff=None, wfc=None, wfopo=None, wl_cargs=None, wc_cargs=None, bl=None, pil=None, pol=None, wl=None, wlopi=None, wll=None, wlf=None, wlc=None, wlopo=None, bc=None, pic=None, poc=None, wcopi=None, wcl=None, wcf=None, wcc=None, wcopo=None, metadata=None):  # noqa: E501
         """GrometFN - a model defined in Swagger"""  # noqa: E501
         self._name = None
         self._b = None
@@ -114,12 +114,12 @@ class GrometFN(object):
         self._wff = None
         self._wfc = None
         self._wfopo = None
-        self._w_lcargs = None
-        self._w_ccargs = None
+        self._wl_cargs = None
+        self._wc_cargs = None
         self._bl = None
         self._pil = None
         self._pol = None
-        self._w_loop = None
+        self._wl = None
         self._wlopi = None
         self._wll = None
         self._wlf = None
@@ -161,18 +161,18 @@ class GrometFN(object):
             self.wfc = wfc
         if wfopo is not None:
             self.wfopo = wfopo
-        if w_lcargs is not None:
-            self.w_lcargs = w_lcargs
-        if w_ccargs is not None:
-            self.w_ccargs = w_ccargs
+        if wl_cargs is not None:
+            self.wl_cargs = wl_cargs
+        if wc_cargs is not None:
+            self.wc_cargs = wc_cargs
         if bl is not None:
             self.bl = bl
         if pil is not None:
             self.pil = pil
         if pol is not None:
             self.pol = pol
-        if w_loop is not None:
-            self.w_loop = w_loop
+        if wl is not None:
+            self.wl = wl
         if wlopi is not None:
             self.wlopi = wlopi
         if wll is not None:
@@ -227,7 +227,7 @@ class GrometFN(object):
     def b(self):
         """Gets the b of this GrometFN.  # noqa: E501
 
-        B: The FN Outer Box (although not enforced, there is always only 1).   # noqa: E501
+        b: The FN Outer Box (although not enforced, there is always only 1).   # noqa: E501
 
         :return: The b of this GrometFN.  # noqa: E501
         :rtype: list[GrometBoxFunction]
@@ -238,7 +238,7 @@ class GrometFN(object):
     def b(self, b):
         """Sets the b of this GrometFN.
 
-        B: The FN Outer Box (although not enforced, there is always only 1).   # noqa: E501
+        b: The FN Outer Box (although not enforced, there is always only 1).   # noqa: E501
 
         :param b: The b of this GrometFN.  # noqa: E501
         :type: list[GrometBoxFunction]
@@ -250,7 +250,7 @@ class GrometFN(object):
     def opi(self):
         """Gets the opi of this GrometFN.  # noqa: E501
 
-        OPI: The Outer Port Inputs of the FN Outer Box (B)   # noqa: E501
+        opi: The Outer Port Inputs of the FN Outer Box (b)   # noqa: E501
 
         :return: The opi of this GrometFN.  # noqa: E501
         :rtype: list[GrometPort]
@@ -261,7 +261,7 @@ class GrometFN(object):
     def opi(self, opi):
         """Sets the opi of this GrometFN.
 
-        OPI: The Outer Port Inputs of the FN Outer Box (B)   # noqa: E501
+        opi: The Outer Port Inputs of the FN Outer Box (b)   # noqa: E501
 
         :param opi: The opi of this GrometFN.  # noqa: E501
         :type: list[GrometPort]
@@ -273,7 +273,7 @@ class GrometFN(object):
     def opo(self):
         """Gets the opo of this GrometFN.  # noqa: E501
 
-        OPO: The Outer Port Outputs of the FN Outer Box (B)   # noqa: E501
+        opo: The Outer Port Outputs of the FN Outer Box (b)   # noqa: E501
 
         :return: The opo of this GrometFN.  # noqa: E501
         :rtype: list[GrometPort]
@@ -284,7 +284,7 @@ class GrometFN(object):
     def opo(self, opo):
         """Sets the opo of this GrometFN.
 
-        OPO: The Outer Port Outputs of the FN Outer Box (B)   # noqa: E501
+        opo: The Outer Port Outputs of the FN Outer Box (b)   # noqa: E501
 
         :param opo: The opo of this GrometFN.  # noqa: E501
         :type: list[GrometPort]
@@ -296,7 +296,7 @@ class GrometFN(object):
     def wopio(self):
         """Gets the wopio of this GrometFN.  # noqa: E501
 
-        WOPIO: The Wires from (src) Outer Box Outer Port Inputs (OPI) to (tgt) Outer Box Outer Port Outputs (OPO). (AKA: Passthrough.)   # noqa: E501
+        wopio: The Wires from (src) Outer Box Outer Port Inputs (opi) to (tgt) Outer Box Outer Port Outputs (opo). (AKA: Passthrough.)   # noqa: E501
 
         :return: The wopio of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -307,7 +307,7 @@ class GrometFN(object):
     def wopio(self, wopio):
         """Sets the wopio of this GrometFN.
 
-        WOPIO: The Wires from (src) Outer Box Outer Port Inputs (OPI) to (tgt) Outer Box Outer Port Outputs (OPO). (AKA: Passthrough.)   # noqa: E501
+        wopio: The Wires from (src) Outer Box Outer Port Inputs (opi) to (tgt) Outer Box Outer Port Outputs (opo). (AKA: Passthrough.)   # noqa: E501
 
         :param wopio: The wopio of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -319,7 +319,7 @@ class GrometFN(object):
     def bf(self):
         """Gets the bf of this GrometFN.  # noqa: E501
 
-        BF: The GrometBoxFunctions within this GrometFN.   # noqa: E501
+        bf: The GrometBoxFunctions within this GrometFN.   # noqa: E501
 
         :return: The bf of this GrometFN.  # noqa: E501
         :rtype: list[GrometBoxFunction]
@@ -330,7 +330,7 @@ class GrometFN(object):
     def bf(self, bf):
         """Sets the bf of this GrometFN.
 
-        BF: The GrometBoxFunctions within this GrometFN.   # noqa: E501
+        bf: The GrometBoxFunctions within this GrometFN.   # noqa: E501
 
         :param bf: The bf of this GrometFN.  # noqa: E501
         :type: list[GrometBoxFunction]
@@ -342,7 +342,7 @@ class GrometFN(object):
     def pif(self):
         """Gets the pif of this GrometFN.  # noqa: E501
 
-        PIF: The Port Inputs of the GrometBoxFunctions (BF).   # noqa: E501
+        pif: The Port Inputs of the GrometBoxFunctions (bf).   # noqa: E501
 
         :return: The pif of this GrometFN.  # noqa: E501
         :rtype: list[GrometPort]
@@ -353,7 +353,7 @@ class GrometFN(object):
     def pif(self, pif):
         """Sets the pif of this GrometFN.
 
-        PIF: The Port Inputs of the GrometBoxFunctions (BF).   # noqa: E501
+        pif: The Port Inputs of the GrometBoxFunctions (bf).   # noqa: E501
 
         :param pif: The pif of this GrometFN.  # noqa: E501
         :type: list[GrometPort]
@@ -365,7 +365,7 @@ class GrometFN(object):
     def pof(self):
         """Gets the pof of this GrometFN.  # noqa: E501
 
-        POF: The Port Outputs of the GrometBoxFunctions (BF).   # noqa: E501
+        pof: The Port Outputs of the GrometBoxFunctions (bf).   # noqa: E501
 
         :return: The pof of this GrometFN.  # noqa: E501
         :rtype: list[GrometPort]
@@ -376,7 +376,7 @@ class GrometFN(object):
     def pof(self, pof):
         """Sets the pof of this GrometFN.
 
-        POF: The Port Outputs of the GrometBoxFunctions (BF).   # noqa: E501
+        pof: The Port Outputs of the GrometBoxFunctions (bf).   # noqa: E501
 
         :param pof: The pof of this GrometFN.  # noqa: E501
         :type: list[GrometPort]
@@ -388,7 +388,7 @@ class GrometFN(object):
     def wfopi(self):
         """Gets the wfopi of this GrometFN.  # noqa: E501
 
-        WFOPI: The Wires from (src) Outer Box Outer Port Inputs (OPI) to (tgt) GrometBoxFunctions Port Inputs (PIF)   # noqa: E501
+        wfopi: The Wires from (src) Outer Box Outer Port Inputs (opi) to (tgt) GrometBoxFunctions Port Inputs (pif)   # noqa: E501
 
         :return: The wfopi of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -399,7 +399,7 @@ class GrometFN(object):
     def wfopi(self, wfopi):
         """Sets the wfopi of this GrometFN.
 
-        WFOPI: The Wires from (src) Outer Box Outer Port Inputs (OPI) to (tgt) GrometBoxFunctions Port Inputs (PIF)   # noqa: E501
+        wfopi: The Wires from (src) Outer Box Outer Port Inputs (opi) to (tgt) GrometBoxFunctions Port Inputs (pif)   # noqa: E501
 
         :param wfopi: The wfopi of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -411,7 +411,7 @@ class GrometFN(object):
     def wfl(self):
         """Gets the wfl of this GrometFN.  # noqa: E501
 
-        WFL: The Wires from (src) GrometBoxFunctions Port Outputs (POF) to (tgt) GrometBoxLoops Port Inputs (PIL)   # noqa: E501
+        wfl: The Wires from (src) GrometBoxFunctions Port Outputs (pof) to (tgt) GrometBoxLoops Port Inputs (pil)   # noqa: E501
 
         :return: The wfl of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -422,7 +422,7 @@ class GrometFN(object):
     def wfl(self, wfl):
         """Sets the wfl of this GrometFN.
 
-        WFL: The Wires from (src) GrometBoxFunctions Port Outputs (POF) to (tgt) GrometBoxLoops Port Inputs (PIL)   # noqa: E501
+        wfl: The Wires from (src) GrometBoxFunctions Port Outputs (pof) to (tgt) GrometBoxLoops Port Inputs (pil)   # noqa: E501
 
         :param wfl: The wfl of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -434,7 +434,7 @@ class GrometFN(object):
     def wff(self):
         """Gets the wff of this GrometFN.  # noqa: E501
 
-        WFF: The Wires from (src) GrometBoxFunctions Port Outputs (POF) to (tgt) GrometBoxFunctions Port Inputs (PIF)   # noqa: E501
+        wff: The Wires from (src) GrometBoxFunctions Port Outputs (pof) to (tgt) GrometBoxFunctions Port Inputs (pif)   # noqa: E501
 
         :return: The wff of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -445,7 +445,7 @@ class GrometFN(object):
     def wff(self, wff):
         """Sets the wff of this GrometFN.
 
-        WFF: The Wires from (src) GrometBoxFunctions Port Outputs (POF) to (tgt) GrometBoxFunctions Port Inputs (PIF)   # noqa: E501
+        wff: The Wires from (src) GrometBoxFunctions Port Outputs (pof) to (tgt) GrometBoxFunctions Port Inputs (pif)   # noqa: E501
 
         :param wff: The wff of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -457,7 +457,7 @@ class GrometFN(object):
     def wfc(self):
         """Gets the wfc of this GrometFN.  # noqa: E501
 
-        WFC: The Wires from (src) GrometBoxFunctions Port Outputs (POF) to (tgt) GrometBoxConditionals Port Inputs (PIC)   # noqa: E501
+        wfc: The Wires from (src) GrometBoxFunctions Port Outputs (pof) to (tgt) GrometBoxConditionals Port Inputs (pic)   # noqa: E501
 
         :return: The wfc of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -468,7 +468,7 @@ class GrometFN(object):
     def wfc(self, wfc):
         """Sets the wfc of this GrometFN.
 
-        WFC: The Wires from (src) GrometBoxFunctions Port Outputs (POF) to (tgt) GrometBoxConditionals Port Inputs (PIC)   # noqa: E501
+        wfc: The Wires from (src) GrometBoxFunctions Port Outputs (pof) to (tgt) GrometBoxConditionals Port Inputs (pic)   # noqa: E501
 
         :param wfc: The wfc of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -480,7 +480,7 @@ class GrometFN(object):
     def wfopo(self):
         """Gets the wfopo of this GrometFN.  # noqa: E501
 
-        WFOPO: The Wires from (src) GrometBoxFunctions Port Outputs (POF) to (tgt) Outer Box Outer Port Outputs (OPO)   # noqa: E501
+        wfopo: The Wires from (src) GrometBoxFunctions Port Outputs (pof) to (tgt) Outer Box Outer Port Outputs (opo)   # noqa: E501
 
         :return: The wfopo of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -491,7 +491,7 @@ class GrometFN(object):
     def wfopo(self, wfopo):
         """Sets the wfopo of this GrometFN.
 
-        WFOPO: The Wires from (src) GrometBoxFunctions Port Outputs (POF) to (tgt) Outer Box Outer Port Outputs (OPO)   # noqa: E501
+        wfopo: The Wires from (src) GrometBoxFunctions Port Outputs (pof) to (tgt) Outer Box Outer Port Outputs (opo)   # noqa: E501
 
         :param wfopo: The wfopo of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -500,56 +500,56 @@ class GrometFN(object):
         self._wfopo = wfopo
 
     @property
-    def w_lcargs(self):
-        """Gets the w_lcargs of this GrometFN.  # noqa: E501
+    def wl_cargs(self):
+        """Gets the wl_cargs of this GrometFN.  # noqa: E501
 
-        WLcargs: The Wires from (src) the arguments (the Port Outputs) of the Loop condition (itself a Predicate, a type of GrometBoxFunction) (PIF) to (tgt) the Port Inputs of the Loop (PIL).   # noqa: E501
+        wl_cargs: The Wires from (src) the arguments (the Port Outputs) of the Loop condition (itself a Predicate, a type of GrometBoxFunction) (pif) to (tgt) the Port Inputs of the Loop (pil).   # noqa: E501
 
-        :return: The w_lcargs of this GrometFN.  # noqa: E501
+        :return: The wl_cargs of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
         """
-        return self._w_lcargs
+        return self._wl_cargs
 
-    @w_lcargs.setter
-    def w_lcargs(self, w_lcargs):
-        """Sets the w_lcargs of this GrometFN.
+    @wl_cargs.setter
+    def wl_cargs(self, wl_cargs):
+        """Sets the wl_cargs of this GrometFN.
 
-        WLcargs: The Wires from (src) the arguments (the Port Outputs) of the Loop condition (itself a Predicate, a type of GrometBoxFunction) (PIF) to (tgt) the Port Inputs of the Loop (PIL).   # noqa: E501
+        wl_cargs: The Wires from (src) the arguments (the Port Outputs) of the Loop condition (itself a Predicate, a type of GrometBoxFunction) (pif) to (tgt) the Port Inputs of the Loop (pil).   # noqa: E501
 
-        :param w_lcargs: The w_lcargs of this GrometFN.  # noqa: E501
+        :param wl_cargs: The wl_cargs of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
         """
 
-        self._w_lcargs = w_lcargs
+        self._wl_cargs = wl_cargs
 
     @property
-    def w_ccargs(self):
-        """Gets the w_ccargs of this GrometFN.  # noqa: E501
+    def wc_cargs(self):
+        """Gets the wc_cargs of this GrometFN.  # noqa: E501
 
-        WCcargs: The Wires from (src) the arguments (the Port Outputs) of the Conditional condition (itself a Predicate, a type of GrometBoxFunction) (PIF) to (tgt) the Port Inputs of the Conditional (PIC).   # noqa: E501
+        wc_cargs: The Wires from (src) the arguments (the Port Outputs) of the Conditional condition (itself a Predicate, a type of GrometBoxFunction) (pif) to (tgt) the Port Inputs of the Conditional (pic).   # noqa: E501
 
-        :return: The w_ccargs of this GrometFN.  # noqa: E501
+        :return: The wc_cargs of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
         """
-        return self._w_ccargs
+        return self._wc_cargs
 
-    @w_ccargs.setter
-    def w_ccargs(self, w_ccargs):
-        """Sets the w_ccargs of this GrometFN.
+    @wc_cargs.setter
+    def wc_cargs(self, wc_cargs):
+        """Sets the wc_cargs of this GrometFN.
 
-        WCcargs: The Wires from (src) the arguments (the Port Outputs) of the Conditional condition (itself a Predicate, a type of GrometBoxFunction) (PIF) to (tgt) the Port Inputs of the Conditional (PIC).   # noqa: E501
+        wc_cargs: The Wires from (src) the arguments (the Port Outputs) of the Conditional condition (itself a Predicate, a type of GrometBoxFunction) (pif) to (tgt) the Port Inputs of the Conditional (pic).   # noqa: E501
 
-        :param w_ccargs: The w_ccargs of this GrometFN.  # noqa: E501
+        :param wc_cargs: The wc_cargs of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
         """
 
-        self._w_ccargs = w_ccargs
+        self._wc_cargs = wc_cargs
 
     @property
     def bl(self):
         """Gets the bl of this GrometFN.  # noqa: E501
 
-        BL: The FN GrometBoxLoops within this GrometFN.   # noqa: E501
+        bl: The FN GrometBoxLoops within this GrometFN.   # noqa: E501
 
         :return: The bl of this GrometFN.  # noqa: E501
         :rtype: list[GrometBoxLoop]
@@ -560,7 +560,7 @@ class GrometFN(object):
     def bl(self, bl):
         """Sets the bl of this GrometFN.
 
-        BL: The FN GrometBoxLoops within this GrometFN.   # noqa: E501
+        bl: The FN GrometBoxLoops within this GrometFN.   # noqa: E501
 
         :param bl: The bl of this GrometFN.  # noqa: E501
         :type: list[GrometBoxLoop]
@@ -572,7 +572,7 @@ class GrometFN(object):
     def pil(self):
         """Gets the pil of this GrometFN.  # noqa: E501
 
-        PIL: The Port Inputs of the GrometBoxLoops (BL)   # noqa: E501
+        pil: The Port Inputs of the GrometBoxLoops (bl)   # noqa: E501
 
         :return: The pil of this GrometFN.  # noqa: E501
         :rtype: list[GrometPort]
@@ -583,7 +583,7 @@ class GrometFN(object):
     def pil(self, pil):
         """Sets the pil of this GrometFN.
 
-        PIL: The Port Inputs of the GrometBoxLoops (BL)   # noqa: E501
+        pil: The Port Inputs of the GrometBoxLoops (bl)   # noqa: E501
 
         :param pil: The pil of this GrometFN.  # noqa: E501
         :type: list[GrometPort]
@@ -595,7 +595,7 @@ class GrometFN(object):
     def pol(self):
         """Gets the pol of this GrometFN.  # noqa: E501
 
-        POL: The Port Outputs of the GrometBoxLoops (BL)   # noqa: E501
+        pol: The Port Outputs of the GrometBoxLoops (bl)   # noqa: E501
 
         :return: The pol of this GrometFN.  # noqa: E501
         :rtype: list[GrometPort]
@@ -606,7 +606,7 @@ class GrometFN(object):
     def pol(self, pol):
         """Sets the pol of this GrometFN.
 
-        POL: The Port Outputs of the GrometBoxLoops (BL)   # noqa: E501
+        pol: The Port Outputs of the GrometBoxLoops (bl)   # noqa: E501
 
         :param pol: The pol of this GrometFN.  # noqa: E501
         :type: list[GrometPort]
@@ -615,33 +615,33 @@ class GrometFN(object):
         self._pol = pol
 
     @property
-    def w_loop(self):
-        """Gets the w_loop of this GrometFN.  # noqa: E501
+    def wl(self):
+        """Gets the wl of this GrometFN.  # noqa: E501
 
-        WLoop: The Wires that form the loop, from (src) the Port Inputs of the Loop (PIL) to (tgt) the Port Outputs of the Loop (POL)   # noqa: E501
+        wl: The Wires that form the loop, from (src) the Port Inputs of the Loop (pil) to (tgt) the Port Outputs of the Loop (pol)   # noqa: E501
 
-        :return: The w_loop of this GrometFN.  # noqa: E501
+        :return: The wl of this GrometFN.  # noqa: E501
         :rtype: list[GrometPort]
         """
-        return self._w_loop
+        return self._wl
 
-    @w_loop.setter
-    def w_loop(self, w_loop):
-        """Sets the w_loop of this GrometFN.
+    @wl.setter
+    def wl(self, wl):
+        """Sets the wl of this GrometFN.
 
-        WLoop: The Wires that form the loop, from (src) the Port Inputs of the Loop (PIL) to (tgt) the Port Outputs of the Loop (POL)   # noqa: E501
+        wl: The Wires that form the loop, from (src) the Port Inputs of the Loop (pil) to (tgt) the Port Outputs of the Loop (pol)   # noqa: E501
 
-        :param w_loop: The w_loop of this GrometFN.  # noqa: E501
+        :param wl: The wl of this GrometFN.  # noqa: E501
         :type: list[GrometPort]
         """
 
-        self._w_loop = w_loop
+        self._wl = wl
 
     @property
     def wlopi(self):
         """Gets the wlopi of this GrometFN.  # noqa: E501
 
-        WLOPI: The Wires from (src) the Outer Box Outer Port Inputs (OPI) to (tgt) GrometBoxLoops Port Inputs (PIL)   # noqa: E501
+        wlopi: The Wires from (src) the Outer Box Outer Port Inputs (opi) to (tgt) GrometBoxLoops Port Inputs (pil)   # noqa: E501
 
         :return: The wlopi of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -652,7 +652,7 @@ class GrometFN(object):
     def wlopi(self, wlopi):
         """Sets the wlopi of this GrometFN.
 
-        WLOPI: The Wires from (src) the Outer Box Outer Port Inputs (OPI) to (tgt) GrometBoxLoops Port Inputs (PIL)   # noqa: E501
+        wlopi: The Wires from (src) the Outer Box Outer Port Inputs (opi) to (tgt) GrometBoxLoops Port Inputs (pil)   # noqa: E501
 
         :param wlopi: The wlopi of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -664,7 +664,7 @@ class GrometFN(object):
     def wll(self):
         """Gets the wll of this GrometFN.  # noqa: E501
 
-        WLL: The Wires from (src) the GrometBoxLoops Port Outputs (POL) to (tgt) the GrometBoxLoops Port Inputs (PIL)   # noqa: E501
+        wll: The Wires from (src) the GrometBoxLoops Port Outputs (pol) to (tgt) the GrometBoxLoops Port Inputs (pil)   # noqa: E501
 
         :return: The wll of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -675,7 +675,7 @@ class GrometFN(object):
     def wll(self, wll):
         """Sets the wll of this GrometFN.
 
-        WLL: The Wires from (src) the GrometBoxLoops Port Outputs (POL) to (tgt) the GrometBoxLoops Port Inputs (PIL)   # noqa: E501
+        wll: The Wires from (src) the GrometBoxLoops Port Outputs (pol) to (tgt) the GrometBoxLoops Port Inputs (pil)   # noqa: E501
 
         :param wll: The wll of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -687,7 +687,7 @@ class GrometFN(object):
     def wlf(self):
         """Gets the wlf of this GrometFN.  # noqa: E501
 
-        WLF: The Wires from (src) the GrometBoxLoops Port Outputs (POL) to (tgt) the GrometBoxFunctions Port Inputs (PIF)   # noqa: E501
+        wlf: The Wires from (src) the GrometBoxLoops Port Outputs (pol) to (tgt) the GrometBoxFunctions Port Inputs (pif)   # noqa: E501
 
         :return: The wlf of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -698,7 +698,7 @@ class GrometFN(object):
     def wlf(self, wlf):
         """Sets the wlf of this GrometFN.
 
-        WLF: The Wires from (src) the GrometBoxLoops Port Outputs (POL) to (tgt) the GrometBoxFunctions Port Inputs (PIF)   # noqa: E501
+        wlf: The Wires from (src) the GrometBoxLoops Port Outputs (pol) to (tgt) the GrometBoxFunctions Port Inputs (pif)   # noqa: E501
 
         :param wlf: The wlf of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -710,7 +710,7 @@ class GrometFN(object):
     def wlc(self):
         """Gets the wlc of this GrometFN.  # noqa: E501
 
-        WLC: The Wires from (src) the GrometBoxLoops Port Outputs (POL) to (tgt) the GrometBoxConditionals Port Inputs (PIC)   # noqa: E501
+        wlc: The Wires from (src) the GrometBoxLoops Port Outputs (pol) to (tgt) the GrometBoxConditionals Port Inputs (pic)   # noqa: E501
 
         :return: The wlc of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -721,7 +721,7 @@ class GrometFN(object):
     def wlc(self, wlc):
         """Sets the wlc of this GrometFN.
 
-        WLC: The Wires from (src) the GrometBoxLoops Port Outputs (POL) to (tgt) the GrometBoxConditionals Port Inputs (PIC)   # noqa: E501
+        wlc: The Wires from (src) the GrometBoxLoops Port Outputs (pol) to (tgt) the GrometBoxConditionals Port Inputs (pic)   # noqa: E501
 
         :param wlc: The wlc of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -733,7 +733,7 @@ class GrometFN(object):
     def wlopo(self):
         """Gets the wlopo of this GrometFN.  # noqa: E501
 
-        WLOPO: The Wires from (src) GrometBoxLoops Port Outputs (POL) to (tgt) Outer Box Outer Port Outputs (OPO)   # noqa: E501
+        wlopo: The Wires from (src) GrometBoxLoops Port Outputs (pol) to (tgt) Outer Box Outer Port Outputs (opo)   # noqa: E501
 
         :return: The wlopo of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -744,7 +744,7 @@ class GrometFN(object):
     def wlopo(self, wlopo):
         """Sets the wlopo of this GrometFN.
 
-        WLOPO: The Wires from (src) GrometBoxLoops Port Outputs (POL) to (tgt) Outer Box Outer Port Outputs (OPO)   # noqa: E501
+        wlopo: The Wires from (src) GrometBoxLoops Port Outputs (pol) to (tgt) Outer Box Outer Port Outputs (opo)   # noqa: E501
 
         :param wlopo: The wlopo of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -756,7 +756,7 @@ class GrometFN(object):
     def bc(self):
         """Gets the bc of this GrometFN.  # noqa: E501
 
-        BC: The FN GrometBoxConditionals within this GrometFN.   # noqa: E501
+        bc: The FN GrometBoxConditionals within this GrometFN.   # noqa: E501
 
         :return: The bc of this GrometFN.  # noqa: E501
         :rtype: list[GrometBoxConditional]
@@ -767,7 +767,7 @@ class GrometFN(object):
     def bc(self, bc):
         """Sets the bc of this GrometFN.
 
-        BC: The FN GrometBoxConditionals within this GrometFN.   # noqa: E501
+        bc: The FN GrometBoxConditionals within this GrometFN.   # noqa: E501
 
         :param bc: The bc of this GrometFN.  # noqa: E501
         :type: list[GrometBoxConditional]
@@ -779,7 +779,7 @@ class GrometFN(object):
     def pic(self):
         """Gets the pic of this GrometFN.  # noqa: E501
 
-        PIC: The Port Inputs of the GrometBoxConditionals (BC)   # noqa: E501
+        pic: The Port Inputs of the GrometBoxConditionals (bc)   # noqa: E501
 
         :return: The pic of this GrometFN.  # noqa: E501
         :rtype: list[GrometPort]
@@ -790,7 +790,7 @@ class GrometFN(object):
     def pic(self, pic):
         """Sets the pic of this GrometFN.
 
-        PIC: The Port Inputs of the GrometBoxConditionals (BC)   # noqa: E501
+        pic: The Port Inputs of the GrometBoxConditionals (bc)   # noqa: E501
 
         :param pic: The pic of this GrometFN.  # noqa: E501
         :type: list[GrometPort]
@@ -802,7 +802,7 @@ class GrometFN(object):
     def poc(self):
         """Gets the poc of this GrometFN.  # noqa: E501
 
-        POC: The Port Outputs of the GrometBoxConditionals (BC)   # noqa: E501
+        poc: The Port Outputs of the GrometBoxConditionals (bc)   # noqa: E501
 
         :return: The poc of this GrometFN.  # noqa: E501
         :rtype: list[GrometPort]
@@ -813,7 +813,7 @@ class GrometFN(object):
     def poc(self, poc):
         """Sets the poc of this GrometFN.
 
-        POC: The Port Outputs of the GrometBoxConditionals (BC)   # noqa: E501
+        poc: The Port Outputs of the GrometBoxConditionals (bc)   # noqa: E501
 
         :param poc: The poc of this GrometFN.  # noqa: E501
         :type: list[GrometPort]
@@ -825,7 +825,7 @@ class GrometFN(object):
     def wcopi(self):
         """Gets the wcopi of this GrometFN.  # noqa: E501
 
-        WCOPI: The Wires from (src) the Outer Box Outer Port Inputs (OPI) to (tgt) the GrometBoxConditionals Port Inputs (PIC)   # noqa: E501
+        wcopi: The Wires from (src) the Outer Box Outer Port Inputs (opi) to (tgt) the GrometBoxConditionals Port Inputs (pic)   # noqa: E501
 
         :return: The wcopi of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -836,7 +836,7 @@ class GrometFN(object):
     def wcopi(self, wcopi):
         """Sets the wcopi of this GrometFN.
 
-        WCOPI: The Wires from (src) the Outer Box Outer Port Inputs (OPI) to (tgt) the GrometBoxConditionals Port Inputs (PIC)   # noqa: E501
+        wcopi: The Wires from (src) the Outer Box Outer Port Inputs (opi) to (tgt) the GrometBoxConditionals Port Inputs (pic)   # noqa: E501
 
         :param wcopi: The wcopi of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -848,7 +848,7 @@ class GrometFN(object):
     def wcl(self):
         """Gets the wcl of this GrometFN.  # noqa: E501
 
-        WCL: The Wires from (src) the GrometBoxConditionals Port Outputs (POC) to (tgt) the GrometBoxLoops Port Inputs (PIL)   # noqa: E501
+        wcl: The Wires from (src) the GrometBoxConditionals Port Outputs (poc) to (tgt) the GrometBoxLoops Port Inputs (pil)   # noqa: E501
 
         :return: The wcl of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -859,7 +859,7 @@ class GrometFN(object):
     def wcl(self, wcl):
         """Sets the wcl of this GrometFN.
 
-        WCL: The Wires from (src) the GrometBoxConditionals Port Outputs (POC) to (tgt) the GrometBoxLoops Port Inputs (PIL)   # noqa: E501
+        wcl: The Wires from (src) the GrometBoxConditionals Port Outputs (poc) to (tgt) the GrometBoxLoops Port Inputs (pil)   # noqa: E501
 
         :param wcl: The wcl of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -871,7 +871,7 @@ class GrometFN(object):
     def wcf(self):
         """Gets the wcf of this GrometFN.  # noqa: E501
 
-        WCF: The Wires from (src) the GrometBoxConditionals Port Outputs (POC) to (tgt) the GrometBoxFunctions Port Inputs (PIF)   # noqa: E501
+        wcf: The Wires from (src) the GrometBoxConditionals Port Outputs (poc) to (tgt) the GrometBoxFunctions Port Inputs (pif)   # noqa: E501
 
         :return: The wcf of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -882,7 +882,7 @@ class GrometFN(object):
     def wcf(self, wcf):
         """Sets the wcf of this GrometFN.
 
-        WCF: The Wires from (src) the GrometBoxConditionals Port Outputs (POC) to (tgt) the GrometBoxFunctions Port Inputs (PIF)   # noqa: E501
+        wcf: The Wires from (src) the GrometBoxConditionals Port Outputs (poc) to (tgt) the GrometBoxFunctions Port Inputs (pif)   # noqa: E501
 
         :param wcf: The wcf of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -894,7 +894,7 @@ class GrometFN(object):
     def wcc(self):
         """Gets the wcc of this GrometFN.  # noqa: E501
 
-        WCC: The Wires from (src) the GrometBoxConditionals Port Outputs (POC) to (tgt) the GrometBoxConditionals Port Inputs (PIC)   # noqa: E501
+        wcc: The Wires from (src) the GrometBoxConditionals Port Outputs (poc) to (tgt) the GrometBoxConditionals Port Inputs (pic)   # noqa: E501
 
         :return: The wcc of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -905,7 +905,7 @@ class GrometFN(object):
     def wcc(self, wcc):
         """Sets the wcc of this GrometFN.
 
-        WCC: The Wires from (src) the GrometBoxConditionals Port Outputs (POC) to (tgt) the GrometBoxConditionals Port Inputs (PIC)   # noqa: E501
+        wcc: The Wires from (src) the GrometBoxConditionals Port Outputs (poc) to (tgt) the GrometBoxConditionals Port Inputs (pic)   # noqa: E501
 
         :param wcc: The wcc of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
@@ -917,7 +917,7 @@ class GrometFN(object):
     def wcopo(self):
         """Gets the wcopo of this GrometFN.  # noqa: E501
 
-        WCOPO: The Wires from (src) the GrometBoxConditionals Port Outputs (POC) to (tgt) the Outer Box Outer Port Outputs (OPO)   # noqa: E501
+        wcopo: The Wires from (src) the GrometBoxConditionals Port Outputs (poc) to (tgt) the Outer Box Outer Port Outputs (opo)   # noqa: E501
 
         :return: The wcopo of this GrometFN.  # noqa: E501
         :rtype: list[GrometWire]
@@ -928,7 +928,7 @@ class GrometFN(object):
     def wcopo(self, wcopo):
         """Sets the wcopo of this GrometFN.
 
-        WCOPO: The Wires from (src) the GrometBoxConditionals Port Outputs (POC) to (tgt) the Outer Box Outer Port Outputs (OPO)   # noqa: E501
+        wcopo: The Wires from (src) the GrometBoxConditionals Port Outputs (poc) to (tgt) the Outer Box Outer Port Outputs (opo)   # noqa: E501
 
         :param wcopo: The wcopo of this GrometFN.  # noqa: E501
         :type: list[GrometWire]
