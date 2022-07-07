@@ -25,6 +25,8 @@ from automates.model_assembly.gromet.metadata.literal_value import LiteralValue
 from automates.model_assembly.gromet.metadata.metadata import Metadata
 from automates.model_assembly.gromet.metadata.provenance import Provenance
 from automates.model_assembly.gromet.metadata.source_code_data_type import SourceCodeDataType
+from automates.model_assembly.gromet.metadata.source_code_loop_init import SourceCodeLoopInit
+from automates.model_assembly.gromet.metadata.source_code_loop_update import SourceCodeLoopUpdate
 from automates.model_assembly.gromet.metadata.source_code_reference import SourceCodeReference
 from automates.model_assembly.gromet.metadata.text_definition import TextDefinition
 from automates.model_assembly.gromet.metadata.text_extraction import TextExtraction
