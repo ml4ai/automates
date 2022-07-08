@@ -336,15 +336,59 @@ class ToGrometPass:
         pass
 
     @_visit.register
-    def visit_binary_op(self, node: AnnCastBinaryOp, subgraph):
+    def visit_binary_op(self, node: AnnCastBinaryOp, parent_gromet_fn):
         # visit LHS first
-        self.visit(node.left, subgraph)
+        self.visit(node.left, parent_gromet_fn)
+
+        # visit RHS second
+        self.visit(node.right, parent_gromet_fn)
 
         # NOTE/TODO Maintain a table of primitive operators that when queried give you back
         # their signatures that can be used for generating 
+        ops_map = {"Add" : "+", "Sub": "-", "Mult" : "*", "Div" : "/"}
 
-        # visit RHS second
-        self.visit(node.right, subgraph)
+        parent_gromet_fn.bf.append(gromet_box_function.GrometBoxFunction(name=ops_map[node.op], function_type=function_type.FunctionType.PRIMITIVEOP, contents=None, value=None))
+        if parent_gromet_fn.pif == None:
+            parent_gromet_fn.pif = []
+        parent_gromet_fn.pif.append(gromet_port.GrometPort(name="", box=len(parent_gromet_fn.bf) - 1))
+        parent_gromet_fn.pif.append(gromet_port.GrometPort(name="", box=len(parent_gromet_fn.bf) - 1))
+
+        if parent_gromet_fn.pof == None:
+            parent_gromet_fn.pof = []
+        parent_gromet_fn.pof.append(gromet_port.GrometPort(name="", box=len(parent_gromet_fn.bf) - 1))
+
+        if isinstance(node.left, AnnCastName):
+            print("In left")
+            if parent_gromet_fn.opi == None:
+                parent_gromet_fn.opi = []
+            parent_gromet_fn.opi.append(gromet_port.GrometPort(box=len(parent_gromet_fn.b)-1 ,name=""))
+
+            # wire between this OPI and its PIF 
+            if parent_gromet_fn.wfopi == None:
+                parent_gromet_fn.wfopi = []
+            parent_gromet_fn.wfopi.append(gromet_wire.GrometWire(src=len(parent_gromet_fn.b)-1,tgt=len(parent_gromet_fn.pif)-2))
+
+        if isinstance(node.right, AnnCastName):
+            if parent_gromet_fn.opi == None:
+                parent_gromet_fn.opi = []
+            parent_gromet_fn.opi.append(gromet_port.GrometPort(box=len(parent_gromet_fn.b)-1 ,name=""))
+
+            # wire between this OPI and its PIF 
+            if parent_gromet_fn.wfopi == None:
+                parent_gromet_fn.wfopi = []
+            parent_gromet_fn.wfopi.append(gromet_wire.GrometWire(src=len(parent_gromet_fn.b)-1,tgt=len(parent_gromet_fn.pif)-1))
+
+
+        if parent_gromet_fn.wff == None:
+            parent_gromet_fn.wff = []
+        
+        if isinstance(node.left, AnnCastLiteralValue):
+            parent_gromet_fn.wff.append(gromet_wire.GrometWire(src=len(parent_gromet_fn.pof)-3,tgt=len(parent_gromet_fn.pif)-2))
+        
+        if isinstance(node.right, AnnCastLiteralValue):
+            parent_gromet_fn.wff.append(gromet_wire.GrometWire(src=len(parent_gromet_fn.pof)-2,tgt=len(parent_gromet_fn.pif)-1))
+
+
 
     @_visit.register
     def visit_boolean(self, node: AnnCastBoolean, subgraph):
@@ -408,7 +452,7 @@ class ToGrometPass:
     def visit_model_return(self, node: AnnCastModelReturn, subgraph):
         self.visit(node.value, subgraph)
 
-        self.visit_grfn_assignment(node.grfn_assignment, subgraph)
+        # self.visit_grfn_assignment(node.grfn_assignment, subgraph)
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, subgraph):
