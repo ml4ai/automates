@@ -30,6 +30,7 @@ class GrometBoxLoop(GrometBox):
     """
     swagger_types = {
         'condition': 'int',
+        'init': 'int',
         'body': 'int'
     }
     if hasattr(GrometBox, "swagger_types"):
@@ -37,18 +38,22 @@ class GrometBoxLoop(GrometBox):
 
     attribute_map = {
         'condition': 'condition',
+        'init': 'init',
         'body': 'body'
     }
     if hasattr(GrometBox, "attribute_map"):
         attribute_map.update(GrometBox.attribute_map)
 
-    def __init__(self, condition=None, body=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, condition=None, init=None, body=None, *args, **kwargs):  # noqa: E501
         """GrometBoxLoop - a model defined in Swagger"""  # noqa: E501
         self._condition = None
+        self._init = None
         self._body = None
         self.discriminator = None
         if condition is not None:
             self.condition = condition
+        if init is not None:
+            self.init = init
         if body is not None:
             self.body = body
         GrometBox.__init__(self, *args, **kwargs)
@@ -75,6 +80,29 @@ class GrometBoxLoop(GrometBox):
         """
 
         self._condition = condition
+
+    @property
+    def init(self):
+        """Gets the init of this GrometBoxLoop.  # noqa: E501
+
+        The index to the entry in the BF table (array) of *this* GrometFN representing the init (Function) of the Loop. This is primarily for the support of for-loops, cases where most languages have provided an extension to loops that have an initialization that is only in the scope of the loop, but not part of the loop body.   # noqa: E501
+
+        :return: The init of this GrometBoxLoop.  # noqa: E501
+        :rtype: int
+        """
+        return self._init
+
+    @init.setter
+    def init(self, init):
+        """Sets the init of this GrometBoxLoop.
+
+        The index to the entry in the BF table (array) of *this* GrometFN representing the init (Function) of the Loop. This is primarily for the support of for-loops, cases where most languages have provided an extension to loops that have an initialization that is only in the scope of the loop, but not part of the loop body.   # noqa: E501
+
+        :param init: The init of this GrometBoxLoop.  # noqa: E501
+        :type: int
+        """
+
+        self._init = init
 
     @property
     def body(self):

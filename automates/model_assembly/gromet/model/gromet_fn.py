@@ -41,12 +41,12 @@ class GrometFN(object):
         'wff': 'list[GrometWire]',
         'wfc': 'list[GrometWire]',
         'wfopo': 'list[GrometWire]',
+        'wl_iargs': 'list[GrometWire]',
         'wl_cargs': 'list[GrometWire]',
         'wc_cargs': 'list[GrometWire]',
         'bl': 'list[GrometBoxLoop]',
         'pil': 'list[GrometPort]',
         'pol': 'list[GrometPort]',
-        'wl': 'list[GrometPort]',
         'wlopi': 'list[GrometWire]',
         'wll': 'list[GrometWire]',
         'wlf': 'list[GrometWire]',
@@ -77,12 +77,12 @@ class GrometFN(object):
         'wff': 'wff',
         'wfc': 'wfc',
         'wfopo': 'wfopo',
+        'wl_iargs': 'wl_iargs',
         'wl_cargs': 'wl_cargs',
         'wc_cargs': 'wc_cargs',
         'bl': 'bl',
         'pil': 'pil',
         'pol': 'pol',
-        'wl': 'wl',
         'wlopi': 'wlopi',
         'wll': 'wll',
         'wlf': 'wlf',
@@ -99,7 +99,7 @@ class GrometFN(object):
         'metadata': 'metadata'
     }
 
-    def __init__(self, name=None, b=None, opi=None, opo=None, wopio=None, bf=None, pif=None, pof=None, wfopi=None, wfl=None, wff=None, wfc=None, wfopo=None, wl_cargs=None, wc_cargs=None, bl=None, pil=None, pol=None, wl=None, wlopi=None, wll=None, wlf=None, wlc=None, wlopo=None, bc=None, pic=None, poc=None, wcopi=None, wcl=None, wcf=None, wcc=None, wcopo=None, metadata=None):  # noqa: E501
+    def __init__(self, name=None, b=None, opi=None, opo=None, wopio=None, bf=None, pif=None, pof=None, wfopi=None, wfl=None, wff=None, wfc=None, wfopo=None, wl_iargs=None, wl_cargs=None, wc_cargs=None, bl=None, pil=None, pol=None, wlopi=None, wll=None, wlf=None, wlc=None, wlopo=None, bc=None, pic=None, poc=None, wcopi=None, wcl=None, wcf=None, wcc=None, wcopo=None, metadata=None):  # noqa: E501
         """GrometFN - a model defined in Swagger"""  # noqa: E501
         self._name = None
         self._b = None
@@ -114,12 +114,12 @@ class GrometFN(object):
         self._wff = None
         self._wfc = None
         self._wfopo = None
+        self._wl_iargs = None
         self._wl_cargs = None
         self._wc_cargs = None
         self._bl = None
         self._pil = None
         self._pol = None
-        self._wl = None
         self._wlopi = None
         self._wll = None
         self._wlf = None
@@ -161,6 +161,8 @@ class GrometFN(object):
             self.wfc = wfc
         if wfopo is not None:
             self.wfopo = wfopo
+        if wl_iargs is not None:
+            self.wl_iargs = wl_iargs
         if wl_cargs is not None:
             self.wl_cargs = wl_cargs
         if wc_cargs is not None:
@@ -171,8 +173,6 @@ class GrometFN(object):
             self.pil = pil
         if pol is not None:
             self.pol = pol
-        if wl is not None:
-            self.wl = wl
         if wlopi is not None:
             self.wlopi = wlopi
         if wll is not None:
@@ -500,6 +500,29 @@ class GrometFN(object):
         self._wfopo = wfopo
 
     @property
+    def wl_iargs(self):
+        """Gets the wl_iargs of this GrometFN.  # noqa: E501
+
+        wl_iargs: The Wires from (src) the Port Inputs of the Loop (pil) (that get set by the init) to (tgt) the init (itself a Function, a type of GrometBoxFunction) (pof)   # noqa: E501
+
+        :return: The wl_iargs of this GrometFN.  # noqa: E501
+        :rtype: list[GrometWire]
+        """
+        return self._wl_iargs
+
+    @wl_iargs.setter
+    def wl_iargs(self, wl_iargs):
+        """Sets the wl_iargs of this GrometFN.
+
+        wl_iargs: The Wires from (src) the Port Inputs of the Loop (pil) (that get set by the init) to (tgt) the init (itself a Function, a type of GrometBoxFunction) (pof)   # noqa: E501
+
+        :param wl_iargs: The wl_iargs of this GrometFN.  # noqa: E501
+        :type: list[GrometWire]
+        """
+
+        self._wl_iargs = wl_iargs
+
+    @property
     def wl_cargs(self):
         """Gets the wl_cargs of this GrometFN.  # noqa: E501
 
@@ -613,29 +636,6 @@ class GrometFN(object):
         """
 
         self._pol = pol
-
-    @property
-    def wl(self):
-        """Gets the wl of this GrometFN.  # noqa: E501
-
-        wl: The Wires that form the loop, from (src) the Port Inputs of the Loop (pil) to (tgt) the Port Outputs of the Loop (pol)   # noqa: E501
-
-        :return: The wl of this GrometFN.  # noqa: E501
-        :rtype: list[GrometPort]
-        """
-        return self._wl
-
-    @wl.setter
-    def wl(self, wl):
-        """Sets the wl of this GrometFN.
-
-        wl: The Wires that form the loop, from (src) the Port Inputs of the Loop (pil) to (tgt) the Port Outputs of the Loop (pol)   # noqa: E501
-
-        :param wl: The wl of this GrometFN.  # noqa: E501
-        :type: list[GrometPort]
-        """
-
-        self._wl = wl
 
     @property
     def wlopi(self):
