@@ -71,6 +71,8 @@ class PipelineState:
         # do not literally exist in source, and so don't consider those to be from source
         self.FROM_SOURCE_FOR_GE = True
 
+        self.gromet_collection = None
+
     def get_nodes(self):
         return self.nodes
 

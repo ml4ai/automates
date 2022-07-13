@@ -16,6 +16,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.lambda_expression_pass import
 from automates.program_analysis.CAST2GrFN.ann_cast.to_grfn_pass import ToGrfnPass
 from automates.program_analysis.CAST2GrFN.ann_cast.to_gromet_pass import ToGrometPass
 
+from automates.utils.fold import dictionary_to_gromet_json, del_nulls
 
 def get_args():
     parser = argparse.ArgumentParser(description="Runs Annotated Cast pipeline on input CAST json file.")
@@ -83,6 +84,10 @@ def main():
 
     print("\nCalling ToGrometPass-----------------------")
     ToGrometPass(pipeline_state)
+
+    with open(f"{f_name}--Gromet-FN-auto.json","w") as f:
+        gromet_collection_dict = pipeline_state.gromet_collection.to_dict()
+        f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
 
     assert False
 

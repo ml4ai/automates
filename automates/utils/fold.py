@@ -62,3 +62,14 @@ def dictionary_to_gromet_json(o, fold_level=3, indent=4, level=0):
     else:
         ret += str(o)
     return ret
+
+def del_nulls(d):
+    for key,value in list(d.items()):
+        if isinstance(value, list):
+            for elem in value:
+                if isinstance(elem, dict):
+                    del_nulls(elem)
+        if value is None:
+            del d[key]
+
+    return d    
