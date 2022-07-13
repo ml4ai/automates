@@ -28,29 +28,57 @@ class GrometPort(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'id': 'int',
         'name': 'str',
         'box': 'GrometBox',
         'metadata': 'Metadata'
     }
 
     attribute_map = {
+        'id': 'id',
         'name': 'name',
         'box': 'box',
         'metadata': 'metadata'
     }
 
-    def __init__(self, name=None, box=None, metadata=None):  # noqa: E501
+    def __init__(self, id=None, name=None, box=None, metadata=None):  # noqa: E501
         """GrometPort - a model defined in Swagger"""  # noqa: E501
+        self._id = None
         self._name = None
         self._box = None
         self._metadata = None
         self.discriminator = None
+        if id is not None:
+            self.id = id
         if name is not None:
             self.name = name
         if box is not None:
             self.box = box
         if metadata is not None:
             self.metadata = metadata
+
+    @property
+    def id(self):
+        """Gets the id of this GrometPort.  # noqa: E501
+
+        The Port id is a natural number that represent the order of the Port on the Box. This enables the following: (1) BoxFunctions with FN context will be able to unambiguously match the \"calling\" BoxFunction Port Inputs (pif) (and Port Outputs, pof) to their corresonding Outer Port Inputs (opi) (and Outer Port Outputs, opo) based in the ordering of the ids of each Port. (2) Loop Port Input (pil) id ordering will match the Loop Port Output (pol) as well as the ordering of the Port Inputs and Port Outputs of the calling loop body Function.   # noqa: E501
+
+        :return: The id of this GrometPort.  # noqa: E501
+        :rtype: int
+        """
+        return self._id
+
+    @id.setter
+    def id(self, id):
+        """Sets the id of this GrometPort.
+
+        The Port id is a natural number that represent the order of the Port on the Box. This enables the following: (1) BoxFunctions with FN context will be able to unambiguously match the \"calling\" BoxFunction Port Inputs (pif) (and Port Outputs, pof) to their corresonding Outer Port Inputs (opi) (and Outer Port Outputs, opo) based in the ordering of the ids of each Port. (2) Loop Port Input (pil) id ordering will match the Loop Port Output (pol) as well as the ordering of the Port Inputs and Port Outputs of the calling loop body Function.   # noqa: E501
+
+        :param id: The id of this GrometPort.  # noqa: E501
+        :type: int
+        """
+
+        self._id = id
 
     @property
     def name(self):
