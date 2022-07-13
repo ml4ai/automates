@@ -22,7 +22,7 @@ import sys
 import json
 
 
-def to_json(o, fold_level=3, indent=4, level=0):
+def dictionary_to_gromet_json(o, fold_level=3, indent=4, level=0):
     if level < fold_level:
         newline = "\n"
         space = " "
@@ -45,7 +45,7 @@ def to_json(o, fold_level=3, indent=4, level=0):
             ret += comma
             comma = "," + newline
             ret += space * indent * (level+1)
-            ret += to_json(e, level+1)
+            ret += dictionary_to_gromet_json(e, fold_level, indent, level+1)
         ret += newline + space * indent * level + "]"
     elif isinstance(o, dict):
         ret += "{" + newline
@@ -55,7 +55,7 @@ def to_json(o, fold_level=3, indent=4, level=0):
             comma = "," + newline
             ret += space * indent * (level+1)
             ret += '"' + str(k) + '":' + space
-            ret += to_json(v, level+1)
+            ret += dictionary_to_gromet_json(v, fold_level, indent, level+1)
         ret += newline + space * indent * level + "}"
     elif o is None:
         ret += "null"
