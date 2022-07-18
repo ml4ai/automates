@@ -1,0 +1,25 @@
+{
+    "function_networks": [
+        {
+            "b": [{"function_type":"Module","name":"module"}],
+            "bf": [{"function_type":"LiteralValue","name":"","value":{"value":2,"value_type":"Integer"}},{"contents":1,"function_type":"Function","name":"module.foo_id0"},{"contents":1,"function_type":"Function","name":"module.foo_id0"}],
+            "pif": [{"box":1,"name":""},{"box":2,"name":""}],
+            "pof": [{"box":0,"name":""},{"box":1,"name":"x"},{"box":2,"name":"y"}],
+            "wff": [{"src":0,"tgt":0},{"src":1,"tgt":1}]
+        },
+        {
+            "b": [{"function_type":"Function","name":"foo"}],
+            "bf": [{"function_type":"LiteralValue","name":"","value":{"value":3,"value_type":"Integer"}},{"function_type":"PrimitiveOp","name":"+"}],
+            "opi": [{"box":0,"name":"x"}],
+            "opo": [{"box":0,"name":""}],
+            "pif": [{"box":1,"name":""},{"box":1,"name":""}],
+            "pof": [{"box":0,"name":""},{"box":1,"name":""}],
+            "wff": [{"src":0,"tgt":1}],
+            "wfopi": [{"src":0,"tgt":0}],
+            "wfopo": [{"src":1,"tgt":0}]
+        }
+    ],
+    "metadata": [
+
+    ]
+}

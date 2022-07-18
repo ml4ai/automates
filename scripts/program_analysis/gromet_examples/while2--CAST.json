@@ -1,0 +1,295 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "left": {
+                        "node_type": "Var",
+                        "source_refs": [
+                            {
+                                "col_end": 1,
+                                "col_start": 0,
+                                "node_type": "SourceRef",
+                                "row_end": 1,
+                                "row_start": 1,
+                                "source_file_name": "while2"
+                            }
+                        ],
+                        "type": "float",
+                        "val": {
+                            "id": 0,
+                            "name": "x",
+                            "node_type": "Name",
+                            "source_refs": [
+                                {
+                                    "col_end": 1,
+                                    "col_start": 0,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "while2"
+                                }
+                            ]
+                        }
+                    },
+                    "node_type": "Assignment",
+                    "right": {
+                        "node_type": "LiteralValue",
+                        "source_code_data_type": [
+                            "Python",
+                            "3.8",
+                            "<class 'int'>"
+                        ],
+                        "source_refs": [
+                            {
+                                "col_end": 5,
+                                "col_start": 4,
+                                "node_type": "SourceRef",
+                                "row_end": 1,
+                                "row_start": 1,
+                                "source_file_name": "while2"
+                            }
+                        ],
+                        "value": 2,
+                        "value_type": "Integer"
+                    },
+                    "source_refs": [
+                        {
+                            "col_end": 5,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 1,
+                            "row_start": 1,
+                            "source_file_name": "while2"
+                        }
+                    ]
+                },
+                {
+                    "left": {
+                        "node_type": "Var",
+                        "source_refs": [
+                            {
+                                "col_end": 1,
+                                "col_start": 0,
+                                "node_type": "SourceRef",
+                                "row_end": 2,
+                                "row_start": 2,
+                                "source_file_name": "while2"
+                            }
+                        ],
+                        "type": "float",
+                        "val": {
+                            "id": 1,
+                            "name": "y",
+                            "node_type": "Name",
+                            "source_refs": [
+                                {
+                                    "col_end": 1,
+                                    "col_start": 0,
+                                    "node_type": "SourceRef",
+                                    "row_end": 2,
+                                    "row_start": 2,
+                                    "source_file_name": "while2"
+                                }
+                            ]
+                        }
+                    },
+                    "node_type": "Assignment",
+                    "right": {
+                        "node_type": "LiteralValue",
+                        "source_code_data_type": [
+                            "Python",
+                            "3.8",
+                            "<class 'int'>"
+                        ],
+                        "source_refs": [
+                            {
+                                "col_end": 5,
+                                "col_start": 4,
+                                "node_type": "SourceRef",
+                                "row_end": 2,
+                                "row_start": 2,
+                                "source_file_name": "while2"
+                            }
+                        ],
+                        "value": 3,
+                        "value_type": "Integer"
+                    },
+                    "source_refs": [
+                        {
+                            "col_end": 5,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 2,
+                            "row_start": 2,
+                            "source_file_name": "while2"
+                        }
+                    ]
+                },
+                {
+                    "body": [
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 4,
+                                        "row_start": 4,
+                                        "source_file_name": "while2"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "id": 2,
+                                    "name": "x",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 4,
+                                            "row_start": 4,
+                                            "source_file_name": "while2"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "id": 2,
+                                    "name": "x",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 9,
+                                            "col_start": 8,
+                                            "node_type": "SourceRef",
+                                            "row_end": 4,
+                                            "row_start": 4,
+                                            "source_file_name": "while2"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Add",
+                                "right": {
+                                    "id": 3,
+                                    "name": "y",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 13,
+                                            "col_start": 12,
+                                            "node_type": "SourceRef",
+                                            "row_end": 4,
+                                            "row_start": 4,
+                                            "source_file_name": "while2"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 13,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 4,
+                                        "row_start": 4,
+                                        "source_file_name": "while2"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 13,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 4,
+                                    "row_start": 4,
+                                    "source_file_name": "while2"
+                                }
+                            ]
+                        }
+                    ],
+                    "expr": {
+                        "left": {
+                            "id": 2,
+                            "name": "x",
+                            "node_type": "Name",
+                            "source_refs": [
+                                {
+                                    "col_end": 7,
+                                    "col_start": 6,
+                                    "node_type": "SourceRef",
+                                    "row_end": 3,
+                                    "row_start": 3,
+                                    "source_file_name": "while2"
+                                }
+                            ]
+                        },
+                        "node_type": "BinaryOp",
+                        "op": "Lt",
+                        "right": {
+                            "node_type": "LiteralValue",
+                            "source_code_data_type": [
+                                "Python",
+                                "3.8",
+                                "<class 'int'>"
+                            ],
+                            "source_refs": [
+                                {
+                                    "col_end": 11,
+                                    "col_start": 10,
+                                    "node_type": "SourceRef",
+                                    "row_end": 3,
+                                    "row_start": 3,
+                                    "source_file_name": "while2"
+                                }
+                            ],
+                            "value": 5,
+                            "value_type": "Integer"
+                        },
+                        "source_refs": [
+                            {
+                                "col_end": 11,
+                                "col_start": 6,
+                                "node_type": "SourceRef",
+                                "row_end": 3,
+                                "row_start": 3,
+                                "source_file_name": "while2"
+                            }
+                        ]
+                    },
+                    "init": [],
+                    "node_type": "Loop",
+                    "source_refs": [
+                        {
+                            "col_end": 13,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 4,
+                            "row_start": 3,
+                            "source_file_name": "while2"
+                        }
+                    ]
+                }
+            ],
+            "name": "while2",
+            "node_type": "Module",
+            "source_refs": [
+                {
+                    "col_end": null,
+                    "col_start": null,
+                    "node_type": "SourceRef",
+                    "row_end": 4,
+                    "row_start": 1,
+                    "source_file_name": "while2.py"
+                }
+            ]
+        }
+    ]
+}
