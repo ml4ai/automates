@@ -61,8 +61,9 @@ def dictionary_to_gromet_json(o, fold_level=3, indent=4, level=0, parent_key="")
             elif k == "attributes":
                 ret += dictionary_to_gromet_json(v, 4, indent, level+1, k)
             elif k == "bf" and parent_key == "fn":
-                print("Here")
                 ret += dictionary_to_gromet_json(v, 3, indent, level+1, k)
+            elif k == "bf" and parent_key == "value":
+                ret += dictionary_to_gromet_json(v, 5, indent, level+1, k)
             else:
                 ret += dictionary_to_gromet_json(v, fold_level, indent, level+1, k)
         ret += newline + space * indent * level + "}"
