@@ -63,11 +63,12 @@ C.source_refs = [SourceRef(file_name, None, None, 1, line_count)]
 os.chdir(old_path)
 out_cast = cast.CAST([C], "python")
 
-V = CASTToAGraphVisitor(out_cast)
-last_slash_idx = file_name.rfind("/")
-file_ending_idx = file_name.rfind(".")
-pdf_file_name = f"{file_name[last_slash_idx + 1 : file_ending_idx]}.pdf"
-V.to_pdf(pdf_file_name)
+if True:
+    V = CASTToAGraphVisitor(out_cast)
+    last_slash_idx = file_name.rfind("/")
+    file_ending_idx = file_name.rfind(".")
+    pdf_file_name = f"{file_name[last_slash_idx + 1 : file_ending_idx]}.pdf"
+    V.to_pdf(pdf_file_name)
 
 # Then, print CAST as JSON
 if '--rawjson' in sys.argv:

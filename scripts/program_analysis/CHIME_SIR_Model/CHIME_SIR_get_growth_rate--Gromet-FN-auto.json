@@ -1,0 +1,51 @@
+{
+    "function_networks": [
+        {
+            "b": [{"function_type":"Module","name":"module"}],
+            "bf": [],
+            "pof": []
+        },
+        {
+            "b": [{"function_type":"Function","name":"get_growth_rate"}],
+            "bc": [{"body_else":[{"contents":4,"function_type":"Function"}],"body_if":[{"contents":3,"function_type":"Function"}],"condition":[{"contents":2,"function_type":"Function"}]}],
+            "opi": [{"box":0,"name":"doubling_time"}],
+            "opo": [{"box":0,"name":""}],
+            "pic": [{"box":0,"name":""},{"box":0,"name":""}],
+            "poc": [{"box":0,"name":"growth_rate"}],
+            "wcopo": [{"src":0,"tgt":0}],
+            "wfopi": []
+        },
+        {
+            "b": [{"function_type":"Predicate","name":""}],
+            "bf": [{"function_type":"LiteralValue","name":"","value":{"value":0,"value_type":"Integer"}},{"function_type":"PrimitiveOp","name":"=="}],
+            "opi": [{"box":0,"name":""}],
+            "opo": [{"box":0,"name":""}],
+            "pif": [{"box":1,"name":""},{"box":1,"name":""}],
+            "pof": [{"box":0,"name":""},{"box":1,"name":""}],
+            "wff": [{"src":1,"tgt":0}],
+            "wfopi": [{"src":0,"tgt":0}],
+            "wfopo": [{"src":0,"tgt":1}]
+        },
+        {
+            "b": [{"function_type":"Expression","name":""}],
+            "bf": [{"function_type":"LiteralValue","name":"","value":{"value":0,"value_type":"Integer"}}],
+            "opo": [{"box":0,"name":""}],
+            "pof": [{"box":0,"name":""}],
+            "wfopo": [{"src":0,"tgt":0}]
+        },
+        {
+            "b": [{"function_type":"Expression","name":""}],
+            "bf": [{"function_type":"LiteralValue","name":"","value":{"value":2,"value_type":"AbstractFloat"}},{"function_type":"LiteralValue","name":"","value":{"value":1,"value_type":"AbstractFloat"}},{"function_type":"PrimitiveOp","name":"/"},{"function_type":"PrimitiveOp","name":"**"},{"function_type":"LiteralValue","name":"","value":{"value":1,"value_type":"AbstractFloat"}},{"function_type":"PrimitiveOp","name":"-"}],
+            "opi": [{"box":0,"name":""}],
+            "opo": [{"box":0,"name":""}],
+            "pif": [{"box":2,"name":""},{"box":2,"name":""},{"box":3,"name":""},{"box":3,"name":""},{"box":5,"name":""},{"box":5,"name":""}],
+            "pof": [{"box":0,"name":""},{"box":1,"name":""},{"box":2,"name":""},{"box":3,"name":""},{"box":4,"name":""},{"box":5,"name":""}],
+            "wff": [{"src":0,"tgt":0},{"src":2,"tgt":1},{"src":5,"tgt":4}],
+            "wfopi": [{"src":1,"tgt":0}],
+            "wfopo": [{"src":0,"tgt":5}]
+        }
+    ],
+    "metadata": [
+
+    ]
+}

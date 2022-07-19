@@ -532,17 +532,27 @@ class CASTToAGraphVisitor(CASTVisitor):
         body of the loop, and connect them to this node in the graph.
         This node's UID is returned."""
         expr = self.visit(node.expr)
+        init = []
         body = []
+        if len(node.init) > 0:
+            init = self.visit_list(node.init)
+
         if len(node.body) > 0:
             body = self.visit_list(node.body)
         node_uid = uuid.uuid4()
+        init_uid = uuid.uuid4()
         test_uid = uuid.uuid4()
         body_uid = uuid.uuid4()
 
         self.G.add_node(node_uid, label="Loop")
+        self.G.add_node(init_uid, label="Init")
         self.G.add_node(test_uid, label="Test")
         self.G.add_node(body_uid, label="Body")
 
+
+        self.G.add_edge(node_uid, init_uid)
+        for n in init:
+            self.G.add_edge(init_uid, n)
         self.G.add_edge(node_uid, test_uid)
         self.G.add_edge(test_uid, expr)
         self.G.add_edge(node_uid, body_uid)

@@ -89,7 +89,7 @@ def main():
         gromet_collection_dict = pipeline_state.gromet_collection.to_dict()
         f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
 
-    assert False
+    sys.exit()
 
     print("\nCalling ToGrfnPass-------------------")
     ToGrfnPass(pipeline_state)
