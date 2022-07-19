@@ -24,8 +24,9 @@ from automates.model_assembly.gromet.model.gromet_fn_module import GrometFNModul
 from automates.model_assembly.gromet.model.gromet_port import GrometPort
 from automates.model_assembly.gromet.model.gromet_type import GrometType
 from automates.model_assembly.gromet.model.gromet_wire import GrometWire
+from automates.model_assembly.gromet.model.import_reference import ImportReference
 from automates.model_assembly.gromet.model.import_type import ImportType
 from automates.model_assembly.gromet.model.literal_value import LiteralValue
 from automates.model_assembly.gromet.model.metadata import Metadata
-from automates.model_assembly.gromet.model.model_import import ModelImport
+from automates.model_assembly.gromet.model.source_type import SourceType
 from automates.model_assembly.gromet.model.typed_value import TypedValue

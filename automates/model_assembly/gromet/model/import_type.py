@@ -24,11 +24,9 @@ class ImportType(object):
     """
     allowed enum values
     """
-    REPOSITORY = "REPOSITORY"
-    FILE_URI = "FILE_URI"
-    LIBRARY = "LIBRARY"
-    NATIVE = "NATIVE"
     GROMET_FN_MODULE = "GROMET_FN_MODULE"
+    NATIVE = "NATIVE"
+    OTHER = "OTHER"
     """
     Attributes:
       swagger_types (dict): The key is attribute name

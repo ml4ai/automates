@@ -28,7 +28,7 @@ class TypedValue(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'type': 'GrometType',
+        'type': 'str',
         'value': 'object'
     }
 
@@ -51,9 +51,10 @@ class TypedValue(object):
     def type(self):
         """Gets the type of this TypedValue.  # noqa: E501
 
+        The type of the value.  # noqa: E501
 
         :return: The type of this TypedValue.  # noqa: E501
-        :rtype: GrometType
+        :rtype: str
         """
         return self._type
 
@@ -61,9 +62,10 @@ class TypedValue(object):
     def type(self, type):
         """Sets the type of this TypedValue.
 
+        The type of the value.  # noqa: E501
 
         :param type: The type of this TypedValue.  # noqa: E501
-        :type: GrometType
+        :type: str
         """
 
         self._type = type
