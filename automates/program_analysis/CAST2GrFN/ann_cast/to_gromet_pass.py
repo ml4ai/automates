@@ -355,7 +355,7 @@ class ToGrometPass:
         # their signatures that can be used for generating 
         ops_map = {"Add" : "+", "Sub": "-", "Mult" : "*", "Div" : "/", "Lt": "<", "Gt": ">", "Eq": "==", "Pow": "**"}
 
-        parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=ops_map[node.op], function_type=FunctionType.PRIMITIVEOP, contents=None, value=None))
+        parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=ops_map[node.op], function_type=FunctionType.PRIMITIVE, contents=None, value=None))
         parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(name="", box=len(parent_gromet_fn.bf) - 1))
         parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(name="", box=len(parent_gromet_fn.bf) - 1))
 
@@ -560,6 +560,7 @@ class ToGrometPass:
 
         parent_gromet_fn.bc = insert_gromet_object(parent_gromet_fn.bc, gromet_bc)
 
+        print(node.top_interface_vars.items())
         for _,val in node.top_interface_vars.items():
             # TODO: Connect the ports using the ID system clay introduced
             parent_gromet_fn.pic = insert_gromet_object(parent_gromet_fn.pic, GrometPort(name="",box=len(parent_gromet_fn.bc)))
@@ -570,8 +571,15 @@ class ToGrometPass:
 
         # TODO: We also need to put this around a loop
         # And in particular we only want to make wires to variables that are used in the conditional
-        parent_gromet_fn.wfc = insert_gromet_object(parent_gromet_fn.wfc, GrometWire(src=len(parent_gromet_fn.pic),tgt=len(parent_gromet_fn.pof)))
-
+        # Check type of parent_cast_node to determine which wire to create
+        # TODO: Previously, we were always generating a wfc wire for variables coming into a conditional
+        # However, we can also have variables coming in from other sources such as an opi.
+        # This is a temporary fix for the specific case in the CHIME model, but may need to be revisited
+        if isinstance(parent_cast_node, AnnCastFunctionDef):
+            parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=len(parent_gromet_fn.pic), tgt=len(parent_gromet_fn.opi)))
+        else:
+            parent_gromet_fn.wfc = insert_gromet_object(parent_gromet_fn.wfc, GrometWire(src=len(parent_gromet_fn.pic),tgt=len(parent_gromet_fn.pof)))
+        
         # Visit the predicate afterwards
         gromet_predicate_fn.b = insert_gromet_object(gromet_predicate_fn.b, GrometBoxFunction(name="",function_type=FunctionType.PREDICATE))
         self.visit(node.expr, gromet_predicate_fn, node)
@@ -592,7 +600,7 @@ class ToGrometPass:
               # TODO: put this in a loop to handle more than one argument
         parent_gromet_fn.wl_cargs = insert_gromet_object(parent_gromet_fn.wl_cargs, GrometWire(src=len(parent_gromet_fn.pif),
                                                                                                 tgt=len(parent_gromet_fn.pic)))
-
+        
         # Visit the body (if cond true part) of the gromet fn
         self.visit(node.body[0], parent_gromet_fn, node)
         body_if_bf = GrometBoxFunction(function_type=FunctionType.FUNCTION, contents=len(self.gromet_module.attributes))
