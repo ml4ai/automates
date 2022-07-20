@@ -493,7 +493,7 @@ class ToGrometPass:
         # This will have a single outport (the little blank box)
         # What we dont determine here is the wiring to whatever variable this 
         # literal value goes to (that's up to the parent context)
-        parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name="", function_type=FunctionType.LITERALVALUE, contents=None, value=LiteralValue(node.value_type, node.value)))
+        parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name="", function_type=FunctionType.LITERAL, contents=None, value=LiteralValue(node.value_type, node.value)))
         parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name="", box=len(parent_gromet_fn.bf))) 
 
         # Perhaps we may need to return something in the future
