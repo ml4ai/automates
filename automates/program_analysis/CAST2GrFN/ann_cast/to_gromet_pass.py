@@ -644,6 +644,9 @@ class ToGrometPass:
         # Module level GroMEt FN sits in its own special field dicating the module node
         self.gromet_module.fn = new_gromet
 
+        # Set the name of the outer Gromet module to be the source file name
+        self.gromet_module.name = node.source_refs[0].source_file_name
+        
         self.visit_node_list(node.body, new_gromet, node)
 
 
