@@ -12,6 +12,8 @@ from automates.model_assembly.gromet.model import (
     LiteralValue,
 )
 from automates.utils.fold import dictionary_to_gromet_json, del_nulls
+from automates.model_assembly.gromet.model.gromet_type import GrometType
+from automates.model_assembly.gromet.model.typed_value import TypedValue
 
 class GrometImportPass:
     def __init__(self, path):
@@ -20,22 +22,42 @@ class GrometImportPass:
         self.json_object = None
 
         self.box_functions = ["b", "bf"]
-        self.ports = ["pof", "pif", "opo", "opi"]
-        self.wires = ["wfopo"]
+        self.ports = ["opi", "opo", "pil", "pol", "pif", "pof", "pic", "poc"]
+        self.wires = ["wopio", "wlopi", "wll", "wlf", "wlc", "wlopo", "wfopi", "wfl", "wff", "wfc", "wfopo", "wcopi", "wcl", "wcf", "wcc", "wcopo"]
        
-        self.gromet_module_fn = None
+        self.gromet_module = None
 
         self.load_file()
+        
         self.import_module()
+        self.import_attributes()
+        
         self.export()
+
     def import_module(self):
         # Create module 
         name = self.json_object["name"]
-        self.gromet_module_fn = GrometFNModule(name)
+        self.gromet_module = GrometFNModule(name)
         
-        # Create function network for module
-        self.gromet_module_fn.fn = GrometFN()
-        for table,contents in self.json_object["fn"].items():
+        # Create the function networt
+        self.gromet_module.fn = self.parse_function_network(self.json_object["fn"])
+        
+    def import_attributes(self):
+        for fn in self.json_object["attributes"]:
+             # TODO: Add support for types other than FN
+            type = fn["type"]
+            value = TypedValue(type="FN", value=self.parse_function_network(fn["value"]))
+            
+            if not self.gromet_module.attributes:
+                self.gromet_module.attributes = [value]
+            else:
+                self.gromet_module.attributes.append(value)
+
+    def parse_function_network(self, obj):
+        # Create function_network object
+        function_network = GrometFN()
+
+        for table,contents in obj.items():
             # Move to next table if this one is empty
             table_size = len(table)
             if table_size == 0:
@@ -58,13 +80,13 @@ class GrometImportPass:
                     
                     # We use getattr/setattr to set attribute, since we only have the attribute as a string
                     try:
-                        current_attribute = getattr(self.gromet_module_fn.fn, table)
+                        current_attribute = getattr(function_network, table)
                     except:
                         current_attribute = None
                     if current_attribute:
                         current_attribute.append(gromet_box_function)
                     else:
-                        setattr(self.gromet_module_fn.fn, table, [gromet_box_function])
+                        setattr(function_network, table, [gromet_box_function])
                 
             elif table in self.ports:
                 for entry in contents:
@@ -77,37 +99,38 @@ class GrometImportPass:
                         gromet_port.box = entry["box"]
                     
                     try:
-                        current_attribute = getattr(self.gromet_module_fn.fn, table)
+                        current_attribute = getattr(function_network, table)
                     except:
                         current_attribute = None
                     if current_attribute:
                         current_attribute.append(gromet_port)
                     else:
-                        setattr(self.gromet_module_fn.fn, table, [gromet_port])
+                        setattr(function_network, table, [gromet_port])
 
             elif table in self.wires:
                 for entry in contents:
                     gromet_wire = GrometWire()
-
-                    if "tgt" in entry:
-                        gromet_port.src = entry["src"]
+                    
                     if "src" in entry:
-                        gromet_port.tgt = entry["tgt"]
+                        gromet_wire.src = entry["src"]
+                    if "tgt" in entry:
+                        gromet_wire.tgt = entry["tgt"]
                     
                     try:
-                        current_attribute = getattr(self.gromet_module_fn.fn, table)
+                        current_attribute = getattr(function_network, table)
                     except:
                         current_attribute = None
                     if current_attribute:
                         current_attribute.append(gromet_wire)
                     else:
-                        setattr(self.gromet_module_fn.fn, table, [gromet_wire])
-           
+                        setattr(function_network, table, [gromet_wire])
+        return function_network
+
     def load_file(self):
         with open(self.path) as f:
             self.json_string = f.read()
         self.json_object = json.loads(self.json_string)
     def export(self):
-        print(dictionary_to_gromet_json(del_nulls(self.gromet_module_fn.to_dict())))
+        print(dictionary_to_gromet_json(del_nulls(self.gromet_module.to_dict())))
 
-p = GrometImportPass("exp0--Gromet-FN-auto.json")
+p = GrometImportPass("CHIME_SIR_get_growth_rate--Gromet-FN-auto.json")
