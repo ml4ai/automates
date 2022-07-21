@@ -36,12 +36,11 @@ class GrometImportPass:
         # Create function network for module
         self.gromet_module_fn.fn = GrometFN()
         for table,contents in self.json_object["fn"].items():
+            # Move to next table if this one is empty
+            table_size = len(table)
+            if table_size == 0:
+                continue
             if table in self.box_functions:
-                # Check table size and continue if empty
-                table_size = len(table)
-                if table_size == 0:
-                    continue
-
                 for entry in contents:
                     # We create a blank box function first and fill out fields later,
                     # since not all box functions will have all fields 
@@ -68,9 +67,41 @@ class GrometImportPass:
                         setattr(self.gromet_module_fn.fn, table, [gromet_box_function])
                 
             elif table in self.ports:
-                pass
+                for entry in contents:
+                    gromet_port = GrometPort()
+                    if "id" in entry:
+                        gromet_port.id = entry["id"]
+                    if "name" in entry:
+                        gromet_port.name = entry["name"]
+                    if "box" in entry:
+                        gromet_port.box = entry["box"]
+                    
+                    try:
+                        current_attribute = getattr(self.gromet_module_fn.fn, table)
+                    except:
+                        current_attribute = None
+                    if current_attribute:
+                        current_attribute.append(gromet_port)
+                    else:
+                        setattr(self.gromet_module_fn.fn, table, [gromet_port])
+
             elif table in self.wires:
-                pass
+                for entry in contents:
+                    gromet_wire = GrometWire()
+
+                    if "tgt" in entry:
+                        gromet_port.src = entry["src"]
+                    if "src" in entry:
+                        gromet_port.tgt = entry["tgt"]
+                    
+                    try:
+                        current_attribute = getattr(self.gromet_module_fn.fn, table)
+                    except:
+                        current_attribute = None
+                    if current_attribute:
+                        current_attribute.append(gromet_wire)
+                    else:
+                        setattr(self.gromet_module_fn.fn, table, [gromet_wire])
            
     def load_file(self):
         with open(self.path) as f:
