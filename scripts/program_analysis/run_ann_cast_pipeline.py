@@ -82,14 +82,14 @@ def main():
     print("\nCalling LambdaExpressionPass-------------------")
     LambdaExpressionPass(pipeline_state)
 
-    print("\nCalling ToGrometPass-----------------------")
-    ToGrometPass(pipeline_state)
+    #print("\nCalling ToGrometPass-----------------------")
+    #ToGrometPass(pipeline_state)
 
-    with open(f"{f_name}--Gromet-FN-auto.json","w") as f:
-        gromet_collection_dict = pipeline_state.gromet_collection.to_dict()
-        f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+    #with open(f"{f_name}--Gromet-FN-auto.json","w") as f:
+    #    gromet_collection_dict = pipeline_state.gromet_collection.to_dict()
+    #    f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
 
-    sys.exit()
+    # sys.exit()
 
     print("\nCalling ToGrfnPass-------------------")
     ToGrfnPass(pipeline_state)
