@@ -11,9 +11,9 @@ from automates.model_assembly.gromet.model import (
     GrometWire,
     LiteralValue,
 )
-from automates.utils.fold import dictionary_to_gromet_json, del_nulls
 from automates.model_assembly.gromet.model.gromet_type import GrometType
 from automates.model_assembly.gromet.model.typed_value import TypedValue
+from automates.utils.fold import dictionary_to_gromet_json, del_nulls
 
 class GrometImportPass:
     def __init__(self, path):
@@ -85,7 +85,26 @@ class GrometImportPass:
                         current_attribute.append(gromet_box_function)
                     else:
                         setattr(function_network, table, [gromet_box_function])
-                
+            elif table == "bc":
+                for entry in contents:
+                    gromet_conditional = GrometBoxConditional()
+                    # bc has three different components: condition, body_if, and body_else
+                    condition = entry["condition"][0]
+                    gromet_conditional.condition = [GrometBoxFunction(function_type=condition["function_type"], contents=condition["contents"])]
+
+                    body_if = entry["body_if"][0]
+                    gromet_conditional.body_if = [GrometBoxFunction(function_type=body_if["function_type"], contents=body_if["contents"])]
+
+                    body_else = entry["body_else"][0]
+                    gromet_conditional.body_else = [GrometBoxFunction(function_type=body_else["function_type"], contents=body_else["contents"])]
+
+                    if function_network.bc:
+                        function_network.bc.append(gromet_conditional)
+                    else:
+                        function_network.bc = [gromet_conditional]
+
+            elif table == "bl":
+                pass
             elif table in self.ports:
                 for entry in contents:
                     gromet_port = GrometPort()
