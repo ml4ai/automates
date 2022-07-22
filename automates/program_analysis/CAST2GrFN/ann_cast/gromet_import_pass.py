@@ -104,7 +104,21 @@ class GrometImportPass:
                         function_network.bc = [gromet_conditional]
 
             elif table == "bl":
-                pass
+                for entry in contents:
+                    gromet_loop = GrometBoxLoop()
+                    #bl has two components: condition and body
+                    condition = entry["condition"]
+                    gromet_loop.condition = [GrometBoxFunction(function_type=condition["function_type"], contents=condition["contents"])]
+
+                    body = entry["body"]
+                    gromet_loop.body = [GrometBoxFunction(function_type=body["function_type"], body=condition["contents"])]
+
+                    if function_network.bc:
+                        function_network.bc.append(gromet_conditional)
+                    else:
+                        function_network.bc = [gromet_conditional]
+
+                
             elif table in self.ports:
                 for entry in contents:
                     gromet_port = GrometPort()
