@@ -73,10 +73,8 @@ class GrometImportPass:
                         gromet_box_function.contents = entry["contents"]
                     if "name" in entry:
                         gromet_box_function.name = entry["name"]
-                    
-                    # TODO: Value field is a little more complex to import
-                    #if "value" in entry:
-                        #gromet_box_funciton_value =
+                    if "value" in entry:
+                        gromet_box_function.value = LiteralValue(value_type=entry["value"]["value_type"], value=entry["value"]["value"])
                     
                     # We use getattr/setattr to set attribute, since we only have the attribute as a string
                     try:
