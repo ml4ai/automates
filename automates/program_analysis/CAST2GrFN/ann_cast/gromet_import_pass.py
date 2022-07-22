@@ -79,11 +79,8 @@ class GrometImportPass:
                     # We use getattr/setattr to set attribute, since we only have the attribute as a string
                     try:
                         current_attribute = getattr(function_network, table)
-                    except:
-                        current_attribute = None
-                    if current_attribute:
                         current_attribute.append(gromet_box_function)
-                    else:
+                    except:
                         setattr(function_network, table, [gromet_box_function])
             elif table == "bc":
                 for entry in contents:
@@ -102,7 +99,6 @@ class GrometImportPass:
                         function_network.bc.append(gromet_conditional)
                     else:
                         function_network.bc = [gromet_conditional]
-
             elif table == "bl":
                 for entry in contents:
                     gromet_loop = GrometBoxLoop()
@@ -116,9 +112,7 @@ class GrometImportPass:
                     if function_network.bc:
                         function_network.bc.append(gromet_conditional)
                     else:
-                        function_network.bc = [gromet_conditional]
-
-                
+                        function_network.bc = [gromet_conditional]  
             elif table in self.ports:
                 for entry in contents:
                     gromet_port = GrometPort()
@@ -131,13 +125,9 @@ class GrometImportPass:
                     
                     try:
                         current_attribute = getattr(function_network, table)
-                    except:
-                        current_attribute = None
-                    if current_attribute:
                         current_attribute.append(gromet_port)
-                    else:
+                    except:
                         setattr(function_network, table, [gromet_port])
-
             elif table in self.wires:
                 for entry in contents:
                     gromet_wire = GrometWire()
@@ -149,11 +139,8 @@ class GrometImportPass:
                     
                     try:
                         current_attribute = getattr(function_network, table)
-                    except:
-                        current_attribute = None
-                    if current_attribute:
                         current_attribute.append(gromet_wire)
-                    else:
+                    except:
                         setattr(function_network, table, [gromet_wire])
         return function_network
 
