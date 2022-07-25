@@ -169,6 +169,8 @@ class PyASTToCAST():
                      this is used to prevent an import cycle that could have no end
            - filenames: A list of strings used as a stack to maintain the current file being
                         visited
+           - module_stack: A list of Module PyAST nodes used as a stack to maintain the current module
+                        being visited. 
            - classes: A dictionary of class names and their associated functions.
            - var_count: An int used when CAST variables need to be generated (i.e. loop variables, etc)
            - global_identifier_dict: A dictionary used to map global variables to unique identifiers
@@ -179,6 +181,7 @@ class PyASTToCAST():
         self.aliases = {}
         self.visited = set()
         self.filenames = [file_name.split(".")[0]]
+        self.module_stack = []
         self.classes = {}
         self.var_count = 0
         self.global_identifier_dict = {}
@@ -273,6 +276,18 @@ class PyASTToCAST():
         else:
             return piece
 
+    def find_function(module_node: ast.Module, f_name: str):
+        """Given a PyAST Module node, we search for a particular FunctionDef node
+           which is given to us by its function name f_name.
+
+           This function searches at the top level, that is it only searches FunctionDefs that 
+           exist at the module level, and will not search deeper for functions within functions.
+        """
+        for stmt in module_node.body:
+            if isinstance(stmt, ast.FunctionDef) and stmt.name == f_name:
+                return stmt
+
+        return None
 
 
     @singledispatchmethod
@@ -367,10 +382,10 @@ class PyASTToCAST():
                     t = get_op(binop.op)
                     cons.operator = "*" if get_op(binop.op) == 'Mult' else "+" if get_op(binop.op) == 'Add' else None
                     cons.size = self.visit(operand, prev_scope_id_dict, curr_scope_id_dict)[0]
-                    cons.initial_value = LiteralValue(value_type=lit_type, value=list_node.elts[0].value, source_code_data_type=["Python","3.8","Float"], source_ref=ref) 
+                    cons.initial_value = LiteralValue(value_type=lit_type, value=list_node.elts[0].value, source_code_data_type=["Python","3.8","Float"], source_refs=ref) 
             
                     # TODO: Source code data type metadata
-                    to_ret = LiteralValue(value_type="List[Any]", value=cons, source_code_data_type=["Python","3.8","List"], source_ref=ref)
+                    to_ret = LiteralValue(value_type="List[Any]", value=cons, source_code_data_type=["Python","3.8","List"], source_refs=ref)
 
                     #print(to_ret)
                     l_visit = self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict)
@@ -980,21 +995,27 @@ class PyASTToCAST():
         else:
             next_id = self.global_identifier_dict["next"]
 
-        iter_var_cast = Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref)
-        iter_var = Assignment(iter_var_cast, 
-                    Call(Name(name="iter", id=iter_id, source_refs=ref),[iterable],source_refs=ref), source_refs=ref)
 
         stop_cond_name = f"sc_{self.var_count}"
         self.var_count += 1
         
         stop_cond_id = self.insert_next_id(curr_scope_id_dict, stop_cond_name)
 
-        stop_cond_var_cast = Var(Name(name=stop_cond_name, id=stop_cond_id, source_refs=ref), "boolean", source_refs=ref)
-        stop_cond_var = Assignment(left = stop_cond_var_cast, 
-                    right=LiteralValue(ScalarType.BOOLEAN, False, ["Python", "3.8", "boolean"], ref), source_refs=ref)
+        iter_var_cast = Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref)
 
-        # loop_cond = LiteralValue(ScalarType.BOOLEAN, True, ["Python", "3.8", "boolean"], ref)
-        
+
+        stop_cond_var_cast = Var(Name(name=stop_cond_name, id=stop_cond_id, source_refs=ref), "boolean", source_refs=ref)
+        #stop_cond_var = Assignment(left = stop_cond_var_cast, 
+         #           right=LiteralValue(ScalarType.BOOLEAN, False, ["Python", "3.8", "boolean"], ref), source_refs=ref)
+
+        iter_var = Assignment(iter_var_cast, 
+                    Call(Name(name="iter", id=iter_id, source_refs=ref),[iterable],source_refs=ref), source_refs=ref)
+
+        first_next = Assignment(Tuple([target, iter_var_cast, stop_cond_var_cast]), Call(Name(name="next", id=next_id, source_refs=ref),
+                        [Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref), 
+                        Var(Name(name=stop_cond_name, id=stop_cond_id, source_refs=ref), "bool", source_refs=ref)], 
+                        source_refs=ref), source_refs=ref)
+
         loop_cond = BinaryOp(op=BinaryOperator.NOTEQ, left=stop_cond_var_cast,
                     right=LiteralValue(ScalarType.BOOLEAN, True, ["Python", "3.8", "boolean"], ref), source_refs=ref)
 
@@ -1003,7 +1024,7 @@ class PyASTToCAST():
                 Var(Name(name=stop_cond_name, id=stop_cond_id, source_refs=ref), "bool", source_refs=ref)], 
                 source_refs=ref), source_refs=ref)
 
-        return [iter_var, stop_cond_var, Loop(expr=loop_cond, body=[loop_assign] + body, source_refs=ref)]
+        return [Loop(init=[iter_var, first_next], expr=loop_cond, body=body + [loop_assign], source_refs=ref)]
 
     @visit.register
     def visit_FunctionDef(self, node: ast.FunctionDef, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -1497,6 +1518,7 @@ class PyASTToCAST():
         # Visit all the nodes and make a Module object out of them
         body = []
         funcs = []
+        self.module_stack.append(node)
         for piece in node.body:
             # Defer visiting function defs until all global vars are processed
             if isinstance(piece, ast.FunctionDef):
@@ -1538,6 +1560,7 @@ class PyASTToCAST():
             to_add = self.visit(piece, curr_scope_id_dict, {})
             body.extend(to_add)
 
+        self.module_stack.pop()
         return Module(name=self.filenames[-1].split(".")[0], body=body, source_refs=None)
 
     @visit.register
@@ -1981,7 +2004,7 @@ class PyASTToCAST():
         curr_scope_id_dict = copy.deepcopy(curr_scope_copy)
         
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        return [Loop(expr=test, body=body, source_refs=ref)]
+        return [Loop(init=[], expr=test, body=body, source_refs=ref)]
 
     @visit.register
     def visit_With(self, node: ast.With, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
