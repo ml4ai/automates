@@ -21,8 +21,10 @@ from automates.model_assembly.gromet.metadata import (
     TextualDocumentCollection,
     TextualDocumentReference,
     TextDefinition,
+    TextParameter,
     EquationDefinition,
     EquationExtraction,
+    EquationParameter,
     TextExtraction,
     GrometCreation,
     CodeCollection,
@@ -321,19 +323,51 @@ def parse_metadata(obj):
 
         metadata = equation_definition
     elif metadata_type == "equation_parameter":
-        # TODO EquationParameter
-        pass
+        equation_parameter = EquationParameter(metadata_type=metadata_type, provenance=provenance)
+        
+        equation_parameter.equation_extraction = EquationExtraction()
+        equation_parameter.equation_extraction.source_type = obj["equation_extraction"]["source_type"]
+        equation_parameter.equation_extraction.document_reference_uid = obj["equation_extraction"]["document_reference_uid"]
+        equation_parameter.equation_extraction.equation_number = obj["equation_extraction"]["equation_number"]
+
+        equation_parameter.value = LiteralValue()
+        equation_parameter.value.value_type = obj["value"]["value_type"]
+        equation_parameter.value.value = obj["value"]["value"]
+
+        if "variable_identifier" in obj:
+            equation_parameter.variable_identifier = obj["variable_identifier"]
+
+        metadata = equation_parameter
     elif metadata_type == "text_definition":
         text_definition = TextDefinition(metadata_type=metadata_type, provenance=provenance)
 
         # Required fields
+        text_definition.text_extraction = TextExtraction()
+        text_definition.text_extraction.document_reference_uid = obj["text_extraction"]["document_reference_uid"]
+        text_definition.text_extraction.page = obj["text_extraction"]["page"]
+        text_definition.text_extraction.block = obj["text_extraction"]["block"]
+        text_definition.text_extraction.char_begin = obj["text_extraction"]["char_begin"]
+        text_definition.text_extraction.char_end = obj["text_extraction"]["char_end"]
+
         text_definition.variable_identifier = obj["variable_identifier"]
         text_definition.variable_definition = obj["variable_definition"]
         
-        # TODO: Create text extraction
-        
         metadata = text_definition
     elif metadata_type == "text_parameter":
-        #TODO TextParameter
-        pass
+        text_parameter = TextParameter(metadata_type=metadata_type, provenance=provenance)
+
+        text_parameter.text_extraction = TextExtraction()
+        text_parameter.text_extraction.document_reference_uid = obj["text_extraction"]["document_reference_uid"]
+        text_parameter.text_extraction.page = obj["text_extraction"]["page"]
+        text_parameter.text_extraction.block = obj["text_extraction"]["block"]
+        text_parameter.text_extraction.char_begin = obj["text_extraction"]["char_begin"]
+        text_parameter.text_extraction.char_end = obj["text_extraction"]["char_end"]
+
+        text_parameter.value = LiteralValue()
+        text_parameter.value.value_type = obj["value"]["value_type"]
+        text_parameter.value.value = obj["value"]["value"]
+
+        text_parameter.variable_identifier = obj["variable_identifier"]
+
+        metadata = text_parameter
     return metadata
