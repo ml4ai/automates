@@ -8,6 +8,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     IFBODY,
     IFEXPR,
     LOOP_VAR_UPDATED_VERSION,
+    LOOPINIT,
     LOOPBODY,
     LOOPEXPR,
     VAR_EXIT_VERSION,
@@ -328,6 +329,25 @@ class GrfnVarCreationPass:
                 exit_fullid = build_fullid(var_name, id, exit_version, exit_scopestr)
                 self.pipeline_state.alias_grfn_vars(exit_fullid, expr_fullid)
 
+    def alias_loop_init_highest_vers(self, node:AnnCastLoop):
+        """
+        Precondition: This should be called after visiting loop-init.
+
+        Aliases highest version variables from the loop init to
+        `LOOP_VAR_UPDATED_VERSION` variables.
+        """
+        con_scopestr = con_scope_to_str(node.con_scope)
+
+        # alias `LOOP_VAR_UPDATED_VERSION` modified variables 
+        # to the highest version occuring the loop body
+        updated_version = LOOP_VAR_UPDATED_VERSION
+        for id, var_name in node.modified_vars.items():
+            init_version = node.init_highest_var_vers[id]
+            init_scopestr = con_scopestr + CON_STR_SEP + LOOPINIT
+            init_fullid = build_fullid(var_name, id, init_version, init_scopestr)
+            updated_fullid = build_fullid(var_name, id, updated_version, con_scopestr)
+            self.pipeline_state.alias_grfn_vars(updated_fullid, init_fullid)
+
     def alias_loop_body_highest_vers(self, node:AnnCastLoop):
         """
         Precondition: This should be called after visiting loop-body.
@@ -490,9 +510,13 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_loop(self, node: AnnCastLoop):
         self.create_grfn_vars_loop(node)
+        if len(node.init) > 0:
+            self.alias_loop_init_highest_vers(node)
         self.alias_loop_expr_highest_vers(node)
         self.alias_loop_body_highest_vers(node)
         # visit children
+        if len(node.init) > 0:
+            self.visit_node_list(node.init)
         self.visit(node.expr)
         self.setup_loop_condition(node)
         self.visit_node_list(node.body)

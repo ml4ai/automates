@@ -152,9 +152,10 @@ class CastToAnnotatedCastVisitor():
 
     @_visit.register
     def visit_loop(self, node: Loop):
+        init = self.visit_node_list(node.init)
         expr = self.visit(node.expr)
         body = self.visit_node_list(node.body)
-        return AnnCastLoop(expr,body, node.source_refs)
+        return AnnCastLoop(init,expr,body, node.source_refs)
 
     @_visit.register
     def visit_model_break(self, node: ModelBreak):

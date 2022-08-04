@@ -10,6 +10,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     ELSEBODY,
     IFBODY,
     IFEXPR,
+    LOOPINIT,
     LOOPBODY,
     LOOPEXPR,
     MODULE_SCOPE,
@@ -402,6 +403,13 @@ class ContainerScopePass:
         loopscope = self.next_loop_scope(enclosing_con_scope)
         self.initialize_con_scope_data(loopscope, node)
         node.con_scope = loopscope
+        
+        if len(node.init) > 0:
+            # Additional modifications to support the loop init body
+            loopinitscope = loopscope + [LOOPINIT]        
+            self.initialize_con_scope_data(loopinitscope, node)
+            init_src_ref = self.visit_node_list(node.init, base_func_scopestr, loopinitscope, assign_side)
+
         # we store an additional ContainerData for the loop expression, but
         # we store the Loop node in `self.con_str_to_node`         
         loopexprscope = loopscope + [LOOPEXPR]
@@ -412,7 +420,10 @@ class ContainerScopePass:
         body_src_ref = self.visit_node_list(node.body, base_func_scopestr, loopbodyscope, assign_side)
 
         # store GrfnContainerSrcRef for this loop
-        node.grfn_con_src_ref = combine_grfn_con_src_refs([expr_src_ref, body_src_ref])
+        if len(node.init) > 0:
+            node.grfn_con_src_ref = combine_grfn_con_src_refs([init_src_ref, expr_src_ref, body_src_ref])
+        else:
+            node.grfn_con_src_ref = combine_grfn_con_src_refs([expr_src_ref, body_src_ref])
         # return the children GrfnContainerSrcRef
         return node.grfn_con_src_ref
 
