@@ -105,7 +105,7 @@ class GrometFNModule(object):
     def attributes(self):
         """Gets the attributes of this GrometFNModule.  # noqa: E501
 
-        (sum-type) Array of TypedValues. Currently expect:<br> (1) other GrometFN (type = FN)<br> (2) references to imports (type = IMPORT)   # noqa: E501
+        (sum-type) Array of TypedValues. Currently expect:<br> (1) other GrometFN (type = \"FN\")<br> (2) references to ImportReference (type = \"IMPORT\")   # noqa: E501
 
         :return: The attributes of this GrometFNModule.  # noqa: E501
         :rtype: list[TypedValue]
@@ -116,7 +116,7 @@ class GrometFNModule(object):
     def attributes(self, attributes):
         """Sets the attributes of this GrometFNModule.
 
-        (sum-type) Array of TypedValues. Currently expect:<br> (1) other GrometFN (type = FN)<br> (2) references to imports (type = IMPORT)   # noqa: E501
+        (sum-type) Array of TypedValues. Currently expect:<br> (1) other GrometFN (type = \"FN\")<br> (2) references to ImportReference (type = \"IMPORT\")   # noqa: E501
 
         :param attributes: The attributes of this GrometFNModule.  # noqa: E501
         :type: list[TypedValue]

@@ -30,7 +30,7 @@ class GrometPort(object):
     swagger_types = {
         'id': 'int',
         'name': 'str',
-        'box': 'GrometBox',
+        'box': 'int',
         'metadata': 'Metadata'
     }
 
@@ -105,9 +105,10 @@ class GrometPort(object):
     def box(self):
         """Gets the box of this GrometPort.  # noqa: E501
 
+        Index to the Box that the Port belongs to.  # noqa: E501
 
         :return: The box of this GrometPort.  # noqa: E501
-        :rtype: GrometBox
+        :rtype: int
         """
         return self._box
 
@@ -115,9 +116,10 @@ class GrometPort(object):
     def box(self, box):
         """Sets the box of this GrometPort.
 
+        Index to the Box that the Port belongs to.  # noqa: E501
 
         :param box: The box of this GrometPort.  # noqa: E501
-        :type: GrometBox
+        :type: int
         """
 
         self._box = box
