@@ -29,7 +29,7 @@ class TextDefinition(Metadata):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'metadata_type': 'object',
+        'metadata_type': 'str',
         'text_extraction': 'TextExtraction',
         'variable_identifier': 'str',
         'variable_definition': 'str'
@@ -46,7 +46,7 @@ class TextDefinition(Metadata):
     if hasattr(Metadata, "attribute_map"):
         attribute_map.update(Metadata.attribute_map)
 
-    def __init__(self, metadata_type=None, text_extraction=None, variable_identifier=None, variable_definition=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, metadata_type='text_definition', text_extraction=None, variable_identifier=None, variable_definition=None, *args, **kwargs):  # noqa: E501
         """TextDefinition - a model defined in Swagger"""  # noqa: E501
         self._metadata_type = None
         self._text_extraction = None
@@ -66,7 +66,7 @@ class TextDefinition(Metadata):
 
 
         :return: The metadata_type of this TextDefinition.  # noqa: E501
-        :rtype: object
+        :rtype: str
         """
         return self._metadata_type
 
@@ -76,7 +76,7 @@ class TextDefinition(Metadata):
 
 
         :param metadata_type: The metadata_type of this TextDefinition.  # noqa: E501
-        :type: object
+        :type: str
         """
 
         self._metadata_type = metadata_type

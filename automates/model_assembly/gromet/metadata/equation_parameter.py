@@ -29,7 +29,7 @@ class EquationParameter(Metadata):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'metadata_type': 'object',
+        'metadata_type': 'str',
         'equation_extraction': 'EquationExtraction',
         'variable_identifier': 'str',
         'value': 'LiteralValue'
@@ -46,7 +46,7 @@ class EquationParameter(Metadata):
     if hasattr(Metadata, "attribute_map"):
         attribute_map.update(Metadata.attribute_map)
 
-    def __init__(self, metadata_type=None, equation_extraction=None, variable_identifier=None, value=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, metadata_type='equation_parameter', equation_extraction=None, variable_identifier=None, value=None, *args, **kwargs):  # noqa: E501
         """EquationParameter - a model defined in Swagger"""  # noqa: E501
         self._metadata_type = None
         self._equation_extraction = None
@@ -67,7 +67,7 @@ class EquationParameter(Metadata):
 
 
         :return: The metadata_type of this EquationParameter.  # noqa: E501
-        :rtype: object
+        :rtype: str
         """
         return self._metadata_type
 
@@ -77,7 +77,7 @@ class EquationParameter(Metadata):
 
 
         :param metadata_type: The metadata_type of this EquationParameter.  # noqa: E501
-        :type: object
+        :type: str
         """
 
         self._metadata_type = metadata_type

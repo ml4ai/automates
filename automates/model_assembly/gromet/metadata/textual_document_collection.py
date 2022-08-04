@@ -29,7 +29,7 @@ class TextualDocumentCollection(Metadata):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'metadata_type': 'object',
+        'metadata_type': 'str',
         'documents': 'list[TextualDocumentReference]'
     }
     if hasattr(Metadata, "swagger_types"):
@@ -42,7 +42,7 @@ class TextualDocumentCollection(Metadata):
     if hasattr(Metadata, "attribute_map"):
         attribute_map.update(Metadata.attribute_map)
 
-    def __init__(self, metadata_type=None, documents=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, metadata_type='textual_document_collection', documents=None, *args, **kwargs):  # noqa: E501
         """TextualDocumentCollection - a model defined in Swagger"""  # noqa: E501
         self._metadata_type = None
         self._documents = None
@@ -58,7 +58,7 @@ class TextualDocumentCollection(Metadata):
 
 
         :return: The metadata_type of this TextualDocumentCollection.  # noqa: E501
-        :rtype: object
+        :rtype: str
         """
         return self._metadata_type
 
@@ -68,7 +68,7 @@ class TextualDocumentCollection(Metadata):
 
 
         :param metadata_type: The metadata_type of this TextualDocumentCollection.  # noqa: E501
-        :type: object
+        :type: str
         """
 
         self._metadata_type = metadata_type

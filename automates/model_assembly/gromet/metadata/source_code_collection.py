@@ -46,7 +46,7 @@ class SourceCodeCollection(Metadata):
     if hasattr(Metadata, "attribute_map"):
         attribute_map.update(Metadata.attribute_map)
 
-    def __init__(self, metadata_type='code_collection', name=None, global_reference_id=None, files=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, metadata_type='source_code_collection', name=None, global_reference_id=None, files=None, *args, **kwargs):  # noqa: E501
         """SourceCodeCollection - a model defined in Swagger"""  # noqa: E501
         self._metadata_type = None
         self._name = None
