@@ -29,7 +29,7 @@ class LiteralValue(object):
     """
     swagger_types = {
         'value_type': 'str',
-        'value': 'str'
+        'value': 'object'
     }
 
     attribute_map = {
@@ -74,10 +74,10 @@ class LiteralValue(object):
     def value(self):
         """Gets the value of this LiteralValue.  # noqa: E501
 
-        The value as a string. To get the literal value, interpret string according to value_type.   # noqa: E501
+        The value as an object representing the value. Interpret the value object according to the value_type.   # noqa: E501
 
         :return: The value of this LiteralValue.  # noqa: E501
-        :rtype: str
+        :rtype: object
         """
         return self._value
 
@@ -85,10 +85,10 @@ class LiteralValue(object):
     def value(self, value):
         """Sets the value of this LiteralValue.
 
-        The value as a string. To get the literal value, interpret string according to value_type.   # noqa: E501
+        The value as an object representing the value. Interpret the value object according to the value_type.   # noqa: E501
 
         :param value: The value of this LiteralValue.  # noqa: E501
-        :type: str
+        :type: object
         """
 
         self._value = value
