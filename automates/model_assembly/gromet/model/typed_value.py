@@ -29,23 +29,28 @@ class TypedValue(object):
     """
     swagger_types = {
         'type': 'str',
-        'value': 'object'
+        'value': 'object',
+        'index': 'int'
     }
 
     attribute_map = {
         'type': 'type',
-        'value': 'value'
+        'value': 'value',
+        'index': 'index'
     }
 
-    def __init__(self, type=None, value=None):  # noqa: E501
+    def __init__(self, type=None, value=None, index=None):  # noqa: E501
         """TypedValue - a model defined in Swagger"""  # noqa: E501
         self._type = None
         self._value = None
+        self._index = None
         self.discriminator = None
         if type is not None:
             self.type = type
         if value is not None:
             self.value = value
+        if index is not None:
+            self.index = value
 
     @property
     def type(self):
@@ -90,6 +95,14 @@ class TypedValue(object):
         """
 
         self._value = value
+
+    @property
+    def index(self):
+        return self._index
+
+    @index.setter
+    def index(self, index):
+        self._index = index
 
     def to_dict(self):
         """Returns the model properties as a dict"""

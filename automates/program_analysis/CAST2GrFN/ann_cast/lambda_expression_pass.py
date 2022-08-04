@@ -359,6 +359,9 @@ class LambdaExpressionPass:
         # top interface lambda
         node.top_interface_lambda = lambda_for_loop_top_interface(node.top_interface_initial, 
                                                                  node.top_interface_updated)
+        # init lambda
+        if len(node.init) > 0:
+            loop_init = self.visit_node_list(node.init)
 
         # condition lambda
         loop_expr = self.visit(node.expr)

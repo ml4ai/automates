@@ -215,6 +215,7 @@ class GrfnAssignmentPass:
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, add_to: typing.Dict):
+        self.visit_node_list(node.init, add_to)
         self.visit(node.expr, add_to)
         self.visit_node_list(node.body, add_to)
 

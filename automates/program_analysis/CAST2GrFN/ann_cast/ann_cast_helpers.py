@@ -30,6 +30,7 @@ FULLID_SEP = ":"
 LOOPBODY = "loop-body"
 ELSEBODY = "else-body"
 IFBODY = "if-body"
+LOOPINIT = "loop-init"
 LOOPEXPR = "loop-expr"
 IFEXPR = "if-expr"
 
