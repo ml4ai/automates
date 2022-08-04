@@ -29,27 +29,23 @@ class GrometCreation(Metadata):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'metadata_type': 'str',
-        'timestamp': 'str'
+        'metadata_type': 'str'
     }
     if hasattr(Metadata, "swagger_types"):
         swagger_types.update(Metadata.swagger_types)
 
     attribute_map = {
-        'metadata_type': 'metadata_type',
-        'timestamp': 'timestamp'
+        'metadata_type': 'metadata_type'
     }
     if hasattr(Metadata, "attribute_map"):
         attribute_map.update(Metadata.attribute_map)
 
-    def __init__(self, metadata_type='gromet_creation', timestamp=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, metadata_type='gromet_creation', *args, **kwargs):  # noqa: E501
         """GrometCreation - a model defined in Swagger"""  # noqa: E501
         self._metadata_type = None
-        self._timestamp = None
         self.discriminator = None
         if metadata_type is not None:
             self.metadata_type = metadata_type
-        self.timestamp = timestamp
         Metadata.__init__(self, *args, **kwargs)
 
     @property
@@ -72,31 +68,6 @@ class GrometCreation(Metadata):
         """
 
         self._metadata_type = metadata_type
-
-    @property
-    def timestamp(self):
-        """Gets the timestamp of this GrometCreation.  # noqa: E501
-
-        Creation timestamp  # noqa: E501
-
-        :return: The timestamp of this GrometCreation.  # noqa: E501
-        :rtype: str
-        """
-        return self._timestamp
-
-    @timestamp.setter
-    def timestamp(self, timestamp):
-        """Sets the timestamp of this GrometCreation.
-
-        Creation timestamp  # noqa: E501
-
-        :param timestamp: The timestamp of this GrometCreation.  # noqa: E501
-        :type: str
-        """
-        if timestamp is None:
-            raise ValueError("Invalid value for `timestamp`, must not be `None`")  # noqa: E501
-
-        self._timestamp = timestamp
 
     def to_dict(self):
         """Returns the model properties as a dict"""
