@@ -76,8 +76,8 @@ def insert_gromet_object(t: List, obj):
 
 def generate_provenance():
     timestamp = str(datetime.fromtimestamp(time()))
-    return Provenance(method="SKEMA_Program_Analysis", timestamp=timestamp)
-
+    method_name = "skema_code2fn_program_analysis"
+    return Provenance(method=method_name, timestamp=timestamp)
 
 def comp_name_nodes(n1, n2):
     if not isinstance(n1, AnnCastName):
@@ -136,6 +136,7 @@ class ToGrometPass:
         pipeline_state.gromet_collection = self.gromet_module
 
     def create_source_code_reference(self, ref_info):
+        #return None # Uncomment this when we want metadata
         if ref_info == None:
             return None
 
