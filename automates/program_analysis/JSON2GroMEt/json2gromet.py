@@ -129,11 +129,11 @@ def parse_function_network(obj):
                 for entry in contents:
                     gromet_loop = GrometBoxLoop()
                     #bl has two components: condition and body
-                    condition = entry["condition"]
+                    condition = entry["condition"][0]
                     gromet_loop.condition = [GrometBoxFunction(function_type=condition["function_type"], contents=condition["contents"])]
 
-                    body = entry["body"]
-                    gromet_loop.body = [GrometBoxFunction(function_type=body["function_type"], body=condition["contents"])]
+                    body = entry["body"][0]
+                    gromet_loop.body = [GrometBoxFunction(function_type=body["function_type"], contents=condition["contents"])]
 
                     # Check for existence of metadata in each entry.
                     if "metadata" in entry:
@@ -142,9 +142,9 @@ def parse_function_network(obj):
                             gromet_loop.metadata.append(parse_metadata(metadata))
 
                     if function_network.bc:
-                        function_network.bc.append(gromet_conditional)
+                        function_network.bc.append(gromet_loop)
                     else:
-                        function_network.bc = [gromet_conditional]  
+                        function_network.bc = [gromet_loop]  
             elif table.startswith("p") or table.startswith("o"):
                 for entry in contents:
                     gromet_port = GrometPort()
