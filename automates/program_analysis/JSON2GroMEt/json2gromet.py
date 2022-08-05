@@ -27,14 +27,15 @@ from automates.model_assembly.gromet.metadata import (
     EquationParameter,
     TextExtraction,
     GrometCreation,
-    CodeCollection,
+    SourceCodeCollection,
     CodeFileReference
 
 )
 from automates.model_assembly.gromet.model.gromet_type import GrometType
 from automates.model_assembly.gromet.model.typed_value import TypedValue
- 
-def JsonToGromet(path):
+
+
+def json_to_gromet(path):
     # Read JSON from file
     with open(path) as f:
         json_string = f.read()
@@ -258,12 +259,12 @@ def parse_metadata(obj):
         
         metadata = gromet_creation
     elif metadata_type == "code_collection":
-        code_collection = CodeCollection(metadata_type=metadata_type, provenance=provenance)
+        code_collection = SourceCodeCollection(metadata_type=metadata_type, provenance=provenance)
 
         # Required fields
         code_collection.global_reference_id = obj["global_reference_id"]
         
-        # CodeCollection.files is a list of CodeFileReference objects
+        # SourceCodeCollection.files is a list of CodeFileReference objects
         code_collection.files = []
         for f in obj["files"]:
             code_file_reference = CodeFileReference()
