@@ -76,8 +76,8 @@ def insert_gromet_object(t: List, obj):
 
 def generate_provenance():
     timestamp = datetime.fromtimestamp(time()) 
-    return Provenance(method="SKEMA_Program_Analysis", timestamp=timestamp)
-
+    method_name = "skema_code2fn_program_analysis"
+    return Provenance(method=method_name, timestamp=timestamp)
 
 def comp_name_nodes(n1, n2):
     if not isinstance(n1, AnnCastName):
@@ -136,6 +136,7 @@ class ToGrometPass:
         pipeline_state.gromet_collection = self.gromet_module
 
     def create_source_code_reference(self, ref_info):
+        #return None # Uncomment this when we want metadata
         if ref_info == None:
             return None
 
@@ -1118,7 +1119,7 @@ class ToGrometPass:
         # Have a FN constructor to build the GroMEt FN
         # and pass this FN to maintain a 'nesting' approach (boxes within boxes)
         # instead of passing a GrFNSubgraph through the visitors
-        new_gromet = GrometFN(metadata=GrometCreation(provenance=generate_provenance(), timestamp=""))
+        new_gromet = GrometFN(metadata=GrometCreation(provenance=generate_provenance()))
 
         # Initialize the Gromet module's SourceCodeCollection of CodeFileReferences
         code_file_references = [CodeFileReference(uid=uuid.uuid4(), name=file_name, path="")]
