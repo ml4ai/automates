@@ -637,14 +637,18 @@ class CASTToAGraphVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: AnnCastLoop):
-        """Visits Loop nodes. We visit the conditional expression and the
+        """Visits Loop nodes. We visit the initial statements, the conditional expression and the
         body of the loop, and connect them to this node in the graph.
         This node's UID is returned."""
         expr = self.visit(node.expr)
+        init = []
         body = []
+        if len(node.init) > 0:
+            init = self.visit_list(node.init)
         if len(node.body) > 0:
             body = self.visit_list(node.body)
         node_uid = uuid.uuid4()
+        init_uid = uuid.uuid4()
         test_uid = uuid.uuid4()
         body_uid = uuid.uuid4()
 
@@ -659,8 +663,13 @@ class CASTToAGraphVisitor(CASTVisitor):
         loop_label = f"{loop_label}\n{top_iface_init_vars}\n{top_iface_updt_vars}\n{top_iface_out_vars}"
         loop_label = f"{loop_label}\n{bot_iface_in_vars}\n{bot_iface_out_vars}"
         self.G.add_node(node_uid, label=loop_label)
+        self.G.add_node(init_uid, label="Init")
         self.G.add_node(test_uid, label="Test")
         self.G.add_node(body_uid, label="Body")
+
+        self.G.add_edge(node_uid, init_uid)
+        for n in init:
+            self.G.add_edge(init_uid, n)
 
         self.G.add_edge(node_uid, test_uid)
         self.G.add_edge(test_uid, expr)

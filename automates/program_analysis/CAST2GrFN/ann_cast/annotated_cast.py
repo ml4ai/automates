@@ -556,8 +556,9 @@ class AnnCastLiteralValue(AnnCastNode):
 
 
 class AnnCastLoop(AnnCastNode):
-    def __init__(self, expr, body, source_refs):
+    def __init__(self, init, expr, body, source_refs):
         super().__init__(self)
+        self.init = init
         self.expr = expr
         self.body = body
         self.source_refs = source_refs
@@ -577,6 +578,7 @@ class AnnCastLoop(AnnCastNode):
         self.bot_interface_vars: typing.Dict[int, str] = {}
 
         # dicts mapping Name id to highest version at end of "block"
+        self.init_highest_var_vers = {}
         self.expr_highest_var_vers = {}
         self.body_highest_var_vers = {}
 
@@ -609,6 +611,7 @@ class AnnCastLoop(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
+        result["init"] = [node.to_dict() for node in self.init]
         result["expr"] = self.expr.to_dict()
         result["body"] = [node.to_dict() for node in self.body]
         result["con_scope"] = self.con_scope

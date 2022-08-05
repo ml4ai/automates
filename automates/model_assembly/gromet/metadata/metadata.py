@@ -28,47 +28,18 @@ class Metadata(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'metadata_type': 'str',
         'provenance': 'Provenance'
     }
 
     attribute_map = {
-        'metadata_type': 'metadata_type',
         'provenance': 'provenance'
     }
 
-    def __init__(self, metadata_type=None, provenance=None):  # noqa: E501
+    def __init__(self, provenance=None):  # noqa: E501
         """Metadata - a model defined in Swagger"""  # noqa: E501
-        self._metadata_type = None
         self._provenance = None
         self.discriminator = None
-        self.metadata_type = metadata_type
         self.provenance = provenance
-
-    @property
-    def metadata_type(self):
-        """Gets the metadata_type of this Metadata.  # noqa: E501
-
-        Type of metadata.  # noqa: E501
-
-        :return: The metadata_type of this Metadata.  # noqa: E501
-        :rtype: str
-        """
-        return self._metadata_type
-
-    @metadata_type.setter
-    def metadata_type(self, metadata_type):
-        """Sets the metadata_type of this Metadata.
-
-        Type of metadata.  # noqa: E501
-
-        :param metadata_type: The metadata_type of this Metadata.  # noqa: E501
-        :type: str
-        """
-        if metadata_type is None:
-            raise ValueError("Invalid value for `metadata_type`, must not be `None`")  # noqa: E501
-
-        self._metadata_type = metadata_type
 
     @property
     def provenance(self):

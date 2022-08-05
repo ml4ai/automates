@@ -29,8 +29,8 @@ class GrometWire(object):
     """
     swagger_types = {
         'name': 'str',
-        'src': 'GrometPort',
-        'tgt': 'GrometPort',
+        'src': 'int',
+        'tgt': 'int',
         'metadata': 'Metadata'
     }
 
@@ -82,9 +82,10 @@ class GrometWire(object):
     def src(self):
         """Gets the src of this GrometWire.  # noqa: E501
 
+        Index to the source Port of the Wire.  # noqa: E501
 
         :return: The src of this GrometWire.  # noqa: E501
-        :rtype: GrometPort
+        :rtype: int
         """
         return self._src
 
@@ -92,9 +93,10 @@ class GrometWire(object):
     def src(self, src):
         """Sets the src of this GrometWire.
 
+        Index to the source Port of the Wire.  # noqa: E501
 
         :param src: The src of this GrometWire.  # noqa: E501
-        :type: GrometPort
+        :type: int
         """
 
         self._src = src
@@ -103,9 +105,10 @@ class GrometWire(object):
     def tgt(self):
         """Gets the tgt of this GrometWire.  # noqa: E501
 
+        Index to the target Port of the Wire.  # noqa: E501
 
         :return: The tgt of this GrometWire.  # noqa: E501
-        :rtype: GrometPort
+        :rtype: int
         """
         return self._tgt
 
@@ -113,9 +116,10 @@ class GrometWire(object):
     def tgt(self, tgt):
         """Sets the tgt of this GrometWire.
 
+        Index to the target Port of the Wire.  # noqa: E501
 
         :param tgt: The tgt of this GrometWire.  # noqa: E501
-        :type: GrometPort
+        :type: int
         """
 
         self._tgt = tgt

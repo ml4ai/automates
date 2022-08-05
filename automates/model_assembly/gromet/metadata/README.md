@@ -33,7 +33,7 @@ following:
       ```
    must be changed to:
       ```
-      from metadata import Metadata
+      from automates.model_assembly.gromet.metadata.metadata import Metadata
       ```
    This change must be made manually for any file that import the Metadata 
    module. This includes (as of v0.1.0) the following files:
@@ -47,7 +47,7 @@ following:
    - `text_parameter.py`
    - `textual_document_collection.py`
 
-3. After copying over data models files, you can now delete `$OUTPUT_PATH` 
+4. After copying over data models files, you can now delete `$OUTPUT_PATH` 
    directory tree (e.g.: `$ rm -rf client`).
    And if you are updating the metadata model in the master, you can add, 
    commit, push the updated metadata model files.

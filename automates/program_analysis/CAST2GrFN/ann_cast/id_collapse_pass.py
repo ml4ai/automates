@@ -158,6 +158,7 @@ class IdCollapsePass:
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, at_module_scope):
+        self.visit_node_list(node.init, at_module_scope)
         self.visit(node.expr, at_module_scope)
         self.visit_node_list(node.body, at_module_scope)
 

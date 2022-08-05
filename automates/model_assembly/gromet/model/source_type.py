@@ -27,7 +27,7 @@ class SourceType(object):
     GROMET = "GROMET"
     SOURCE_FILE = "SOURCE_FILE"
     REPOSITORY = "REPOSITORY"
-    LIBRARY = "LIBRARY"
+    WEB = "WEB"
     """
     Attributes:
       swagger_types (dict): The key is attribute name

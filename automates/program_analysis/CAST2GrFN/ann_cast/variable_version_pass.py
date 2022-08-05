@@ -11,6 +11,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     IFBODY,
     IFEXPR,
     LOOP_VAR_UPDATED_VERSION,
+    LOOPINIT,
     LOOPBODY,
     LOOPEXPR,
     VAR_EXIT_VERSION,
@@ -1093,8 +1094,15 @@ class VariableVersionPass:
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, assign_lhs: bool):
         # Initialize scope_to_highest_var_version
+        if len(node.init) > 0:
+            init_scopestr = con_scope_to_str(node.con_scope + [LOOPINIT])
         expr_scopestr = con_scope_to_str(node.con_scope + [LOOPEXPR])
         body_scopestr = con_scope_to_str(node.con_scope + [LOOPBODY])
+
+        # Initialize LoopInit
+        # create versions 0 of any modified or accessed variables
+        if len(node.init) > 0:
+            self.init_highest_var_vers_dict(init_scopestr, node.used_vars.keys())
 
         # Initialize LoopExpr
         # create versions 0 of any modified or accessed variables
@@ -1105,10 +1113,14 @@ class VariableVersionPass:
         self.init_highest_var_vers_dict(body_scopestr, node.used_vars.keys())
 
         # visit children
+        if len(node.init) > 0:
+            self.visit_node_list(node.init, assign_lhs)
         self.visit(node.expr, assign_lhs)
         self.visit_node_list(node.body, assign_lhs)
 
         # store highest var version
+        if len(node.init) > 0:
+            node.init_highest_var_vers = self.con_scope_to_highest_var_vers[init_scopestr]
         node.expr_highest_var_vers = self.con_scope_to_highest_var_vers[expr_scopestr]
         node.body_highest_var_vers = self.con_scope_to_highest_var_vers[body_scopestr]
 
@@ -1118,6 +1130,8 @@ class VariableVersionPass:
         # DEBUG printing
         if self.pipeline_state.PRINT_DEBUGGING_INFO:
             print(f"\nFor LOOP: {con_scope_to_str(node.con_scope)}")
+            if len(node.init) > 0:
+                print(f"  LoopHighestVers: {node.init_highest_var_vers}")
             print(f"  ExprHighestVers: {node.expr_highest_var_vers}")
             print(f"  BodyHighestVers: {node.body_highest_var_vers}")
 

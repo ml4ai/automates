@@ -28,53 +28,26 @@ class EquationExtraction(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'metadata_type': 'str',
         'source_type': 'str',
         'document_reference_uid': 'str',
         'equation_number': 'int'
     }
 
     attribute_map = {
-        'metadata_type': 'metadata_type',
         'source_type': 'source_type',
         'document_reference_uid': 'document_reference_uid',
         'equation_number': 'equation_number'
     }
 
-    def __init__(self, metadata_type='equation_extraction', source_type='equation_document_source', document_reference_uid=None, equation_number=None):  # noqa: E501
+    def __init__(self, source_type='equation_document_source', document_reference_uid=None, equation_number=None):  # noqa: E501
         """EquationExtraction - a model defined in Swagger"""  # noqa: E501
-        self._metadata_type = None
         self._source_type = None
         self._document_reference_uid = None
         self._equation_number = None
         self.discriminator = None
-        if metadata_type is not None:
-            self.metadata_type = metadata_type
         self.source_type = source_type
         self.document_reference_uid = document_reference_uid
-        if equation_number is not None:
-            self.equation_number = equation_number
-
-    @property
-    def metadata_type(self):
-        """Gets the metadata_type of this EquationExtraction.  # noqa: E501
-
-
-        :return: The metadata_type of this EquationExtraction.  # noqa: E501
-        :rtype: str
-        """
-        return self._metadata_type
-
-    @metadata_type.setter
-    def metadata_type(self, metadata_type):
-        """Sets the metadata_type of this EquationExtraction.
-
-
-        :param metadata_type: The metadata_type of this EquationExtraction.  # noqa: E501
-        :type: str
-        """
-
-        self._metadata_type = metadata_type
+        self.equation_number = equation_number
 
     @property
     def source_type(self):
@@ -144,6 +117,8 @@ class EquationExtraction(object):
         :param equation_number: The equation_number of this EquationExtraction.  # noqa: E501
         :type: int
         """
+        if equation_number is None:
+            raise ValueError("Invalid value for `equation_number`, must not be `None`")  # noqa: E501
 
         self._equation_number = equation_number
 

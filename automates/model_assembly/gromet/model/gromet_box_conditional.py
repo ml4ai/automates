@@ -62,7 +62,7 @@ class GrometBoxConditional(GrometBox):
     def condition(self):
         """Gets the condition of this GrometBoxConditional.  # noqa: E501
 
-        The index to the entry in the BF table (array) of *this* GrometFN representing the conditional condition.   # noqa: E501
+        The index to the entry in the `bf` table (array) of *this* GrometFN representing the conditional condition.   # noqa: E501
 
         :return: The condition of this GrometBoxConditional.  # noqa: E501
         :rtype: int
@@ -73,7 +73,7 @@ class GrometBoxConditional(GrometBox):
     def condition(self, condition):
         """Sets the condition of this GrometBoxConditional.
 
-        The index to the entry in the BF table (array) of *this* GrometFN representing the conditional condition.   # noqa: E501
+        The index to the entry in the `bf` table (array) of *this* GrometFN representing the conditional condition.   # noqa: E501
 
         :param condition: The condition of this GrometBoxConditional.  # noqa: E501
         :type: int
@@ -85,7 +85,7 @@ class GrometBoxConditional(GrometBox):
     def body_if(self):
         """Gets the body_if of this GrometBoxConditional.  # noqa: E501
 
-        The index to the entry in the BF table (array) of *this* GrometFN representing the body (Function) of IF-branch of the conditional.   # noqa: E501
+        The index to the entry in the `bf` table (array) of *this* GrometFN representing the body (Function) of IF-branch of the conditional.   # noqa: E501
 
         :return: The body_if of this GrometBoxConditional.  # noqa: E501
         :rtype: int
@@ -96,7 +96,7 @@ class GrometBoxConditional(GrometBox):
     def body_if(self, body_if):
         """Sets the body_if of this GrometBoxConditional.
 
-        The index to the entry in the BF table (array) of *this* GrometFN representing the body (Function) of IF-branch of the conditional.   # noqa: E501
+        The index to the entry in the `bf` table (array) of *this* GrometFN representing the body (Function) of IF-branch of the conditional.   # noqa: E501
 
         :param body_if: The body_if of this GrometBoxConditional.  # noqa: E501
         :type: int
@@ -108,7 +108,7 @@ class GrometBoxConditional(GrometBox):
     def body_else(self):
         """Gets the body_else of this GrometBoxConditional.  # noqa: E501
 
-        The index to the entry in the BF table (array) of *this* GrometFN representing the body (Function) of ELSE-branch of the conditional.   # noqa: E501
+        The index to the entry in the `bf` table (array) of *this* GrometFN representing the body (Function) of ELSE-branch of the conditional.   # noqa: E501
 
         :return: The body_else of this GrometBoxConditional.  # noqa: E501
         :rtype: int
@@ -119,7 +119,7 @@ class GrometBoxConditional(GrometBox):
     def body_else(self, body_else):
         """Sets the body_else of this GrometBoxConditional.
 
-        The index to the entry in the BF table (array) of *this* GrometFN representing the body (Function) of ELSE-branch of the conditional.   # noqa: E501
+        The index to the entry in the `bf` table (array) of *this* GrometFN representing the body (Function) of ELSE-branch of the conditional.   # noqa: E501
 
         :param body_else: The body_else of this GrometBoxConditional.  # noqa: E501
         :type: int

@@ -28,7 +28,6 @@ class TextExtraction(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'metadata_type': 'str',
         'document_reference_uid': 'str',
         'page': 'int',
         'block': 'int',
@@ -37,7 +36,6 @@ class TextExtraction(object):
     }
 
     attribute_map = {
-        'metadata_type': 'metadata_type',
         'document_reference_uid': 'document_reference_uid',
         'page': 'page',
         'block': 'block',
@@ -45,43 +43,19 @@ class TextExtraction(object):
         'char_end': 'char_end'
     }
 
-    def __init__(self, metadata_type='text_extraction', document_reference_uid=None, page=None, block=None, char_begin=None, char_end=None):  # noqa: E501
+    def __init__(self, document_reference_uid=None, page=None, block=None, char_begin=None, char_end=None):  # noqa: E501
         """TextExtraction - a model defined in Swagger"""  # noqa: E501
-        self._metadata_type = None
         self._document_reference_uid = None
         self._page = None
         self._block = None
         self._char_begin = None
         self._char_end = None
         self.discriminator = None
-        if metadata_type is not None:
-            self.metadata_type = metadata_type
         self.document_reference_uid = document_reference_uid
         self.page = page
         self.block = block
         self.char_begin = char_begin
         self.char_end = char_end
-
-    @property
-    def metadata_type(self):
-        """Gets the metadata_type of this TextExtraction.  # noqa: E501
-
-
-        :return: The metadata_type of this TextExtraction.  # noqa: E501
-        :rtype: str
-        """
-        return self._metadata_type
-
-    @metadata_type.setter
-    def metadata_type(self, metadata_type):
-        """Sets the metadata_type of this TextExtraction.
-
-
-        :param metadata_type: The metadata_type of this TextExtraction.  # noqa: E501
-        :type: str
-        """
-
-        self._metadata_type = metadata_type
 
     @property
     def document_reference_uid(self):
