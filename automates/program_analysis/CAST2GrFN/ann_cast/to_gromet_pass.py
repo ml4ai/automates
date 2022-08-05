@@ -75,7 +75,7 @@ def insert_gromet_object(t: List, obj):
     return t
 
 def generate_provenance():
-    timestamp = datetime.fromtimestamp(time()) 
+    timestamp = str(datetime.fromtimestamp(time()))
     method_name = "skema_code2fn_program_analysis"
     return Provenance(method=method_name, timestamp=timestamp)
 
@@ -145,7 +145,7 @@ class ToGrometPass:
         col_begin = ref_info.col_start
         col_end = ref_info.col_end
 
-        file_uid = self.gromet_module.metadata[0].files[0].uid
+        file_uid = str(self.gromet_module.metadata[0].files[0].uid)
         return SourceCodeReference(provenance=generate_provenance(), code_file_reference_uid=file_uid, line_begin=line_begin, line_end=line_end, col_begin=col_begin, col_end=col_end)
 
     def set_index(self):
@@ -1122,7 +1122,7 @@ class ToGrometPass:
         new_gromet = GrometFN(metadata=GrometCreation(provenance=generate_provenance()))
 
         # Initialize the Gromet module's SourceCodeCollection of CodeFileReferences
-        code_file_references = [CodeFileReference(uid=uuid.uuid4(), name=file_name, path="")]
+        code_file_references = [CodeFileReference(uid=str(uuid.uuid4()), name=file_name, path="")]
         self.gromet_module.metadata = [SourceCodeCollection(provenance=generate_provenance(), name="", global_reference_id="", files=code_file_references)]
         
         # Outer module box only has name 'module' and its type 'Module'
