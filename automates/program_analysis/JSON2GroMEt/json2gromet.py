@@ -215,7 +215,15 @@ def parse_metadata(obj):
             
         metadata = source_code_reference
     elif metadata_type == "source_code_data_type":
-        source_code_data_type = SourceCodeDataType(metadata_type=metadata_type, provenance=provenance, source_language=obj["source_language"], source_language_version=obj["source_language_version"], data_type=obj["data_type"])
+        source_code_data_type = SourceCodeDataType(metadata_type=metadata_type, provenance=provenance) 
+
+        if "source_language" in obj:
+            source_code_data_type.source_language = obj["source_language"]
+        if "source_language_version" in obj:
+            source_code_data_type.source_language_version = obj["source_language_version"]
+        if "data_type" in obj:
+            source_code_data_type.data_type = obj["data_type"]
+
         metadata = source_code_data_type
     elif metadata_type == "source_code_loop_init":
         source_code_loop_init = SourceCodeLoopInit(metadata_type=metadata_type, provenance=provenance)
@@ -244,23 +252,24 @@ def parse_metadata(obj):
     elif metadata_type == "gromet_creation":
         gromet_creation = GrometCreation(metadata_type=metadata_type, provenance=provenance)
         metadata = gromet_creation
-    elif metadata_type == "code_collection":
+    elif metadata_type == "source_code_collection":
         code_collection = SourceCodeCollection(metadata_type=metadata_type, provenance=provenance)
 
-        # Required fields
-        code_collection.global_reference_id = obj["global_reference_id"]
+        if "global_reference_id" in obj:
+            code_collection.global_reference_id = obj["global_reference_id"]
         
         # SourceCodeCollection.files is a list of CodeFileReference objects
-        code_collection.files = []
-        for f in obj["files"]:
-            code_file_reference = CodeFileReference()
-            if "uid" in f:
-                code_file_reference.uid = f["uid"]
-            if "name" in f:
-                code_file_reference.name = f["name"]
-            if "path" in f:
-                code_file_reference.path = f["path"]
-            code_collection.files.append(code_file_reference)
+        if "files" in obj:
+            code_collection.files = []
+            for f in obj["files"]:
+                code_file_reference = CodeFileReference()
+                if "uid" in f:
+                    code_file_reference.uid = f["uid"]
+                if "name" in f:
+                    code_file_reference.name = f["name"]
+                if "path" in f:
+                    code_file_reference.path = f["path"]
+                code_collection.files.append(code_file_reference)
 
         # Optional fields 
         if "name" in obj:
