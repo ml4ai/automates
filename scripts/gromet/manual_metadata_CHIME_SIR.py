@@ -38,6 +38,10 @@ PATH_CHIME_SIR_GROMET = \
     os.path.join(ROOT_CHIME_SIR_GROMET,
                  'CHIME_SIR_while_loop--Gromet-FN-auto.json')
 
+PATH_CHIME_SIR_GROMET_V2 = \
+    os.path.join(ROOT_CHIME_SIR_GROMET,
+                 'CHIME_SIR_while_loop--Gromet-FN-auto_v2.json')
+
 PATH_CHIME_SIR_GROMET_MLINK = \
     os.path.join(ROOT_CHIME_SIR_GROMET,
                  'CHIME_SIR_while_loop--Gromet-FN-auto-manual-link.json')
@@ -108,4 +112,15 @@ def add_metadata_CHIME_SIR():
     print(gromet_fn_module_2)
 
 
-add_metadata_CHIME_SIR()
+def read_write_read():
+    gromet_fn_module = json_to_gromet(PATH_CHIME_SIR_GROMET)
+    with open(f"{PATH_CHIME_SIR_GROMET_V2}", "w") as f:
+        gromet_fn_module_dict = gromet_fn_module.to_dict()
+        f.write(dictionary_to_gromet_json(del_nulls(gromet_fn_module_dict)))
+    gromet_fn_module_2 = json_to_gromet(PATH_CHIME_SIR_GROMET_V2)
+    print(gromet_fn_module_2)
+
+
+# add_metadata_CHIME_SIR()
+
+read_write_read()
