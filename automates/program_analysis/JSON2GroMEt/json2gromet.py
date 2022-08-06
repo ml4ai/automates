@@ -27,14 +27,15 @@ from automates.model_assembly.gromet.metadata import (
     EquationParameter,
     TextExtraction,
     GrometCreation,
-    CodeCollection,
+    SourceCodeCollection,
     CodeFileReference
 
 )
 from automates.model_assembly.gromet.model.gromet_type import GrometType
 from automates.model_assembly.gromet.model.typed_value import TypedValue
- 
-def JsonToGromet(path):
+
+
+def json_to_gromet(path):
     # Read JSON from file
     with open(path) as f:
         json_string = f.read()
@@ -105,15 +106,11 @@ def parse_function_network(obj):
             elif table == "bc":
                 for entry in contents:
                     gromet_conditional = GrometBoxConditional()
+        
                     # bc has three different components: condition, body_if, and body_else
-                    condition = entry["condition"][0]
-                    gromet_conditional.condition = [GrometBoxFunction(function_type=condition["function_type"], contents=condition["contents"])]
-
-                    body_if = entry["body_if"][0]
-                    gromet_conditional.body_if = [GrometBoxFunction(function_type=body_if["function_type"], contents=body_if["contents"])]
-
-                    body_else = entry["body_else"][0]
-                    gromet_conditional.body_else = [GrometBoxFunction(function_type=body_else["function_type"], contents=body_else["contents"])]
+                    gromet_conditional.condition = entry["condition"]
+                    gromet_conditional.body_if = entry["body_if"]
+                    gromet_conditional.body_else = entry["body_else"]
 
                     # Check for existence of metadata in each entry.
                     if "metadata" in entry:
@@ -129,11 +126,8 @@ def parse_function_network(obj):
                 for entry in contents:
                     gromet_loop = GrometBoxLoop()
                     #bl has two components: condition and body
-                    condition = entry["condition"][0]
-                    gromet_loop.condition = [GrometBoxFunction(function_type=condition["function_type"], contents=condition["contents"])]
-
-                    body = entry["body"][0]
-                    gromet_loop.body = [GrometBoxFunction(function_type=body["function_type"], contents=condition["contents"])]
+                    gromet_loop.condition = entry["condition"]
+                    gromet_loop.body = entry["body"]
 
                     # Check for existence of metadata in each entry.
                     if "metadata" in entry:
@@ -203,27 +197,32 @@ def parse_metadata(obj):
 
     # Load type specific data
     if metadata_type == "source_code_reference":
+        # Due to Swagger auto generated schema, all fields marked required must be non-None in the constructor
         source_code_reference = SourceCodeReference(metadata_type=metadata_type, provenance=provenance)
-
-        # Required fields
-        source_code_reference.code_file_reference_uid=obj["code_file_reference_uid"]
-        source_code_reference.line_begin=obj["line_begin"]
         
-        # Optional fields
+        # TODO: For now all fields will be optional
+        # We check for the existence of optional fields, and then add them to the object if they exist
+        if "code_file_reference_uid" in obj:
+            source_code_reference.code_file_reference_uid = obj["code_file_reference_uid"]
+        if "line_begin" in obj:
+            source_code_reference.line_begin = obj["line_begin"]
         if "line_end" in obj:
             source_code_reference.line_end=obj["line_end"]
         if "col_begin" in obj:
             source_code_reference.col_begin=obj["col_begin"]
         if "col_end" in obj:   
             source_code_reference.col_end=obj["col_end"]
+            
         metadata = source_code_reference
     elif metadata_type == "source_code_data_type":
-        source_code_data_type = SourceCodeDataType(metadata_type=metadata_type, provenance=provenance)
+        source_code_data_type = SourceCodeDataType(metadata_type=metadata_type, provenance=provenance) 
 
-        # Required fields
-        source_code_data_type.source_language=obj["source_language"]
-        source_code_data_type.source_language_version=obj["source_language_version"]
-        source_code_data_type.data_type=obj["data_type"]
+        if "source_language" in obj:
+            source_code_data_type.source_language = obj["source_language"]
+        if "source_language_version" in obj:
+            source_code_data_type.source_language_version = obj["source_language_version"]
+        if "data_type" in obj:
+            source_code_data_type.data_type = obj["data_type"]
 
         metadata = source_code_data_type
     elif metadata_type == "source_code_loop_init":
@@ -252,28 +251,25 @@ def parse_metadata(obj):
         metadata = source_code_loop_update
     elif metadata_type == "gromet_creation":
         gromet_creation = GrometCreation(metadata_type=metadata_type, provenance=provenance)
-
-        # Required fields
-        gromet_creation.timestamp = obj["timestamp"]
-        
         metadata = gromet_creation
-    elif metadata_type == "code_collection":
-        code_collection = CodeCollection(metadata_type=metadata_type, provenance=provenance)
+    elif metadata_type == "source_code_collection":
+        code_collection = SourceCodeCollection(metadata_type=metadata_type, provenance=provenance)
 
-        # Required fields
-        code_collection.global_reference_id = obj["global_reference_id"]
+        if "global_reference_id" in obj:
+            code_collection.global_reference_id = obj["global_reference_id"]
         
-        # CodeCollection.files is a list of CodeFileReference objects
-        code_collection.files = []
-        for f in obj["files"]:
-            code_file_reference = CodeFileReference()
-            if "uid" in f:
-                code_file_reference.uid = f["uid"]
-            if "name" in f:
-                code_file_reference.name = f["name"]
-            if "path" in f:
-                code_file_reference.path = f["path"]
-            code_collection.files.append(code_file_reference)
+        # SourceCodeCollection.files is a list of CodeFileReference objects
+        if "files" in obj:
+            code_collection.files = []
+            for f in obj["files"]:
+                code_file_reference = CodeFileReference()
+                if "uid" in f:
+                    code_file_reference.uid = f["uid"]
+                if "name" in f:
+                    code_file_reference.name = f["name"]
+                if "path" in f:
+                    code_file_reference.path = f["path"]
+                code_collection.files.append(code_file_reference)
 
         # Optional fields 
         if "name" in obj:
