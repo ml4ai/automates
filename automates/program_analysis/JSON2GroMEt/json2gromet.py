@@ -135,10 +135,10 @@ def parse_function_network(obj):
                         for metadata in entry["metadata"]:
                             gromet_loop.metadata.append(parse_metadata(metadata))
 
-                    if function_network.bc:
-                        function_network.bc.append(gromet_loop)
+                    if function_network.bl:
+                        function_network.bl.append(gromet_loop)
                     else:
-                        function_network.bc = [gromet_loop]  
+                        function_network.bl = [gromet_loop]  
             elif table.startswith("p") or table.startswith("o"):
                 for entry in contents:
                     gromet_port = GrometPort()
