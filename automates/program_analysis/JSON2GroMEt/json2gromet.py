@@ -108,9 +108,12 @@ def parse_function_network(obj):
                     gromet_conditional = GrometBoxConditional()
         
                     # bc has three different components: condition, body_if, and body_else
-                    gromet_conditional.condition = entry["condition"]
-                    gromet_conditional.body_if = entry["body_if"]
-                    gromet_conditional.body_else = entry["body_else"]
+                    if "condition" in entry:
+                        gromet_conditional.condition = entry["condition"]
+                    if "body_if" in entry:
+                        gromet_conditional.body_if = entry["body_if"]
+                    if "body_else" in entry:
+                        gromet_conditional.body_else = entry["body_else"]
 
                     # Check for existence of metadata in each entry.
                     if "metadata" in entry:
@@ -126,8 +129,10 @@ def parse_function_network(obj):
                 for entry in contents:
                     gromet_loop = GrometBoxLoop()
                     #bl has two components: condition and body
-                    gromet_loop.condition = entry["condition"]
-                    gromet_loop.body = entry["body"]
+                    if "condition" in entry:
+                        gromet_loop.condition = entry["condition"]
+                    if "body" in entry:
+                        gromet_loop.body = entry["body"]
 
                     # Check for existence of metadata in each entry.
                     if "metadata" in entry:
@@ -135,10 +140,10 @@ def parse_function_network(obj):
                         for metadata in entry["metadata"]:
                             gromet_loop.metadata.append(parse_metadata(metadata))
 
-                    if function_network.bc:
-                        function_network.bc.append(gromet_loop)
+                    if function_network.bl:
+                        function_network.bl.append(gromet_loop)
                     else:
-                        function_network.bc = [gromet_loop]  
+                        function_network.bl = [gromet_loop]  
             elif table.startswith("p") or table.startswith("o"):
                 for entry in contents:
                     gromet_port = GrometPort()
@@ -189,8 +194,6 @@ def parse_function_network(obj):
         
         return function_network
 def parse_metadata(obj):
-    metadata = None
-
     # All metadata have a provenance and metadata_type
     provenance = Provenance(method=obj["provenance"]["method"], timestamp=obj["provenance"]["timestamp"])
     metadata_type = obj["metadata_type"]
@@ -198,9 +201,9 @@ def parse_metadata(obj):
     # Load type specific data
     if metadata_type == "source_code_reference":
         # Due to Swagger auto generated schema, all fields marked required must be non-None in the constructor
+        # TODO: Update required fields. For now all fields will be optional
         source_code_reference = SourceCodeReference(metadata_type=metadata_type, provenance=provenance)
         
-        # TODO: For now all fields will be optional
         # We check for the existence of optional fields, and then add them to the object if they exist
         if "code_file_reference_uid" in obj:
             source_code_reference.code_file_reference_uid = obj["code_file_reference_uid"]
@@ -213,7 +216,7 @@ def parse_metadata(obj):
         if "col_end" in obj:   
             source_code_reference.col_end=obj["col_end"]
             
-        metadata = source_code_reference
+        return source_code_reference
     elif metadata_type == "source_code_data_type":
         source_code_data_type = SourceCodeDataType(metadata_type=metadata_type, provenance=provenance) 
 
@@ -224,11 +227,10 @@ def parse_metadata(obj):
         if "data_type" in obj:
             source_code_data_type.data_type = obj["data_type"]
 
-        metadata = source_code_data_type
+        return source_code_data_type
     elif metadata_type == "source_code_loop_init":
         source_code_loop_init = SourceCodeLoopInit(metadata_type=metadata_type, provenance=provenance)
 
-        # Optional fields
         if "source_language" in obj:
             source_code_loop_init.source_language=obj["source_language"]
         if "source_language_version" in obj:
@@ -236,11 +238,10 @@ def parse_metadata(obj):
         if "loop_name" in obj:
             source_code_loop_init.loop_name = obj["loop_name"]
 
-        metadata = source_code_loop_init
+        return source_code_loop_init
     elif metadata_type == "source_code_loop_update":
         source_code_loop_update = SourceCodeLoopUpdate(metadata_type=metadata_type, provenance=provenance)
     
-        # Optional fields
         if "source_language" in obj:
             source_code_loop_update.source_language=obj["source_language"]
         if "source_language_version" in obj:
@@ -248,122 +249,134 @@ def parse_metadata(obj):
         if "loop_name" in obj:
             source_code_loop_update.loop_name = obj["loop_name"]
 
-        metadata = source_code_loop_update
+        return source_code_loop_update
     elif metadata_type == "gromet_creation":
         gromet_creation = GrometCreation(metadata_type=metadata_type, provenance=provenance)
-        metadata = gromet_creation
+        return gromet_creation
     elif metadata_type == "source_code_collection":
-        code_collection = SourceCodeCollection(metadata_type=metadata_type, provenance=provenance)
+        source_code_collection = SourceCodeCollection(metadata_type=metadata_type, provenance=provenance)
 
         if "global_reference_id" in obj:
-            code_collection.global_reference_id = obj["global_reference_id"]
-        
-        # SourceCodeCollection.files is a list of CodeFileReference objects
-        if "files" in obj:
-            code_collection.files = []
-            for f in obj["files"]:
+            source_code_collection.global_reference_id = obj["global_reference_id"]
+        if "files" in obj: 
+            #SourceCodeCollection.files is a list of CodeFileReference objects
+            source_code_collection.files = []
+            for file in obj["files"]:
                 code_file_reference = CodeFileReference()
-                if "uid" in f:
-                    code_file_reference.uid = f["uid"]
-                if "name" in f:
-                    code_file_reference.name = f["name"]
-                if "path" in f:
-                    code_file_reference.path = f["path"]
-                code_collection.files.append(code_file_reference)
-
-        # Optional fields 
+                if "uid" in file:
+                    code_file_reference.uid = file["uid"]
+                if "name" in file:
+                    code_file_reference.name = file["name"]
+                if "path" in file:
+                    code_file_reference.path = file["path"]
+                source_code_collection.files.append(code_file_reference) 
         if "name" in obj:
-            code_collection.name = obj["name"]
+            source_code_collection.name = obj["name"]
 
-        metadata = code_collection
+        return source_code_collection
     elif metadata_type == "textual_document_collection":
         textual_document_collection = TextualDocumentCollection(metadata_type=metadata_type, provenance=provenance)
         
-        # TextualDocumentCollection.documents is a list of TextualDocumentReference objects
-        textual_document_collection.documents = []
-        for d in obj["documents"]:
-            textual_document_reference = TextualDocumentReference()
+        if "documents" in obj:
+            # TextualDocumentCollection.documents is a list of TextualDocumentReference objects
+            textual_document_collection.documents = []
+            for document in obj["documents"]:
+                textual_document_reference = TextualDocumentReference()
 
-            textual_document_reference.uid = d["uid"]
-            textual_document_reference.global_reference_id = d["global_reference_id"]
-            
-            if "cosmos_id" in d:
-                textual_document_reference.cosmos_id = d["cosmos_id"]
-            if "cosmos_version_number" in d:
-                textual_document_reference.cosmos_version_number = d["cosmos_version_number"]
-            if "skema_id" in d:
-                textual_document_reference._skema_id = d["skema_id"]
-            if "skema_version_number" in d:
-                textual_document_reference._skema_version_number = d["skema_version_number"]
-            
-            # TODO: ADD BIBJSON field
-            # bibjson field is a bibjson object
-            #if "bibjson" in d:
-            #    textual_document_reference._skema_id = d["skema_id"]
-            textual_document_collection.documents.append(textual_document_reference)
-        metadata = textual_document_collection
+                if "uid" in document:
+                    textual_document_reference.uid = document["uid"]
+                if "global_reference_id" in document:
+                    textual_document_reference.global_reference_id = document["global_reference_id"]
+                if "cosmos_id" in document:
+                    textual_document_reference.cosmos_id = document["cosmos_id"]
+                if "cosmos_version_number" in document:
+                    textual_document_reference.cosmos_version_number = document["cosmos_version_number"]
+                if "skema_id" in document:
+                    textual_document_reference._skema_id = document["skema_id"]
+                if "skema_version_number" in document:
+                    textual_document_reference._skema_version_number = document["skema_version_number"]
+                
+                # TODO: ADD BIBJSON field
+                # bibjson field is a bibjson object
+                #if "bibjson" in d:
+                #    textual_document_reference._skema_id = d["skema_id"]
+                textual_document_collection.documents.append(textual_document_reference)
+        return textual_document_collection
     elif metadata_type == "equation_definition":
         equation_definition = EquationDefinition(metadata_type=metadata_type, provenance=provenance)
 
         # EquationDefinition.equation_extraction is an EquationExtraction object 
-        equation_definition.equation_extraction = EquationExtraction()
-        equation_definition.equation_extraction.source_type = obj["equation_extraction"]["source_type"]
-        equation_definition.equation_extraction.document_reference_uid = obj["equation_extraction"]["document_reference_uid"]
-        equation_definition.equation_extraction.equation_number = obj["equation_extraction"]["equation_number"]
-        
-        # Optional fields
+        if "equation_extraction" in obj:
+            equation_extraction = EquationExtraction()
+            if "source_type" in obj["equation_extraction"]:
+                equation_extraction.source_type = obj["equation_extraction"]["source_type"]
+            if "document_reference_uid" in obj["equation_extraction"]:
+                equation_extraction.document_reference_uid = obj["equation_extraction"]["document_reference_uid"]
+            if "equation_number" in obj["equation_extraction"]:
+                equation_extraction.equation_number = obj["equation_extraction"]["equation_number"]
+            equation_definition.equation_extraction = equation_extraction
         if "equation_mathml_source" in obj:
             equation_definition.equation_mathml_source = obj["equation_mathml_source"]
         if "equation_latex_source" in obj:
             equation_definition.equation_latex_source = obj["equation_latex_source"]
 
-        metadata = equation_definition
+        return equation_definition
     elif metadata_type == "equation_parameter":
         equation_parameter = EquationParameter(metadata_type=metadata_type, provenance=provenance)
         
-        equation_parameter.equation_extraction = EquationExtraction()
-        equation_parameter.equation_extraction.source_type = obj["equation_extraction"]["source_type"]
-        equation_parameter.equation_extraction.document_reference_uid = obj["equation_extraction"]["document_reference_uid"]
-        equation_parameter.equation_extraction.equation_number = obj["equation_extraction"]["equation_number"]
-
-        equation_parameter.value = LiteralValue()
-        equation_parameter.value.value_type = obj["value"]["value_type"]
-        equation_parameter.value.value = obj["value"]["value"]
-
+        if "equation_extraction" in obj:
+            equation_extraction = EquationExtraction()
+            if "source_type" in obj["equation_extraction"]:
+                equation_extraction.source_type = obj["equation_extraction"]["source_type"]
+            if "document_reference_uid" in obj["equation_extraction"]:
+                equation_extraction.document_reference_uid = obj["equation_extraction"]["document_reference_uid"]
+            if "equation_number" in obj["equation_extraction"]:
+                equation_extraction.equation_number = obj["equation_extraction"]["equation_number"]
+            equation_parameter.equation_extraction = equation_extraction
+        if "value" in obj:
+            value = LiteralValue()
+            value.value_type = obj["value"]["value_type"]
+            value.value = obj["value"]["value"]
+            equation_parameter.value = value
         if "variable_identifier" in obj:
             equation_parameter.variable_identifier = obj["variable_identifier"]
 
-        metadata = equation_parameter
+        return equation_parameter
     elif metadata_type == "text_definition":
         text_definition = TextDefinition(metadata_type=metadata_type, provenance=provenance)
 
-        # Required fields
-        text_definition.text_extraction = TextExtraction()
-        text_definition.text_extraction.document_reference_uid = obj["text_extraction"]["document_reference_uid"]
-        text_definition.text_extraction.page = obj["text_extraction"]["page"]
-        text_definition.text_extraction.block = obj["text_extraction"]["block"]
-        text_definition.text_extraction.char_begin = obj["text_extraction"]["char_begin"]
-        text_definition.text_extraction.char_end = obj["text_extraction"]["char_end"]
-
-        text_definition.variable_identifier = obj["variable_identifier"]
-        text_definition.variable_definition = obj["variable_definition"]
+        if "text_extraction" in obj:
+            text_extraction = TextExtraction()
+            text_extraction.document_reference_uid = obj["text_extraction"]["document_reference_uid"]
+            text_extraction.page = obj["text_extraction"]["page"]
+            text_extraction.block = obj["text_extraction"]["block"]
+            text_extraction.char_begin = obj["text_extraction"]["char_begin"]
+            text_extraction.char_end = obj["text_extraction"]["char_end"]
+            text_definition.text_extraction = text_extraction
+        if "variable_identifier" in obj:
+            text_definition.variable_identifier = obj["variable_identifier"]
+        if "variable_definition" in obj:
+            text_definition.variable_definition = obj["variable_definition"]
         
-        metadata = text_definition
+        return text_definition
     elif metadata_type == "text_parameter":
         text_parameter = TextParameter(metadata_type=metadata_type, provenance=provenance)
 
-        text_parameter.text_extraction = TextExtraction()
-        text_parameter.text_extraction.document_reference_uid = obj["text_extraction"]["document_reference_uid"]
-        text_parameter.text_extraction.page = obj["text_extraction"]["page"]
-        text_parameter.text_extraction.block = obj["text_extraction"]["block"]
-        text_parameter.text_extraction.char_begin = obj["text_extraction"]["char_begin"]
-        text_parameter.text_extraction.char_end = obj["text_extraction"]["char_end"]
+        if "text_extraction" in obj:
+            text_extraction = TextExtraction()
+            text_extraction.document_reference_uid = obj["text_extraction"]["document_reference_uid"]
+            text_extraction.page = obj["text_extraction"]["page"]
+            text_extraction.block = obj["text_extraction"]["block"]
+            text_extraction.char_begin = obj["text_extraction"]["char_begin"]
+            text_extraction.char_end = obj["text_extraction"]["char_end"]
+            text_parameter.text_extraction = text_extraction
+        if "value" in obj:
+            value = LiteralValue()
+            value.value_type = obj["value"]["value_type"]
+            value.value = obj["value"]["value"]
+            text_parameter.value = value
+        if "variable_identifier" in obj:
+            text_parameter.variable_identifier = obj["variable_identifier"]
 
-        text_parameter.value = LiteralValue()
-        text_parameter.value.value_type = obj["value"]["value_type"]
-        text_parameter.value.value = obj["value"]["value"]
-
-        text_parameter.variable_identifier = obj["variable_identifier"]
-
-        metadata = text_parameter
-    return metadata
+        return text_parameter
+    return None
