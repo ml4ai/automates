@@ -401,13 +401,14 @@ class ContainerScopePass:
         node.base_func_scopestr = base_func_scopestr
 
         loopscope = self.next_loop_scope(enclosing_con_scope)
+        print(f"-----------{loopscope}-----------")
         self.initialize_con_scope_data(loopscope, node)
         node.con_scope = loopscope
         
         if len(node.init) > 0:
             # Additional modifications to support the loop init body
             loopinitscope = loopscope + [LOOPINIT]        
-            self.initialize_con_scope_data(loopinitscope, node)
+            # self.initialize_con_scope_data(loopinitscope, node)
             init_src_ref = self.visit_node_list(node.init, base_func_scopestr, loopinitscope, assign_side)
 
         # we store an additional ContainerData for the loop expression, but

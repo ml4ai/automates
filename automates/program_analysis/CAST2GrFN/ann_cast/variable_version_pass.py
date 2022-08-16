@@ -1116,6 +1116,8 @@ class VariableVersionPass:
         if len(node.init) > 0:
             self.visit_node_list(node.init, assign_lhs)
         self.visit(node.expr, assign_lhs)
+        
+        print(node.used_vars)
         self.visit_node_list(node.body, assign_lhs)
 
         # store highest var version

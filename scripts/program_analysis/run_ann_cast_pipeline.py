@@ -23,6 +23,9 @@ def get_args():
     parser.add_argument("--grfn_2_2", 
             help="Generate GrFN 2.2 for the CAST-> Annotated Cast  -> GrFN pipeline",
             action="store_true")
+    parser.add_argument("--gromet",
+            help="Generates GroMEt using the AnnCAST. CAST -> AnnCast -> GroMEt",
+            action="store_true")
     parser.add_argument("cast_json", 
             help="input CAST.json file")
     options = parser.parse_args()
@@ -69,9 +72,9 @@ def main():
     # that the generated GrFN uuids will not be consistent with GrFN uuids
     # created during test runtime. So, do not use these GrFN jsons as expected 
     # json for testing
-    #agraph = CASTToAGraphVisitor(pipeline_state)
-    #pdf_file_name = f"{f_name}-AnnCast.pdf"
-    #agraph.to_pdf(pdf_file_name)
+    agraph = CASTToAGraphVisitor(pipeline_state)
+    pdf_file_name = f"{f_name}-AnnCast.pdf"
+    agraph.to_pdf(pdf_file_name)
 
     print("\nCalling GrfnVarCreationPass-------------------")
     GrfnVarCreationPass(pipeline_state)
@@ -81,28 +84,27 @@ def main():
 
     print("\nCalling LambdaExpressionPass-------------------")
     LambdaExpressionPass(pipeline_state)
+    
+    if args.gromet:
+        print("\nCalling ToGrometPass-----------------------")
+        ToGrometPass(pipeline_state)
 
-    #print("\nCalling ToGrometPass-----------------------")
-    #ToGrometPass(pipeline_state)
+        with open(f"{f_name}--Gromet-FN-auto.json","w") as f:
+            gromet_collection_dict = pipeline_state.gromet_collection.to_dict()
+            f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+    else:
+        print("\nCalling ToGrfnPass-------------------")
+        ToGrfnPass(pipeline_state)
+        grfn = pipeline_state.get_grfn()
+        grfn.to_json_file(f"{f_name}--AC-GrFN.json")
 
-    #with open(f"{f_name}--Gromet-FN-auto.json","w") as f:
-    #    gromet_collection_dict = pipeline_state.gromet_collection.to_dict()
-    #    f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+        grfn_agraph = grfn.to_AGraph()
+        grfn_agraph.draw(f"{f_name}--AC-GrFN.pdf", prog="dot")
 
-    # sys.exit()
-
-    print("\nCalling ToGrfnPass-------------------")
-    ToGrfnPass(pipeline_state)
-    grfn = pipeline_state.get_grfn()
-    grfn.to_json_file(f"{f_name}--AC-GrFN.json")
-
-    grfn_agraph = grfn.to_AGraph()
-    grfn_agraph.draw(f"{f_name}--AC-GrFN.pdf", prog="dot")
-
-    print("\nGenerating pickled AnnCast nodes-----------------")
-    pickled_file_name = f"{f_name}--AnnCast.pickled"
-    with open(pickled_file_name,"wb") as pkfile:
-        dill.dump(pipeline_state, pkfile)
+        print("\nGenerating pickled AnnCast nodes-----------------")
+        pickled_file_name = f"{f_name}--AnnCast.pickled"
+        with open(pickled_file_name,"wb") as pkfile:
+            dill.dump(pipeline_state, pkfile)
 
 
 if __name__ == "__main__":
