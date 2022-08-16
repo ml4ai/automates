@@ -321,8 +321,9 @@ class ToGrfnPass:
         uid = GenericNode.create_node_id()
         ns = "default-ns"
         scope = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
-        basename = scope
-        subgraph = GrFNSubgraph(uid, ns, scope, basename,
+        basename = node.func.name
+        basename_id = node.func.id
+        subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
                                 occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
