@@ -1,8 +1,5 @@
-from ast import Lambda
 import typing
 from functools import singledispatchmethod
-
-from numpy import isin
 
 from automates.model_assembly.metadata import LambdaType
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (

@@ -1,8 +1,6 @@
 from functools import singledispatchmethod
 import typing
 
-from numpy import ScalarType
-
 from automates.program_analysis.CAST2GrFN.cast import CAST
 
 from automates.program_analysis.CAST2GrFN.model.cast import (

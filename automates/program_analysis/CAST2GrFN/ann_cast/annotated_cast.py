@@ -1,9 +1,6 @@
 import typing
 import difflib
 
-from numpy import source
-
-
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
     Assignment,
@@ -33,7 +30,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     UnaryOp,
 #    ValueConstructor,
     Var,
-)
+)    
 
 from automates.model_assembly.networks import GroundedFunctionNetwork, VariableNode
 
