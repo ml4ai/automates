@@ -141,6 +141,7 @@ class LambdaType(AutoMATESBaseEnum):
     PACK = auto()
     OPERATOR = auto()
     LOOP_TOP_INTERFACE = auto()
+    UNPACK = auto()
 
     def __str__(self):
         return str(self.name)
@@ -164,6 +165,8 @@ class LambdaType(AutoMATESBaseEnum):
             return cls.INTERFACE
         elif type_str == "pack":
             return cls.PACK
+        elif type_str == "unpack":
+            return cls.UNPACK
         elif type_str == "extract":
             return cls.EXTRACT
         elif type_str == "loop_top_interface":

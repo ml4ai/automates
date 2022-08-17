@@ -8,6 +8,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     IFBODY,
     IFEXPR,
     LOOP_VAR_UPDATED_VERSION,
+    LOOPINIT,
     LOOPBODY,
     LOOPEXPR,
     VAR_EXIT_VERSION,
@@ -25,6 +26,10 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     make_loop_exit_name,
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.model.cast import ( 
+    ScalarType,
+    ValueConstructor,
+)
 
 
 class GrfnVarCreationPass:
@@ -324,6 +329,25 @@ class GrfnVarCreationPass:
                 exit_fullid = build_fullid(var_name, id, exit_version, exit_scopestr)
                 self.pipeline_state.alias_grfn_vars(exit_fullid, expr_fullid)
 
+    def alias_loop_init_highest_vers(self, node:AnnCastLoop):
+        """
+        Precondition: This should be called after visiting loop-init.
+
+        Aliases highest version variables from the loop init to
+        `LOOP_VAR_UPDATED_VERSION` variables.
+        """
+        con_scopestr = con_scope_to_str(node.con_scope)
+
+        # alias `LOOP_VAR_UPDATED_VERSION` modified variables 
+        # to the highest version occuring the loop body
+        updated_version = LOOP_VAR_UPDATED_VERSION
+        for id, var_name in node.modified_vars.items():
+            init_version = node.init_highest_var_vers[id]
+            init_scopestr = con_scopestr + CON_STR_SEP + LOOPINIT
+            init_fullid = build_fullid(var_name, id, init_version, init_scopestr)
+            updated_fullid = build_fullid(var_name, id, updated_version, con_scopestr)
+            self.pipeline_state.alias_grfn_vars(updated_fullid, init_fullid)
+
     def alias_loop_body_highest_vers(self, node:AnnCastLoop):
         """
         Precondition: This should be called after visiting loop-body.
@@ -399,7 +423,9 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment):
         self.visit(node.right)
-        assert isinstance(node.left, AnnCastVar)
+        # The AnnCastTuple is added to handle scenarios where an assignment
+        # is made by assigning to a tuple of values, as opposed to one singular value
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple), f"container_scope: visit_assigment: node.left is not AnnCastVar or AnnCastTuple it is {type(node.left)}"
         self.visit(node.left)
 
     @_visit.register
@@ -461,11 +487,36 @@ class GrfnVarCreationPass:
         self.visit_node_list(node.values)
 
     @_visit.register
+    def visit_literal_value(self, node: AnnCastLiteralValue):
+        if node.value_type == 'List[Any]':
+            # val has
+            # operator - string
+            # size - Var node or a LiteralValue node (for number)
+            # initial_value - LiteralValue node
+            val = node.value
+            
+            # visit size's anncast name node
+            self.visit(val.size) 
+
+            # List literal doesn't need to add any other changes
+            # to the anncast at this pass
+
+        elif node.value_type == ScalarType.INTEGER:
+            pass
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            pass
+        pass
+
+    @_visit.register
     def visit_loop(self, node: AnnCastLoop):
         self.create_grfn_vars_loop(node)
+        if len(node.init) > 0:
+            self.alias_loop_init_highest_vers(node)
         self.alias_loop_expr_highest_vers(node)
         self.alias_loop_body_highest_vers(node)
         # visit children
+        if len(node.init) > 0:
+            self.visit_node_list(node.init)
         self.visit(node.expr)
         self.setup_loop_condition(node)
         self.visit_node_list(node.body)
@@ -541,7 +592,7 @@ class GrfnVarCreationPass:
 
     @_visit.register
     def visit_tuple(self, node: AnnCastTuple):
-        pass
+        self.visit_node_list(node.values)
 
     @_visit.register
     def visit_unary_op(self, node: AnnCastUnaryOp):

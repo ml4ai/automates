@@ -15,6 +15,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Expr,
     FunctionDef,
     List,
+    LiteralValue,
     Loop,
     ModelBreak,
     ModelContinue,
@@ -23,6 +24,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+    ScalarType,
     Set,
     String,
     Subscript,
@@ -68,8 +70,8 @@ class CastToAnnotatedCastVisitor():
     def visit(self, node: AstNode) -> AnnCastNode:
         # print current node being visited.  
         # this can be useful for debugging 
-        class_name = node.__class__.__name__
-        print(f"\nProcessing node type {class_name}")
+        #class_name = node.__class__.__name__
+        #print(f"\nProcessing node type {class_name}")
         return self._visit(node)
 
     @singledispatchmethod
@@ -139,10 +141,22 @@ class CastToAnnotatedCastVisitor():
         return AnnCastList(values, node.source_refs)
 
     @_visit.register
+    def visit_literal_value(self, node: LiteralValue):
+        if node.value_type == 'List[Any]':
+            node.value.size = self.visit(node.value.size) # Turns the cast var into annCast
+            node.value.initial_value = self.visit(node.value.initial_value) # Turns the literalValue into annCast
+            return AnnCastLiteralValue(node.value_type, node.value, node.source_code_data_type, node.source_refs)
+        return AnnCastLiteralValue(node.value_type, node.value, node.source_code_data_type, node.source_refs)
+
+    @_visit.register
     def visit_loop(self, node: Loop):
+        if node.init != None:
+            init = self.visit_node_list(node.init)
+        else:
+            init = []
         expr = self.visit(node.expr)
         body = self.visit_node_list(node.body)
-        return AnnCastLoop(expr,body, node.source_refs)
+        return AnnCastLoop(init,expr,body, node.source_refs)
 
     @_visit.register
     def visit_model_break(self, node: ModelBreak):

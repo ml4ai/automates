@@ -277,6 +277,7 @@ def derived_type_with_default():
 #########################################################
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_crop_yield_pythonIR_generation(crop_yield_python_IR_test):
     with open(f"{DATA_DIR}/crop_yield.py", "r") as f:
         python_src = f.read()
@@ -290,42 +291,49 @@ def test_PETPT_pythonIR_generation(PETPT_python_IR_test):
     assert PETPT_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_io_test_pythonIR_generation(io_python_IR_test):
     with open(f"{DATA_DIR}/io-tests/iotest_05.py", "r") as f:
         python_src = f.read()
     assert io_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_array_pythonIR_generation(array_python_IR_test):
     with open(f"{DATA_DIR}/arrays/arrays-basic-06.py", "r") as f:
         python_src = f.read()
     assert array_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_do_while_pythonIR_generation(do_while_python_IR_test):
     with open(f"{DATA_DIR}/do-while/do_while_04.py", "r") as f:
         python_src = f.read()
     assert do_while_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_derived_type_pythonIR_generation(derived_type_python_IR_test):
     with open(f"{DATA_DIR}/derived-types/derived-types-04.py", "r") as f:
         python_src = f.read()
     assert derived_type_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_conditional_goto_pythonIR_generation(cond_goto_python_IR_test):
     with open(f"{DATA_DIR}/goto/goto_02.py", "r") as f:
         python_src = f.read()
     assert cond_goto_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_unconditional_goto_pythonIR_generation(uncond_goto_python_IR_test):
     with open(f"{DATA_DIR}/goto/goto_08.py", "r") as f:
         python_src = f.read()
     assert uncond_goto_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_unconditional_goto_pythonIR_generation(
     diff_level_goto_python_IR_test,
 ):
@@ -334,12 +342,14 @@ def test_unconditional_goto_pythonIR_generation(
     assert diff_level_goto_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_save_pythonIR_generation(save_python_IR_test):
     with open(f"{DATA_DIR}/save/simple_variables/save-02.py", "r") as f:
         python_src = f.read()
     assert save_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_module_pythonIR_generation(module_python_IR_test):
     src = module_python_IR_test[0]
     with open(f"{DATA_DIR}/modules/test_module_08.py", "r") as f:
@@ -347,12 +357,14 @@ def test_module_pythonIR_generation(module_python_IR_test):
     assert src[1][0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_cycle_exit_pythonIR_generation(cycle_exit_python_IR_test):
     with open(f"{DATA_DIR}/cycle/cycle_03.py", "r") as f:
         python_src = f.read()
     assert cycle_exit_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_continue_line_pythonIR_generation(continuation_lines_python_IR_test):
     with open(
         f"{DATA_DIR}/continuation_line/continuation-lines-01.py", "r"
@@ -361,6 +373,7 @@ def test_continue_line_pythonIR_generation(continuation_lines_python_IR_test):
     assert continuation_lines_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_continue_line_f90_pythonIR_generation(
     continuation_lines_f90_python_IR_test,
 ):
@@ -371,36 +384,42 @@ def test_continue_line_f90_pythonIR_generation(
     assert continuation_lines_f90_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_SIR_pythonIR_generation(SIR_python_IR_test):
     with open(f"{DATA_DIR}/SIR-Gillespie-SD_inline.py", "r") as f:
         python_src = f.read()
     assert SIR_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_array_to_func_pythonIR_generation(array_to_func_python_IR_test):
     with open(f"{DATA_DIR}/array_func_loop/array-to-func_06.py", "r") as f:
         python_src = f.read()
     assert array_to_func_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_strings_pythonIR_generation(strings_test):
     with open(f"{DATA_DIR}/strings/str06.py", "r") as f:
         python_src = f.read()
     assert strings_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_select_case_pythonIR_generation(select_case_python_IR_test):
     with open(f"{DATA_DIR}/select_case/select02.py", "r") as f:
         python_src = f.read()
     assert select_case_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_interface_pythonIR_generation(interface_python_IR_test):
     with open(f"{DATA_DIR}/interface/m_mymod.py", "r") as f:
         python_src = f.read()
     assert interface_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_multiple_interface_pythonIR_generation(
     multiple_interface_python_IR_test,
 ):
@@ -409,6 +428,7 @@ def test_multiple_interface_pythonIR_generation(
     assert multiple_interface_python_IR_test[0] == python_src
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_derived_type_with_default_pythonIR_generation(
     derived_type_with_default,
 ):
@@ -424,6 +444,7 @@ def test_derived_type_with_default_pythonIR_generation(
 ############################################################################
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_multidimensional_array_grfn_generation(multidimensional_array_test):
     with open(f"{DATA_DIR}/arrays/arrays-basic-06_AIR.json", "r") as f:
         grfn_dict = json.load(f)
@@ -437,18 +458,21 @@ def test_sir_gillespie_sd_multi_grfn_generation(sir_gillespie_sd_multi_test):
     assert sir_gillespie_sd_multi_test[0] == grfn_dict
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_derived_type_grfn_generation(derived_type_grfn_test):
     with open(f"{DATA_DIR}/derived-types/derived-types-04_AIR.json", "r") as f:
         grfn_dict = json.load(f)
     assert derived_type_grfn_test[0] == grfn_dict
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_derived_type_array_grfn_generation(derived_type_array_grfn_test):
     with open(f"{DATA_DIR}/derived-types/derived-types-02_AIR.json", "r") as f:
         grfn_dict = json.load(f)
     assert derived_type_array_grfn_test[0] == grfn_dict
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated")
 def test_select_case_grfn_generation(select_case_grfn_test):
     with open(f"{DATA_DIR}/select_case/select02_AIR.json", "r") as f:
         grfn_dict = json.load(f)

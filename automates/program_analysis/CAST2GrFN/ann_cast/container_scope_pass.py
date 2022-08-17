@@ -9,6 +9,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     ELSEBODY,
     IFBODY,
     IFEXPR,
+    LOOPINIT,
     LOOPBODY,
     LOOPEXPR,
     MODULE_SCOPE,
@@ -21,7 +22,10 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     var_dict_to_str,
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-
+from automates.program_analysis.CAST2GrFN.model.cast import ( 
+    ScalarType,
+    ValueConstructor,
+)
 
 class AssignSide(Enum):
     NEITHER = 0
@@ -185,8 +189,8 @@ class ContainerScopePass:
     ):
         # print current node being visited.  
         # this can be useful for debugging 
-        # class_name = node.__class__.__name__
-        # print(f"\nProcessing node type {class_name}")
+        #class_name = node.__class__.__name__
+        #print(f"\nProcessing node type {class_name}")
 
         children_src_ref = self._visit(node, base_func_scopestr, enclosing_con_scope, assign_side)
         if children_src_ref is None:
@@ -228,7 +232,9 @@ class ContainerScopePass:
         self, node: AnnCastAssignment, base_func_scopestr, enclosing_con_scope, assign_side
     ):
         right_src_ref = self.visit(node.right, base_func_scopestr, enclosing_con_scope, AssignSide.RIGHT)
-        assert isinstance(node.left, AnnCastVar)
+        # The AnnCastTuple is added to handle scenarios where an assignment
+        # is made by assigning to a tuple of values, as opposed to one singular value
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple), f"container_scope: visit_assigment: node.left is not AnnCastVar or AnnCastTuple it is {type(node.left)}"
         left_src_ref = self.visit(node.left, base_func_scopestr, enclosing_con_scope, AssignSide.LEFT)
 
         return combine_grfn_con_src_refs([right_src_ref, left_src_ref])
@@ -366,6 +372,27 @@ class ContainerScopePass:
         return self.visit_node_list(node.values, base_func_scopestr, enclosing_con_scope, assign_side)
 
     @_visit.register
+    def visit_literal_value(self, node: AnnCastLiteralValue, base_func_scopestr, enclosing_con_scope, assign_side):
+        if node.value_type == 'List[Any]':
+            # val has
+            # operator - string
+            # size - Var node or a LiteralValue node (for number)
+            # initial_value - LiteralValue node
+            val = node.value
+            
+            # visit size's anncast name node
+            self.visit(val.size, base_func_scopestr, enclosing_con_scope, assign_side) 
+
+            # List literal doesn't need to add any other changes
+            # to the anncast at this pass
+
+        elif node.value_type == ScalarType.INTEGER:
+            pass
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            pass
+        pass
+
+    @_visit.register
     def visit_loop(self, node: AnnCastLoop, base_func_scopestr, enclosing_con_scope, assign_side):
         # we believe the start of the container should not be on either side of an assignment
         assert(assign_side == AssignSide.NEITHER)
@@ -373,8 +400,16 @@ class ContainerScopePass:
         node.base_func_scopestr = base_func_scopestr
 
         loopscope = self.next_loop_scope(enclosing_con_scope)
+        # print(f"-----------{loopscope}-----------")
         self.initialize_con_scope_data(loopscope, node)
         node.con_scope = loopscope
+        
+        if len(node.init) > 0:
+            # Additional modifications to support the loop init body
+            loopinitscope = loopscope + [LOOPINIT]        
+            # self.initialize_con_scope_data(loopinitscope, node)
+            init_src_ref = self.visit_node_list(node.init, base_func_scopestr, loopinitscope, assign_side)
+
         # we store an additional ContainerData for the loop expression, but
         # we store the Loop node in `self.con_str_to_node`         
         loopexprscope = loopscope + [LOOPEXPR]
@@ -385,7 +420,10 @@ class ContainerScopePass:
         body_src_ref = self.visit_node_list(node.body, base_func_scopestr, loopbodyscope, assign_side)
 
         # store GrfnContainerSrcRef for this loop
-        node.grfn_con_src_ref = combine_grfn_con_src_refs([expr_src_ref, body_src_ref])
+        if len(node.init) > 0:
+            node.grfn_con_src_ref = combine_grfn_con_src_refs([init_src_ref, expr_src_ref, body_src_ref])
+        else:
+            node.grfn_con_src_ref = combine_grfn_con_src_refs([expr_src_ref, body_src_ref])
         # return the children GrfnContainerSrcRef
         return node.grfn_con_src_ref
 
@@ -506,9 +544,9 @@ class ContainerScopePass:
         pass
 
     @_visit.register
-    def visit_tuple(self, node: AnnCastTuple, assign_side):
-        pass
-
+    def visit_tuple(self, node: AnnCastTuple, base_func_scopestr, enclosing_con_scope, assign_side):
+        self.visit_node_list(node.values, base_func_scopestr, enclosing_con_scope, assign_side)
+        
     @_visit.register
     def visit_unary_op(self, node: AnnCastUnaryOp, base_func_scopestr, enclosing_con_scope, assign_side):
         return self.visit(node.value, base_func_scopestr, enclosing_con_scope, assign_side)

@@ -379,6 +379,54 @@ class LoopTopInterface(LambdaNode):
             "use_initial": self.use_initial
         }
 
+@dataclass(eq=False)
+class UnpackNode(LambdaNode):
+    """ An UnpackNode is used to represent the process of 'unpacking' a
+        sequence of variables in an assignment, for example 
+        x,y,z,w = foo(1,2,3)
+        The return value of foo is unpacked into variables x,y,z, and w 
+        This is a new operation that the GrFN execution handles differently
+        An UnpackNode does not contain a lambda expression
+    """
+
+    # input: A single tuple string name to unpack
+    inputs: str = ""
+    # output: A string holding a list of variable names
+    output: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict):
+        return {}
+
+    def to_dict(self) -> dict:
+        return {
+            "uid": self.uid,
+            "type": str(self.func_type),            
+            "inputs": self.inputs,
+            "output": self.output,
+            "metadata": [m.to_dict() for m in self.metadata]
+        }
+
+@dataclass(eq=False)
+class PackNode(LambdaNode):
+    # input: A single tuple string name to unpack
+    inputs: str = ""
+    # output: A string holding a list of variable names
+    output: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict):
+        return {}
+
+    def to_dict(self) -> dict:
+        return {
+            "uid": self.uid,
+            "type": str(self.func_type),            
+            "inputs": self.inputs,
+            "output": self.output,
+            "metadata": [m.to_dict() for m in self.metadata]
+        }
+
 @dataclass
 class HyperEdge:
     inputs: Iterable[VariableNode]
@@ -474,6 +522,7 @@ class GrFNSubgraph:
     namespace: str
     scope: str
     basename: str
+    basename_id: int
     occurrence_num: int
     parent: str
     # TODO: maybe uncomment
@@ -841,6 +890,7 @@ class GrFNSubgraph:
             data["namespace"],
             data["scope"],
             data["basename"],
+            data["basename_id"],
             data["occurrence_num"],
             data["parent"],
             type_str,
@@ -857,6 +907,7 @@ class GrFNSubgraph:
             "namespace": self.namespace,
             "scope": self.scope,
             "basename": self.basename,
+            "basename_id": self.basename_id,
             "occurrence_num": self.occurrence_num,
             "parent": self.parent,
             "type": self.type,

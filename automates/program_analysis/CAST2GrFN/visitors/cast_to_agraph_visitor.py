@@ -18,6 +18,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Expr,
     FunctionDef,
     List,
+    LiteralValue,
     Loop,
     ModelBreak,
     ModelContinue,
@@ -26,8 +27,10 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+    ScalarType,
     Set,
     String,
+    StructureType,
     SourceRef,
     Subscript,
     Tuple,
@@ -35,6 +38,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     UnaryOperator,
     VarType,
     Var,
+    ValueConstructor
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
@@ -425,7 +429,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         This node's UID is returned."""
         args = []
         body = []
-        print(node.name)
+        # print(node.name)
         if len(node.func_args) > 0:
             args = self.visit_list(node.func_args)
         if len(node.body) > 0:
@@ -464,7 +468,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         This node's UID is returned."""
         args = []
         body = []
-        print(node.name)
+        # print(node.name)
         if len(node.func_args) > 0:
             args = self.visit_list(node.func_args)
         if len(node.body) > 0:
@@ -528,17 +532,27 @@ class CASTToAGraphVisitor(CASTVisitor):
         body of the loop, and connect them to this node in the graph.
         This node's UID is returned."""
         expr = self.visit(node.expr)
+        init = []
         body = []
+        if node.init != None and len(node.init) > 0:
+            init = self.visit_list(node.init)
+
         if len(node.body) > 0:
             body = self.visit_list(node.body)
         node_uid = uuid.uuid4()
+        init_uid = uuid.uuid4()
         test_uid = uuid.uuid4()
         body_uid = uuid.uuid4()
 
         self.G.add_node(node_uid, label="Loop")
+        self.G.add_node(init_uid, label="Init")
         self.G.add_node(test_uid, label="Test")
         self.G.add_node(body_uid, label="Body")
 
+
+        self.G.add_edge(node_uid, init_uid)
+        for n in init:
+            self.G.add_edge(init_uid, n)
         self.G.add_edge(node_uid, test_uid)
         self.G.add_edge(test_uid, expr)
         self.G.add_edge(node_uid, body_uid)
@@ -548,15 +562,93 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
+    def _(self, node: AnnCastLiteralValue):
+        if node.value_type == ScalarType.INTEGER:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"Integer: {node.value}")
+            return node_uid
+        elif node.value_type == ScalarType.BOOLEAN:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"Boolean: {str(node.value)}")
+            return node_uid
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"abstractFloat: {node.value}")
+            return node_uid
+        elif node.value_type == StructureType.LIST:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"List: [...]")
+            return node_uid
+        elif node.value_type == "List[Any]":
+            node_uid = uuid.uuid4()
+            if isinstance(node.value, ValueConstructor):
+                op = node.value.operator
+                init_val = node.value.initial_value.value 
+                if isinstance(node.value.size, LiteralValue):
+                    size = node.value.size.value
+                    id = -1
+                else: 
+                    size = node.value.size.name
+                    id = node.value.size.id
+
+                #self.G.add_node(node_uid, label=f"List: Init_Val: [{init_val}], Size: {size} ")
+                self.G.add_node(node_uid, label=f"List: [{init_val}] {op} {size} (id: {id})")
+
+            return node_uid
+        else:
+            assert False, f"cast_to_agraph_visitor LiteralValue: type not supported yet {type(node)}"
+
+    @visit.register
+    def _(self, node: LiteralValue):
+        if node.value_type == ScalarType.INTEGER:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"Integer: {node.value}")
+            return node_uid
+        elif node.value_type == ScalarType.BOOLEAN:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"Boolean: {str(node.value)}")
+            return node_uid
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"abstractFloat: {node.value}")
+            return node_uid
+        elif node.value_type == StructureType.LIST:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"List: [...]")
+            return node_uid
+        elif node.value_type == "List[Any]":
+            node_uid = uuid.uuid4()
+            if isinstance(node.value, ValueConstructor):
+                op = node.value.operator
+                init_val = node.value.initial_value.value 
+                if isinstance(node.value.size, LiteralValue):
+                    size = node.value.size.value
+                    id = -1
+                else: 
+                    size = node.value.size.name
+                    id = node.value.size.id
+
+                #self.G.add_node(node_uid, label=f"List: Init_Val: [{init_val}], Size: {size} ")
+                self.G.add_node(node_uid, label=f"List: [{init_val}] {op} {size} (id: {id})")
+
+            return node_uid
+        else:
+            assert False, f"cast_to_agraph_visitor LiteralValue: type not supported yet {type(node)}"
+
+    @visit.register
     def _(self, node: AnnCastLoop):
-        """Visits Loop nodes. We visit the conditional expression and the
+        """Visits Loop nodes. We visit the initial statements, the conditional expression and the
         body of the loop, and connect them to this node in the graph.
         This node's UID is returned."""
         expr = self.visit(node.expr)
+        init = []
         body = []
+        if len(node.init) > 0:
+            init = self.visit_list(node.init)
         if len(node.body) > 0:
             body = self.visit_list(node.body)
         node_uid = uuid.uuid4()
+        init_uid = uuid.uuid4()
         test_uid = uuid.uuid4()
         body_uid = uuid.uuid4()
 
@@ -571,8 +663,13 @@ class CASTToAGraphVisitor(CASTVisitor):
         loop_label = f"{loop_label}\n{top_iface_init_vars}\n{top_iface_updt_vars}\n{top_iface_out_vars}"
         loop_label = f"{loop_label}\n{bot_iface_in_vars}\n{bot_iface_out_vars}"
         self.G.add_node(node_uid, label=loop_label)
+        self.G.add_node(init_uid, label="Init")
         self.G.add_node(test_uid, label="Test")
         self.G.add_node(body_uid, label="Body")
+
+        self.G.add_edge(node_uid, init_uid)
+        for n in init:
+            self.G.add_edge(init_uid, n)
 
         self.G.add_edge(node_uid, test_uid)
         self.G.add_edge(test_uid, expr)
@@ -862,6 +959,20 @@ class CASTToAGraphVisitor(CASTVisitor):
         self.G.add_node(node_uid, label="Subscript")
         self.G.add_edge(node_uid, value)
         self.G.add_edge(node_uid, s_slice)
+
+        return node_uid
+
+    @visit.register
+    def _(self, node: AnnCastTuple):
+        """Visits a Tuple node. We add all the elements of this
+        tuple (if any) to the graph and return the UID of this node."""
+        values = []
+        if len(node.values) > 0:
+            values = self.visit_list(node.values)
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label="Tuple")
+        for n in values:
+            self.G.add_edge(node_uid, n)
 
         return node_uid
 

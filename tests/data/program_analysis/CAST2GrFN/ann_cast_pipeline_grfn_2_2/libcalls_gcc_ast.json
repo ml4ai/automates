@@ -1,0 +1,1321 @@
+{
+  "mainInputFilename": "libcalls.c",
+  "functions": [
+    {
+      "id": 4294960570,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 4,
+      "decl_col_start": 5,
+      "file": "libcalls.c",
+      "line_start": 4,
+      "line_end": 11,
+      "variableDeclarations": [
+        {
+          "name": "z",
+          "id": 4294960567,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        },
+        {
+          "name": "x",
+          "id": 4294960568,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294960557,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 5,
+              "col_start": 9,
+              "file": "libcalls.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294960568,
+                "name": "x",
+                "line_start": 5,
+                "col_start": 9,
+                "file": "libcalls.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 64
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 8,
+              "col_start": 13,
+              "file": "libcalls.c",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294960567,
+                "name": "z",
+                "line_start": 6,
+                "col_start": 12,
+                "file": "libcalls.c"
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "integer_type",
+                        "size": 32,
+                        "unsigned": false
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294960562,
+                  "mangledName": "_ZSt4sqrtIiEN9__gnu_cxx11__enable_ifIXsrSt12__is_integerIT_E7__valueEdE6__typeES3_",
+                  "name": "sqrt",
+                  "line_start": 475,
+                  "col_start": 5,
+                  "file": "/usr/local/gcc-10.1.0/include/c++/10.1.0/cmath"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294960568,
+                  "name": "x",
+                  "line_start": 5,
+                  "col_start": 9,
+                  "file": "libcalls.c"
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 10,
+              "col_start": 11,
+              "file": "libcalls.c",
+              "lhs": null,
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "pointer_type",
+                        "size": 64,
+                        "baseType": {
+                          "type": "integer_type",
+                          "size": 8,
+                          "unsigned": false
+                        }
+                      }
+                    ],
+                    "variableArguments": true
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "integer_type",
+                      "size": 32,
+                      "unsigned": false
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "pointer_type",
+                        "size": 64,
+                        "baseType": {
+                          "type": "integer_type",
+                          "size": 8,
+                          "unsigned": false
+                        }
+                      }
+                    ],
+                    "variableArguments": true
+                  },
+                  "id": 4294966081,
+                  "mangledName": "printf",
+                  "name": "printf",
+                  "line_start": 184,
+                  "col_start": 6,
+                  "file": "/usr/local/gcc-10.1.0/lib/gcc/x86_64-apple-darwin19.6.0/10.1.0/include-fixed/stdio.h"
+                }
+              },
+              "arguments": [
+                {
+                  "code": "addr_expr",
+                  "type": {
+                    "type": "pointer_type",
+                    "size": 64,
+                    "baseType": {
+                      "type": "array_type",
+                      "size": 144,
+                      "componentType": {
+                        "type": "integer_type",
+                        "size": 8,
+                        "unsigned": false
+                      },
+                      "lbound": 0,
+                      "ubound": 17
+                    }
+                  },
+                  "value": {
+                    "code": "string_cst",
+                    "type": {
+                      "type": "array_type",
+                      "size": 144,
+                      "componentType": {
+                        "type": "integer_type",
+                        "size": 8,
+                        "unsigned": false
+                      },
+                      "lbound": 0,
+                      "ubound": 17
+                    },
+                    "value": "Value of z is %f\u000a\u0000",
+                    "type": {
+                      "type": "array_type",
+                      "size": 144,
+                      "componentType": {
+                        "type": "integer_type",
+                        "size": 8,
+                        "unsigned": false
+                      },
+                      "lbound": 0,
+                      "ubound": 17
+                    }
+                  }
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  },
+                  "id": 4294960567,
+                  "name": "z",
+                  "line_start": 6,
+                  "col_start": 12,
+                  "file": "libcalls.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 11,
+              "col_start": 1,
+              "file": "libcalls.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294960557,
+                "line_start": 11,
+                "col_start": 1,
+                "file": "libcalls.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 11,
+              "col_start": 1,
+              "file": "libcalls.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294960557,
+                "line_start": 11,
+                "col_start": 1,
+                "file": "libcalls.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    },
+    {
+      "id": 4294960562,
+      "name": "sqrt",
+      "mangledName": "_ZSt4sqrtIiEN9__gnu_cxx11__enable_ifIXsrSt12__is_integerIT_E7__valueEdE6__typeES3_",
+      "weak": true,
+      "inline": true,
+      "public": true,
+      "decl_line_start": 475,
+      "decl_col_start": 5,
+      "file": "/usr/local/gcc-10.1.0/include/c++/10.1.0/cmath",
+      "line_start": 0,
+      "line_end": 476,
+      "parameters": [
+        {
+          "name": "__x",
+          "id": 4294960561,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 475,
+          "col_start": 14,
+          "file": "/usr/local/gcc-10.1.0/include/c++/10.1.0/cmath"
+        }
+      ],
+      "variableDeclarations": [
+        {
+          "id": 4294960555,
+          "static": false,
+          "type": {
+            "type": "real_type",
+            "size": 64
+          }
+        }
+      ],
+      "numberOfLoops": 1,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 4,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "superloops": [
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 476,
+              "col_start": 28,
+              "file": "/usr/local/gcc-10.1.0/include/c++/10.1.0/cmath",
+              "operator": "float_expr",
+              "lhs": {
+                "ssa_id": 1,
+                "code": "ssa_name",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                }
+              },
+              "operands": [
+                {
+                  "code": "parm_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294960561,
+                  "name": "__x",
+                  "line_start": 475,
+                  "col_start": 14,
+                  "file": "/usr/local/gcc-10.1.0/include/c++/10.1.0/cmath"
+                }
+              ]
+            },
+            {
+              "type": "call",
+              "line_start": 476,
+              "col_start": 28,
+              "file": "/usr/local/gcc-10.1.0/include/c++/10.1.0/cmath",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294960555,
+                "line_start": 476,
+                "col_start": 32,
+                "file": "/usr/local/gcc-10.1.0/include/c++/10.1.0/cmath"
+              },
+              "function": {
+                "code": "addr_expr",
+                "type": {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  }
+                },
+                "value": {
+                  "code": "function_decl",
+                  "type": {
+                    "type": "function_type",
+                    "size": 8,
+                    "returnType": {
+                      "type": "real_type",
+                      "size": 64
+                    },
+                    "argumentTypes": [
+                      {
+                        "type": "real_type",
+                        "size": 64
+                      }
+                    ],
+                    "variableArguments": false
+                  },
+                  "id": 4294966500,
+                  "mangledName": "sqrt",
+                  "name": "__builtin_sqrt"
+                }
+              },
+              "arguments": [
+                {
+                  "ssa_id": 1,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "real_type",
+                    "size": 64
+                  }
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 476,
+              "col_start": 32,
+              "file": "/usr/local/gcc-10.1.0/include/c++/10.1.0/cmath",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "real_type",
+                  "size": 64
+                },
+                "id": 4294960555,
+                "line_start": 476,
+                "col_start": 32,
+                "file": "/usr/local/gcc-10.1.0/include/c++/10.1.0/cmath"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 3,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            3
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "real_type",
+        "size": 64
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+    {
+      "id": 4294960614,
+      "name": "sys_errlist",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "array_type",
+        "componentType": {
+          "type": "pointer_type",
+          "size": 64,
+          "baseType": {
+            "type": "integer_type",
+            "size": 8,
+            "unsigned": false
+          }
+        }
+      },
+      "const": false,
+      "line_start": 382,
+      "col_start": 30,
+      "file": "/usr/local/gcc-10.1.0/lib/gcc/x86_64-apple-darwin19.6.0/10.1.0/include-fixed/stdio.h"
+    },
+    {
+      "id": 4294960615,
+      "name": "sys_nerr",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      },
+      "const": false,
+      "line_start": 381,
+      "col_start": 20,
+      "file": "/usr/local/gcc-10.1.0/lib/gcc/x86_64-apple-darwin19.6.0/10.1.0/include-fixed/stdio.h"
+    },
+    {
+      "id": 4294960827,
+      "name": "__stderrp",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "pointer_type",
+        "size": 64,
+        "baseType": {
+          "type": "record_type",
+          "size": 1216,
+          "id": "0x102ca3150"
+        }
+      },
+      "const": false,
+      "line_start": 83,
+      "col_start": 14,
+      "file": "/usr/local/gcc-10.1.0/lib/gcc/x86_64-apple-darwin19.6.0/10.1.0/include-fixed/stdio.h"
+    },
+    {
+      "id": 4294960828,
+      "name": "__stdoutp",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "pointer_type",
+        "size": 64,
+        "baseType": {
+          "type": "record_type",
+          "size": 1216,
+          "id": "0x102ca3150"
+        }
+      },
+      "const": false,
+      "line_start": 82,
+      "col_start": 14,
+      "file": "/usr/local/gcc-10.1.0/lib/gcc/x86_64-apple-darwin19.6.0/10.1.0/include-fixed/stdio.h"
+    },
+    {
+      "id": 4294960829,
+      "name": "__stdinp",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "pointer_type",
+        "size": 64,
+        "baseType": {
+          "type": "record_type",
+          "size": 1216,
+          "id": "0x102ca3150"
+        }
+      },
+      "const": false,
+      "line_start": 81,
+      "col_start": 14,
+      "file": "/usr/local/gcc-10.1.0/lib/gcc/x86_64-apple-darwin19.6.0/10.1.0/include-fixed/stdio.h"
+    },
+    {
+      "id": 4294962185,
+      "name": "suboptarg",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "pointer_type",
+        "size": 64,
+        "baseType": {
+          "type": "integer_type",
+          "size": 8,
+          "unsigned": false
+        }
+      },
+      "const": false,
+      "line_start": 359,
+      "col_start": 14,
+      "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/stdlib.h"
+    },
+    {
+      "id": 4294962510,
+      "name": "__mb_cur_max",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      },
+      "const": false,
+      "line_start": 118,
+      "col_start": 12,
+      "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/stdlib.h"
+    },
+    {
+      "id": 4294963585,
+      "name": "signgam",
+      "public": true,
+      "extern": true,
+      "type": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      },
+      "const": false,
+      "line_start": 700,
+      "col_start": 12,
+      "file": "/usr/local/gcc-10.1.0/lib/gcc/x86_64-apple-darwin19.6.0/10.1.0/include-fixed/math.h"
+    }
+  ],
+  "recordTypes": [
+    {
+      "id": "0x102ca3150",
+      "union": false,
+      "name": "__sFILE",
+      "size": 1216,
+      "fields": [
+        {
+          "id": 4294960860,
+          "name": "_p",
+          "offset": 0,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": true
+            }
+          },
+          "line_start": 127,
+          "col_start": 17,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960859,
+          "name": "_r",
+          "offset": 64,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 128,
+          "col_start": 6,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960858,
+          "name": "_w",
+          "offset": 96,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 129,
+          "col_start": 6,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960857,
+          "name": "_flags",
+          "offset": 128,
+          "size": 16,
+          "type": {
+            "type": "integer_type",
+            "size": 16,
+            "unsigned": false
+          },
+          "line_start": 130,
+          "col_start": 8,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960856,
+          "name": "_file",
+          "offset": 144,
+          "size": 16,
+          "type": {
+            "type": "integer_type",
+            "size": 16,
+            "unsigned": false
+          },
+          "line_start": 131,
+          "col_start": 8,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960855,
+          "name": "_bf",
+          "offset": 192,
+          "size": 128,
+          "type": {
+            "type": "record_type",
+            "size": 128,
+            "id": "0x102ca3e70"
+          },
+          "line_start": 132,
+          "col_start": 16,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960854,
+          "name": "_lbfsize",
+          "offset": 320,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 133,
+          "col_start": 6,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960853,
+          "name": "_cookie",
+          "offset": 384,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "void_type"
+            }
+          },
+          "line_start": 136,
+          "col_start": 8,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960851,
+          "name": "_close",
+          "offset": 448,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "function_type",
+              "size": 8,
+              "returnType": {
+                "type": "integer_type",
+                "size": 32,
+                "unsigned": false
+              },
+              "argumentTypes": [
+                {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "void_type"
+                  }
+                }
+              ],
+              "variableArguments": false
+            }
+          },
+          "line_start": 137,
+          "col_start": 19,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960847,
+          "name": "_read",
+          "offset": 512,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "function_type",
+              "size": 8,
+              "returnType": {
+                "type": "integer_type",
+                "size": 32,
+                "unsigned": false
+              },
+              "argumentTypes": [
+                {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "void_type"
+                  }
+                },
+                {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "integer_type",
+                    "size": 8,
+                    "unsigned": false
+                  }
+                },
+                {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              ],
+              "variableArguments": false
+            }
+          },
+          "line_start": 138,
+          "col_start": 19,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960843,
+          "name": "_seek",
+          "offset": 576,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "function_type",
+              "size": 8,
+              "returnType": {
+                "type": "integer_type",
+                "size": 64,
+                "unsigned": false
+              },
+              "argumentTypes": [
+                {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "void_type"
+                  }
+                },
+                {
+                  "type": "integer_type",
+                  "size": 64,
+                  "unsigned": false
+                },
+                {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              ],
+              "variableArguments": false
+            }
+          },
+          "line_start": 139,
+          "col_start": 22,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960839,
+          "name": "_write",
+          "offset": 640,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "function_type",
+              "size": 8,
+              "returnType": {
+                "type": "integer_type",
+                "size": 32,
+                "unsigned": false
+              },
+              "argumentTypes": [
+                {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "void_type"
+                  }
+                },
+                {
+                  "type": "pointer_type",
+                  "size": 64,
+                  "baseType": {
+                    "type": "integer_type",
+                    "size": 8,
+                    "unsigned": false
+                  }
+                },
+                {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              ],
+              "variableArguments": false
+            }
+          },
+          "line_start": 140,
+          "col_start": 19,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960838,
+          "name": "_ub",
+          "offset": 704,
+          "size": 128,
+          "type": {
+            "type": "record_type",
+            "size": 128,
+            "id": "0x102ca3e70"
+          },
+          "line_start": 143,
+          "col_start": 16,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960837,
+          "name": "_extra",
+          "offset": 832,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "record_type",
+              "id": "0x102ca30a8"
+            }
+          },
+          "line_start": 144,
+          "col_start": 19,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960836,
+          "name": "_ur",
+          "offset": 896,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 145,
+          "col_start": 6,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960835,
+          "name": "_ubuf",
+          "offset": 928,
+          "size": 24,
+          "type": {
+            "type": "array_type",
+            "size": 24,
+            "componentType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": true
+            },
+            "lbound": 0,
+            "ubound": 2
+          },
+          "line_start": 148,
+          "col_start": 16,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960834,
+          "name": "_nbuf",
+          "offset": 952,
+          "size": 8,
+          "type": {
+            "type": "array_type",
+            "size": 8,
+            "componentType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": true
+            },
+            "lbound": 0,
+            "ubound": 0
+          },
+          "line_start": 149,
+          "col_start": 16,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960833,
+          "name": "_lb",
+          "offset": 960,
+          "size": 128,
+          "type": {
+            "type": "record_type",
+            "size": 128,
+            "id": "0x102ca3e70"
+          },
+          "line_start": 152,
+          "col_start": 16,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960832,
+          "name": "_blksize",
+          "offset": 1088,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 155,
+          "col_start": 6,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960831,
+          "name": "_offset",
+          "offset": 1152,
+          "size": 64,
+          "type": {
+            "type": "integer_type",
+            "size": 64,
+            "unsigned": false
+          },
+          "line_start": 156,
+          "col_start": 9,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        }
+      ]
+    },
+    {
+      "id": "0x102ca3e70",
+      "union": false,
+      "name": "__sbuf",
+      "size": 128,
+      "fields": [
+        {
+          "id": 4294960865,
+          "name": "_base",
+          "offset": 0,
+          "size": 64,
+          "type": {
+            "type": "pointer_type",
+            "size": 64,
+            "baseType": {
+              "type": "integer_type",
+              "size": 8,
+              "unsigned": true
+            }
+          },
+          "line_start": 93,
+          "col_start": 17,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        },
+        {
+          "id": 4294960864,
+          "name": "_size",
+          "offset": 64,
+          "size": 32,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          },
+          "line_start": 94,
+          "col_start": 7,
+          "file": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h"
+        }
+      ]
+    },
+    {
+      "id": "0x102ca30a8",
+      "union": false,
+      "name": "__sFILEX",
+      "fields": [
+      ]
+    }
+  ]
+}

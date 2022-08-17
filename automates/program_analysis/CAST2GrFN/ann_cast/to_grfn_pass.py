@@ -11,6 +11,8 @@ from automates.model_assembly.networks import (
     HyperEdge,
     LambdaNode,
     LoopTopInterface,
+    UnpackNode,
+    PackNode,
 )
 from automates.model_assembly.sandbox import load_lambda_function
 from automates.model_assembly.structures import ContainerIdentifier
@@ -23,8 +25,13 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     con_scope_to_str,
     create_container_metadata,
     is_func_def_main,
+    lambda_var_from_fullid,
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+from automates.program_analysis.CAST2GrFN.model.cast import ( 
+    ScalarType,
+    ValueConstructor,
+)
 
 
 class ToGrfnPass:
@@ -188,10 +195,14 @@ class ToGrfnPass:
         outputs = self.grfn_vars_from_fullids(grfn_assignment.outputs.keys())
         self.add_grfn_edges(inputs, assignment_node, outputs)
 
+        # Create strings representing the inputs and outputs for pack and unpack
+        if isinstance(assignment_node, (PackNode, UnpackNode)):
+            assignment_node.inputs = ",".join(list(map(lambda_var_from_fullid,grfn_assignment.inputs.keys())))
+            assignment_node.output = ",".join(list(map(lambda_var_from_fullid,grfn_assignment.outputs.keys())))
+
         # add subgraph nodes
         subgraph.nodes.extend(inputs + [assignment_node] + outputs)
         
-
     def visit(self, node: AnnCastNode, subgraph: GrFNSubgraph):
         """
         External visit that callsthe internal visit
@@ -259,8 +270,9 @@ class ToGrfnPass:
         uid = GenericNode.create_node_id()
         ns = "default-ns"
         scope = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
-        basename = scope
-        subgraph = GrFNSubgraph(uid, ns, scope, basename,
+        basename = node.func.name # change from 'scope' to its function name
+        basename_id = node.func.id # NOTE: represents the function's name ID, not the call number (i.e. invocation index)
+        subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
                                 occs, parent_str, type, border_color, nodes, metadata)
 
         self.subgraphs.add_node(subgraph)
@@ -309,8 +321,9 @@ class ToGrfnPass:
         uid = GenericNode.create_node_id()
         ns = "default-ns"
         scope = con_scope_to_str(node.func.con_scope + [call_container_name(node)])
-        basename = scope
-        subgraph = GrFNSubgraph(uid, ns, scope, basename,
+        basename = node.func.name
+        basename_id = node.func.id
+        subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
                                 occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
@@ -380,8 +393,9 @@ class ToGrfnPass:
         uid = GenericNode.create_node_id()
         ns = "default-ns"
         scope = con_scope_to_str(node.con_scope)
-        basename = scope
-        subgraph = GrFNSubgraph(uid, ns, scope, basename,
+        basename = node.name.name # was originally assigned to 'scope', changed to node.name.name
+        basename_id = node.name.id # added 
+        subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
                                 occs, parent_str, type, border_color, nodes, metadata)
 
         self.visit_node_list(node.func_args, subgraph)
@@ -423,6 +437,10 @@ class ToGrfnPass:
 
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
+    
+    @_visit.register
+    def visit_literal_value(self, node: AnnCastLiteralValue, subgraph: GrFNSubgraph):
+        pass
 
     @_visit.register
     def visit_list(self, node: AnnCastList, subgraph: GrFNSubgraph):
@@ -441,8 +459,9 @@ class ToGrfnPass:
         uid = GenericNode.create_node_id()
         ns = "default-ns"
         scope = con_scope_to_str(node.con_scope)
-        basename = scope
-        subgraph = GrFNLoopSubgraph(uid, ns, scope, basename,
+        basename = "loop"  # changed from 'scope' to the string 'loop'
+        basename_id = int(node.con_scope[-1][4:]) # stripping out the word 'loop' to obtain a numerical ID
+        subgraph = GrFNLoopSubgraph(uid, ns, scope, basename, basename_id,
                                 occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
@@ -504,9 +523,10 @@ class ToGrfnPass:
         occs = 0
         uid = GenericNode.create_node_id()
         ns = "default-ns"
-        scope = con_scope_to_str(node.con_scope)
-        basename = scope
-        subgraph = GrFNSubgraph(uid, ns, scope, basename,
+        scope = con_scope_to_str(node.con_scope) 
+        basename = "if" # changed from 'scope' to the string 'if'
+        basename_id = int(node.con_scope[-1][2:]) # stripping out the word 'if' to obtain a numerical ID
+        subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
                                 occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
@@ -567,7 +587,8 @@ class ToGrfnPass:
         ns = "default-ns"
         scope = MODULE_SCOPE
         basename = MODULE_SCOPE
-        subgraph = GrFNSubgraph(uid, ns, scope, basename,
+        basename_id = -1
+        subgraph = GrFNSubgraph(uid, ns, scope, basename, basename_id,
                                 occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
 
@@ -595,7 +616,7 @@ class ToGrfnPass:
 
     @_visit.register
     def visit_tuple(self, node: AnnCastTuple, subgraph: GrFNSubgraph):
-        pass
+        self.visit_node_list(node.values, subgraph)
 
     @_visit.register
     def visit_unary_op(self, node: AnnCastUnaryOp, subgraph: GrFNSubgraph):

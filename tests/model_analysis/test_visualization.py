@@ -56,6 +56,7 @@ def sensitivity_visualizer():
     yield SensitivityVisualizer(sensitivity_indices_lst)
 
 
+@pytest.mark.skip(reason="Aug 2022: Potentially outdated due to GrFN Subgraph change")
 def test_sensitivity_visualization(sensitivity_visualizer):
     sensitivity_visualizer.create_S1_plot()
     sensitivity_visualizer.create_S2_plot()

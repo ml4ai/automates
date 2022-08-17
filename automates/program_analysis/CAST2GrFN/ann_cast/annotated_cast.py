@@ -1,7 +1,6 @@
 import typing
 import difflib
 
-
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
     Assignment,
@@ -14,6 +13,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Expr,
     FunctionDef,
     List,
+    LiteralValue,
     Loop,
     ModelBreak,
     ModelContinue,
@@ -22,13 +22,15 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+#    ScalarType,
     Set,
     String,
     Subscript,
     Tuple,
     UnaryOp,
+#    ValueConstructor,
     Var,
-)
+)    
 
 from automates.model_assembly.networks import GroundedFunctionNetwork, VariableNode
 
@@ -65,6 +67,8 @@ class PipelineState:
         # transition between interfaces. That is, we create many GrFN variables which
         # do not literally exist in source, and so don't consider those to be from source
         self.FROM_SOURCE_FOR_GE = True
+
+        self.gromet_collection = None
 
     def get_nodes(self):
         return self.nodes
@@ -527,9 +531,31 @@ class AnnCastClassDef(AnnCastNode):
     def __str__(self):
         return ClassDef.__str__(self)
 
-class AnnCastLoop(AnnCastNode):
-    def __init__(self, expr, body, source_refs):
+class AnnCastLiteralValue(AnnCastNode):
+    def __init__(self, value_type, value, source_code_data_type, source_refs):
         super().__init__(self)
+        self.value_type = value_type
+        self.value = value 
+        self.source_code_data_type = source_code_data_type
+        self.source_refs = source_refs
+
+    def to_dict(self):
+        result = super().to_dict()
+        return result
+
+    def equiv(self, other):
+        if not isinstance(other, AnnCastLiteralValue):
+            return False
+        return self.to_dict() == other.to_dict()
+
+    def __str__(self):
+        return LiteralValue.__str__(self)
+
+
+class AnnCastLoop(AnnCastNode):
+    def __init__(self, init, expr, body, source_refs):
+        super().__init__(self)
+        self.init = init
         self.expr = expr
         self.body = body
         self.source_refs = source_refs
@@ -549,6 +575,7 @@ class AnnCastLoop(AnnCastNode):
         self.bot_interface_vars: typing.Dict[int, str] = {}
 
         # dicts mapping Name id to highest version at end of "block"
+        self.init_highest_var_vers = {}
         self.expr_highest_var_vers = {}
         self.body_highest_var_vers = {}
 
@@ -581,6 +608,7 @@ class AnnCastLoop(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
+        # result["init"] = [node.to_dict() for node in self.init]
         result["expr"] = self.expr.to_dict()
         result["body"] = [node.to_dict() for node in self.body]
         result["con_scope"] = self.con_scope

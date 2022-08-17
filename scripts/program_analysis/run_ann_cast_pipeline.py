@@ -14,12 +14,17 @@ from automates.program_analysis.CAST2GrFN.ann_cast.grfn_var_creation_pass import
 from automates.program_analysis.CAST2GrFN.ann_cast.grfn_assignment_pass import GrfnAssignmentPass
 from automates.program_analysis.CAST2GrFN.ann_cast.lambda_expression_pass import LambdaExpressionPass
 from automates.program_analysis.CAST2GrFN.ann_cast.to_grfn_pass import ToGrfnPass
+from automates.program_analysis.CAST2GrFN.ann_cast.to_gromet_pass import ToGrometPass
 
+from automates.utils.fold import dictionary_to_gromet_json, del_nulls
 
 def get_args():
     parser = argparse.ArgumentParser(description="Runs Annotated Cast pipeline on input CAST json file.")
     parser.add_argument("--grfn_2_2", 
             help="Generate GrFN 2.2 for the CAST-> Annotated Cast  -> GrFN pipeline",
+            action="store_true")
+    parser.add_argument("--gromet",
+            help="Generates GroMEt using the AnnCAST. CAST -> AnnCast -> GroMEt",
             action="store_true")
     parser.add_argument("cast_json", 
             help="input CAST.json file")
@@ -79,19 +84,27 @@ def main():
 
     print("\nCalling LambdaExpressionPass-------------------")
     LambdaExpressionPass(pipeline_state)
+    
+    if args.gromet:
+        print("\nCalling ToGrometPass-----------------------")
+        ToGrometPass(pipeline_state)
 
-    print("\nCalling ToGrfnPass-------------------")
-    ToGrfnPass(pipeline_state)
-    grfn = pipeline_state.get_grfn()
-    grfn.to_json_file(f"{f_name}--AC-GrFN.json")
+        with open(f"{f_name}--Gromet-FN-auto.json","w") as f:
+            gromet_collection_dict = pipeline_state.gromet_collection.to_dict()
+            f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+    else:
+        print("\nCalling ToGrfnPass-------------------")
+        ToGrfnPass(pipeline_state)
+        grfn = pipeline_state.get_grfn()
+        grfn.to_json_file(f"{f_name}--AC-GrFN.json")
 
-    grfn_agraph = grfn.to_AGraph()
-    grfn_agraph.draw(f"{f_name}--AC-GrFN.pdf", prog="dot")
+        grfn_agraph = grfn.to_AGraph()
+        grfn_agraph.draw(f"{f_name}--AC-GrFN.pdf", prog="dot")
 
-    print("\nGenerating pickled AnnCast nodes-----------------")
-    pickled_file_name = f"{f_name}--AnnCast.pickled"
-    with open(pickled_file_name,"wb") as pkfile:
-        dill.dump(pipeline_state, pkfile)
+        print("\nGenerating pickled AnnCast nodes-----------------")
+        pickled_file_name = f"{f_name}--AnnCast.pickled"
+        with open(pickled_file_name,"wb") as pkfile:
+            dill.dump(pipeline_state, pkfile)
 
 
 if __name__ == "__main__":

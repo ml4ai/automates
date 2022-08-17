@@ -1,13 +1,17 @@
 import typing
 from functools import singledispatchmethod
 
-from automates.model_assembly.metadata import VariableCreationReason
+from automates.model_assembly.metadata import (
+    VariableCreationReason,
+    LambdaType
+)
 from automates.model_assembly.networks import load_lambda_function
 from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     ELSEBODY,
     IFBODY,
     IFEXPR,
     LOOP_VAR_UPDATED_VERSION,
+    LOOPINIT,
     LOOPBODY,
     LOOPEXPR,
     VAR_EXIT_VERSION,
@@ -31,7 +35,10 @@ from automates.program_analysis.CAST2GrFN.ann_cast.ann_cast_helpers import (
     specialized_global_name,
 )
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-
+from automates.program_analysis.CAST2GrFN.model.cast import ( 
+    ScalarType,
+    ValueConstructor,
+)
 
 class VariableVersionPass:
     def __init__(self, pipeline_state: PipelineState):
@@ -914,7 +921,9 @@ class VariableVersionPass:
     @_visit.register
     def visit_assignment(self, node: AnnCastAssignment, assign_lhs: bool):
         self.visit(node.right, assign_lhs)
-        assert isinstance(node.left, AnnCastVar)
+        # The AnnCastTuple is added to handle scenarios where an assignment
+        # is made by assigning to a tuple of values, as opposed to one singular value
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple), f"container_scope: visit_assigment: node.left is not AnnCastVar or AnnCastTuple it is {type(node.left)}"
         self.visit(node.left, True)
 
     @_visit.register
@@ -1060,15 +1069,40 @@ class VariableVersionPass:
             print(f"\nFor FUNCTION: {con_scopestr}")
             print(f"  BodyHighestVers: {node.body_highest_var_vers}")
 
+
     @_visit.register
-    def visit_list(self, node: AnnCastList, assign_lhs: bool):
-        self.visit_node_list(node.values, assign_lhs)
+    def visit_literal_value(self, node: AnnCastLiteralValue, assign_side):
+        if node.value_type == 'List[Any]':
+            # val has
+            # operator - string
+            # size - Var node or a LiteralValue node (for number)
+            # initial_value - LiteralValue node
+            val = node.value
+            
+            # visit size's anncast name node
+            self.visit(val.size, assign_side) 
+
+            # List literal doesn't need to add any other changes
+            # to the anncast at this pass
+
+        elif node.value_type == ScalarType.INTEGER:
+            pass
+        elif node.value_type == ScalarType.ABSTRACTFLOAT:
+            pass
+        pass
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, assign_lhs: bool):
         # Initialize scope_to_highest_var_version
+        if len(node.init) > 0:
+            init_scopestr = con_scope_to_str(node.con_scope + [LOOPINIT])
         expr_scopestr = con_scope_to_str(node.con_scope + [LOOPEXPR])
         body_scopestr = con_scope_to_str(node.con_scope + [LOOPBODY])
+
+        # Initialize LoopInit
+        # create versions 0 of any modified or accessed variables
+        if len(node.init) > 0:
+            self.init_highest_var_vers_dict(init_scopestr, node.used_vars.keys())
 
         # Initialize LoopExpr
         # create versions 0 of any modified or accessed variables
@@ -1079,10 +1113,16 @@ class VariableVersionPass:
         self.init_highest_var_vers_dict(body_scopestr, node.used_vars.keys())
 
         # visit children
+        if len(node.init) > 0:
+            self.visit_node_list(node.init, assign_lhs)
         self.visit(node.expr, assign_lhs)
+        
+        # print(node.used_vars)
         self.visit_node_list(node.body, assign_lhs)
 
         # store highest var version
+        if len(node.init) > 0:
+            node.init_highest_var_vers = self.con_scope_to_highest_var_vers[init_scopestr]
         node.expr_highest_var_vers = self.con_scope_to_highest_var_vers[expr_scopestr]
         node.body_highest_var_vers = self.con_scope_to_highest_var_vers[body_scopestr]
 
@@ -1092,6 +1132,8 @@ class VariableVersionPass:
         # DEBUG printing
         if self.pipeline_state.PRINT_DEBUGGING_INFO:
             print(f"\nFor LOOP: {con_scope_to_str(node.con_scope)}")
+            if len(node.init) > 0:
+                print(f"  LoopHighestVers: {node.init_highest_var_vers}")
             print(f"  ExprHighestVers: {node.expr_highest_var_vers}")
             print(f"  BodyHighestVers: {node.body_highest_var_vers}")
 
@@ -1161,6 +1203,10 @@ class VariableVersionPass:
         node.version = self.get_highest_ver_in_con_scope(con_scopestr, node.id)
 
     @_visit.register
+    def visit_list(self, node: AnnCastList, assign_lhs: bool):
+        self.visit_node_list(node.values, assign_lhs)
+
+    @_visit.register
     def visit_number(self, node: AnnCastNumber, assign_lhs: bool):
         pass
 
@@ -1178,7 +1224,7 @@ class VariableVersionPass:
 
     @_visit.register
     def visit_tuple(self, node: AnnCastTuple, assign_lhs: bool):
-        pass
+        self.visit_node_list(node.values, assign_lhs)
 
     @_visit.register
     def visit_unary_op(self, node: AnnCastUnaryOp, assign_lhs: bool):
