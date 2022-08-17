@@ -150,7 +150,10 @@ class CastToAnnotatedCastVisitor():
 
     @_visit.register
     def visit_loop(self, node: Loop):
-        init = self.visit_node_list(node.init)
+        if node.init != None:
+            init = self.visit_node_list(node.init)
+        else:
+            init = []
         expr = self.visit(node.expr)
         body = self.visit_node_list(node.body)
         return AnnCastLoop(init,expr,body, node.source_refs)

@@ -429,7 +429,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         This node's UID is returned."""
         args = []
         body = []
-        print(node.name)
+        # print(node.name)
         if len(node.func_args) > 0:
             args = self.visit_list(node.func_args)
         if len(node.body) > 0:
@@ -468,7 +468,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         This node's UID is returned."""
         args = []
         body = []
-        print(node.name)
+        # print(node.name)
         if len(node.func_args) > 0:
             args = self.visit_list(node.func_args)
         if len(node.body) > 0:

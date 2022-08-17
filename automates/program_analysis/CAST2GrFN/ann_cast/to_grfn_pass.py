@@ -211,8 +211,8 @@ class ToGrfnPass:
         """
         # print current node being visited.  
         # this can be useful for debugging 
-        class_name = node.__class__.__name__
-        print(f"\nProcessing node type {class_name}")
+        # class_name = node.__class__.__name__
+        # print(f"\nProcessing node type {class_name}")
 
         # call internal visit
         return self._visit(node, subgraph)

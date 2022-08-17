@@ -400,7 +400,7 @@ class ContainerScopePass:
         node.base_func_scopestr = base_func_scopestr
 
         loopscope = self.next_loop_scope(enclosing_con_scope)
-        print(f"-----------{loopscope}-----------")
+        # print(f"-----------{loopscope}-----------")
         self.initialize_con_scope_data(loopscope, node)
         node.con_scope = loopscope
         
