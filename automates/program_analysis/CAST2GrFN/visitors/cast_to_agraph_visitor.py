@@ -534,7 +534,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         expr = self.visit(node.expr)
         init = []
         body = []
-        if len(node.init) > 0:
+        if node.init != None and len(node.init) > 0:
             init = self.visit_list(node.init)
 
         if len(node.body) > 0:
