@@ -608,7 +608,7 @@ class AnnCastLoop(AnnCastNode):
 
     def to_dict(self):
         result = super().to_dict()
-        result["init"] = [node.to_dict() for node in self.init]
+        # result["init"] = [node.to_dict() for node in self.init]
         result["expr"] = self.expr.to_dict()
         result["body"] = [node.to_dict() for node in self.body]
         result["con_scope"] = self.con_scope
