@@ -39,7 +39,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 
 cons = "num"
 
-PRIMITIVES = {"Add" : "+", "Sub": "-", "Mult" : "*", "Div" : "/", "Lt": "<", "Gt": ">", "Eq": "==", "Pow": "**",
+PRIMITIVES = {"Add" : "+", "Sub": "-", "Mult" : "*", "Div" : "/", "Lt": "<", "Gt": ">", "Eq": "==", "Pow": "**", "NotEq": "!=",
              "_List_get" : "", "_List_set" : "", "_Array_get" : "", "_Array_set" : "", "_Tuple_get" : "", "_Tuple_set" : "",
              "_iter" : "", "_next": "", "_member": "", "_add": "", "_delete": "", "print": "", 
              "_List": "", "_List_"+cons: "", "_Array": "", "_Array_"+cons: "", "_Tuple": "", "_Tuple_"+cons: "", "_Set": ""}
@@ -212,7 +212,7 @@ class ToGrometPass:
 
         # Create FN's opi and and opo
         for arg in node.arguments:
-            print(type(arg))
+            # print(type(arg))
             if isinstance(arg, AnnCastBinaryOp) or isinstance(arg, AnnCastLiteralValue):
                 self.visit(arg, primitive_fn, parent_cast_node)
                 primitive_fn.pif = insert_gromet_object(primitive_fn.pif, GrometPort(box=primitive_bf_loc))
@@ -298,8 +298,8 @@ class ToGrometPass:
         """
         # print current node being visited.  
         # this can be useful for debugging 
-        class_name = node.__class__.__name__
-        print(f"\nProcessing node type {class_name}")
+        # class_name = node.__class__.__name__
+        # print(f"\nProcessing node type {class_name}")
 
         # call internal visit
         return self._visit(node, parent_gromet_fn, parent_cast_node)
@@ -474,7 +474,7 @@ class ToGrometPass:
             # For each opi the Expression GroMEt may have, we add a corresponding pif
             # to it, and then we see if we need to wire the pif to anything
             if new_gromet.opi != None:
-                print(new_gromet.opi)
+                # print(new_gromet.opi)
                 for opi in new_gromet.opi:
                     parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
                     self.wire_from_var_env(opi.name, parent_gromet_fn)
@@ -639,7 +639,7 @@ class ToGrometPass:
             # Handle the primitive's arguments that don't involve expressions of more than 1 variable
             for arg in node.arguments:
                 #NOTE: do we need a global check? if arg.name in self.var_environment["global"]:
-                print(f"+++++++++++++++++++++{type(arg)}")
+                # print(f"+++++++++++++++++++++{type(arg)}")
 
                 if isinstance(arg, AnnCastName):
                     parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
@@ -676,7 +676,7 @@ class ToGrometPass:
                 arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
             else:
                 arg_fn_pofs.append(None)
-        print(arg_fn_pofs)
+        # print(arg_fn_pofs)
 
         # The CAST generation step has the potential to rearrange
         # the order in which FunctionDefs appear in the code 
@@ -708,7 +708,7 @@ class ToGrometPass:
             pof = arg_fn_pofs[idx]
             parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=func_call_idx))
             if isinstance(arg, AnnCastName):
-                print("----"+arg.name)
+                # print("----"+arg.name)
                 self.wire_from_var_env(arg.name, parent_gromet_fn)
                 if arg.name not in self.var_environment["global"] and arg.name not in self.var_environment["local"] and arg.name not in self.var_environment["args"]:   
                     parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=len(parent_gromet_fn.pof)))
@@ -774,9 +774,9 @@ class ToGrometPass:
                     new_gromet_fn.wopio = insert_gromet_object(new_gromet_fn.wopio, GrometWire(src=i,tgt=entry[2]+1))
         elif new_gromet_fn.opo != None: # This is in the case of a loop or conditional adding opos
             for (i,opo) in enumerate(new_gromet_fn.opo,1):
-                print(opo, end="--")
+                # print(opo, end="--")
                 if opo.name in self.var_environment["local"]:
-                    print("wfopo")
+                    # print("wfopo")
                     local_env = self.var_environment["local"]
                     entry = local_env[opo.name]
                     if isinstance(entry[0], AnnCastLoop):
@@ -786,7 +786,7 @@ class ToGrometPass:
                     else:
                         new_gromet_fn.wfopo = insert_gromet_object(new_gromet_fn.wfopo, GrometWire(src=i,tgt=entry[2]+1))
                 elif opo.name in self.var_environment["args"]:
-                    print("wopio")
+                    # print("wopio")
                     args_env = self.var_environment["args"]
                     entry = args_env[opo.name]
                     new_gromet_fn.wopio = insert_gromet_object(new_gromet_fn.wopio, GrometWire(src=i,tgt=entry[2]+1))
@@ -827,7 +827,7 @@ class ToGrometPass:
         arg_env = self.var_environment["args"]
         
         for arg in node.func_args: 
-            print("VISITING ARG ----")
+            #print("VISITING ARG ----")
             # Visit the arguments
             self.visit(arg, new_gromet, node)
             
@@ -904,7 +904,7 @@ class ToGrometPass:
         # TODO
         ######### Loop Condition
 
-        print("-------------- PREDICATE -")
+        # print("-------------- PREDICATE -")
         # This creates a predicate Gromet FN
         gromet_predicate_fn = GrometFN()
         self.gromet_module.attributes = insert_gromet_object(self.gromet_module.attributes, TypedValue(type=GrometType.FN, value=gromet_predicate_fn))
@@ -943,7 +943,7 @@ class ToGrometPass:
 
         ######### Loop Body
 
-        print("-------------- LOOP BODY -")
+        # print("-------------- LOOP BODY -")
         # The body section of the loop is itself a Gromet FN, so we create one and add it to our global list of FNs for this overall module
         gromet_body_fn = GrometFN()
         
@@ -976,7 +976,7 @@ class ToGrometPass:
         # The Gromet FN for the loop body needs to have its opis and opos generated here, since it isn't an actual FunctionDef here to make it with
         # Any opis we create for this Gromet FN are also added to the variable environment
         for (_,val) in node.used_vars.items():
-            print(val)
+            # print(val)
             gromet_body_fn.opi = insert_gromet_object(gromet_body_fn.opi, GrometPort(box=len(gromet_body_fn.b)))
             arg_env = self.var_environment["args"]
             arg_env[val] = (AnnCastFunctionDef(None,None,None,None), gromet_body_fn.opi[-1], len(gromet_body_fn.opi)-1)
@@ -1000,7 +1000,7 @@ class ToGrometPass:
             self.add_var_to_env(val, AnnCastLoop(None,None,None,None), parent_gromet_fn.pol[-1], len(parent_gromet_fn.pol)-1, node)
 
 
-        print("-------------- LOOP DONE -")
+        # print("-------------- LOOP DONE -")
         # print(node.bot_interface_out)
 
     @_visit.register
@@ -1043,7 +1043,7 @@ class ToGrometPass:
         
         ########### Predicate generation
 
-        print("-------------- PREDICATE -")
+        # print("-------------- PREDICATE -")
         # Visit the predicate afterwards
         gromet_predicate_fn.b = insert_gromet_object(gromet_predicate_fn.b, GrometBoxFunction(function_type=FunctionType.PREDICATE))
         self.visit(node.expr, gromet_predicate_fn, node)
@@ -1067,7 +1067,7 @@ class ToGrometPass:
         
         ########### If true generation
 
-        print("-------------- IF TRUE  ---")
+        # print("-------------- IF TRUE  ---")
         # Visit the body (if cond true part) of the gromet fn
         body_if_fn = GrometFN()
         body_if_fn.b = insert_gromet_object(body_if_fn.b, GrometBoxFunction(function_type=FunctionType.FUNCTION))
@@ -1087,7 +1087,7 @@ class ToGrometPass:
 
         ########### If false generation
 
-        print("-------------- IF FALSE ---")
+        # print("-------------- IF FALSE ---")
         # Visit the else (if cond false part) of the gromet fn
         body_else_fn = GrometFN()
         body_else_fn.b = insert_gromet_object(body_else_fn.b, GrometBoxFunction(function_type=FunctionType.FUNCTION))
@@ -1104,7 +1104,7 @@ class ToGrometPass:
         parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
         parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
 
-        print("-------------- IF DONE  ---")
+        # print("-------------- IF DONE  ---")
 
 
     @_visit.register

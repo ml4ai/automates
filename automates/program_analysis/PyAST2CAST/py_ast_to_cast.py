@@ -336,11 +336,11 @@ class PyASTToCAST():
 
                 idx = self.visit(sub_node.slice, prev_scope_id_dict, curr_scope_id_dict)[0]
                 list_name = self.visit(sub_node.value, prev_scope_id_dict, curr_scope_id_dict)[0]
-                print("-------------")
-                print(type(node.value))
-                print(type(sub_node.slice))
-                print(type(sub_node.value))
-                print("-------------")
+                #print("-------------")
+                #print(type(node.value))
+                #print(type(sub_node.slice))
+                #print(type(sub_node.value))
+                #print("-------------")
 
                 """
                 if isinstance(arg, ast.Subscript):
