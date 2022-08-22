@@ -448,6 +448,9 @@ class ToGrfnPass:
 
     @_visit.register
     def visit_loop(self, node: AnnCastLoop, subgraph: GrFNSubgraph):
+        if len(node.init) > 0:
+            self.visit_node_list(node.init, subgraph)
+
         parent = subgraph
         # make a new subgraph for this If Container
         type = "LoopContainer"
@@ -465,6 +468,7 @@ class ToGrfnPass:
                                 occs, parent_str, type, border_color, nodes, metadata)
         self.subgraphs.add_node(subgraph)
         self.subgraphs.add_edge(parent, subgraph)
+
 
         # build top interface
         if len(node.top_interface_initial) > 0:

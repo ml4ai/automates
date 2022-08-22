@@ -510,8 +510,6 @@ class GrfnVarCreationPass:
     @_visit.register
     def visit_loop(self, node: AnnCastLoop):
         self.create_grfn_vars_loop(node)
-        if len(node.init) > 0:
-            self.alias_loop_init_highest_vers(node)
         self.alias_loop_expr_highest_vers(node)
         self.alias_loop_body_highest_vers(node)
         # visit children
