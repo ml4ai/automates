@@ -43,7 +43,7 @@ PRIMITIVES = {"Add" : "+", "Sub": "-", "Mult" : "*", "Div" : "/", "Lt": "<", "Gt
              "_List_get" : "", "_List_set" : "", "_Array_get" : "", "_Array_set" : "", "_Tuple_get" : "", "_Tuple_set" : "",
              "_iter" : "", "_next": "", "_member": "", "_add": "", "_delete": "", "print": "", 
              "_List": "", "_List_"+cons: "", "_Array": "", "_Array_"+cons: "", "_Tuple": "", "_Tuple_"+cons: "", "_Set": "", 
-             "_Map": "", "_Map_set": "", "_Map_get": ""}
+             "_Map": "", "_Map_set": "", "_Map_get": "", "sum": ""}
 
 def insert_gromet_object(t: List, obj):
     """ Inserts a GroMEt object obj into a GroMEt table t
@@ -243,6 +243,9 @@ class ToGrometPass:
         # case we use a wlf wire to wire the pol to the pif
 
         parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, parent_primitive_call_bf)
+
+        if isinstance(parent_cast_node, AnnCastBinaryOp):
+            parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
 
     def add_var_to_env(self, var_name, var_cast, var_pof, var_pof_idx, parent_cast_node):
         """ Adds a variable with name var_name, CAST node var_cast, Gromet pof var_pof
@@ -526,7 +529,7 @@ class ToGrometPass:
         left_pof = -1
         if parent_gromet_fn.pof != None:
             left_pof = len(parent_gromet_fn.pof)
-        if isinstance(node.left, AnnCastName) or isinstance(node.left, AnnCastUnaryOp):
+        if isinstance(node.left, AnnCastName):
             left_pof = -1
 
         # visit RHS second
@@ -539,7 +542,7 @@ class ToGrometPass:
         right_pof = -1
         if parent_gromet_fn.pof != None:
             right_pof = len(parent_gromet_fn.pof)
-        if isinstance(node.right, AnnCastName) or isinstance(node.right, AnnCastUnaryOp): 
+        if isinstance(node.right, AnnCastName): 
             right_pof = -1
 
         ref = node.source_refs[0]
@@ -1195,15 +1198,11 @@ class ToGrometPass:
         if node.op == "USub":
             ref = node.source_refs[0]
             metadata = [self.create_source_code_reference(ref)]
-            parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name="*", function_type=FunctionType.PRIMITIVE, metadata=metadata))
-            parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
+            # Unary Add: UPos (if we ever need it...)
+            parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name="USub", function_type=FunctionType.PRIMITIVE, metadata=metadata))
             parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
             parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
             
-            val = LiteralValue("Integer", -1)
-            parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(function_type=FunctionType.LITERAL, value=val, metadata=metadata))
-            parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
-            parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif)-1,tgt=len(parent_gromet_fn.pof)-1))
             if isinstance(node.value, AnnCastLiteralValue):
                 self.visit(node.value, parent_gromet_fn, parent_cast_node)
                 parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=len(parent_gromet_fn.pof)))
@@ -1216,7 +1215,7 @@ class ToGrometPass:
                 else:
                     # If we are in a function def then we retrieve where the variable is 
                     # Whether it's in the local or the args environment
-                    self.wire_from_var_env(node.value.name, parent_gromet_fn)
+                    self.wire_from_var_env(node.value.name, parent_gromet_fn)        
 
     @_visit.register
     def visit_var(self, node: AnnCastVar, parent_gromet_fn, parent_cast_node):
