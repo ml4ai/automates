@@ -434,7 +434,12 @@ class PyASTToCAST():
 
                         prev_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
 
+                    # TODO: Augment this _List_num constructor with the following
+                    # First argument should be a list with the initial amount of elements
+                    # Then second arg is how many times to repeat that
+                    # When we say List for the first argument: It should be a literal value List that holds the elements 
                     to_ret = Call(Name("_List_num", id=prev_scope_id_dict[unique_name], source_refs=ref), [cons.initial_value, cons.size], source_refs=ref)
+
 
                     #print(to_ret)
                     l_visit = self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict)
@@ -982,7 +987,7 @@ class PyASTToCAST():
                 values.extend(self.visit(piece, prev_scope_id_dict, curr_scope_id_dict))
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        return [Dict(keys, values, source_refs=ref)]
+        return [LiteralValue(StructureType.MAP, Dict(keys, values, source_refs=ref)]
 
     @visit.register
     def visit_Expr(self, node: ast.Expr, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -1555,6 +1560,7 @@ class PyASTToCAST():
 
         source_code_data_type = ["Python","3.8","List"]
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        # TODO: How to handle constructors with variables?
         if len(node.elts) > 0:
             to_ret = []
             for piece in node.elts:

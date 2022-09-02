@@ -42,7 +42,8 @@ cons = "num"
 PRIMITIVES = {"Add" : "+", "Sub": "-", "Mult" : "*", "Div" : "/", "Lt": "<", "Gt": ">", "Eq": "==", "Pow": "**", "NotEq": "!=",
              "_List_get" : "", "_List_set" : "", "_Array_get" : "", "_Array_set" : "", "_Tuple_get" : "", "_Tuple_set" : "",
              "_iter" : "", "_next": "", "_member": "", "_add": "", "_delete": "", "print": "", 
-             "_List": "", "_List_"+cons: "", "_Array": "", "_Array_"+cons: "", "_Tuple": "", "_Tuple_"+cons: "", "_Set": ""}
+             "_List": "", "_List_"+cons: "", "_Array": "", "_Array_"+cons: "", "_Tuple": "", "_Tuple_"+cons: "", "_Set": "", 
+             "_Map": "", "_Map_set": "", "_Map_get": ""}
 
 def insert_gromet_object(t: List, obj):
     """ Inserts a GroMEt object obj into a GroMEt table t
