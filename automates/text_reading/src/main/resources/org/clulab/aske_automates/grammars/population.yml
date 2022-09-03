@@ -5,7 +5,7 @@ rules:
 ####DESCRIPTIONS####
 
   - name: <rule_name>
-    label: Population
+    label: PopulationSample
     priority: ${priority}
     type: <dependency or token> # pick the rule type
     example: "<example_here>"

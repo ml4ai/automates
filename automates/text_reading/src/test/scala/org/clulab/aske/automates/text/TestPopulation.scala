@@ -12,7 +12,7 @@ class TestPopulation extends ExtractionTest {
       "participants" -> Seq("25,718")
     )
     val mentions = extractMentions(t1a)
-    testPopulationEvent(mentions, desired)
+    testPopulationSampleEvent(mentions, desired)
   }
 
   val t2a = "Of the total sample, 63.3% identified as female (n = 16,273), ..."
@@ -22,7 +22,7 @@ class TestPopulation extends ExtractionTest {
       "female" -> Seq("63.3%"),
     )
     val mentions = extractMentions(t2a)
-    testPopulationEvent(mentions, desired)
+    testPopulationSampleEvent(mentions, desired)
   }
 
 }
