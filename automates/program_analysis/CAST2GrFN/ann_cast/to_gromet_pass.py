@@ -41,7 +41,7 @@ cons = "num"
 
 PRIMITIVES = {"Add" : "+", "Sub": "-", "Mult" : "*", "Div" : "/", "Lt": "<", "Gt": ">", "Eq": "==", "Pow": "**", "NotEq": "!=",
              "_List_get" : "", "_List_set" : "", "_Array_get" : "", "_Array_set" : "", "_Tuple_get" : "", "_Tuple_set" : "",
-             "_iter" : "", "_next": "", "_member": "", "_add": "", "_delete": "", "print": "", 
+             "_iter" : "", "_next": "", "_member": "", "_add": "", "_delete": "", "print": "", "_get": "", "_set": "",
              "_List": "", "_List_"+cons: "", "_Array": "", "_Array_"+cons: "", "_Tuple": "", "_Tuple_"+cons: "", "_Set": "", 
              "_Map": "", "_Map_set": "", "_Map_get": "", "sum": ""}
 
@@ -134,7 +134,7 @@ class ToGrometPass:
         self.pipeline_state = pipeline_state
         self.nodes = self.pipeline_state.nodes
 
-        self.var_environment = {"global": None, "args": None, "local": None}
+        self.var_environment = {"global": {}, "args": {}, "local": {}}
         self.cast_node_stack = []
 
         # creating a GroMEt FN object here or a collection of GroMEt FNs
@@ -302,8 +302,8 @@ class ToGrometPass:
         """
         # print current node being visited.  
         # this can be useful for debugging 
-        # class_name = node.__class__.__name__
-        # print(f"\nProcessing node type {class_name}")
+        class_name = node.__class__.__name__
+        print(f"\nProcessing node type {class_name}")
 
         # call internal visit
         return self._visit(node, parent_gromet_fn, parent_cast_node)
@@ -647,17 +647,21 @@ class ToGrometPass:
 
                 if isinstance(arg, AnnCastName):
                     parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
-                    if arg.name in self.var_environment["local"]:
+                    if self.var_environment["local"] != None and arg.name in self.var_environment["local"]:
                         local_env = self.var_environment["local"]
                         entry = local_env[arg.name]
                         if isinstance(entry[0], AnnCastLoop):
                             parent_gromet_fn.wlf = insert_gromet_object(parent_gromet_fn.wlf, GrometWire(src=len(parent_gromet_fn.pif),tgt=entry[2]+1))
                         else:
                             parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=entry[2]+1))
-                    elif arg.name in self.var_environment["args"]:
+                    elif self.var_environment["args"] != None and arg.name in self.var_environment["args"]:
                         args_env = self.var_environment["args"]
                         entry = args_env[arg.name]
                         parent_gromet_fn.wfopi = insert_gromet_object(parent_gromet_fn.wfopi, GrometWire(src=len(parent_gromet_fn.pif),tgt=entry[2]+1))
+                    elif self.var_environment["global"] != None and arg.name in self.var_environment["global"]:
+                        global_env = self.var_environment["global"]
+                        entry = global_env[arg.name]
+                        parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=entry[2]+1))
                 elif isinstance(arg, AnnCastBinaryOp):
                     self.wire_binary_op_args(arg, parent_gromet_fn)
 
