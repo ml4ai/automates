@@ -577,7 +577,11 @@ class CASTToAGraphVisitor(CASTVisitor):
             return node_uid
         elif node.value_type == StructureType.LIST:
             node_uid = uuid.uuid4()
-            self.G.add_node(node_uid, label=f"List: [...]")
+            self.G.add_node(node_uid, label=f"List (str or list): [...]")
+            return node_uid
+        elif node.value_type == StructureType.MAP:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label="Dict: {...}")
             return node_uid
         elif node.value_type == "List[Any]":
             node_uid = uuid.uuid4()
@@ -593,7 +597,10 @@ class CASTToAGraphVisitor(CASTVisitor):
 
                 #self.G.add_node(node_uid, label=f"List: Init_Val: [{init_val}], Size: {size} ")
                 self.G.add_node(node_uid, label=f"List: [{init_val}] {op} {size} (id: {id})")
-
+            return node_uid
+        elif node.value_type == StructureType.MAP:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"Dict: {node.value}")
             return node_uid
         else:
             assert False, f"cast_to_agraph_visitor LiteralValue: type not supported yet {type(node)}"
@@ -614,7 +621,7 @@ class CASTToAGraphVisitor(CASTVisitor):
             return node_uid
         elif node.value_type == StructureType.LIST:
             node_uid = uuid.uuid4()
-            self.G.add_node(node_uid, label=f"List: [...]")
+            self.G.add_node(node_uid, label=f"List (str or list): [...]")
             return node_uid
         elif node.value_type == "List[Any]":
             node_uid = uuid.uuid4()
@@ -630,7 +637,9 @@ class CASTToAGraphVisitor(CASTVisitor):
 
                 #self.G.add_node(node_uid, label=f"List: Init_Val: [{init_val}], Size: {size} ")
                 self.G.add_node(node_uid, label=f"List: [{init_val}] {op} {size} (id: {id})")
-
+        elif node.value_type == StructureType.MAP:
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"Dict: {node.value}")
             return node_uid
         else:
             assert False, f"cast_to_agraph_visitor LiteralValue: type not supported yet {type(node)}"
