@@ -1,0 +1,13 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+####DESCRIPTIONS####
+
+  - name: <rule_name>
+    label: Population
+    priority: ${priority}
+    type: <dependency or token> # pick the rule type
+    example: "<example_here>"
+    pattern: |
+      <rule_here>

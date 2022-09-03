@@ -70,6 +70,10 @@ rules:
       action: filterModelDescrs
       priority: 10
 
+  - import: "org/clulab/aske_automates/grammars/population.yml"
+    vars:
+      priority: 11
+
 #  - import: "org/clulab/aske_automates/grammars/template.yml"
 #    vars:
 #      rulepriority: "6"

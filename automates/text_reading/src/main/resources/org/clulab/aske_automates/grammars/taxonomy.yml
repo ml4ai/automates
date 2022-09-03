@@ -31,6 +31,7 @@
     - ModelLimitation
   - ParameterSetting
   - ParamAndUnit
+  - Population
   - IntervalParameterSetting
   - Function
   - Context

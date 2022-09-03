@@ -163,6 +163,7 @@ object OdinEngine {
   val FUNCTION_LABEL: String = "Function"
   val CONTEXT_LABEL: String = "Context"
   val CONTEXT_EVENT_LABEL: String = "ContextEvent"
+  val POPULATION_EVENT_LABEL: String = "Population"
   // Mention argument types
   val VARIABLE_ARG: String = "variable"
   val VALUE_LEAST_ARG: String = "valueLeast"
@@ -176,6 +177,8 @@ object OdinEngine {
   val MODEL_DESCRIPTION_ARG: String = "modelDescr"
   val CONTEXT_ARG: String = "context"
   val CONTEXT_EVENT_ARG: String = "event"
+  val POPULATION_EVENT_ARG: String = "population"
+  val NUMBER_ARG: String = "number"
 
   val logger = LoggerFactory.getLogger(this.getClass())
   // Used by LexiconNER
