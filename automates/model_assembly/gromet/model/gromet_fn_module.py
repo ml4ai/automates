@@ -29,7 +29,8 @@ class GrometFNModule(GrometObject):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'gromet_fn_version': 'str',
+        'schema': 'str',
+        'schema_version': 'str',
         'name': 'str',
         'fn': 'GrometFN',
         'attributes': 'list[TypedValue]',
@@ -39,7 +40,8 @@ class GrometFNModule(GrometObject):
         swagger_types.update(GrometObject.swagger_types)
 
     attribute_map = {
-        'gromet_fn_version': 'gromet_fn_version',
+        'schema': 'schema',
+        'schema_version': 'schema_version',
         'name': 'name',
         'fn': 'fn',
         'attributes': 'attributes',
@@ -48,16 +50,19 @@ class GrometFNModule(GrometObject):
     if hasattr(GrometObject, "attribute_map"):
         attribute_map.update(GrometObject.attribute_map)
 
-    def __init__(self, gromet_fn_version=None, name=None, fn=None, attributes=None, metadata_collection=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, schema='FN', schema_version=None, name=None, fn=None, attributes=None, metadata_collection=None, *args, **kwargs):  # noqa: E501
         """GrometFNModule - a model defined in Swagger"""  # noqa: E501
-        self._gromet_fn_version = None
+        self._schema = None
+        self._schema_version = None
         self._name = None
         self._fn = None
         self._attributes = None
         self._metadata_collection = None
         self.discriminator = None
-        if gromet_fn_version is not None:
-            self.gromet_fn_version = gromet_fn_version
+        if schema is not None:
+            self.schema = schema
+        if schema_version is not None:
+            self.schema_version = schema_version
         if name is not None:
             self.name = name
         if fn is not None:
@@ -69,25 +74,46 @@ class GrometFNModule(GrometObject):
         GrometObject.__init__(self, *args, **kwargs)
 
     @property
-    def gromet_fn_version(self):
-        """Gets the gromet_fn_version of this GrometFNModule.  # noqa: E501
+    def schema(self):
+        """Gets the schema of this GrometFNModule.  # noqa: E501
 
 
-        :return: The gromet_fn_version of this GrometFNModule.  # noqa: E501
+        :return: The schema of this GrometFNModule.  # noqa: E501
         :rtype: str
         """
-        return self._gromet_fn_version
+        return self._schema
 
-    @gromet_fn_version.setter
-    def gromet_fn_version(self, gromet_fn_version):
-        """Sets the gromet_fn_version of this GrometFNModule.
+    @schema.setter
+    def schema(self, schema):
+        """Sets the schema of this GrometFNModule.
 
 
-        :param gromet_fn_version: The gromet_fn_version of this GrometFNModule.  # noqa: E501
+        :param schema: The schema of this GrometFNModule.  # noqa: E501
         :type: str
         """
 
-        self._gromet_fn_version = gromet_fn_version
+        self._schema = schema
+
+    @property
+    def schema_version(self):
+        """Gets the schema_version of this GrometFNModule.  # noqa: E501
+
+
+        :return: The schema_version of this GrometFNModule.  # noqa: E501
+        :rtype: str
+        """
+        return self._schema_version
+
+    @schema_version.setter
+    def schema_version(self, schema_version):
+        """Sets the schema_version of this GrometFNModule.
+
+
+        :param schema_version: The schema_version of this GrometFNModule.  # noqa: E501
+        :type: str
+        """
+
+        self._schema_version = schema_version
 
     @property
     def name(self):
