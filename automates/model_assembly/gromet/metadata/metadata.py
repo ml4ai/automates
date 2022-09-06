@@ -28,47 +28,19 @@ class Metadata(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'uid': 'str',
         'provenance': 'Provenance'
     }
 
     attribute_map = {
-        'uid': 'uid',
         'provenance': 'provenance'
     }
 
-    def __init__(self, uid=None, provenance=None):  # noqa: E501
+    def __init__(self, provenance=None):  # noqa: E501
         """Metadata - a model defined in Swagger"""  # noqa: E501
-        self._uid = None
         self._provenance = None
         self.discriminator = None
-        if uid is not None:
-            self.uid = uid
         if provenance is not None:
             self.provenance = provenance
-
-    @property
-    def uid(self):
-        """Gets the uid of this Metadata.  # noqa: E501
-
-        A unique identifier  # noqa: E501
-
-        :return: The uid of this Metadata.  # noqa: E501
-        :rtype: str
-        """
-        return self._uid
-
-    @uid.setter
-    def uid(self, uid):
-        """Sets the uid of this Metadata.
-
-        A unique identifier  # noqa: E501
-
-        :param uid: The uid of this Metadata.  # noqa: E501
-        :type: str
-        """
-
-        self._uid = uid
 
     @property
     def provenance(self):

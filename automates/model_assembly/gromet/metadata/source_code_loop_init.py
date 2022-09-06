@@ -29,7 +29,7 @@ class SourceCodeLoopInit(Metadata):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'metadata_type': 'Sring',
+        'metadata_type': 'str',
         'source_language': 'str',
         'source_language_version': 'str',
         'loop_name': 'str'
@@ -46,7 +46,7 @@ class SourceCodeLoopInit(Metadata):
     if hasattr(Metadata, "attribute_map"):
         attribute_map.update(Metadata.attribute_map)
 
-    def __init__(self, metadata_type=None, source_language=None, source_language_version=None, loop_name=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, metadata_type='source_code_loop_init', source_language=None, source_language_version=None, loop_name=None, *args, **kwargs):  # noqa: E501
         """SourceCodeLoopInit - a model defined in Swagger"""  # noqa: E501
         self._metadata_type = None
         self._source_language = None
@@ -69,7 +69,7 @@ class SourceCodeLoopInit(Metadata):
 
 
         :return: The metadata_type of this SourceCodeLoopInit.  # noqa: E501
-        :rtype: Sring
+        :rtype: str
         """
         return self._metadata_type
 
@@ -79,7 +79,7 @@ class SourceCodeLoopInit(Metadata):
 
 
         :param metadata_type: The metadata_type of this SourceCodeLoopInit.  # noqa: E501
-        :type: Sring
+        :type: str
         """
 
         self._metadata_type = metadata_type

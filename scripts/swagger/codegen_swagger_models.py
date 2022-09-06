@@ -21,7 +21,7 @@ import argparse
 
 # Current highest versions
 CAST_VERSION = "1.2.1"
-GROMET_VERSION = "0.1.3"
+GROMET_VERSION = "0.1.4"
 
 RELATIVE_AUTOMATES_ROOT = '../../'
 
