@@ -28,47 +28,47 @@ class AstNode(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'uid': 'str',
+        'id': 'int',
         'source_refs': 'list[ComponentsmetadataSourceRef]'
     }
 
     attribute_map = {
-        'uid': 'uid',
+        'id': 'id',
         'source_refs': 'source_refs'
     }
 
-    def __init__(self, uid=None, source_refs=None):  # noqa: E501
+    def __init__(self, id=None, source_refs=None):  # noqa: E501
         """AstNode - a model defined in Swagger"""  # noqa: E501
-        self._uid = None
+        self._id = None
         self._source_refs = None
         self.discriminator = None
-        if uid is not None:
-            self.uid = uid
+        if id is not None:
+            self.id = id
         if source_refs is not None:
             self.source_refs = source_refs
 
     @property
-    def uid(self):
-        """Gets the uid of this AstNode.  # noqa: E501
+    def id(self):
+        """Gets the id of this AstNode.  # noqa: E501
 
-        A unique identifier  # noqa: E501
+        An identifier (integer)  # noqa: E501
 
-        :return: The uid of this AstNode.  # noqa: E501
-        :rtype: str
+        :return: The id of this AstNode.  # noqa: E501
+        :rtype: int
         """
-        return self._uid
+        return self._id
 
-    @uid.setter
-    def uid(self, uid):
-        """Sets the uid of this AstNode.
+    @id.setter
+    def id(self, id):
+        """Sets the id of this AstNode.
 
-        A unique identifier  # noqa: E501
+        An identifier (integer)  # noqa: E501
 
-        :param uid: The uid of this AstNode.  # noqa: E501
-        :type: str
+        :param id: The id of this AstNode.  # noqa: E501
+        :type: int
         """
 
-        self._uid = uid
+        self._id = id
 
     @property
     def source_refs(self):
