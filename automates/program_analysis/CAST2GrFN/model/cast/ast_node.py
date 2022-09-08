@@ -28,47 +28,19 @@ class AstNode(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'id': 'int',
         'source_refs': 'list[SourceRef]'
     }
 
     attribute_map = {
-        'id': 'id',
         'source_refs': 'source_refs'
     }
 
-    def __init__(self, id=None, source_refs=None):  # noqa: E501
+    def __init__(self, source_refs=None):  # noqa: E501
         """AstNode - a model defined in Swagger"""  # noqa: E501
-        self._id = None
         self._source_refs = None
         self.discriminator = None
-        if id is not None:
-            self.id = id
         if source_refs is not None:
             self.source_refs = source_refs
-
-    @property
-    def id(self):
-        """Gets the id of this AstNode.  # noqa: E501
-
-        An identifier (integer)  # noqa: E501
-
-        :return: The id of this AstNode.  # noqa: E501
-        :rtype: int
-        """
-        return self._id
-
-    @id.setter
-    def id(self, id):
-        """Sets the id of this AstNode.
-
-        An identifier (integer)  # noqa: E501
-
-        :param id: The id of this AstNode.  # noqa: E501
-        :type: int
-        """
-
-        self._id = id
 
     @property
     def source_refs(self):
