@@ -37,6 +37,8 @@ from automates.program_analysis.CAST2GrFN.model.cast.name import Name
 from automates.program_analysis.CAST2GrFN.model.cast.number import Number
 from automates.program_analysis.CAST2GrFN.model.cast.scalar_type import ScalarType
 from automates.program_analysis.CAST2GrFN.model.cast.set import Set
+from automates.program_analysis.CAST2GrFN.model.cast.source_code_data_type import SourceCodeDataType
+from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
 from automates.program_analysis.CAST2GrFN.model.cast.string import String
 from automates.program_analysis.CAST2GrFN.model.cast.structure_type import StructureType
 from automates.program_analysis.CAST2GrFN.model.cast.subscript import Subscript

@@ -29,7 +29,7 @@ class AstNode(object):
     """
     swagger_types = {
         'id': 'int',
-        'source_refs': 'list[ComponentsmetadataSourceRef]'
+        'source_refs': 'list[SourceRef]'
     }
 
     attribute_map = {
@@ -76,7 +76,7 @@ class AstNode(object):
 
 
         :return: The source_refs of this AstNode.  # noqa: E501
-        :rtype: list[ComponentsmetadataSourceRef]
+        :rtype: list[SourceRef]
         """
         return self._source_refs
 
@@ -86,7 +86,7 @@ class AstNode(object):
 
 
         :param source_refs: The source_refs of this AstNode.  # noqa: E501
-        :type: list[ComponentsmetadataSourceRef]
+        :type: list[SourceRef]
         """
 
         self._source_refs = source_refs
