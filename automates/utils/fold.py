@@ -70,7 +70,11 @@ def dictionary_to_gromet_json(o, fold_level=3, indent=4, level=0, parent_key="")
     elif o is None:
         ret += "null"
     else:
-        ret += str(o)
+        if hasattr(o, "to_dict"):
+            temp = del_nulls(o.to_dict())
+            ret += dictionary_to_gromet_json(temp, fold_level, indent, level, parent_key)
+        else:
+            ret += str(o)
     return ret
 
 def del_nulls(d):
