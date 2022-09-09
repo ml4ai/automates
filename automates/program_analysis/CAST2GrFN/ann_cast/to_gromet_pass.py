@@ -1,4 +1,5 @@
 from copy import deepcopy
+from re import I
 import typing
 import sys
 
@@ -184,7 +185,7 @@ class ToGrometPass:
         file_uid = ""
         return SourceCodeReference(provenance=generate_provenance(), code_file_reference_uid=file_uid, line_begin=line_begin, line_end=line_end, col_begin=col_begin, col_end=col_end)
 
-    def insert_metadata(self, metadata):
+    def insert_metadata(self, *metadata):
         """
             insert_metadata inserts metadata into the self.gromet_module.metadata_collection list
             Then, the index of where this metadata lives is returned
@@ -192,7 +193,10 @@ class ToGrometPass:
             into metadata_collection that points to the metadata they stored
         """
         # return None # Uncomment this line if we don't want metadata
-        self.gromet_module.metadata_collection.append(metadata)
+        to_insert = []
+        for md in metadata:
+            to_insert.append(md)
+        self.gromet_module.metadata_collection.append(to_insert)
         return len(self.gromet_module.metadata_collection)-1
 
     def set_index(self):
@@ -887,9 +891,7 @@ class ToGrometPass:
         code_data_metadata = SourceCodeDataType(metadata_type="source_code_data_type", provenance=generate_provenance(), source_language=ref[0], source_language_version=ref[1], data_type=str(ref[2]))
         val = LiteralValue(node.value_type, node.value)
 
-        parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(function_type=FunctionType.LITERAL, value=val, metadata=[self.insert_metadata(code_data_metadata),self.insert_metadata(source_code_metadata)]))
-        # NOTE: how to store multiple metadata?
-        #parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(function_type=FunctionType.LITERAL, value=val, metadata=self.insert_metadata(code_data_metadata)))
+        parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(function_type=FunctionType.LITERAL, value=val, metadata=self.insert_metadata(code_data_metadata,source_code_metadata)))
         parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf))) 
 
         # Perhaps we may need to return something in the future
@@ -1165,8 +1167,8 @@ class ToGrometPass:
 
         # Initialize the Gromet module's SourceCodeCollection of CodeFileReferences
         code_file_references = [CodeFileReference(uid=str(uuid.uuid4()), name=file_name, path="")]
-        self.gromet_module.metadata = [self.insert_metadata(GrometCreation(provenance=generate_provenance())), self.insert_metadata(SourceCodeCollection(provenance=generate_provenance(), name="", global_reference_id="", files=code_file_references))]
-        # self.gromet_module.metadata = self.insert_metadata(SourceCodeCollection(provenance=generate_provenance(), name="", global_reference_id="", files=code_file_references))
+        # self.gromet_module.metadata = [self.insert_metadata(GrometCreation(provenance=generate_provenance())), self.insert_metadata(SourceCodeCollection(provenance=generate_provenance(), name="", global_reference_id="", files=code_file_references))]
+        self.gromet_module.metadata = self.insert_metadata(GrometCreation(provenance=generate_provenance()),SourceCodeCollection(provenance=generate_provenance(), name="", global_reference_id="", files=code_file_references))
         
         # Outer module box only has name 'module' and its type 'Module'
         new_gromet.b = insert_gromet_object(new_gromet.b, GrometBoxFunction(name="module", function_type=FunctionType.MODULE, metadata=self.insert_metadata(self.create_source_code_reference(node.source_refs[0]))))
