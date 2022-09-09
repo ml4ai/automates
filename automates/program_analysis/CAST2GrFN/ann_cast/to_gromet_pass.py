@@ -182,7 +182,8 @@ class ToGrometPass:
         col_end = ref_info.col_end
 
         # file_uid = str(self.gromet_module.metadata[-1].files[0].uid)
-        file_uid = ""
+        file_uid = str(self.gromet_module.metadata_collection[0][0].files[0].uid)
+        # file_uid = ""
         return SourceCodeReference(provenance=generate_provenance(), code_file_reference_uid=file_uid, line_begin=line_begin, line_end=line_end, col_begin=col_begin, col_end=col_end)
 
     def insert_metadata(self, *metadata):
@@ -1168,7 +1169,7 @@ class ToGrometPass:
         # Initialize the Gromet module's SourceCodeCollection of CodeFileReferences
         code_file_references = [CodeFileReference(uid=str(uuid.uuid4()), name=file_name, path="")]
         # self.gromet_module.metadata = [self.insert_metadata(GrometCreation(provenance=generate_provenance())), self.insert_metadata(SourceCodeCollection(provenance=generate_provenance(), name="", global_reference_id="", files=code_file_references))]
-        self.gromet_module.metadata = self.insert_metadata(GrometCreation(provenance=generate_provenance()),SourceCodeCollection(provenance=generate_provenance(), name="", global_reference_id="", files=code_file_references))
+        self.gromet_module.metadata = self.insert_metadata(SourceCodeCollection(provenance=generate_provenance(), name="", global_reference_id="", files=code_file_references), GrometCreation(provenance=generate_provenance()))
         
         # Outer module box only has name 'module' and its type 'Module'
         new_gromet.b = insert_gromet_object(new_gromet.b, GrometBoxFunction(name="module", function_type=FunctionType.MODULE, metadata=self.insert_metadata(self.create_source_code_reference(node.source_refs[0]))))
