@@ -70,7 +70,16 @@ def dictionary_to_gromet_json(o, fold_level=3, indent=4, level=0, parent_key="")
     elif o is None:
         ret += "null"
     else:
-        ret += str(o)
+        # NOTE: We added this check here to catch any Python objects that
+        # didn't get turned into dictionaries.
+        # This is to circumvent Swagger's inability to generate to_dicts that support
+        # multi-dimensional dictionaries. This becomes an issue for us when we're storing
+        # an array of metadata arrays
+        if hasattr(o, "to_dict"):          
+            temp = del_nulls(o.to_dict()) 
+            ret += dictionary_to_gromet_json(temp, fold_level, indent, level, parent_key)
+        else:
+            ret += str(o)
     return ret
 
 def del_nulls(d):
