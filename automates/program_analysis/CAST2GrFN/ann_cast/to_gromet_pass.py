@@ -1,21 +1,18 @@
 from copy import deepcopy
-from re import I
-import typing
 import sys
 
 from automates.utils.misc import uuid
 
 from functools import singledispatchmethod
-from automates.model_assembly.gromet.metadata.provenance import Provenance
+from automates.gromet import Provenance
 from datetime import datetime
 from time import time
 
-from automates.model_assembly.gromet.model import (
+from automates.gromet import (
     FunctionType,    
     GrometBoxConditional,
     GrometBoxFunction,
     GrometBoxLoop,
-    GrometBox,
     GrometFNModule,
     GrometFN,
     GrometPort,
@@ -23,20 +20,16 @@ from automates.model_assembly.gromet.model import (
     LiteralValue,
 )
 
-from automates.model_assembly.gromet.model.attribute_type import AttributeType
-from automates.model_assembly.gromet.model.typed_value import TypedValue
+from automates.gromet import AttributeType
+from automates.gromet import TypedValue
 
-from automates.model_assembly.gromet.metadata.source_code_data_type import SourceCodeDataType
-from automates.model_assembly.gromet.metadata.source_code_reference import SourceCodeReference
-from automates.model_assembly.gromet.metadata.source_code_collection import SourceCodeCollection
-from automates.model_assembly.gromet.metadata.code_file_reference import CodeFileReference
-from automates.model_assembly.gromet.metadata.gromet_creation import GrometCreation
+from automates.gromet import SourceCodeDataType
+from automates.gromet import SourceCodeReference
+from automates.gromet.metadata.source_code_collection import SourceCodeCollection
+from automates.gromet.metadata.code_file_reference import CodeFileReference
+from automates.gromet import GrometCreation
 
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-from automates.program_analysis.CAST2GrFN.model.cast import ( 
-    ScalarType,
-    ValueConstructor,
-)
 
 cons = "num"
 

@@ -1,4 +1,4 @@
-from automates.model_assembly.gromet.metadata import (
+from automates.gromet import (
     # Bibjson,
     # CodeFileReference,
     # EquationDefinition,
@@ -24,8 +24,6 @@ from automates.program_analysis.JSON2GroMEt.json2gromet import json_to_gromet
 from automates.utils.fold import dictionary_to_gromet_json, del_nulls
 
 import os
-import pprint
-
 
 # NOTE: Update ROOT_ASKEM_DATA path to local version
 ROOT_ASKEM_DATA = '/Users/claytonm/My Drive/ASKEM-SKEMA/data'

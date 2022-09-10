@@ -1,6 +1,6 @@
 import json
 
-from automates.model_assembly.gromet.model import (  
+from automates.gromet import (
     GrometBoxConditional,
     GrometBoxFunction,
     GrometBoxLoop,
@@ -10,8 +10,7 @@ from automates.model_assembly.gromet.model import (
     GrometWire,
     LiteralValue,
 )
-from automates.model_assembly.gromet.metadata import (
-    Metadata,
+from automates.gromet import (
     Provenance,
     SourceCodeReference,
     SourceCodeDataType,
@@ -30,7 +29,7 @@ from automates.model_assembly.gromet.metadata import (
     CodeFileReference
 
 )
-from automates.model_assembly.gromet.model.typed_value import TypedValue
+from automates.gromet import TypedValue
 
 
 def json_to_gromet(path):

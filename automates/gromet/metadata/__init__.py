@@ -14,22 +14,4 @@
 from __future__ import absolute_import
 
 # import models into model package
-from automates.model_assembly.gromet.metadata.bibjson import Bibjson
-from automates.model_assembly.gromet.metadata.code_file_reference import CodeFileReference
-from automates.model_assembly.gromet.metadata.equation_definition import EquationDefinition
-from automates.model_assembly.gromet.metadata.equation_extraction import EquationExtraction
-from automates.model_assembly.gromet.metadata.equation_parameter import EquationParameter
-from automates.model_assembly.gromet.metadata.gromet_creation import GrometCreation
-from automates.model_assembly.gromet.metadata.literal_value import LiteralValue
-from automates.model_assembly.gromet.metadata.metadata import Metadata
-from automates.model_assembly.gromet.metadata.provenance import Provenance
-from automates.model_assembly.gromet.metadata.source_code_collection import SourceCodeCollection
-from automates.model_assembly.gromet.metadata.source_code_data_type import SourceCodeDataType
-from automates.model_assembly.gromet.metadata.source_code_loop_init import SourceCodeLoopInit
-from automates.model_assembly.gromet.metadata.source_code_loop_update import SourceCodeLoopUpdate
-from automates.model_assembly.gromet.metadata.source_code_reference import SourceCodeReference
-from automates.model_assembly.gromet.metadata.text_definition import TextDefinition
-from automates.model_assembly.gromet.metadata.text_extraction import TextExtraction
-from automates.model_assembly.gromet.metadata.text_parameter import TextParameter
-from automates.model_assembly.gromet.metadata.textual_document_collection import TextualDocumentCollection
-from automates.model_assembly.gromet.metadata.textual_document_reference import TextualDocumentReference
+from automates.gromet.metadata.bibjson import Bibjson

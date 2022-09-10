@@ -14,20 +14,5 @@
 from __future__ import absolute_import
 
 # import models into model package
-from automates.model_assembly.gromet.model.attribute_type import AttributeType
-from automates.model_assembly.gromet.model.function_type import FunctionType
-from automates.model_assembly.gromet.model.gromet_box import GrometBox
-from automates.model_assembly.gromet.model.gromet_box_conditional import GrometBoxConditional
-from automates.model_assembly.gromet.model.gromet_box_function import GrometBoxFunction
-from automates.model_assembly.gromet.model.gromet_box_loop import GrometBoxLoop
-from automates.model_assembly.gromet.model.gromet_fn import GrometFN
-from automates.model_assembly.gromet.model.gromet_fn_module import GrometFNModule
-from automates.model_assembly.gromet.model.gromet_object import GrometObject
-from automates.model_assembly.gromet.model.gromet_port import GrometPort
-from automates.model_assembly.gromet.model.gromet_wire import GrometWire
-from automates.model_assembly.gromet.model.import_reference import ImportReference
-from automates.model_assembly.gromet.model.import_type import ImportType
-from automates.model_assembly.gromet.model.literal_value import LiteralValue
+from automates.gromet.fn.gromet_fn_module import GrometFNModule
 # from automates.model_assembly.gromet.model.metadata import Metadata
-from automates.model_assembly.gromet.model.source_type import SourceType
-from automates.model_assembly.gromet.model.typed_value import TypedValue
