@@ -1,6 +1,6 @@
 import json
 
-from automates.gromet import (
+from automates.gromet.fn import (
     GrometBoxConditional,
     GrometBoxFunction,
     GrometBoxLoop,
@@ -10,7 +10,7 @@ from automates.gromet import (
     GrometWire,
     LiteralValue,
 )
-from automates.gromet import (
+from automates.gromet.metadata import (
     Provenance,
     SourceCodeReference,
     SourceCodeDataType,
@@ -29,7 +29,7 @@ from automates.gromet import (
     CodeFileReference
 
 )
-from automates.gromet import TypedValue
+from automates.gromet.fn import TypedValue
 
 
 def json_to_gromet(path):
@@ -46,7 +46,7 @@ def json_to_gromet(path):
 
     # Import Attributes
     for fn in json_object["attributes"]:
-         # TODO: Add support for types other than FN
+        # TODO: Add support for types other than FN
         type = fn["type"]
         value = TypedValue(type="FN", value=parse_function_network(fn["value"]))
         
@@ -70,6 +70,7 @@ def json_to_gromet(path):
     import_basic_datatypes(json_object, gromet_module)
     
     return gromet_module
+
 
 def parse_function_network(obj):
         # Create function_network object
@@ -112,6 +113,7 @@ def parse_function_network(obj):
                     setattr(function_network, table, [gromet_object])
 
         return function_network
+
 
 def parse_metadata(obj):
     metadata_type_map = {
@@ -202,6 +204,7 @@ def parse_metadata(obj):
     import_basic_datatypes(obj, metadata_object)
     
     return metadata_object
+
 
 def import_basic_datatypes(obj, gromet_obj):
     for field, value in obj.items():

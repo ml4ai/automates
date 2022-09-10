@@ -4,12 +4,12 @@ import sys
 from automates.utils.misc import uuid
 
 from functools import singledispatchmethod
-from automates.gromet import Provenance
 from datetime import datetime
 from time import time
 
-from automates.gromet import (
-    FunctionType,    
+from automates.gromet.fn import (
+    AttributeType,
+    FunctionType,
     GrometBoxConditional,
     GrometBoxFunction,
     GrometBoxLoop,
@@ -18,16 +18,17 @@ from automates.gromet import (
     GrometPort,
     GrometWire,
     LiteralValue,
+    TypedValue,
 )
 
-from automates.gromet import AttributeType
-from automates.gromet import TypedValue
-
-from automates.gromet import SourceCodeDataType
-from automates.gromet import SourceCodeReference
-from automates.gromet.metadata.source_code_collection import SourceCodeCollection
-from automates.gromet.metadata.code_file_reference import CodeFileReference
-from automates.gromet import GrometCreation
+from automates.gromet.metadata import (
+    Provenance,
+    SourceCodeDataType,
+    SourceCodeReference,
+    SourceCodeCollection,
+    CodeFileReference,
+    GrometCreation,
+)
 
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
@@ -38,6 +39,7 @@ PRIMITIVES = {"Add" : "+", "Sub": "-", "Mult" : "*", "Div" : "/", "Lt": "<", "Gt
              "_iter" : "", "_next": "", "_member": "", "_add": "", "_delete": "", "print": "", "_get": "", "_set": "",
              "_List": "", "_List_"+cons: "", "_Array": "", "_Array_"+cons: "", "_Tuple": "", "_Tuple_"+cons: "", "_Set": "", 
              "_Map": "", "_Map_set": "", "_Map_get": "", "sum": ""}
+
 
 def insert_gromet_object(t: List, obj):
     """ Inserts a GroMEt object obj into a GroMEt table t
@@ -69,10 +71,12 @@ def insert_gromet_object(t: List, obj):
 
     return t
 
+
 def generate_provenance():
     timestamp = str(datetime.fromtimestamp(time()))
     method_name = "skema_code2fn_program_analysis"
     return Provenance(method=method_name, timestamp=timestamp)
+
 
 def comp_name_nodes(n1, n2):
     if not isinstance(n1, AnnCastName) and not isinstance(n1, AnnCastUnaryOp):
@@ -94,6 +98,7 @@ def comp_name_nodes(n1, n2):
 
     return n1_name == n2_name and n1_id == n2_id     
 
+
 def find_existing_opi(gromet_fn, opi_name):
     idx = 1
     if gromet_fn.opi == None:
@@ -104,6 +109,7 @@ def find_existing_opi(gromet_fn, opi_name):
             return True,idx
         idx += 1
     return False,idx
+
 
 def find_existing_pil(gromet_fn, opi_name):
     if gromet_fn.pil == None:
@@ -281,7 +287,6 @@ class ToGrometPass:
         else:
             print(f"error: add_var_to_env: we came from{type(parent_cast_node)}")
             sys.exit()
-
 
     def find_gromet(self, func_name):
         """ Attempts to find func_name in self.gromet_module.attributes
@@ -871,7 +876,6 @@ class ToGrometPass:
         # not quite sure how to go about this yet (TODO)
         if func_name == "main":
             parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=identified_func_name,function_type=FunctionType.FUNCTION,contents=idx))
-
 
     @_visit.register
     def visit_literal_value(self, node: AnnCastLiteralValue, parent_gromet_fn, parent_cast_node):
