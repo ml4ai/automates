@@ -9,7 +9,6 @@ from automates.program_analysis.CAST2GrFN import cast
 
 DATA_DIR = "tests/data/program_analysis/CAST2PDF"
 
-
 def test_cast_all_nodes():
     file_name = "cast_all_nodes.json"
 

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn
+from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn, Optional
 from abc import ABC, abstractmethod
 from functools import singledispatch
 from dataclasses import dataclass
@@ -86,6 +86,7 @@ class VariableNode(GenericNode):
     object_ref: str = None
     value: Any = None
     input_value: Any = None
+    is_exit: bool = False
 
     def __hash__(self):
         return hash(self.uid)
@@ -138,12 +139,11 @@ class VariableNode(GenericNode):
         return str(self.identifier)
 
     def get_kwargs(self):
-        is_exit = self.identifier.var_name == "EXIT"
         return {
             "color": "crimson",
-            "fontcolor": "white" if is_exit else "black",
-            "fillcolor": "crimson" if is_exit else "white",
-            "style": "filled" if is_exit else "",
+            "fontcolor": "white" if self.is_exit else "black",
+            "fillcolor": "crimson" if self.is_exit else "white",
+            "style": "filled" if self.is_exit else "",
             "padding": 15,
             "label": self.get_label(),
         }
@@ -338,6 +338,94 @@ class LambdaNode(GenericNode):
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
+@dataclass(eq=False)
+class LoopTopInterface(LambdaNode):
+    use_initial: bool = False
+
+    def parse_result(self, values, res):
+        # The top interfaces node (LTI) should output a tuple of the
+        # correct variables. However, if there is only one var in the
+        # tuple it is outputting, python collapses this to a single
+        # var, so handle this scenario
+        if not isinstance(res[0], tuple):
+            # return [[r] for r in res]
+            return [res]
+        res = [list(v) for v in res]
+        return [np.array(v) for v in list(map(list, zip(*res)))]
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        lambda_fn = load_lambda_function(data["lambda"])
+        lambda_type = LambdaType.from_str(data["type"])
+        if "metadata" in data:
+            metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
+        else:
+            metadata = []
+        return cls(
+            data["uid"],
+            lambda_type,
+            data["lambda"],
+            lambda_fn,
+            metadata,
+            data["use_initial"],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "uid": self.uid,
+            "type": str(self.func_type),
+            "lambda": self.func_str,
+            "metadata": [m.to_dict() for m in self.metadata],
+            "use_initial": self.use_initial
+        }
+
+@dataclass(eq=False)
+class UnpackNode(LambdaNode):
+    """ An UnpackNode is used to represent the process of 'unpacking' a
+        sequence of variables in an assignment, for example 
+        x,y,z,w = foo(1,2,3)
+        The return value of foo is unpacked into variables x,y,z, and w 
+        This is a new operation that the GrFN execution handles differently
+        An UnpackNode does not contain a lambda expression
+    """
+
+    # input: A single tuple string name to unpack
+    inputs: str = ""
+    # output: A string holding a list of variable names
+    output: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict):
+        return {}
+
+    def to_dict(self) -> dict:
+        return {
+            "uid": self.uid,
+            "type": str(self.func_type),            
+            "inputs": self.inputs,
+            "output": self.output,
+            "metadata": [m.to_dict() for m in self.metadata]
+        }
+
+@dataclass(eq=False)
+class PackNode(LambdaNode):
+    # input: A single tuple string name to unpack
+    inputs: str = ""
+    # output: A string holding a list of variable names
+    output: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict):
+        return {}
+
+    def to_dict(self) -> dict:
+        return {
+            "uid": self.uid,
+            "type": str(self.func_type),            
+            "inputs": self.inputs,
+            "output": self.output,
+            "metadata": [m.to_dict() for m in self.metadata]
+        }
 
 @dataclass
 class HyperEdge:
@@ -434,8 +522,11 @@ class GrFNSubgraph:
     namespace: str
     scope: str
     basename: str
+    basename_id: int
     occurrence_num: int
     parent: str
+    # TODO: maybe uncomment
+    # parent: Optional[GrFNSubgraph]
     type: str
     border_color: str
     nodes: Iterable[GenericNode]
@@ -778,6 +869,10 @@ class GrFNSubgraph:
             return "forestgreen"
         elif type_str == "LoopContainer":
             return "navyblue"
+        elif type_str == "CallContainer":
+            return "purple"
+        elif type_str == "ModuleContainer":
+            return "grey"
         else:
             raise TypeError(f"Unrecognized subgraph type: {type_str}")
 
@@ -795,6 +890,7 @@ class GrFNSubgraph:
             data["namespace"],
             data["scope"],
             data["basename"],
+            data["basename_id"],
             data["occurrence_num"],
             data["parent"],
             type_str,
@@ -811,6 +907,7 @@ class GrFNSubgraph:
             "namespace": self.namespace,
             "scope": self.scope,
             "basename": self.basename,
+            "basename_id": self.basename_id,
             "occurrence_num": self.occurrence_num,
             "parent": self.parent,
             "type": self.type,
@@ -1091,11 +1188,29 @@ class GroundedFunctionNetwork(nx.DiGraph):
         return self.__str__()
 
     def __eq__(self, other) -> bool:
+        # FUTURE: for debugging and testing purposes
+        # it might be good to convert to loop e.g.
+#         for edge in self.hyper_edges:
+#             if edge not in other.hyper_edges:
+#                 print(f"\nSelf HEs:")
+#                 for e in self.hyper_edges:
+#                     print(f"{e}")
+#                     print(f"Input uids: {[v.uid for v in e.inputs]}")
+#                     print(f"Output uids: {[v.uid for v in e.outputs]}")
+#                 print(f"\n\nOther HEs:")
+#                 for e in other.hyper_edges:
+#                     print(f"{e}")
+#                     print(f"Input uids: {[v.uid for v in e.inputs]}")
+#                     print(f"Output uids: {[v.uid for v in e.outputs]}")
+#                 return False
+# 
+#         return True
+
         return (
-            set(self.hyper_edges) == set(other.hyper_edges)
-            and set(self.subgraphs) == set(other.subgraphs)
-            and set(self.inputs) == set(other.inputs)
-            and set(self.outputs) == set(other.outputs)
+            self.hyper_edges == other.hyper_edges
+            and list(self.subgraphs) == list(other.subgraphs)
+            and self.inputs == other.inputs
+            and self.outputs == other.outputs
         )
 
     def __str__(self):
@@ -1440,13 +1555,19 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
     def to_FCG(self):
         G = nx.DiGraph()
-        func_to_func_edges = [
-            (func_node, node)
-            for node in self.nodes
-            if isinstance(node, LambdaNode)
-            for var_node in self.predecessors(node)
-            for func_node in self.predecessors(var_node)
-        ]
+        func_to_func_edges = []
+        for node in self.nodes:
+            if isinstance(node, LambdaNode):
+                preds = list(self.predecessors(node))
+                # DEBUGGING
+                # print(f"node {node} has predecessors {preds}")
+                for var_node in self.predecessors(node):
+                    preds = list(self.predecessors(var_node))
+                    # DEBUGGING
+                    # print(f"node {var_node} has predecessors {preds}")
+                    for func_node in self.predecessors(var_node):
+                        func_to_func_edges.append((func_node, node))
+                        
         G.add_edges_from(func_to_func_edges)
         return G
 
@@ -1477,8 +1598,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
                         else dist
                     )
                     if func not in visited_funcs:
-                        new_successors.extend(self.FCG.successors(func))
                         visited_funcs.add(func)
+                        # add new successors if func is in FCG
+                        if func in self.FCG:
+                            new_successors.extend(self.FCG.successors(func))
 
                 if len(new_successors) > 0:
                     all_successors.extend(new_successors)

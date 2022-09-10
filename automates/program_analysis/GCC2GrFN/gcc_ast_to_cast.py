@@ -91,7 +91,7 @@ class GCC2CAST:
     for one file outputted from our ast_dump.cpp GCC plugin.
     """
 
-    def __init__(self, gcc_asts):
+    def __init__(self, gcc_asts, legacy_cast: bool = False):
         self.gcc_asts = gcc_asts
         self.variables_ids_to_expression = {}
         self.ssa_ids_to_expression = {}
@@ -109,6 +109,11 @@ class GCC2CAST:
         self.loop_num_to_loop_info = {}
         self.bb_headers_to_loop_info = {} 
 
+        # legacy CAST generation does not create Name nodes
+        # for the `name` attribute of FunctionDef's.
+        # This allows the legacy CAST -> AIR -> GrFN 
+        # pipeline to be run on the resulting CAST json
+        self.legacy_cast = legacy_cast
 
     def clear_function_dependent_vars(self):
         self.variables_ids_to_expression = {}
@@ -220,7 +225,7 @@ class GCC2CAST:
         source_refs = self.get_source_refs(variable)
 
         var_node = Var(
-            val=Name(name=name, id=id),
+            val=Name(name=name, id=id, source_refs=source_refs),
             type=cast_type,
             source_refs=source_refs,
         )
@@ -240,6 +245,18 @@ class GCC2CAST:
         default_val = default_cast_val_for_gcc_types(
             v["type"], self.type_ids_to_defined_types
         )
+        # TODO: Rethink how variable declarations are handled
+        # It does not make much sense to create an Assignment node from
+        # a declaration
+        # We could just return None, however there is a potential issue with
+        # code like
+        # int x;
+        # int y = x + 1;
+        # this would compile fine, and both x and y would end up with random
+        # values
+        # However, the translation to CAST would fail, when trying to 
+        # evaluate the expression "x + 1" because there is no value for "x"
+        # in `self.variables_ids_to_expression`
         if "id" in v:
             self.variables_ids_to_expression[v["id"]] = default_val
         if var is not None:
@@ -258,6 +275,7 @@ class GCC2CAST:
             name = value["name"]
             name = name.replace(".", "_")
             id = value["id"]
+            # TODO: add in source_refs to returned Name
             return Name(name=name, id=id)
 
     def parse_operand(self, operand):
@@ -274,7 +292,8 @@ class GCC2CAST:
                 name = operand["name"]
                 name = name.replace(".", "_")
                 id = operand["id"]
-                return Name(name=name, id=id)
+                source_refs = self.get_source_refs(operand)
+                return Name(name=name, id=id, source_refs=source_refs)
             elif "id" in operand:
                 return self.variables_ids_to_expression[operand["id"]]
         elif code == "addr_expr":
@@ -379,7 +398,8 @@ class GCC2CAST:
                 name = lhs["name"]
                 name = name.replace(".", "_")
                 id = lhs["id"]
-                assign_var = Var(val=Name(name=name,id=id), type=cast_type)
+                source_refs = self.get_source_refs(lhs)
+                assign_var = Var(val=Name(name=name,id=id, source_refs=source_refs), type=cast_type, source_refs=source_refs)
             elif "id" in lhs:
                 assign_var = self.variables_ids_to_expression[lhs["id"]]
 
@@ -435,7 +455,8 @@ class GCC2CAST:
                     name = operands[0]["name"].replace(".", "_")
                     name = name.replace(".", "_")
                     id = operands[0]["id"]
-                    assign_value = Name(name=name,id=id)
+                    source_refs = self.get_source_refs(operands[0])
+                    assign_value = Name(name=name,id=id, source_refs=source_refs)
                 # When do we have an id but no name
                 # Do we need to track the numerical id in this situation?
                 elif "id" in operands[0]:
@@ -767,7 +788,11 @@ class GCC2CAST:
     def parse_function(self, function):
         # clear functions variables to prepare for parsing
         self.clear_function_dependent_vars()
-        name = function["name"]
+        name = Name(function["name"], function["id"])
+
+        # if we want legacy CAST, the `name` attribute should just be a string
+        if self.legacy_cast:
+            name = function["name"]
 
         parameters = function["parameters"] if "parameters" in function else []
         var_declarations = (

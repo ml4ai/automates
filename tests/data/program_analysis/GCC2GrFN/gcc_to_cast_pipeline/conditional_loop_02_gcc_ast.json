@@ -1,0 +1,834 @@
+{
+  "mainInputFilename": "conditional_loop_02.c",
+  "functions": [
+    {
+      "id": 4294964969,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 1,
+      "decl_col_start": 5,
+      "file": "conditional_loop_02.c",
+      "line_start": 1,
+      "line_end": 18,
+      "variableDeclarations": [
+        {
+          "name": "divisible",
+          "id": 4294964964,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "i",
+          "id": 4294964965,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "y",
+          "id": 4294964966,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "x",
+          "id": 4294964967,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964956,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "numberOfLoops": 2,
+      "loops": [
+        {
+          "num": 0,
+          "headerBB": 0,
+          "depth": 0,
+          "numLatches": 0,
+          "latchBBs": [
+          ],
+          "numNodes": 9,
+          "loopBody": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "superloops": [
+          ],
+          "children": [
+            1
+          ]
+        },
+        {
+          "num": 1,
+          "headerBB": 4,
+          "depth": 1,
+          "numLatches": 1,
+          "latchBBs": [
+            5
+          ],
+          "numNodes": 2,
+          "loopBody": [
+            4,
+            5
+          ],
+          "immediateSuperloop": 0,
+          "superloops": [
+            0
+          ],
+          "children": [
+          ]
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            0
+          ],
+          "parents": [
+          ],
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 0,
+          "dominators": [
+            0,
+            2
+          ],
+          "parents": [
+            0
+          ],
+          "parentsNearestCommonDom": 0,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 2,
+              "col_start": 9,
+              "file": "conditional_loop_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964967,
+                "name": "x",
+                "line_start": 2,
+                "col_start": 9,
+                "file": "conditional_loop_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 5
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 3,
+              "col_start": 9,
+              "file": "conditional_loop_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "y",
+                "line_start": 3,
+                "col_start": 9,
+                "file": "conditional_loop_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 10
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 4,
+              "col_start": 9,
+              "file": "conditional_loop_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964965,
+                "name": "i",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "conditional_loop_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 5,
+              "col_start": 9,
+              "file": "conditional_loop_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964964,
+                "name": "divisible",
+                "line_start": 5,
+                "col_start": 9,
+                "file": "conditional_loop_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 8,
+              "col_start": 11,
+              "file": "conditional_loop_02.c",
+              "operator": "trunc_div_expr",
+              "lhs": {
+                "ssa_id": 1,
+                "code": "ssa_name",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                }
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964966,
+                  "name": "y",
+                  "line_start": 3,
+                  "col_start": 9,
+                  "file": "conditional_loop_02.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964967,
+                  "name": "x",
+                  "line_start": 2,
+                  "col_start": 9,
+                  "file": "conditional_loop_02.c"
+                }
+              ]
+            },
+            {
+              "type": "conditional",
+              "line_start": 8,
+              "col_start": 5,
+              "file": "conditional_loop_02.c",
+              "operator": "eq_expr",
+              "operands": [
+                {
+                  "ssa_id": 1,
+                  "code": "ssa_name",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  }
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ],
+              "trueLabel": 3,
+              "falseLabel": 7
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 2,
+              "target": 3
+            },
+            {
+              "flags": 512,
+              "source": 2,
+              "target": 7
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            3
+          ],
+          "parents": [
+            2
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 10,
+              "col_start": 11,
+              "file": "conditional_loop_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964966,
+                "name": "y",
+                "line_start": 3,
+                "col_start": 9,
+                "file": "conditional_loop_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964966,
+                  "name": "y",
+                  "line_start": 3,
+                  "col_start": 9,
+                  "file": "conditional_loop_02.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964967,
+                  "name": "x",
+                  "line_start": 2,
+                  "col_start": 9,
+                  "file": "conditional_loop_02.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 11,
+              "col_start": 16,
+              "file": "conditional_loop_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964965,
+                "name": "i",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "conditional_loop_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 3,
+              "target": 4
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "loopFatherNum": 1,
+          "loopHeader": true,
+          "immediateDominatorIndex": 3,
+          "dominators": [
+            0,
+            2,
+            3,
+            4
+          ],
+          "parents": [
+            3,
+            5
+          ],
+          "parentsNearestCommonDom": 3,
+          "statements": [
+            {
+              "type": "conditional",
+              "line_start": 11,
+              "col_start": 23,
+              "file": "conditional_loop_02.c",
+              "operator": "gt_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964965,
+                  "name": "i",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "conditional_loop_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ],
+              "trueLabel": 6,
+              "falseLabel": 5
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 4,
+              "target": 6
+            },
+            {
+              "flags": 512,
+              "source": 4,
+              "target": 5
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "loopFatherNum": 1,
+          "loopHeader": false,
+          "immediateDominatorIndex": 4,
+          "dominators": [
+            0,
+            2,
+            3,
+            4,
+            5
+          ],
+          "parents": [
+            4
+          ],
+          "parentsNearestCommonDom": 4,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 12,
+              "col_start": 15,
+              "file": "conditional_loop_02.c",
+              "operator": "minus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964967,
+                "name": "x",
+                "line_start": 2,
+                "col_start": 9,
+                "file": "conditional_loop_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964967,
+                  "name": "x",
+                  "line_start": 2,
+                  "col_start": 9,
+                  "file": "conditional_loop_02.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964965,
+                  "name": "i",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "conditional_loop_02.c"
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 11,
+              "col_start": 9,
+              "file": "conditional_loop_02.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964965,
+                "name": "i",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "conditional_loop_02.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294964965,
+                  "name": "i",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "conditional_loop_02.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 4
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 5,
+              "target": 4
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 4,
+          "dominators": [
+            0,
+            2,
+            3,
+            4,
+            6
+          ],
+          "parents": [
+            4
+          ],
+          "parentsNearestCommonDom": 4,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 15,
+              "col_start": 19,
+              "file": "conditional_loop_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964964,
+                "name": "divisible",
+                "line_start": 5,
+                "col_start": 9,
+                "file": "conditional_loop_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 6,
+              "target": 7
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 2,
+          "dominators": [
+            0,
+            2,
+            7
+          ],
+          "parents": [
+            2,
+            6
+          ],
+          "parentsNearestCommonDom": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 18,
+              "col_start": 1,
+              "file": "conditional_loop_02.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964956,
+                "line_start": 18,
+                "col_start": 1,
+                "file": "conditional_loop_02.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 7,
+              "target": 8
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "immediateDominatorIndex": 7,
+          "dominators": [
+            0,
+            2,
+            7,
+            8
+          ],
+          "parents": [
+            7
+          ],
+          "parentsNearestCommonDom": 7,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 18,
+              "col_start": 1,
+              "file": "conditional_loop_02.c",
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964956,
+                "line_start": 18,
+                "col_start": 1,
+                "file": "conditional_loop_02.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 8,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "loopFatherNum": 0,
+          "loopHeader": false,
+          "dominators": [
+            1
+          ],
+          "parents": [
+            8
+          ],
+          "parentsNearestCommonDom": 8,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+  ],
+  "recordTypes": [
+  ]
+}

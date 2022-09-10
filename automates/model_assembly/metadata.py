@@ -140,11 +140,15 @@ class LambdaType(AutoMATESBaseEnum):
     EXTRACT = auto()
     PACK = auto()
     OPERATOR = auto()
+    LOOP_TOP_INTERFACE = auto()
+    UNPACK = auto()
 
     def __str__(self):
         return str(self.name)
 
     def shortname(self):
+        if (self == LambdaType.LOOP_TOP_INTERFACE):
+            return "LTI"
         return self.__str__()[0]
 
     @classmethod
@@ -161,8 +165,12 @@ class LambdaType(AutoMATESBaseEnum):
             return cls.INTERFACE
         elif type_str == "pack":
             return cls.PACK
+        elif type_str == "unpack":
+            return cls.UNPACK
         elif type_str == "extract":
             return cls.EXTRACT
+        elif type_str == "loop_top_interface":
+            return cls.LOOP_TOP_INTERFACE
         else:
             raise ValueError(f"Unrecognized lambda type name: {type_str}")
 
@@ -420,6 +428,13 @@ class VariableCreationReason(AutoMATESBaseEnum):
     CONDITION_RESULT = auto()
     LOOP_EXIT_VAR = auto()
     LITERAL_FUNCTION_ARG = auto()
+    TOP_IFACE_INTRO = auto()
+    BOT_IFACE_INTRO = auto()
+    FUNC_RET_VAL = auto()
+    FUNC_ARG = auto()
+    COND_VAR = auto()
+    DUP_GLOBAL = auto()
+    DUMMY_ASSIGN = auto()
 
     def __str__(self):
         return str(self.name)
@@ -454,6 +469,15 @@ class VariableFromSource(TypedMetadata):
             data["provenance"],
             data["from_source"] or data["from_source"] == "True",
             VariableCreationReason.from_str(data["creation_reason"]),
+        )
+
+    @classmethod
+    def from_ann_cast_data(cls, data: dict) -> VariableFromSource:
+        return cls(
+            data["type"],
+            data["provenance"],
+            data["from_source"] or data["from_source"] == "True",
+            data["creation_reason"],
         )
 
     def to_dict(self):
