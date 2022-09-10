@@ -34,11 +34,11 @@ from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 
 cons = "num"
 
-PRIMITIVES = {"Add" : "+", "Sub": "-", "Mult" : "*", "Div" : "/", "Lt": "<", "Gt": ">", "Eq": "==", "Pow": "**", "NotEq": "!=",
-             "_List_get" : "", "_List_set" : "", "_Array_get" : "", "_Array_set" : "", "_Tuple_get" : "", "_Tuple_set" : "",
-             "_iter" : "", "_next": "", "_member": "", "_add": "", "_delete": "", "print": "", "_get": "", "_set": "",
-             "_List": "", "_List_"+cons: "", "_Array": "", "_Array_"+cons: "", "_Tuple": "", "_Tuple_"+cons: "", "_Set": "", 
-             "_Map": "", "_Map_set": "", "_Map_get": "", "sum": ""}
+PRIMITIVES = {"Add": "+", "Sub": "-", "Mult": "*", "Div": "/", "Lt": "<", "Gt": ">", "Eq": "==", "Pow": "**",
+              "NotEq": "!=", "_List_get": "", "_List_set": "", "_Array_get": "", "_Array_set": "", "_Tuple_get": "",
+              "_Tuple_set": "", "_iter": "", "_next": "", "_member": "", "_add": "", "_delete": "", "print": "",
+              "_get": "", "_set": "", "_List": "", "_List_" + cons: "", "_Array": "", "_Array_" + cons: "",
+              "_Tuple": "", "_Tuple_" + cons: "", "_Set": "", "_Map": "", "_Map_set": "", "_Map_get": "", "sum": ""}
 
 
 def insert_gromet_object(t: List, obj):
