@@ -37,11 +37,11 @@ GENERATED_MODEL_IMPORT_PATH = "swagger_client.models"
 MODEL_ROOT_CAST = "automates/program_analysis/CAST2GrFN/model/cast"
 IMPORT_PATH_CAST = "automates.program_analysis.CAST2GrFN.model.cast"
 
-MODEL_ROOT_GROMET = "automates/model_assembly/gromet/model"
-IMPORT_PATH_GROMET = "automates.model_assembly.gromet.model"
+MODEL_ROOT_GROMET = "automates/gromet/fn"
+IMPORT_PATH_GROMET = "automates.gromet.fn"
 
-MODEL_ROOT_METADATA = "automates/model_assembly/gromet/metadata"
-IMPORT_PATH_METADATA = "automates.model_assembly.gromet.metadata"
+MODEL_ROOT_METADATA = "automates/gromet/metadata"
+IMPORT_PATH_METADATA = "automates.gromet.metadata"
 
 
 # -----------------------------------------------------------------------------
