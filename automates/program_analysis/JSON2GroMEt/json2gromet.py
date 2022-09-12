@@ -210,5 +210,7 @@ def import_basic_datatypes(obj, gromet_obj):
     for field, value in obj.items():
         if type(value) != list and type(value) != dict:                         
             setattr(gromet_obj, field, value)
-        else:
-            print(f"Could not automatically import field: {field}. Make sure it is being manually imported")
+
+        # TODO: Make this only print when there is an unhandled case
+        # else:
+        #     print(f"Could not automatically import field: {field}. Make sure it is being manually imported")
