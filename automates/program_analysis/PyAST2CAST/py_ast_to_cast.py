@@ -315,9 +315,8 @@ class PyASTToCAST():
             if isinstance(node.targets[0], ast.Subscript): # List subscript nodes get replaced out by
                                                            # A function call to a "list_set"
                 sub_node = node.targets[0]
-                
                 if isinstance(node.value, ast.Subscript):
-                    unique_name = construct_unique_name(self.filenames[-1], "_List_get")
+                    unique_name = construct_unique_name(self.filenames[-1], "_get")
                     if unique_name not in prev_scope_id_dict.keys():
                         # If a built-in is called, then it gets added to the global dictionary if
                         # it hasn't been called before. This is to maintain one consistent ID per built-in 
@@ -330,7 +329,7 @@ class PyASTToCAST():
                     val = self.visit(node.value.value, prev_scope_id_dict, curr_scope_id_dict)[0]
                     args = [val, idx]
 
-                    val = Call(Name("_List_get", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref)
+                    val = Call(Name("_get", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref)
                 else:
                     val = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)[0]
 
@@ -363,7 +362,7 @@ class PyASTToCAST():
                 # This should only be the case for built-in python functions (i.e print, len, etc...)
                 # Otherwise it would be an error to call a function before it is defined
                 # (An ID would exist for a user-defined function here even if it isn't visited yet because of deferment)
-                unique_name = construct_unique_name(self.filenames[-1], "_List_set")
+                unique_name = construct_unique_name(self.filenames[-1], "_set")
                 if unique_name not in prev_scope_id_dict.keys():
 
                     # If a built-in is called, then it gets added to the global dictionary if
@@ -375,7 +374,7 @@ class PyASTToCAST():
                     prev_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
 
                 args = [list_name, idx, val]
-                return [Assignment(Var(val=list_name, type="Any", source_refs=ref), Call(Name("_List_set", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref), source_refs=ref)]
+                return [Assignment(Var(val=list_name, type="Any", source_refs=ref), Call(Name("_set", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref), source_refs=ref)]
 
             if isinstance(node.value, ast.Subscript):
 
@@ -383,7 +382,7 @@ class PyASTToCAST():
                 # This should only be the case for built-in python functions (i.e print, len, etc...)
                 # Otherwise it would be an error to call a function before it is defined
                 # (An ID would exist for a user-defined function here even if it isn't visited yet because of deferment)
-                unique_name = construct_unique_name(self.filenames[-1], "_List_get")
+                unique_name = construct_unique_name(self.filenames[-1], "_get")
                 if unique_name not in prev_scope_id_dict.keys():
 
                     # If a built-in is called, then it gets added to the global dictionary if
@@ -398,7 +397,7 @@ class PyASTToCAST():
                 idx = self.visit(node.value.slice, prev_scope_id_dict, curr_scope_id_dict)[0]
                 val = self.visit(node.value.value, prev_scope_id_dict, curr_scope_id_dict)[0]
                 args = [val, idx]
-                return [Assignment(var_name, Call(Name("_List_get", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref), source_refs=ref)]
+                return [Assignment(var_name, Call(Name("_get", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref), source_refs=ref)]
 
             if isinstance(node.value, ast.BinOp): # Checking if we have an assignment of the form
                                                   # x = LIST * NUM or x = NUM * LIST 
@@ -423,7 +422,7 @@ class PyASTToCAST():
             
                     # TODO: Source code data type metadata
                     to_ret = LiteralValue(value_type="List[Any]", value=cons, source_code_data_type=["Python","3.8","List"], source_refs=ref)
-                    unique_name = construct_unique_name(self.filenames[-1], "_List_get")
+                    unique_name = construct_unique_name(self.filenames[-1], "_get")
                     if unique_name not in prev_scope_id_dict.keys():
 
                         # If a built-in is called, then it gets added to the global dictionary if
@@ -434,7 +433,12 @@ class PyASTToCAST():
 
                         prev_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
 
+                    # TODO: Augment this _List_num constructor with the following
+                    # First argument should be a list with the initial amount of elements
+                    # Then second arg is how many times to repeat that
+                    # When we say List for the first argument: It should be a literal value List that holds the elements 
                     to_ret = Call(Name("_List_num", id=prev_scope_id_dict[unique_name], source_refs=ref), [cons.initial_value, cons.size], source_refs=ref)
+
 
                     #print(to_ret)
                     l_visit = self.visit(node.targets[0], prev_scope_id_dict, curr_scope_id_dict)
@@ -773,7 +777,7 @@ class PyASTToCAST():
         if len(node.args) > 0:
             for arg in node.args:
                 if isinstance(arg, ast.Subscript):
-                    unique_name = construct_unique_name(self.filenames[-1], "_List_get")
+                    unique_name = construct_unique_name(self.filenames[-1], "_get")
                     if unique_name not in prev_scope_id_dict.keys():
                         # If a built-in is called, then it gets added to the global dictionary if
                         # it hasn't been called before. This is to maintain one consistent ID per built-in 
@@ -786,7 +790,7 @@ class PyASTToCAST():
                     val = self.visit(arg.value, prev_scope_id_dict, curr_scope_id_dict)[0]
                     args = [val, idx]
 
-                    func_args.extend([Call(Name("_List_get", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref)])
+                    func_args.extend([Call(Name("_get", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref)])
                 else:
                     res = self.visit(arg, prev_scope_id_dict, curr_scope_id_dict)
                     func_args.extend(res)
@@ -981,8 +985,11 @@ class PyASTToCAST():
             for piece in node.values:
                 values.extend(self.visit(piece, prev_scope_id_dict, curr_scope_id_dict))
 
+        k = [e.value for e in keys]
+        v = [e.value for e in values]
+
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        return [Dict(keys, values, source_refs=ref)]
+        return [LiteralValue(StructureType.MAP, str(dict(list(zip(k,v)))), source_code_data_type=["Python","3.8",str(dict)], source_refs=ref)]
 
     @visit.register
     def visit_Expr(self, node: ast.Expr, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -1552,6 +1559,7 @@ class PyASTToCAST():
 
         source_code_data_type = ["Python","3.8","List"]
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        # TODO: How to handle constructors with variables?
         if len(node.elts) > 0:
             to_ret = []
             for piece in node.elts:
