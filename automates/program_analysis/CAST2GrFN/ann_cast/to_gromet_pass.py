@@ -41,7 +41,7 @@ PRIMITIVES = {"Add": "+", "Sub": "-", "Mult": "*", "Div": "/", "Lt": "<", "Gt": 
               "_Tuple": "", "_Tuple_" + cons: "", "_Set": "", "_Map": "", "_Map_set": "", "_Map_get": "", "sum": ""}
 
 
-def insert_gromet_object(t: List, obj):
+def insert_gromet_object(t: list, obj):
     """ Inserts a GroMEt object obj into a GroMEt table t
         Where obj can be 
             - A GroMEt Box
@@ -215,7 +215,7 @@ class ToGrometPass:
             Then it gets wired up to its parent_gromet_fn appropriately 
         """
         ref = node.source_refs[0]
-        metadata = [self.create_source_code_reference(ref)]
+        metadata = self.create_source_code_reference(ref)
         # Create the Expression FN and its box function 
         primitive_fn = GrometFN()
         primitive_fn.b = insert_gromet_object(primitive_fn.b, GrometBoxFunction(function_type=FunctionType.EXPRESSION, metadata=self.insert_metadata(metadata)))
