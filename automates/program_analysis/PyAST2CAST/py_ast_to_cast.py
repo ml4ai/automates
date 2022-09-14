@@ -44,6 +44,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     source_code_data_type,
     source_ref,
 )
+from automates.program_analysis.PyAST2CAST.modules_list import BUILTINS
 
 
 def merge_dicts(prev_scope, curr_scope):
@@ -1452,7 +1453,7 @@ class PyASTToCAST():
         alias = names[0]
 
         # Construct the path of the module, relative to where we are at
-        # (Still have to handle things like '..')
+        # TODO: (Still have to handle things like '..')
         name = alias.name
         path = f"./{name.replace('.','/')}.py"
 
@@ -1466,7 +1467,26 @@ class PyASTToCAST():
             name = alias.asname
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        
+        # TODO: Could use a flag to mark a Module as an import
+        if name in BUILTINS:
+            self.insert_next_id(self.global_identifier_dict, name)
+            return [Module(name=name,body=[],source_refs=ref)]
+        else:
+            true_module_name = self.aliases[name] if name in self.aliases else name
+            if true_module_name in self.visited:
+                return [Module(name=true_module_name,body=[],source_refs=ref)]
+            else:
+                file_contents = open(path).read()
+                self.filenames.append(true_module_name)
+                self.visited.add(true_module_name)
+                
+                self.insert_next_id(self.global_identifier_dict, true_module_name)
+
+                to_ret = self.visit(ast.parse(file_contents), {}, {})
+                self.filenames.pop()
+                return to_ret
+
+        """
         # If we find the file by searching the path, then this is a user-imported module
         if os.path.isfile(path):
             true_module_name = self.aliases[name] if name in self.aliases else name
@@ -1485,7 +1505,7 @@ class PyASTToCAST():
         else:
             self.insert_next_id(self.global_identifier_dict, name)
             return [Module(name=name,body=[],source_refs=ref)]
-
+        """
 
     @visit.register
     def visit_ImportFrom(self, node:ast.ImportFrom, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
