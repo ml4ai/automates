@@ -1,42 +1,36 @@
 from copy import deepcopy
-import typing
 import sys
 
 from automates.utils.misc import uuid
 
 from functools import singledispatchmethod
-from automates.model_assembly.gromet.metadata.provenance import Provenance
 from datetime import datetime
 from time import time
 
-from automates.model_assembly.gromet.model import (
-    FunctionType,    
+from automates.gromet.fn import (
+    AttributeType,
+    FunctionType,
     GrometBoxConditional,
     GrometBoxFunction,
     GrometBoxLoop,
-    GrometBox,
     GrometFNModule,
     GrometFN,
     GrometPort,
     GrometWire,
     LiteralValue,
-    gromet_port,
+    TypedValue,
 )
 
-from automates.model_assembly.gromet.model.attribute_type import AttributeType
-from automates.model_assembly.gromet.model.typed_value import TypedValue
-
-from automates.model_assembly.gromet.metadata.source_code_data_type import SourceCodeDataType
-from automates.model_assembly.gromet.metadata.source_code_reference import SourceCodeReference
-from automates.model_assembly.gromet.metadata.source_code_collection import SourceCodeCollection
-from automates.model_assembly.gromet.metadata.code_file_reference import CodeFileReference
-from automates.model_assembly.gromet.metadata.gromet_creation import GrometCreation
+from automates.gromet.metadata import (
+    Provenance,
+    SourceCodeDataType,
+    SourceCodeReference,
+    SourceCodeCollection,
+    CodeFileReference,
+    GrometCreation,
+)
 
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-from automates.program_analysis.CAST2GrFN.model.cast import ( 
-    ScalarType,
-    ValueConstructor,
-)
 
 cons = "num"
 PRIMITIVES = {"Add" : ("+", ["Number","Number"], ["Number"]), "Sub" : ("-", ["Number","Number"], ["Number"]),
@@ -76,7 +70,7 @@ def primitive_inputs(func_name):
 def primitive_outputs(func_name):
     return PRIMITIVES[func_name][2]
 
-def insert_gromet_object(t: List, obj):
+def insert_gromet_object(t: list, obj):
     """ Inserts a GroMEt object obj into a GroMEt table t
         Where obj can be 
             - A GroMEt Box
@@ -106,10 +100,12 @@ def insert_gromet_object(t: List, obj):
 
     return t
 
+
 def generate_provenance():
     timestamp = str(datetime.fromtimestamp(time()))
     method_name = "skema_code2fn_program_analysis"
     return Provenance(method=method_name, timestamp=timestamp)
+
 
 def comp_name_nodes(n1, n2):
     if not isinstance(n1, AnnCastName) and not isinstance(n1, AnnCastUnaryOp):
@@ -131,6 +127,7 @@ def comp_name_nodes(n1, n2):
 
     return n1_name == n2_name and n1_id == n2_id     
 
+
 def find_existing_opi(gromet_fn, opi_name):
     idx = 1
     if gromet_fn.opi == None:
@@ -141,6 +138,7 @@ def find_existing_opi(gromet_fn, opi_name):
             return True,idx
         idx += 1
     return False,idx
+
 
 def find_existing_pil(gromet_fn, opi_name):
     if gromet_fn.pil == None:
@@ -249,7 +247,7 @@ class ToGrometPass:
             Then it gets wired up to its parent_gromet_fn appropriately 
         """
         ref = node.source_refs[0]
-        metadata = [self.create_source_code_reference(ref)]
+        metadata = self.create_source_code_reference(ref)
         # Create the Expression FN and its box function 
         primitive_fn = GrometFN()
         primitive_fn.b = insert_gromet_object(primitive_fn.b, GrometBoxFunction(function_type=FunctionType.EXPRESSION, metadata=self.insert_metadata(metadata)))
@@ -362,7 +360,6 @@ class ToGrometPass:
         else:
             print(f"error: add_var_to_env: we came from{type(parent_cast_node)}")
             sys.exit()
-
 
     def find_gromet(self, func_name):
         """ Attempts to find func_name in self.gromet_module.attributes
@@ -1007,7 +1004,6 @@ class ToGrometPass:
         # not quite sure how to go about this yet (TODO)
         if func_name == "main":
             parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=identified_func_name,function_type=FunctionType.FUNCTION,contents=idx))
-
 
     @_visit.register
     def visit_literal_value(self, node: AnnCastLiteralValue, parent_gromet_fn, parent_cast_node):

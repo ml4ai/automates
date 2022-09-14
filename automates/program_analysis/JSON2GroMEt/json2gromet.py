@@ -1,6 +1,6 @@
 import json
 
-from automates.model_assembly.gromet.model import (  
+from automates.gromet.fn import (
     GrometBoxConditional,
     GrometBoxFunction,
     GrometBoxLoop,
@@ -10,8 +10,7 @@ from automates.model_assembly.gromet.model import (
     GrometWire,
     LiteralValue,
 )
-from automates.model_assembly.gromet.metadata import (
-    Metadata,
+from automates.gromet.metadata import (
     Provenance,
     SourceCodeReference,
     SourceCodeDataType,
@@ -30,7 +29,7 @@ from automates.model_assembly.gromet.metadata import (
     CodeFileReference
 
 )
-from automates.model_assembly.gromet.model.typed_value import TypedValue
+from automates.gromet.fn import TypedValue
 
 
 def json_to_gromet(path):
@@ -47,7 +46,7 @@ def json_to_gromet(path):
 
     # Import Attributes
     for fn in json_object["attributes"]:
-         # TODO: Add support for types other than FN
+        # TODO: Add support for types other than FN
         type = fn["type"]
         value = TypedValue(type="FN", value=parse_function_network(fn["value"]))
         
@@ -71,6 +70,7 @@ def json_to_gromet(path):
     import_basic_datatypes(json_object, gromet_module)
     
     return gromet_module
+
 
 def parse_function_network(obj):
         # Create function_network object
@@ -113,6 +113,7 @@ def parse_function_network(obj):
                     setattr(function_network, table, [gromet_object])
 
         return function_network
+
 
 def parse_metadata(obj):
     metadata_type_map = {
@@ -204,9 +205,12 @@ def parse_metadata(obj):
     
     return metadata_object
 
+
 def import_basic_datatypes(obj, gromet_obj):
     for field, value in obj.items():
         if type(value) != list and type(value) != dict:                         
             setattr(gromet_obj, field, value)
-        else:
-            print(f"Could not automatically import field: {field}. Make sure it is being manually imported")
+
+        # TODO: Make this only print when there is an unhandled case
+        # else:
+        #     print(f"Could not automatically import field: {field}. Make sure it is being manually imported")
