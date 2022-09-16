@@ -312,7 +312,7 @@ object ExtractAndAssembleMentionEvents extends App {
   def writeJsonToFile(obj: ujson.Value, outputDir: String, outputFileName: String): Unit = {
 
     val json = ujson.write(obj, indent = 2)
-    val pw = new PrintWriter(new File(outputDir + outputFileName))
+    val pw = new PrintWriter(new File(outputDir, outputFileName))
     pw.write(json)
     pw.close()
 
