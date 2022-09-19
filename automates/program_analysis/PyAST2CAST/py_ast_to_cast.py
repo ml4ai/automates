@@ -1077,23 +1077,20 @@ class PyASTToCAST():
 
         iter_var_cast = Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref)
 
-
         stop_cond_var_cast = Var(Name(name=stop_cond_name, id=stop_cond_id, source_refs=ref), "boolean", source_refs=ref)
 
         iter_var = Assignment(iter_var_cast, 
                     Call(Name(name="iter", id=iter_id, source_refs=ref),[iterable],source_refs=ref), source_refs=ref)
 
         first_next = Assignment(Tuple([target, iter_var_cast, stop_cond_var_cast]), Call(Name(name="next", id=next_id, source_refs=ref),
-                        [Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref), 
-                        Var(Name(name=stop_cond_name, id=stop_cond_id, source_refs=ref), "bool", source_refs=ref)], 
+                        [Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref)], 
                         source_refs=ref), source_refs=ref)
 
         loop_cond = BinaryOp(op=BinaryOperator.NOTEQ, left=stop_cond_var_cast,
                     right=LiteralValue(ScalarType.BOOLEAN, True, ["Python", "3.8", "boolean"], ref), source_refs=ref)
 
         loop_assign = Assignment(Tuple([target, iter_var_cast, stop_cond_var_cast]), Call(Name(name="next", id=next_id, source_refs=ref),
-                [Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref), 
-                Var(Name(name=stop_cond_name, id=stop_cond_id, source_refs=ref), "bool", source_refs=ref)], 
+                [Var(Name(name=iterator_name, id=iterator_id, source_refs=ref), "iterator", source_refs=ref)], 
                 source_refs=ref), source_refs=ref)
 
         return [Loop(init=[iter_var, first_next], expr=loop_cond, body=body + [loop_assign], source_refs=ref)]
