@@ -29,6 +29,7 @@ class ImportReference(object):
     """
     swagger_types = {
         'name': 'str',
+        'src_language': 'str',
         'type': 'ImportType',
         'version': 'str',
         'uri': 'TypedValue'
@@ -36,20 +37,24 @@ class ImportReference(object):
 
     attribute_map = {
         'name': 'name',
+        'src_language': 'src_language',
         'type': 'type',
         'version': 'version',
         'uri': 'uri'
     }
 
-    def __init__(self, name=None, type=None, version=None, uri=None):  # noqa: E501
+    def __init__(self, name=None, src_language=None, type=None, version=None, uri=None):  # noqa: E501
         """ImportReference - a model defined in Swagger"""  # noqa: E501
         self._name = None
+        self._src_language = None
         self._type = None
         self._version = None
         self._uri = None
         self.discriminator = None
         if name is not None:
             self.name = name
+        if src_language is not None:
+            self.src_language = src_language
         if type is not None:
             self.type = type
         if version is not None:
@@ -79,6 +84,29 @@ class ImportReference(object):
         """
 
         self._name = name
+
+    @property
+    def src_language(self):
+        """Gets the src_language of this ImportReference.  # noqa: E501
+
+        The programming language of the imported module  # noqa: E501
+
+        :return: The src_language of this ImportReference.  # noqa: E501
+        :rtype: str
+        """
+        return self._src_language
+
+    @src_language.setter
+    def src_language(self, src_language):
+        """Sets the src_language of this ImportReference.
+
+        The programming language of the imported module  # noqa: E501
+
+        :param src_language: The src_language of this ImportReference.  # noqa: E501
+        :type: str
+        """
+
+        self._src_language = src_language
 
     @property
     def type(self):

@@ -225,6 +225,10 @@ class GrfnAssignmentPass:
         pass
 
     @_visit.register
+    def visit_model_import(self, node: AnnCastModelImport, add_to: typing.Dict):
+        pass
+
+    @_visit.register
     def visit_model_if(self, node: AnnCastModelIf, add_to: typing.Dict):
         self.visit(node.expr, add_to)
         self.visit_node_list(node.body, add_to)

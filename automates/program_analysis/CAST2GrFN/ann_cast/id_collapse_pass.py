@@ -87,7 +87,7 @@ class IdCollapsePass:
         self.visit(node.right, at_module_scope)
         # The AnnCastTuple is added to handle scenarios where an assignment
         # is made by assigning to a tuple of values, as opposed to one singular value
-        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple), f"id_collapse: visit_assigment: node.left is not AnnCastVar it is {type(node.left)}"
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple) or isinstance(node.left, AnnCastAttribute), f"id_collapse: visit_assigment: node.left is {type(node.left)}"
         self.visit(node.left, at_module_scope)
 
     @_visit.register
@@ -179,6 +179,10 @@ class IdCollapsePass:
     @_visit.register
     def visit_return(self, node: AnnCastModelReturn, at_module_scope):
         self.visit(node.value, at_module_scope)
+
+    @_visit.register
+    def visit_model_import(self, node: AnnCastModelImport, at_module_scope):
+        pass
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, at_module_scope):

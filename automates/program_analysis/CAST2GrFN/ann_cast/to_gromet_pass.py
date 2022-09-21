@@ -17,6 +17,8 @@ from automates.gromet.fn import (
     GrometFN,
     GrometPort,
     GrometWire,
+    ImportReference,
+    ImportType,
     LiteralValue,
     TypedValue,
 )
@@ -31,6 +33,7 @@ from automates.gromet.metadata import (
 )
 
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+from automates.program_analysis.PyAST2CAST.modules_list import BUILTINS
 
 cons = "num"
 
@@ -135,6 +138,10 @@ class ToGrometPass:
         self.nodes = self.pipeline_state.nodes
 
         self.var_environment = {"global": {}, "args": {}, "local": {}}
+        # Attribute accesses check this collection 
+        # to see if we're using an imported item
+        # Function calls to imported functions without their attributes will also check here
+        self.import_collection = {}
 
         # creating a GroMEt FN object here or a collection of GroMEt FNs
         # generally, programs are complex, so a collection of GroMEt FNs is usually created
@@ -522,6 +529,28 @@ class ToGrometPass:
 
     @_visit.register
     def visit_attribute(self, node: AnnCastAttribute, parent_gromet_fn, parent_cast_node):
+        # Use self.import_collection to look up the attribute name
+        # to see if it exists in there.
+        # If the attribute exists, then we can create an import reference
+        ref = node.source_refs[0]
+        if isinstance(node.value, AnnCastName):
+            name = node.value.name
+            if name in self.import_collection:
+                if name in BUILTINS:
+                    imp_type = ImportType.NATIVE
+                else:
+                    imp_type = ImportType.OTHER
+                import_ref = ImportReference(name=name, src_language="Python", type=imp_type, version="3.8")
+                gromet_import_val = TypedValue(type=AttributeType.IMPORT, value=import_ref) 
+                self.gromet_module.attributes = insert_gromet_object(self.gromet_module.attributes, gromet_import_val)
+                import_idx = len(self.gromet_module.attributes)
+                parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(function_type=FunctionType.FUNCTION, 
+                                                                                                  contents=import_idx,
+                                                                                                  metadata=self.insert_metadata(self.create_source_code_reference(ref))))
+        else:
+            print(f"Currently only attributes with a Name type are supported this node.value has type {type(node.value)}")
+            print("No class support, yet!")
+
         pass
 
     @_visit.register
@@ -1129,6 +1158,15 @@ class ToGrometPass:
         parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
 
         # print("-------------- IF DONE  ---")
+
+    @_visit.register
+    def visit_model_import(self, node: AnnCastModelImport, parent_gromet_fn, parent_cast_node):
+        name = node.name
+        alias = node.alias
+        symbol = node.symbol
+        all = node.all
+
+        self.import_collection[name] = (alias,symbol,all)
 
 
     @_visit.register

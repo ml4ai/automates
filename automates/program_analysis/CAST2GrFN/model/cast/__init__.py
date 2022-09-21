@@ -31,6 +31,7 @@ from automates.program_analysis.CAST2GrFN.model.cast.loop import Loop
 from automates.program_analysis.CAST2GrFN.model.cast.model_break import ModelBreak
 from automates.program_analysis.CAST2GrFN.model.cast.model_continue import ModelContinue
 from automates.program_analysis.CAST2GrFN.model.cast.model_if import ModelIf
+from automates.program_analysis.CAST2GrFN.model.cast.model_import import ModelImport
 from automates.program_analysis.CAST2GrFN.model.cast.model_return import ModelReturn
 from automates.program_analysis.CAST2GrFN.model.cast.module import Module
 from automates.program_analysis.CAST2GrFN.model.cast.name import Name

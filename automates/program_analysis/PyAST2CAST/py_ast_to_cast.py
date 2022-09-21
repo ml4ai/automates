@@ -25,6 +25,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     ModelContinue,
     ModelIf,
     ModelReturn,
+    ModelImport,
     Module,
     Name,
     Number,
@@ -1470,7 +1471,8 @@ class PyASTToCAST():
         # TODO: Could use a flag to mark a Module as an import
         if name in BUILTINS:
             self.insert_next_id(self.global_identifier_dict, name)
-            return [Module(name=name,body=[],source_refs=ref)]
+            return [ModelImport(name=name, alias=None, symbol=None, all=False)]
+            # return [Module(name=name,body=[],source_refs=ref)]
         else:
             true_module_name = self.aliases[name] if name in self.aliases else name
             if true_module_name in self.visited:

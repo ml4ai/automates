@@ -234,7 +234,7 @@ class ContainerScopePass:
         right_src_ref = self.visit(node.right, base_func_scopestr, enclosing_con_scope, AssignSide.RIGHT)
         # The AnnCastTuple is added to handle scenarios where an assignment
         # is made by assigning to a tuple of values, as opposed to one singular value
-        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple), f"container_scope: visit_assigment: node.left is not AnnCastVar or AnnCastTuple it is {type(node.left)}"
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple) or isinstance(node.left, AnnCastAttribute), f"container_scope: visit_assigment: node.left is {type(node.left)}"
         left_src_ref = self.visit(node.left, base_func_scopestr, enclosing_con_scope, AssignSide.LEFT)
 
         return combine_grfn_con_src_refs([right_src_ref, left_src_ref])
@@ -433,6 +433,10 @@ class ContainerScopePass:
 
     @_visit.register
     def visit_model_continue(self, node: AnnCastModelContinue, assign_side):
+        pass
+
+    @_visit.register
+    def visit_model_import(self, node: AnnCastModelImport, base_func_scopestr, enclosing_con_scope, assign_side):
         pass
 
     @_visit.register
