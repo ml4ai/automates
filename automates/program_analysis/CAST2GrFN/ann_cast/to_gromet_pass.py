@@ -700,10 +700,41 @@ class ToGrometPass:
         metadata = self.create_source_code_reference(ref)
         if isinstance(node.func, AnnCastAttribute):
             self.visit(node.func, parent_gromet_fn, parent_cast_node)
-            return
+            arg_fn_pofs = []
+            for arg in node.arguments:
+                # Go through the arguments and for all of them, create any necessary GroMEt FNs (in the case the argument is something more than a name)
+                if isinstance(arg, AnnCastCall):
+                    self.visit(arg, parent_gromet_fn, node)
+                    parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
+                    arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
+                elif not isinstance(arg, AnnCastName):
+                    self.visit(arg, parent_gromet_fn, node)
+                    arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
+                else:
+                    arg_fn_pofs.append(None)
 
-        # TODO: Arguments
+            func_call_idx = len(parent_gromet_fn.bf)
+
+            # For each argument we determine if it's a variable being used
+            # If it is then
+            #  - Determine if it's a local variable or function def argument
+            #  - Then wire appropriately
+            # Need to handle the case for FunctionCall and BinaryOp still
+            for idx,arg in enumerate(node.arguments):
+                pof = arg_fn_pofs[idx]
+                parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=func_call_idx))
+                if isinstance(arg, AnnCastName):
+                    # print("----"+arg.name)
+                    self.wire_from_var_env(arg.name, parent_gromet_fn)
+                    if arg.name not in self.var_environment["global"] and arg.name not in self.var_environment["local"] and arg.name not in self.var_environment["args"]:   
+                        parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=len(parent_gromet_fn.pof)))
+                else:
+                    parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=pof))
+
+            return func_call_idx
+
         in_module = self.func_in_module(node.func.name)
+        print(in_module)
 
         # Certain functions (special functions that PA has designated as primitive)
         # Are considered 'primitive' operations, in other words calls to them aren't 
