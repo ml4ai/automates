@@ -944,7 +944,7 @@ class VariableVersionPass:
 
     @_visit.register
     def visit_call(self, node: AnnCastCall, assign_lhs: bool):
-        assert isinstance(node.func, AnnCastName)
+        assert isinstance(node.func, AnnCastName) or isinstance(node.func, AnnCastAttribute)
         
         if node.is_grfn_2_2:
             self.visit_call_grfn_2_2(node, assign_lhs)

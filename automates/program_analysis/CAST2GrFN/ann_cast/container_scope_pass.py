@@ -259,7 +259,7 @@ class ContainerScopePass:
 
     @_visit.register
     def visit_call(self, node: AnnCastCall, base_func_scopestr, enclosing_con_scope, assign_side):
-        assert isinstance(node.func, AnnCastName)
+        assert isinstance(node.func, AnnCastName) or isinstance(node.func, AnnCastAttribute)
         # if this call is on the RHS of an assignment, then it should have a ret val
         # FUTURE: this logic is not sufficient to determine 
         # all cases that a Call node should have a ret val

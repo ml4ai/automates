@@ -33,7 +33,7 @@ from automates.gromet.metadata import (
 )
 
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
-from automates.program_analysis.PyAST2CAST.modules_list import BUILTINS
+from automates.program_analysis.PyAST2CAST.modules_list import BUILTINS, find_func_in_module, find_std_lib_module
 
 cons = "num"
 
@@ -540,7 +540,7 @@ class ToGrometPass:
                     imp_type = ImportType.NATIVE
                 else:
                     imp_type = ImportType.OTHER
-                import_ref = ImportReference(name=name, src_language="Python", type=imp_type, version="3.8")
+                import_ref = ImportReference(name=name+"."+node.attr.name, src_language="Python", type=imp_type, version="3.8")
                 gromet_import_val = TypedValue(type=AttributeType.IMPORT, value=import_ref) 
                 self.gromet_module.attributes = insert_gromet_object(self.gromet_module.attributes, gromet_import_val)
                 import_idx = len(self.gromet_module.attributes)
@@ -676,14 +676,40 @@ class ToGrometPass:
             self.wire_binary_op_args(node.right, parent_gromet_fn)
             return
 
+    def func_in_module(self, func_name):
+        """ See if func_name is actually a function from
+            an imported module
+            A tuple of (Boolean, String) where the boolean value tells us
+            if we found it or not and the string denotes the module if we did find it
+            
+        """
+        for mname in self.import_collection.keys():
+            curr_module = self.import_collection[mname]
+            if curr_module[2] and find_func_in_module(mname, func_name): # If curr module is of form 'from mname import *'
+                return (True, mname)
+            if curr_module[1] == func_name: # If the function has been imported individually
+                return (True, mname)        # With the form 'from mname import func_name'
+
+        return (False, "")
+
     @_visit.register    
     def visit_call(self, node: AnnCastCall, parent_gromet_fn, parent_cast_node):
+
+
+        ref = node.source_refs[0]
+        metadata = self.create_source_code_reference(ref)
+        if isinstance(node.func, AnnCastAttribute):
+            self.visit(node.func, parent_gromet_fn, parent_cast_node)
+            return
+
+        # TODO: Arguments
+        in_module = self.func_in_module(node.func.name)
 
         # Certain functions (special functions that PA has designated as primitive)
         # Are considered 'primitive' operations, in other words calls to them aren't 
         # considered function calls but rather they're considered expressions, so we 
         # call a special handler to handle these
-        if self.is_primitive(node.func.name):
+        if self.is_primitive(node.func.name) and not in_module[0]:
             self.handle_primitive_function(node, parent_gromet_fn, parent_cast_node)
 
             # Handle the primitive's arguments that don't involve expressions of more than 1 variable
@@ -715,8 +741,6 @@ class ToGrometPass:
             for i,opi in enumerate(primitive_fn_opi,1):
                 opi.name = None
             return         
-        ref = node.source_refs[0]
-        metadata = self.create_source_code_reference(ref)
 
         arg_fn_pofs = []
         for arg in node.arguments:
@@ -732,25 +756,38 @@ class ToGrometPass:
                 arg_fn_pofs.append(None)
         # print(arg_fn_pofs)
 
-        # The CAST generation step has the potential to rearrange
-        # the order in which FunctionDefs appear in the code 
-        # so that a Call comes before its definition. This means
-        # that a GroMEt FN isn't guaranteed to exist before a Call 
-        # to it is made. So we either find the GroMEt in the collection of
-        # FNs or we create a 'temporary' one that will be filled out later
-        qualified_func_name = f"{'.'.join(node.func.con_scope)}.{node.func.name}_{node.invocation_index}"
-        func_name = node.func.name
+        if in_module[0]:
+            name = node.func.name
+            imp_type = ImportType.OTHER
+            import_ref = ImportReference(name=in_module[1]+"."+name, src_language="Python", type=imp_type, version="3.8")
+            gromet_import_val = TypedValue(type=AttributeType.IMPORT, value=import_ref) 
+            self.gromet_module.attributes = insert_gromet_object(self.gromet_module.attributes, gromet_import_val)
+            import_idx = len(self.gromet_module.attributes)
+            parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(function_type=FunctionType.FUNCTION, 
+                                                                                              contents=import_idx,
+                                                                                              metadata=self.insert_metadata(self.create_source_code_reference(ref))))
+        else:
+            # The CAST generation step has the potential to rearrange
+            # the order in which FunctionDefs appear in the code 
+            # so that a Call comes before its definition. This means
+            # that a GroMEt FN isn't guaranteed to exist before a Call 
+            # to it is made. So we either find the GroMEt in the collection of
+            # FNs or we create a 'temporary' one that will be filled out later
+            qualified_func_name = f"{'.'.join(node.func.con_scope)}.{node.func.name}_{node.invocation_index}"
+            func_name = node.func.name
 
-        # Make a placeholder for this function if we haven't visited its FunctionDef at the end
-        # of the list of the Gromet FNs
-        idx, found = self.find_gromet(func_name)        
-        if not found:
-            temp_gromet_fn = GrometFN()
-            temp_gromet_fn.b = insert_gromet_object(temp_gromet_fn.b, GrometBoxFunction(name=func_name, function_type=FunctionType.FUNCTION))
-            self.gromet_module.attributes = insert_gromet_object(self.gromet_module.attributes, TypedValue(type=AttributeType.FN,value=temp_gromet_fn))
-            self.set_index()
+            # Make a placeholder for this function if we haven't visited its FunctionDef at the end
+            # of the list of the Gromet FNs
+            idx, found = self.find_gromet(func_name)        
+            if not found:
+                temp_gromet_fn = GrometFN()
+                temp_gromet_fn.b = insert_gromet_object(temp_gromet_fn.b, GrometBoxFunction(name=func_name, function_type=FunctionType.FUNCTION))
+                self.gromet_module.attributes = insert_gromet_object(self.gromet_module.attributes, TypedValue(type=AttributeType.FN,value=temp_gromet_fn))
+                self.set_index()
 
-        parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=qualified_func_name, function_type=FunctionType.FUNCTION, contents=idx, metadata=self.insert_metadata(metadata)))
+            parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=qualified_func_name, function_type=FunctionType.FUNCTION, contents=idx, metadata=self.insert_metadata(metadata)))
+            # func_call_idx = len(parent_gromet_fn.bf)
+
         func_call_idx = len(parent_gromet_fn.bf)
 
         # For each argument we determine if it's a variable being used

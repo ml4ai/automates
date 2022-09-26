@@ -45,7 +45,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     source_code_data_type,
     source_ref,
 )
-from automates.program_analysis.PyAST2CAST.modules_list import BUILTINS
+from automates.program_analysis.PyAST2CAST.modules_list import BUILTINS, find_std_lib_module
 
 
 def merge_dicts(prev_scope, curr_scope):
@@ -1427,6 +1427,8 @@ class PyASTToCAST():
          - ternary for assignments
          - ternary in function call arguments
 
+        # NOTE: Do we want to treat this as a conditional block in GroMEt? But it shouldn't show up in the expression tree
+
         Args:
             node (ast.IfExp): [description]
         """
@@ -1449,45 +1451,50 @@ class PyASTToCAST():
 
         Returns: 
         """
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
         names = node.names
-        alias = names[0]
+        print(names)
+        to_ret = []
+        for alias in names:
+            as_name = alias.asname
+            orig_name = alias.name
 
-        # Construct the path of the module, relative to where we are at
-        # TODO: (Still have to handle things like '..')
-        name = alias.name
-        path = f"./{name.replace('.','/')}.py"
+            # Construct the path of the module, relative to where we are at
+            # TODO: (Still have to handle things like '..')
+            name = alias.name
 
-        # module1.x, module2.x
-        # {module1: {x: 1}, module2: {x: 4}}
+            # module1.x, module2.x
+            # {module1: {x: 1}, module2: {x: 4}}
 
-        # For cases like 'import module as something_else'
-        # We note the alias that the import uses for this module
-        if alias.asname is not None:
-            self.aliases[alias.asname] = name
-            name = alias.asname
+            # For cases like 'import module as something_else'
+            # We note the alias that the import uses for this module
+            # Qualify names
+            if as_name is not None:
+                self.aliases[as_name] = orig_name
+                name = alias.asname
 
-        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        # TODO: Could use a flag to mark a Module as an import
-        if name in BUILTINS:
-            self.insert_next_id(self.global_identifier_dict, name)
-            return [ModelImport(name=name, alias=None, symbol=None, all=False)]
-            # return [Module(name=name,body=[],source_refs=ref)]
-        else:
-            true_module_name = self.aliases[name] if name in self.aliases else name
-            if true_module_name in self.visited:
-                return [Module(name=true_module_name,body=[],source_refs=ref)]
-            else:
-                file_contents = open(path).read()
-                self.filenames.append(true_module_name)
-                self.visited.add(true_module_name)
-                
-                self.insert_next_id(self.global_identifier_dict, true_module_name)
+            # TODO: Could use a flag to mark a Module as an import (old)
+            print(orig_name)
+            if orig_name in BUILTINS or find_std_lib_module(orig_name):
+                self.insert_next_id(self.global_identifier_dict, name)
+                to_ret.append(ModelImport(name=orig_name, alias=as_name, symbol=None, all=False))
+            #else:
+             # path = f"./{orig_name.replace('.','/')}.py"
+             #   true_module_name = self.aliases[name] if name in self.aliases else name
+              #  if true_module_name in self.visited:
+               #     return [Module(name=true_module_name,body=[],source_refs=ref)]
+                #else:
+                 #   file_contents = open(path).read()
+                  #  self.filenames.append(true_module_name)
+                   # self.visited.add(true_module_name)
+                    
+                    #self.insert_next_id(self.global_identifier_dict, true_module_name)
 
-                to_ret = self.visit(ast.parse(file_contents), {}, {})
-                self.filenames.pop()
-                return to_ret
-
+                 #   to_ret = self.visit(ast.parse(file_contents), {}, {})
+                  #  self.filenames.pop()
+                   # return to_ret
+        return to_ret
         """
         # If we find the file by searching the path, then this is a user-imported module
         if os.path.isfile(path):
@@ -1523,19 +1530,29 @@ class PyASTToCAST():
 
         # Construct the path of the module, relative to where we are at
         # (TODO: Still have to handle things like '..')
-
+        # TODO: What about importing individual functions from a module M
+        #        that call other functions from that same module M
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
         name = node.module
-        path = f"./{name.replace('.','/')}.py"
+        if name in self.aliases:
+            name = self.aliases[name]
 
-        names = node.names
-
-        for alias in names:
+        aliases = node.names
+        to_ret = []
+        for alias in aliases: # Iterate through the symbols that are being imported and create individual imports for each
             if alias.asname is not None:
                 self.aliases[alias.asname] = alias.name
 
-        # TODO: What about importing individual functions from a module M
-        #        that call other functions from that same module M
+            if name in BUILTINS or find_std_lib_module(name):
+                if alias.name == "*":
+                    to_ret.append(ModelImport(name=name, alias=None, symbol=None, all=True)) #, source_ref=ref))
+                else:
+                    to_ret.append(ModelImport(name=name, alias=None, symbol=alias.name, all=False)) #, source_ref=ref))
+
+        return to_ret
+        """
+        path = f"./{name.replace('.','/')}.py"
         if os.path.isfile(path):
             true_name = self.aliases[name] if name in self.aliases else name
             if name in self.visited:
@@ -1569,6 +1586,7 @@ class PyASTToCAST():
         else:
             ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
             return [Module(name=name,body=[],source_refs=ref)]
+        """
 
 
     @visit.register

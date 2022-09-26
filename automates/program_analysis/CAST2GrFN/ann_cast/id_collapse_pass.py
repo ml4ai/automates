@@ -57,7 +57,10 @@ class IdCollapsePass:
 
     def determine_function_defs_for_calls(self):
         for call_name, call in self.cached_call_nodes.items():
-            func_id = call.func.id
+            if isinstance(call.func, AnnCastAttribute):
+                func_id = call.func.attr.id
+            else:
+                func_id = call.func.id
             call.has_func_def = self.pipeline_state.func_def_exists(func_id)
             
             # DEBUG printing
@@ -105,9 +108,14 @@ class IdCollapsePass:
 
     @_visit.register
     def visit_call(self, node: AnnCastCall, at_module_scope):
-        assert isinstance(node.func, AnnCastName)
-        node.func.id = self.collapse_id(node.func.id)
-        node.invocation_index = self.next_function_invocation(node.func.id)
+        assert isinstance(node.func, AnnCastName) or isinstance(node.func, AnnCastAttribute)
+        if isinstance(node.func, AnnCastName):
+            node.func.id = self.collapse_id(node.func.id)
+            node.invocation_index = self.next_function_invocation(node.func.id)
+        else:
+            node.func.attr.id = self.collapse_id(node.func.attr.id)
+            node.func.value.id = self.collapse_id(node.func.value.id)
+            node.invocation_index = self.next_function_invocation(node.func.attr.id)
             
         # cache Call node to later determine if this Call has a FunctionDef
         call_name = call_container_name(node)

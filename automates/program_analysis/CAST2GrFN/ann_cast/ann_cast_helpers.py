@@ -366,7 +366,10 @@ def func_container_name_from_name_node(node) -> str:
     Parameter: AnnCastNameNode
     Returns function container name in the form "name_id"
     """
-    return f"{node.name}_id{node.id}"
+    if isinstance(node, AnnCastAttribute):
+        return f"{node.attr.name}_id{node.attr.id}"
+    else:
+        return f"{node.name}_id{node.id}"
 
 def func_def_argument_name(node, arg_index: int) -> str:
     """
