@@ -10,7 +10,6 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     BinaryOp,
     Boolean,
     Call,
-    ClassDef,
     Dict,
     Expr,
     FunctionDef,
@@ -24,6 +23,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+    RecordDef,
     ScalarType,
     Set,
     String,
@@ -112,10 +112,10 @@ class CastToAnnotatedCastVisitor():
 
 
     @_visit.register
-    def visit_class_def(self, node: ClassDef):
+    def visit_record_def(self, node: RecordDef):
         funcs = self.visit_node_list(node.funcs)
         fields = self.visit_node_list(node.fields)
-        return AnnCastClassDef(node.name, node.bases, funcs, fields, node.source_refs)
+        return AnnCastRecordDef(node.name, node.bases, funcs, fields, node.source_refs)
 
     @_visit.register
     def visit_dict(self, node: Dict):

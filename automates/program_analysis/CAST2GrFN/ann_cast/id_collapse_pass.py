@@ -57,7 +57,10 @@ class IdCollapsePass:
 
     def determine_function_defs_for_calls(self):
         for call_name, call in self.cached_call_nodes.items():
-            func_id = call.func.id
+            if isinstance(call.func, AnnCastAttribute):
+                func_id = call.func.attr.id
+            else:
+                func_id = call.func.id
             call.has_func_def = self.pipeline_state.func_def_exists(func_id)
             
             # DEBUG printing
@@ -87,7 +90,7 @@ class IdCollapsePass:
         self.visit(node.right, at_module_scope)
         # The AnnCastTuple is added to handle scenarios where an assignment
         # is made by assigning to a tuple of values, as opposed to one singular value
-        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple), f"id_collapse: visit_assigment: node.left is not AnnCastVar it is {type(node.left)}"
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple) or isinstance(node.left, AnnCastAttribute), f"id_collapse: visit_assigment: node.left is not AnnCastVar it is {type(node.left)}"
         self.visit(node.left, at_module_scope)
 
     @_visit.register
@@ -105,9 +108,15 @@ class IdCollapsePass:
 
     @_visit.register
     def visit_call(self, node: AnnCastCall, at_module_scope):
-        assert isinstance(node.func, AnnCastName)
-        node.func.id = self.collapse_id(node.func.id)
-        node.invocation_index = self.next_function_invocation(node.func.id)
+        assert isinstance(node.func, AnnCastName) or isinstance(node.func, AnnCastAttribute)
+        if isinstance(node.func, AnnCastName):
+            node.func.id = self.collapse_id(node.func.id)
+            node.invocation_index = self.next_function_invocation(node.func.id)
+        else:
+            node.func.attr.id = self.collapse_id(node.func.attr.id)
+            node.func.value.id = self.collapse_id(node.func.value.id)
+            node.invocation_index = self.next_function_invocation(node.func.attr.id)
+            
             
         # cache Call node to later determine if this Call has a FunctionDef
         call_name = call_container_name(node)
@@ -116,9 +125,13 @@ class IdCollapsePass:
         self.visit_node_list(node.arguments, at_module_scope)
 
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef, at_module_scope):
+    def visit_record_def(self, node: AnnCastRecordDef, at_module_scope):
         at_module_scope = False
-        # Each func is an AnnCastVar node
+
+        # Currently, bases doesn't have anything
+        self.visit_node_list(node.bases, at_module_scope)
+
+        # Each func is an AnnCastFuncDef node
         self.visit_node_list(node.funcs, at_module_scope)
 
         # Each field (attribute) is an AnnCastVar node

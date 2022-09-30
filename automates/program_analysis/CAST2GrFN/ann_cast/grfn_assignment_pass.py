@@ -167,7 +167,7 @@ class GrfnAssignmentPass:
                 print(f"     {pos} : {str(grfn_assignment)}")
 
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef, add_to: typing.Dict):
+    def visit_record_def(self, node: AnnCastRecordDef, add_to: typing.Dict):
         pass
 
     @_visit.register

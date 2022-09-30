@@ -462,7 +462,7 @@ class GrfnVarCreationPass:
         self.visit_function_def_copy(node.func_def_copy)
 
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef):
+    def visit_record_def(self, node: AnnCastRecordDef):
         pass
 
     @_visit.register
