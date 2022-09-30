@@ -458,7 +458,7 @@ class ToGrometPass:
             # We've made the call box function, which made its argument box functions and wired them appropriately.
             # Now, we have to make the output(s) to this call's box function and have them be assigned appropriately.
             # We also add any variables that have been assigned in this AnnCastAssignment to the variable environment
-            if not is_inline(node.right.func.name):
+            if not isinstance(node.right.func, AnnCastAttribute) and not is_inline(node.right.func.name):
                 if isinstance(node.left, AnnCastTuple):
                     for elem in node.left.values:
                         ref = elem.source_refs[0]
@@ -790,9 +790,6 @@ class ToGrometPass:
         if isinstance(parent_cast_node, AnnCastAssignment):
             from_assignment = True
 
-        func_name = node.func.name
-
-
         ref = node.source_refs[0]
         metadata = self.create_source_code_reference(ref)
         if isinstance(node.func, AnnCastAttribute):
@@ -830,6 +827,7 @@ class ToGrometPass:
 
             return func_call_idx
 
+        func_name = node.func.name
         in_module = self.func_in_module(node.func.name)
         print(in_module)
 
