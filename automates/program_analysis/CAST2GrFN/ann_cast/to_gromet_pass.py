@@ -1,8 +1,5 @@
 from copy import deepcopy
-from dataclasses import field
 import sys
-from threading import local
-from tkinter import W
 
 from automates.utils.misc import uuid
 
@@ -406,8 +403,8 @@ class ToGrometPass:
         """
         # print current node being visited.  
         # this can be useful for debugging 
-        class_name = node.__class__.__name__
-        print(f"\nProcessing node type {class_name}")
+        #class_name = node.__class__.__name__
+        #print(f"\nProcessing node type {class_name}")
 
         # call internal visit
         return self._visit(node, parent_gromet_fn, parent_cast_node)
@@ -472,7 +469,6 @@ class ToGrometPass:
                         parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=elem.val.name, box=len(parent_gromet_fn.bf), metadata=[metadata]))
                         self.add_var_to_env(elem.val.name, elem, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
                 else:
-                    print(f"=-=-=--=-=-{node.right.func.name}")
                     if node.right.func.name in self.record.keys():
                         self.initialized_records[node.left.val.name] = node.right.func.name                        
 
