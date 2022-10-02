@@ -9,7 +9,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     BinaryOp,
     BinaryOperator,
     Call,
-    ClassDef,
+    RecordDef,
     Dict,
     Expr,
     FunctionDef,
@@ -101,7 +101,7 @@ def cast_with_all_nodes():
     )
 
     class_field_var = Var(val="exampleClassVar", type="String")
-    class_def = ClassDef(
+    class_def = RecordDef(
         name="ExampleClass",
         bases=[],
         funcs=[class_func_def],
@@ -156,7 +156,7 @@ def cast_with_all_nodes():
 @pytest.fixture
 def pid_c_cast():
     # TODO for a C struct, should we make a default init function?
-    struct_pid_def = ClassDef(
+    struct_pid_def = RecordDef(
         name="struct _pid",
         bases=[],
         funcs=[],
