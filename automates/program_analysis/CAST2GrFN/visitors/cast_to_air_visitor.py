@@ -32,7 +32,6 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     BinaryOp,
     Boolean,
     Call,
-    ClassDef,
     Dict,
     Expr,
     FunctionDef,
@@ -45,6 +44,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+    RecordDef,
     Set,
     String,
     SourceRef,
@@ -658,7 +658,7 @@ class CASTToAIRVisitor(CASTVisitor):
         return results
 
     @visit.register
-    def _(self, node: ClassDef):
+    def _(self, node: RecordDef):
         """
         TODO
         """

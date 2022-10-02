@@ -10,7 +10,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     BinaryOp,
     BinaryOperator,
     Call,
-    ClassDef,
+    RecordDef,
     Dict,
     Expr,
     FunctionDef,

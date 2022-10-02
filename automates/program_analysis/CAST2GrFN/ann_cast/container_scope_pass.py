@@ -234,7 +234,7 @@ class ContainerScopePass:
         right_src_ref = self.visit(node.right, base_func_scopestr, enclosing_con_scope, AssignSide.RIGHT)
         # The AnnCastTuple is added to handle scenarios where an assignment
         # is made by assigning to a tuple of values, as opposed to one singular value
-        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple), f"container_scope: visit_assigment: node.left is not AnnCastVar or AnnCastTuple it is {type(node.left)}"
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple) or isinstance(node.left, AnnCastAttribute), f"container_scope: visit_assigment: node.left is not AnnCastVar or AnnCastTuple it is {type(node.left)}"
         left_src_ref = self.visit(node.left, base_func_scopestr, enclosing_con_scope, AssignSide.LEFT)
 
         return combine_grfn_con_src_refs([right_src_ref, left_src_ref])
@@ -259,7 +259,7 @@ class ContainerScopePass:
 
     @_visit.register
     def visit_call(self, node: AnnCastCall, base_func_scopestr, enclosing_con_scope, assign_side):
-        assert isinstance(node.func, AnnCastName)
+        assert isinstance(node.func, AnnCastName) or isinstance(node.func, AnnCastAttribute)
         # if this call is on the RHS of an assignment, then it should have a ret val
         # FUTURE: this logic is not sufficient to determine 
         # all cases that a Call node should have a ret val
@@ -307,7 +307,7 @@ class ContainerScopePass:
 
     # FUTURE: decide how to handle a ClassDef's accessed, modified, and used variables
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef, base_func_scopestr, enclosing_con_scope, assign_side):
+    def visit_record_def(self, node: AnnCastRecordDef, base_func_scopestr, enclosing_con_scope, assign_side):
         # we believe the start of the container should not be on either side of an assignment
         assert(assign_side == AssignSide.NEITHER)
         # we do not visit the name because it is a string

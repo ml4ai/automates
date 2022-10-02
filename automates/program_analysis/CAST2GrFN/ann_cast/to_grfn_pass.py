@@ -358,7 +358,7 @@ class ToGrfnPass:
 
 
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef, subgraph: GrFNSubgraph):
+    def visit_record_def(self, node: AnnCastRecordDef, subgraph: GrFNSubgraph):
         pass
 
     @_visit.register

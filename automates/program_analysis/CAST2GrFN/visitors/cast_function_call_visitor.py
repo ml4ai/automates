@@ -10,7 +10,6 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     BinaryOp,
     Boolean,
     Call,
-    ClassDef,
     Dict,
     Expr,
     FunctionDef,
@@ -23,6 +22,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+    RecordDef,
     Set,
     String,
     Subscript,
@@ -111,7 +111,7 @@ class CASTFunctionCallVisitor(CASTVisitor):
         return [node.func.name] + self.visit(node.arguments)
 
     @visit.register
-    def _(self, node: ClassDef):
+    def _(self, node: RecordDef):
         # Fields should not have function calles
         return self.visit(node.funcs)
 
