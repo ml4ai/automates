@@ -13,7 +13,6 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     BinaryOperator,
     Boolean,
     Call,
-    ClassDef,
     Dict,
     Expr,
     FunctionDef,
@@ -28,6 +27,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+    RecordDef,
     ScalarType,
     Set,
     String,
@@ -320,8 +320,8 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
-    def _(self, node: ClassDef):
-        """Visits ClassDef nodes. We visit all fields and functions
+    def _(self, node: RecordDef):
+        """Visits RecordDef nodes. We visit all fields and functions
         of the class definition, and connect them to this node.
         This node's UID is returned."""
         # TODO: Where should bases field be used?
@@ -332,7 +332,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         if len(node.fields) > 0:
             fields = self.visit_list(node.fields)
         node_uid = uuid.uuid4()
-        self.G.add_node(node_uid, label="Class: " + node.name)
+        self.G.add_node(node_uid, label="Record: " + node.name)
 
         # Add attributes to the graph
         attr_uid = uuid.uuid4()
@@ -351,8 +351,8 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
-    def _(self, node: AnnCastClassDef):
-        """Visits ClassDef nodes. We visit all fields and functions
+    def _(self, node: AnnCastRecordDef):
+        """Visits RecordDef nodes. We visit all fields and functions
         of the class definition, and connect them to this node.
         This node's UID is returned."""
         # TODO: Where should bases field be used?
@@ -905,7 +905,7 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         class_init = False
         for n in self.cast.nodes[0].body:
-            if isinstance(n,ClassDef) and n.name == node.name:
+            if isinstance(n,RecordDef) and n.name == node.name:
                 class_init = True
                 self.G.add_node(node_uid, label=node.name + " Init()")
                 break
@@ -931,7 +931,7 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         class_init = False
         for n in self.cast.nodes[0].body:
-            if isinstance(n,ClassDef) and n.name == node.name:
+            if isinstance(n,RecordDef) and n.name == node.name:
                 class_init = True
                 self.G.add_node(node_uid, label=node.name + " Init()")
                 break

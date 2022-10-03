@@ -14,7 +14,6 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     BinaryOperator,
     Boolean,
     Call,
-    ClassDef,
     Dict,
     Expr,
     FunctionDef,
@@ -29,6 +28,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Module,
     Name,
     Number,
+    RecordDef,
     ScalarType,
     Set,
     String,
@@ -839,20 +839,21 @@ class PyASTToCAST():
         Returns:
             ClassDef: A CAST class definition node
         """
-
         name = node.name
         self.classes[name] = []
 
         bases = []
         for base in node.bases:
-            bases.extend(self.visit(base, prev_scope_id_dict))
+            bases.extend(self.visit(base, prev_scope_id_dict, curr_scope_id_dict))
         
         funcs = []
         for func in node.body:
-            funcs.extend(self.visit(func, prev_scope_id_dict))
+            funcs.extend(self.visit(func, prev_scope_id_dict, curr_scope_id_dict))
             if isinstance(func,ast.FunctionDef):
                 self.classes[name].append(func.name)
-        
+                self.insert_next_id(prev_scope_id_dict, name)
+
+
         fields = []
 
         # Get the fields in the class
@@ -868,10 +869,11 @@ class PyASTToCAST():
                 if attr_node.value.id == "self":
                     ref = [SourceRef(source_file_name=self.filenames[-1], col_start=attr_node.col_offset, col_end=attr_node.end_col_offset, row_start=attr_node.lineno, row_end=attr_node.end_lineno)]
                     # Need IDs for name, which one?
-                    fields.append(Var(Name(attr_node.attr, id=-1,source_refs=ref), "float", source_refs=ref))
+                    attr_id = self.insert_next_id(curr_scope_id_dict, attr_node.attr)
+                    fields.append(Var(Name(attr_node.attr, id=attr_id, source_refs=ref), "float", source_refs=ref))
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        return [ClassDef(name, bases, funcs, fields, source_refs=ref)]
+        return [RecordDef(name, bases, funcs, fields, source_refs=ref)]
 
     @visit.register
     def visit_Compare(self, node: ast.Compare, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -1177,11 +1179,14 @@ class PyASTToCAST():
                 return [FunctionDef(Name(node.name,prev_scope_id_dict[node.name]), args, body, source_refs=ref)]
         else:
             unique_name = construct_unique_name(self.filenames[-1], node.name) 
-            if self.legacy:
-                return [FunctionDef(node.name, args, body, source_refs=ref)]
+            if unique_name in prev_scope_id_dict.keys():
+                if self.legacy:
+                    return [FunctionDef(node.name, args, body, source_refs=ref)]
+                else:
+                    return [FunctionDef(Name(node.name,prev_scope_id_dict[unique_name]), args, body, source_refs=ref)]
             else:
-                return [FunctionDef(Name(node.name,prev_scope_id_dict[unique_name]), args, body, source_refs=ref)]
-
+                    self.insert_next_id(prev_scope_id_dict, unique_name)
+                    return [FunctionDef(Name(node.name,prev_scope_id_dict[unique_name]), args, body, source_refs=ref)]
 
 
     @visit.register

@@ -923,7 +923,7 @@ class VariableVersionPass:
         self.visit(node.right, assign_lhs)
         # The AnnCastTuple is added to handle scenarios where an assignment
         # is made by assigning to a tuple of values, as opposed to one singular value
-        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple) or isinstance(node.left, AnnCastAssignment), f"container_scope: visit_assigment: node.left is {type(node.left)}"
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple) or isinstance(node.left, AnnCastAssignment) or isinstance(node.left, AnnCastAttribute), f"container_scope: visit_assigment: node.left is {type(node.left)}"
         self.visit(node.left, True)
 
     @_visit.register
@@ -1000,7 +1000,11 @@ class VariableVersionPass:
     
 
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef, assign_lhs: bool):
+    def visit_record_def(self, node: AnnCastRecordDef, assign_lhs: bool):
+        # Visit the function defs within this class to make sure
+        # Everything is versioned correctly
+        self.visit_node_list(node.funcs, assign_lhs)
+        
         pass
 
     @_visit.register

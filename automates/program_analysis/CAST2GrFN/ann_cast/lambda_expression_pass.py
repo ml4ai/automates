@@ -282,7 +282,7 @@ class LambdaExpressionPass:
         return node.expr_str
 
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef) -> str:
+    def visit_record_def(self, node: AnnCastRecordDef) -> str:
         return node.expr_str
 
     @_visit.register

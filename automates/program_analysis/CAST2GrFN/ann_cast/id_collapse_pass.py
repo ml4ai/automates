@@ -124,9 +124,13 @@ class IdCollapsePass:
         self.visit_node_list(node.arguments, at_module_scope)
 
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef, at_module_scope):
+    def visit_record_def(self, node: AnnCastRecordDef, at_module_scope):
         at_module_scope = False
-        # Each func is an AnnCastVar node
+
+        # Currently, bases doesn't have anything
+        self.visit_node_list(node.bases, at_module_scope)
+
+        # Each func is an AnnCastFuncDef node
         self.visit_node_list(node.funcs, at_module_scope)
 
         # Each field (attribute) is an AnnCastVar node

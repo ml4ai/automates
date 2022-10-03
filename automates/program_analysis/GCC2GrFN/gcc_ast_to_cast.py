@@ -11,7 +11,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     BinaryOp,
     BinaryOperator,
     Call,
-    ClassDef,
+    RecordDef,
     Dict,
     Expr,
     FunctionDef,
@@ -155,7 +155,7 @@ class GCC2CAST:
             # First fill out the ids to type names in case one type uses another
             # before it is defined.
             for t in types:
-                self.type_ids_to_defined_types[t["id"]] = ClassDef(name=t["name"])
+                self.type_ids_to_defined_types[t["id"]] = RecordDef(name=t["name"])
 
             # Parse types defined in AST so we have them before they are referenced
             for t in types:
@@ -206,7 +206,7 @@ class GCC2CAST:
 
         source_refs = self.get_source_refs(record_type)
 
-        return ClassDef(
+        return RecordDef(
             name=name, bases=bases, funcs=funcs, fields=fields, source_refs=source_refs
         )
 

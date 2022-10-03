@@ -8,7 +8,6 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     BinaryOp,
     Boolean,
     Call,
-    ClassDef,
     Dict,
     Expr,
     FunctionDef,
@@ -23,6 +22,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Name,
     Number,
 #    ScalarType,
+    RecordDef,
     Set,
     String,
     Subscript,
@@ -510,7 +510,7 @@ class AnnCastList(AnnCastNode):
     def __str__(self):
         return List.__str__(self)
 
-class AnnCastClassDef(AnnCastNode):
+class AnnCastRecordDef(AnnCastNode):
     def __init__(self, name, bases, funcs, fields, source_refs):
         super().__init__(self)
         self.name = name
@@ -525,12 +525,12 @@ class AnnCastClassDef(AnnCastNode):
         return result
 
     def equiv(self, other):
-        if not isinstance(other, AnnCastClassDef):
+        if not isinstance(other, AnnCastRecordDef):
             return False
         return self.to_dict() == other.to_dict()
         
     def __str__(self):
-        return ClassDef.__str__(self)
+        return RecordDef.__str__(self)
 
 class AnnCastLiteralValue(AnnCastNode):
     def __init__(self, value_type, value, source_code_data_type, source_refs):

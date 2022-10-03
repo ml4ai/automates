@@ -307,7 +307,7 @@ class ContainerScopePass:
 
     # FUTURE: decide how to handle a ClassDef's accessed, modified, and used variables
     @_visit.register
-    def visit_class_def(self, node: AnnCastClassDef, base_func_scopestr, enclosing_con_scope, assign_side):
+    def visit_record_def(self, node: AnnCastRecordDef, base_func_scopestr, enclosing_con_scope, assign_side):
         # we believe the start of the container should not be on either side of an assignment
         assert(assign_side == AssignSide.NEITHER)
         # we do not visit the name because it is a string
