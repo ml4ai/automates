@@ -1,4 +1,5 @@
 import ast
+from enum import unique
 import os 
 import copy
 import sys
@@ -600,9 +601,22 @@ class PyASTToCAST():
                         curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
                     else:
                         self.insert_next_id(curr_scope_id_dict, unique_name)
+        elif isinstance(curr, ast.Call):
+            unique_name = construct_unique_name(self.filenames[-1], node.attr)
+            if unique_name not in prev_scope_id_dict.keys():
+
+                # If a built-in is called, then it gets added to the global dictionary if
+                # it hasn't been called before. This is to maintain one consistent ID per built-in 
+                # function
+                if unique_name not in self.global_identifier_dict.keys():
+                    self.insert_next_id(self.global_identifier_dict, unique_name)
+
+                prev_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
+
         else:
             raise NotImplementedError(f"Node type: {type(curr)}")
 
+        merge_dicts(prev_scope_id_dict, curr_scope_id_dict)
         value = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)
         
         attr = Name(node.attr, id=curr_scope_id_dict[unique_name], source_refs=ref)

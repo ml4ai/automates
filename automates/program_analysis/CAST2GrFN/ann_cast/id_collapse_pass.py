@@ -1,3 +1,4 @@
+from re import A
 import typing
 from collections import defaultdict
 from functools import singledispatchmethod
@@ -113,8 +114,11 @@ class IdCollapsePass:
             node.func.id = self.collapse_id(node.func.id)
             node.invocation_index = self.next_function_invocation(node.func.id)
         else:
+            if isinstance(node.func.value, AnnCastCall):
+                self.visit(node.func.value, at_module_scope)
+            else:
+                node.func.value.id = self.collapse_id(node.func.value.id)
             node.func.attr.id = self.collapse_id(node.func.attr.id)
-            node.func.value.id = self.collapse_id(node.func.value.id)
             node.invocation_index = self.next_function_invocation(node.func.attr.id)
             
         # cache Call node to later determine if this Call has a FunctionDef
