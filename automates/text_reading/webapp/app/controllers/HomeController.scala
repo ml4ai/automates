@@ -11,6 +11,7 @@ import org.clulab.aske.automates.alignment.{Aligner, AlignmentHandler}
 import org.clulab.aske.automates.apps.ExtractAndAlign.config
 import org.clulab.aske.automates.apps.{AutomatesExporter, ExtractAndAlign}
 import org.clulab.aske.automates.attachments.MentionLocationAttachment
+import org.clulab.aske.automates.cosmosjson.CosmosJsonProcessor
 import org.clulab.aske.automates.data.CosmosJsonDataLoader
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
@@ -21,6 +22,7 @@ import upickle.default._
 
 import scala.collection.mutable.ArrayBuffer
 import ujson.json4s.Json4sJson
+import ujson.play.PlayJson
 import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.AlignmentJsonUtils.SeqOfGlobalVariables
@@ -29,6 +31,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import org.json4s
 import play.api.mvc._
 import play.api.libs.json._
+
 
 
 /**
@@ -217,8 +220,11 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
 
+
+
   def cosmos_json_to_mentions: Action[AnyContent] = Action { request =>
     val data = request.body.asJson.get.toString()
+
     val pathJson = ujson.read(data)
     val jsonPath = pathJson("pathToCosmosJson").str
     logger.info(s"Extracting mentions from $jsonPath")
@@ -256,10 +262,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     }
 
 
-    val outFile = pathJson("outfile").str
-    AutomatesExporter(outFile).export(mentionsWithLocations)
+//    val outFile = pathJson("outfile").str
+//    AutomatesExporter(outFile).export(mentionsWithLocations)
 
-    Ok("")
+    val exportedData  = ujson.write(AutomatesJSONSerializer.serializeMentions(mentionsWithLocations))
+
+    Ok(exportedData)
 
   }
   /**

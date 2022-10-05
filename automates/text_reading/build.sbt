@@ -22,6 +22,7 @@ libraryDependencies ++= {
     "com.lihaoyi"   %% "requests"                 % "0.5.1",
     "com.lihaoyi"   %% "upickle"                  % "0.7.0",
     "com.lihaoyi"   %% "ujson-json4s"             % "0.7.0",
+    "com.lihaoyi"   %% "ujson-play"               % "0.7.0",
     "org.scalatest" %% "scalatest"                % "3.0.4" % "test",
     "com.typesafe"  %  "config"                   % "1.3.1",
     "org.json4s"    %%  "json4s-core"             % json4sVersion,
