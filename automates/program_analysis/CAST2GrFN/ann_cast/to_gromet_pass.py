@@ -17,6 +17,8 @@ from automates.gromet.fn import (
     GrometFN,
     GrometPort,
     GrometWire,
+    ImportReference,
+    ImportType,
     LiteralValue,
     TypedValue,
 )
@@ -31,13 +33,24 @@ from automates.gromet.metadata import (
 )
 
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
+from automates.program_analysis.PyAST2CAST.modules_list import BUILTINS, find_func_in_module, find_std_lib_module
 
 cons = "num"
 PRIMITIVES = {"Add" : ("+", ["Number","Number"], ["Number"]), "Sub" : ("-", ["Number","Number"], ["Number"]),
               "Mult" : ("*", ["Number","Number"], ["Number"]), "Div" : ("/", ["Number","Number"], ["Number"]), 
               "Lt": ("<", ["Element","Element"], ["Boolean"]), "Gt": (">", ["Element","Element"], ["Boolean"]), 
+              "Lte": ("<=", ["Element","Element"], ["Boolean"]), "Gte": (">=", ["Element","Element"], ["Boolean"]), 
               "Eq": ("==", ["Element","Element"], ["Boolean"]), 
+              "And": ("and", ["Element","Element"], ["Boolean"]),
+              "Or": ("or", ["Element","Element"], ["Boolean"]),
+              "NotIs": ("NotIs", ["Element","Element"], ["Boolean"]),
+              "Is": ("Is", ["Element","Element"], ["Boolean"]),
               "NotEq" : ("!=", ["Number","Number"], ["Boolean"]), "Pow": ("**", ["Number","Number"], ["Number"]),
+              "BitAnd" : ("&", ["Number", "Number"], ["Number"]),
+              "BitOr" : ("|", ["Number", "Number"], ["Number"]),
+              "BitXor" : ("^", ["Number", "Number"], ["Number"]),
+              "LShift" : ("<<", ["Number", "Number"], ["Number"]),
+              "RShift" : (">>", ["Number", "Number"], ["Number"]),
              "_List_get" : ("_List_get", ["List", "Integer"], ["Element"]), 
              "_List_set" : ("_List_set", ["List", "Integer", "Element"], ["List"]), 
              "_Array_get" : "", "_Array_set" : "", 
@@ -167,6 +180,10 @@ class ToGrometPass:
         self.nodes = self.pipeline_state.nodes
 
         self.var_environment = {"global": {}, "args": {}, "local": {}}
+        # Attribute accesses check this collection 
+        # to see if we're using an imported item
+        # Function calls to imported functions without their attributes will also check here
+        self.import_collection = {}
 
         # creating a GroMEt FN object here or a collection of GroMEt FNs
         # generally, programs are complex, so a collection of GroMEt FNs is usually created
@@ -279,7 +296,11 @@ class ToGrometPass:
                 elif isinstance(arg, AnnCastVar):
                     self.wire_from_var_env(arg.val.name, parent_gromet_fn)
                 else:
-                    parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=len(parent_gromet_fn.pof)))
+                    if parent_gromet_fn.pof != None: # TODO: Check this guard later
+                        parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=len(parent_gromet_fn.pof)))
+                    else:
+                        print(node.source_refs[0])
+                        parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=-1))
 
                 #if isinstance(arg, AnnCastBinaryOp) or isinstance(arg, AnnCastLiteralValue) or isinstance(arg, AnnCastCall):
                  #   self.visit(arg, primitive_fn, parent_cast_node)
@@ -300,7 +321,7 @@ class ToGrometPass:
         else:
             # Create the Expression FN and its box function 
             primitive_fn = GrometFN()
-            primitive_fn.b = insert_gromet_object(primitive_fn.b, GrometBoxFunction(function_type=FunctionType.EXPRESSION, metadata=metadata))
+            primitive_fn.b = insert_gromet_object(primitive_fn.b, GrometBoxFunction(function_type=FunctionType.EXPRESSION, metadata=self.insert_metadata(metadata)))
 
             # Create the primitive expression bf
             primitive_func_bf = GrometBoxFunction(name=node.func.name,function_type=FunctionType.PRIMITIVE)
@@ -403,8 +424,8 @@ class ToGrometPass:
         """
         # print current node being visited.  
         # this can be useful for debugging 
-        #class_name = node.__class__.__name__
-        #print(f"\nProcessing node type {class_name}")
+        # class_name = node.__class__.__name__
+        # print(f"\nProcessing node type {class_name}")
 
         # call internal visit
         return self._visit(node, parent_gromet_fn, parent_cast_node)
@@ -461,7 +482,8 @@ class ToGrometPass:
             # We've made the call box function, which made its argument box functions and wired them appropriately.
             # Now, we have to make the output(s) to this call's box function and have them be assigned appropriately.
             # We also add any variables that have been assigned in this AnnCastAssignment to the variable environment
-            if isinstance(node.right.func, AnnCastName) and not is_inline(node.right.func.name):
+            if not isinstance(node.right.func, AnnCastAttribute) and not is_inline(node.right.func.name):
+            # if isinstance(node.right.func, AnnCastName) and not is_inline(node.right.func.name):
                 if isinstance(node.left, AnnCastTuple):
                     for elem in node.left.values:
                         ref = elem.source_refs[0]
@@ -484,9 +506,28 @@ class ToGrometPass:
             else: 
                 if isinstance(node.left, AnnCastTuple):
                     for (i,elem) in enumerate(node.left.values,1):
-                        pof_idx = len(parent_gromet_fn.pof)-i
-                        self.add_var_to_env(elem.val.name, elem, parent_gromet_fn.pof[pof_idx], pof_idx, parent_cast_node)
-                        parent_gromet_fn.pof[pof_idx].name = elem.val.name
+                        if parent_gromet_fn.pof != None: # TODO: come back and fix this guard later
+                            pof_idx = len(parent_gromet_fn.pof)-i
+                        else:
+                            pof_idx = -1
+                        if parent_gromet_fn.pof != None: # TODO: come back and fix this guard later
+                            if isinstance(elem, AnnCastTuple): # TODO: This is a tuple of tuples, is this necessary?
+                                for x in elem.values:
+                                    ref = x.source_refs[0]
+                                    metadata = self.create_source_code_reference(ref)
+                                    parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=x.val.name, box=len(parent_gromet_fn.bf), metadata=[metadata]))
+                                    self.add_var_to_env(x.val.name, x, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
+                            else:
+                                self.add_var_to_env(elem.val.name, elem, parent_gromet_fn.pof[pof_idx], pof_idx, parent_cast_node)
+                                parent_gromet_fn.pof[pof_idx].name = elem.val.name
+                elif isinstance(node.right.func, AnnCastAttribute):
+                    if parent_gromet_fn.pof == None: # TODO: check this guard later
+                        print(node.source_refs[0])
+                        parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.val.name, box=-1))
+                    else: 
+                        parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.val.name, box=len(parent_gromet_fn.pof)))
+                    parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.val.name, box=len(parent_gromet_fn.pof)))
+                    self.add_var_to_env(node.left.val.name, node.left, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
                 else:
                     self.add_var_to_env(node.left.val.name, node.left, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
                     parent_gromet_fn.pof[len(parent_gromet_fn.pof)-1].name = node.left.val.name
@@ -516,10 +557,21 @@ class ToGrometPass:
             
             self.wire_from_var_env(node.right.name, parent_gromet_fn)
 
-            parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.val.name, box=len(parent_gromet_fn.bf)))
-           
+            if isinstance(node.left, AnnCastTuple): # TODO: double check that this addition is correct
+                for (i,elem) in enumerate(node.left.values,1):
+                    if parent_gromet_fn.pof != None: # TODO: come back and fix this guard later
+                        pof_idx = len(parent_gromet_fn.pof)-i
+                    else:
+                        print(node.source_refs[0])
+                        pof_idx = -1
+                    if parent_gromet_fn.pof != None: # TODO: come back and fix this guard later
+                        self.add_var_to_env(elem.val.name, elem, parent_gromet_fn.pof[pof_idx], pof_idx, parent_cast_node)
+                        parent_gromet_fn.pof[pof_idx].name = elem.val.name
+            else:
+                parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.val.name, box=len(parent_gromet_fn.bf)))
+                self.add_var_to_env(node.left.val.name, node.left, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
+            
             # Store the new variable we created into the var environment
-            self.add_var_to_env(node.left.val.name, node.left, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
         elif isinstance(node.right, AnnCastLiteralValue):
             # Assignment for 
             # LiteralValue (i.e. 3)
@@ -577,8 +629,17 @@ class ToGrometPass:
             # The creation of the wire between the output port (pof) of the top-level node 
             # of the tree rooted in node.right needs to be wired to the output port out (OPO)
             # of the GExpression of this AnnCastAssignment
-            new_gromet.wfopo = insert_gromet_object(new_gromet.wfopo, GrometWire(src=len(new_gromet.opo), tgt=len(new_gromet.pof)))
-
+            if new_gromet.opo == None and new_gromet.pof == None: # TODO: double check this guard to see if it's necessary
+                print(node.source_refs[0])
+                new_gromet.wfopo = insert_gromet_object(new_gromet.wfopo, GrometWire(src=-1, tgt=-1))
+            elif new_gromet.pof == None:
+                print(node.source_refs[0])
+                new_gromet.wfopo = insert_gromet_object(new_gromet.wfopo, GrometWire(src=len(new_gromet.opo), tgt=-1))
+            elif new_gromet.opo == None:
+                print(node.source_refs[0])
+                new_gromet.wfopo = insert_gromet_object(new_gromet.wfopo, GrometWire(src=-1, tgt=len(new_gromet.pof)))
+            else:
+                new_gromet.wfopo = insert_gromet_object(new_gromet.wfopo, GrometWire(src=len(new_gromet.opo), tgt=len(new_gromet.pof)))
             self.gromet_module.attributes = insert_gromet_object(self.gromet_module.attributes, TypedValue(type=AttributeType.FN,value=new_gromet))
             self.set_index()
 
@@ -604,7 +665,10 @@ class ToGrometPass:
 
 
             # Put the final pof in the GroMEt expression call, and add its respective variable to the variable environment
-            parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.val.name, box=len(parent_gromet_fn.bf)))
+            if isinstance(node.left, AnnCastAttribute):            
+                parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.attr.name, box=len(parent_gromet_fn.bf)))
+            else:
+                parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.val.name, box=len(parent_gromet_fn.bf)))
 
             # TODO: expand on this later
             if isinstance(parent_cast_node, AnnCastModelIf):
@@ -612,7 +676,11 @@ class ToGrometPass:
                 parent_gromet_fn.opo = insert_gromet_object(parent_gromet_fn.opo, GrometPort(box=len(parent_gromet_fn.b)))
                 parent_gromet_fn.wfopo = insert_gromet_object(parent_gromet_fn.wfopo, GrometWire(src=len(parent_gromet_fn.opo), tgt=len(parent_gromet_fn.pof)))
 
-            self.add_var_to_env(node.left.val.name, node.left, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
+            if isinstance(node.left, AnnCastAttribute):            
+                self.add_var_to_env(node.left.attr.name, node.left, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
+            else:
+                self.add_var_to_env(node.left.val.name, node.left, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
+
 
         # One way or another we have a hold of the GEXpression object here.
         # Whatever's returned by the RHS of the assignment, 
@@ -621,37 +689,58 @@ class ToGrometPass:
 
     @_visit.register
     def visit_attribute(self, node: AnnCastAttribute, parent_gromet_fn, parent_cast_node):
-        if isinstance(node.attr, AnnCastName): 
-            #print(node.value.name)
-            #print(node.attr.name)
-            if isinstance(node.value, AnnCastName) and node.value.name == "self": # Compose the case of "self.x" where x is an attribute
-                # Create string literal for "get" second argument
-                parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(function_type=FunctionType.LITERAL, value=LiteralValue("string", node.attr.name)))
-                parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
-
-                # Create "get" function and first argument, then wire it to 'self' argument
-                get_bf = GrometBoxFunction(name = "get", function_type=FunctionType.PRIMITIVE)
-                parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, get_bf)
-                parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
-                parent_gromet_fn.wfopi = insert_gromet_object(parent_gromet_fn.wfopi, GrometWire(src=len(parent_gromet_fn.pif),tgt=1)) # self is opi 1 everytime
-
-                # Create "get" second argument and wire it to the string literal from earlier
-                parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
-                parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif), tgt=len(parent_gromet_fn.pof)))
-
-                # Create "get" pof
-                parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
-            elif isinstance(parent_cast_node, AnnCastCall):
-                func_name = node.attr.name
-
-                if node.value.name in self.initialized_records:
-                    obj_name = self.initialized_records[node.value.name]
-                    idx = self.record[obj_name][func_name]
-                    parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=func_name, function_type=FunctionType.FUNCTION, contents=idx))
-                    # parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=f"{obj_name}:{func_name}", function_type=FunctionType.FUNCTION, contents=idx, metadata=self.insert_metadata(metadata)))
-
-                    parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(name=node.value.name,box=len(parent_gromet_fn.bf)))
+        # Use self.import_collection to look up the attribute name
+        # to see if it exists in there.
+        # If the attribute exists, then we can create an import reference
+        # node.value: left-side (i.e. module name or a class variable)
+        # node.attr: right-side (i.e. name of a function or an attribute of a class)
+        ref = node.source_refs[0]
+        if isinstance(node.value, AnnCastName):
+            name = node.value.name
+            if name in self.import_collection:
+                if name in BUILTINS:
+                    imp_type = ImportType.NATIVE
+                else:
+                    imp_type = ImportType.OTHER
+                import_ref = ImportReference(name=name+"."+node.attr.name, src_language="Python", type=imp_type, version="3.8")
+                gromet_import_val = TypedValue(type=AttributeType.IMPORT, value=import_ref) 
+                self.gromet_module.attributes = insert_gromet_object(self.gromet_module.attributes, gromet_import_val)
+                import_idx = len(self.gromet_module.attributes)
+                parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(function_type=FunctionType.FUNCTION, 
+                                                                                                  contents=import_idx,
+                                                                                                  metadata=self.insert_metadata(self.create_source_code_reference(ref))))
+            elif isinstance(node.attr, AnnCastName): 
+                #print(node.value.name)
+                #print(node.attr.name)
+                if node.value.name == "self": # Compose the case of "self.x" where x is an attribute
+                    # Create string literal for "get" second argument
+                    parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(function_type=FunctionType.LITERAL, value=LiteralValue("string", node.attr.name)))
                     parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
+
+                    # Create "get" function and first argument, then wire it to 'self' argument
+                    get_bf = GrometBoxFunction(name = "get", function_type=FunctionType.PRIMITIVE)
+                    parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, get_bf)
+                    parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
+                    parent_gromet_fn.wfopi = insert_gromet_object(parent_gromet_fn.wfopi, GrometWire(src=len(parent_gromet_fn.pif),tgt=1)) # self is opi 1 everytime
+
+                    # Create "get" second argument and wire it to the string literal from earlier
+                    parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
+                    parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif), tgt=len(parent_gromet_fn.pof)))
+
+                    # Create "get" pof
+                    parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
+                elif isinstance(parent_cast_node, AnnCastCall): # Case where a class is calling a method (i.e. mc is a class, and we do mc.get_c())
+                    func_name = node.attr.name
+
+                    if node.value.name in self.initialized_records:
+                        obj_name = self.initialized_records[node.value.name]
+                        if func_name in self.record[obj_name].keys(): # TODO: remove this guard later
+                            idx = self.record[obj_name][func_name]
+                            parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=func_name, function_type=FunctionType.FUNCTION, contents=idx))
+                            # parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=f"{obj_name}:{func_name}", function_type=FunctionType.FUNCTION, contents=idx, metadata=self.insert_metadata(metadata)))
+
+                            parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(name=node.value.name,box=len(parent_gromet_fn.bf)))
+                            parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
 
 
                 # if node.value.name not in self.record.keys():
@@ -661,7 +750,6 @@ class ToGrometPass:
 
                 # parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=func_name, function_type=FunctionType.FUNCTION, contents=idx, metadata=self.insert_metadata(metadata)))
                 # func_call_idx = len(parent_gromet_fn.bf)
-
 
     @_visit.register
     def visit_binary_op(self, node: AnnCastBinaryOp, parent_gromet_fn, parent_cast_node):
@@ -739,8 +827,8 @@ class ToGrometPass:
                 self.wire_from_var_env(name, parent_gromet_fn)
         else:
             # In this case, the left node gave us a pof, so we can wire it to the pif here
-            if left_pof == -1:
-                print(type(node.left))
+            # if left_pof == -1:
+                # print(type(node.left))
             parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif), tgt=left_pof))            
         
         
@@ -794,6 +882,22 @@ class ToGrometPass:
             self.wire_binary_op_args(node.right, parent_gromet_fn)
             return
 
+    def func_in_module(self, func_name):
+        """ See if func_name is actually a function from
+            an imported module
+            A tuple of (Boolean, String) where the boolean value tells us
+            if we found it or not and the string denotes the module if we did find it
+            
+        """
+        for mname in self.import_collection.keys():
+            curr_module = self.import_collection[mname]
+            if curr_module[2] and find_func_in_module(mname, func_name): # If curr module is of form 'from mname import *'
+                return (True, mname)
+            if func_name in curr_module[1]: # If the function has been imported individually and is in the symbols list
+                return (True, mname)        # With the form 'from mname import func_name'
+
+        return (False, "")
+
     @_visit.register    
     def visit_call(self, node: AnnCastCall, parent_gromet_fn, parent_cast_node):
         from_assignment = False
@@ -804,10 +908,17 @@ class ToGrometPass:
         metadata = self.create_source_code_reference(ref)
         if isinstance(node.func, AnnCastAttribute):
             self.visit(node.func, parent_gromet_fn, node)
+            if(parent_gromet_fn.bf == None): # NOTE: remove this guard when we've resolved the case
+                print(node.source_refs[0])
+                func_call_idx = -1
+            else:
+                func_call_idx = len(parent_gromet_fn.bf)
+
             qualified_func_name = f"{'.'.join(node.func.con_scope)}.{node.func.attr.name}_{node.invocation_index}"
-            parent_gromet_fn.bf[-1].name = qualified_func_name
+            # parent_gromet_fn.bf[-1].name = qualified_func_name
             arg_fn_pofs = []
             for arg in node.arguments:
+                # print(type(arg))
                 # Go through the arguments and for all of them, create any necessary GroMEt FNs (in the case the argument is something more than a name)
                 if isinstance(arg, AnnCastCall):
                     self.visit(arg, parent_gromet_fn, node)
@@ -815,11 +926,16 @@ class ToGrometPass:
                     arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
                 elif not isinstance(arg, AnnCastName):
                     self.visit(arg, parent_gromet_fn, node)
-                    arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
+                    if parent_gromet_fn.pof == None: # TODO: check this guard later
+                        print(node.source_refs[0])
+                        arg_fn_pofs.append(None) # Store the pof index so we can use it later in wiring
+                    else:
+                        arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
                 else:
                     arg_fn_pofs.append(None)
 
-            func_call_idx = len(parent_gromet_fn.bf)
+            # print(qualified_func_name)
+
 
             # For each argument we determine if it's a variable being used
             # If it is then
@@ -830,24 +946,31 @@ class ToGrometPass:
                 pof = arg_fn_pofs[idx]
                 parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=func_call_idx))
                 if isinstance(arg, AnnCastName):
+                    # print("----"+arg.name)
+                    # NOTE: start looking here after meeting
                     self.wire_from_var_env(arg.name, parent_gromet_fn)
                     if arg.name not in self.var_environment["global"] and arg.name not in self.var_environment["local"] and arg.name not in self.var_environment["args"]:   
                         parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=len(parent_gromet_fn.pof)))
                 else:
                     parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=pof))
 
-            # NOTE: This allows us to wire arguments that aren't originally in the CAST but are necessary
-            # For the functional GroMEt structure.  This will probably change
+            return func_call_idx
+
+        func_name = node.func.name
+        in_module = self.func_in_module(node.func.name)
+        # print(in_module)
+        # NOTE: This allows us to wire arguments that aren't originally in the CAST but are necessary
+        # For the functional GroMEt structure.  This will probably change
+        if parent_gromet_fn.pof != None and parent_gromet_fn.pif != None: # NOTE: this is a good guard probably don't need to remove
             for i,pof in enumerate(parent_gromet_fn.pof,1):
                 if pof.name != None:
                     for j,pif in enumerate(parent_gromet_fn.pif,1):
                         if pif.name != None and pif.name == pof.name:
                             parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=i, tgt=j))
 
-            return func_call_idx
 
         # in_module = self.func_in_module(node.func.name)
-        in_module = (False, "")
+        # in_module = (False, "")
         # print(in_module)
 
         # Certain functions (special functions that PA has designated as primitive)
@@ -882,13 +1005,16 @@ class ToGrometPass:
                 elif isinstance(arg, AnnCastBinaryOp):
                     self.wire_binary_op_args(arg, parent_gromet_fn)
 
-            primitive_fn_opi = self.gromet_module.attributes[-1].value.opi
-            for i,opi in enumerate(primitive_fn_opi,1):
-                opi.name = None
+            if self.gromet_module.attributes[-1].type == AttributeType.FN: # TODO: double check this guard
+                primitive_fn_opi = self.gromet_module.attributes[-1].value.opi
+                if primitive_fn_opi != None: # TODO: double check this guard later and remove it if necessary
+                    for i,opi in enumerate(primitive_fn_opi,1):
+                        opi.name = None
             return         
 
         arg_fn_pofs = []
         for arg in node.arguments:
+            # print(type(arg))
             # Go through the arguments and for all of them, create any necessary GroMEt FNs (in the case the argument is something more than a name)
             if isinstance(arg, AnnCastCall):
                 self.visit(arg, parent_gromet_fn, node)
@@ -896,7 +1022,11 @@ class ToGrometPass:
                 arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
             elif not isinstance(arg, AnnCastName):
                 self.visit(arg, parent_gromet_fn, node)
-                arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
+                if parent_gromet_fn.pof != None: # TODO: check this guard later
+                    arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
+                else:
+                    print(node.source_refs[0])
+                    arg_fn_pofs.append(None)
             else:
                 arg_fn_pofs.append(None)
         # print(arg_fn_pofs)
@@ -924,7 +1054,6 @@ class ToGrometPass:
             # Make a placeholder for this function if we haven't visited its FunctionDef at the end
             # of the list of the Gromet FNs
             idx, found = self.find_gromet(func_name)
-            print(f"FUNC_NAME {func_name}")        
             if not found and func_name not in self.record.keys():
                 temp_gromet_fn = GrometFN()
                 temp_gromet_fn.b = insert_gromet_object(temp_gromet_fn.b, GrometBoxFunction(name=func_name, function_type=FunctionType.FUNCTION))
@@ -933,7 +1062,6 @@ class ToGrometPass:
 
             if func_name in self.record.keys():
                 idx = self.record[func_name][f"new:{func_name}"]
-
             parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=qualified_func_name, function_type=FunctionType.FUNCTION, contents=idx, metadata=self.insert_metadata(metadata)))
             # func_call_idx = len(parent_gromet_fn.bf)
 
@@ -952,6 +1080,10 @@ class ToGrometPass:
                 self.wire_from_var_env(arg.name, parent_gromet_fn)
                 if arg.name not in self.var_environment["global"] and arg.name not in self.var_environment["local"] and arg.name not in self.var_environment["args"]:   
                     parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=len(parent_gromet_fn.pof)))
+            elif isinstance(arg, AnnCastTuple):
+                for v in arg.values:
+                    if hasattr(v, "name"):
+                        self.wire_from_var_env(v.name, parent_gromet_fn)
             else:
                 parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=pof))
         
@@ -967,7 +1099,7 @@ class ToGrometPass:
         # Find 'init' and create a special new:Object function for it
         # Repeat with the getters I think? 
         for f in node.funcs:
-            if f.name.name == "__init__":
+            if isinstance(f, FunctionDef) and f.name.name == "__init__":
                 break
 
         new_gromet = GrometFN()
@@ -1004,8 +1136,8 @@ class ToGrometPass:
         new_gromet.pof = insert_gromet_object(new_gromet.pof, GrometPort(box=len(new_gromet.bf)))
 
         for s in f.body:
-            print(s.left.value.name)
-            print(s.left.attr.name)
+            # print(s.left.value.name)
+            # print(s.left.attr.name)
 
             if isinstance(s, AnnCastAssignment) and isinstance(s.left, AnnCastAttribute) and s.left.value.name == 'self':
                 inline_new_record = GrometBoxFunction(name = "new_Field", function_type=FunctionType.PRIMITIVE)
@@ -1037,16 +1169,17 @@ class ToGrometPass:
                 new_gromet.wff = insert_gromet_object(new_gromet.wff, GrometWire(src=len(new_gromet.pif),tgt=field_loc))
                 
                 # Find argument opi for "set" third argument
-                for (opi_i,opi) in enumerate(new_gromet.opi):
-                    if isinstance(s.right, AnnCastName) and opi.name == s.right.name:
-                        break
-                
-                # Wires third arg for "set"
-                new_gromet.pif = insert_gromet_object(new_gromet.pif, GrometPort(box=len(new_gromet.bf)))
-                new_gromet.wfopi = insert_gromet_object(new_gromet.wfopi, GrometWire(src=len(new_gromet.pif),tgt=opi_i))
-                
-                # Output port for "set"
-                new_gromet.pof = insert_gromet_object(new_gromet.pof, GrometPort(box=len(new_gromet.bf)))
+                if(new_gromet.opi != None): # TODO: Fix it so opis aren't ever None
+                    for (opi_i,opi) in enumerate(new_gromet.opi):
+                        if isinstance(s.right, AnnCastName) and opi.name == s.right.name:
+                            break
+                    
+                    # Wires third arg for "set"
+                    new_gromet.pif = insert_gromet_object(new_gromet.pif, GrometPort(box=len(new_gromet.bf)))
+                    new_gromet.wfopi = insert_gromet_object(new_gromet.wfopi, GrometWire(src=len(new_gromet.pif),tgt=opi_i))
+                    
+                    # Output port for "set"
+                    new_gromet.pof = insert_gromet_object(new_gromet.pof, GrometPort(box=len(new_gromet.bf)))
 
         # Wire output wire for "new:Record"
         new_gromet.wfopo = insert_gromet_object(new_gromet.wfopo, GrometWire(src=len(new_gromet.opo),tgt=len(new_gromet.pof)))
@@ -1060,7 +1193,7 @@ class ToGrometPass:
         self.var_environment["local"] = deepcopy(local_env_copy)
 
         for f in node.funcs:
-            if f.name.name != "__init__":
+            if isinstance(f, FunctionDef) and f.name.name != "__init__":
                 arg_env_copy = deepcopy(self.var_environment["args"])
                 local_env_copy = deepcopy(self.var_environment["local"])
                 self.var_environment["args"] = {}
@@ -1087,7 +1220,7 @@ class ToGrometPass:
 
                 self.record[node.name][f.name.name] = len(self.gromet_module.attributes)
 
-        print(self.record)
+        # print(self.record)
 
     @_visit.register
     def visit_dict(self, node: AnnCastDict, parent_gromet_fn, parent_cast_node):
@@ -1136,7 +1269,11 @@ class ToGrometPass:
         elif isinstance(node, AnnCastTuple):
             ret_vals = list(node.values)
             for (i,val) in enumerate(ret_vals,1):
-                self.wire_return_name(val.name, gromet_fn, i)
+                if isinstance(val, AnnCastBinaryOp):
+                    self.wire_return_node(val.left, gromet_fn)
+                    self.wire_return_node(val.right, gromet_fn)
+                else: 
+                    self.wire_return_name(val.name, gromet_fn, i)
         elif isinstance(node, AnnCastBinaryOp):
             # A BinaryOp currently implies that we have one single OPO to put return values into
             gromet_fn.wfopo = insert_gromet_object(gromet_fn.wfopo, GrometWire(src=1,tgt=len(gromet_fn.pof)))
@@ -1253,7 +1390,8 @@ class ToGrometPass:
         source_code_metadata = self.create_source_code_reference(node.source_refs[0])
 
         code_data_metadata = SourceCodeDataType(metadata_type="source_code_data_type", provenance=generate_provenance(), source_language=ref[0], source_language_version=ref[1], data_type=str(ref[2]))
-        val = LiteralValue(node.value_type, node.value)
+        val = LiteralValue(node.value_type if node.value_type is not None else "None",
+                        node.value if node.value is not None else "None")
 
         parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(function_type=FunctionType.LITERAL, value=val, metadata=self.insert_metadata(code_data_metadata,source_code_metadata)))
         parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf))) 
@@ -1372,8 +1510,6 @@ class ToGrometPass:
             self.var_environment["args"] = var_args_copy
             self.var_environment["local"] = var_local_copy
 
-            #sys.exit(0)
-
         ######### Loop Condition
 
         # print("-------------- PREDICATE -")
@@ -1400,15 +1536,18 @@ class ToGrometPass:
 
         # Create pif for predicate and wire the wlcargs
         # NOTE: This method will need some expansion later on
-        for opi in gromet_predicate_fn.opi:
-            opi_idx = find_existing_pil(parent_gromet_fn, opi.name)
-            assert opi_idx != -1
-            parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
-            parent_gromet_fn.wl_cargs = insert_gromet_object(parent_gromet_fn.wl_cargs, GrometWire(src=len(parent_gromet_fn.pif), tgt=opi_idx))
-            
-            # Pil and opis shouldn't have names, clean them out
-            # parent_gromet_fn.pil[opi_idx-1].name = None
-            opi.name = None
+        if gromet_predicate_fn.opi != None: # TODO: check this guard later
+            for opi in gromet_predicate_fn.opi:
+                opi_idx = find_existing_pil(parent_gromet_fn, opi.name)
+                assert opi_idx != -1
+                parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
+                parent_gromet_fn.wl_cargs = insert_gromet_object(parent_gromet_fn.wl_cargs, GrometWire(src=len(parent_gromet_fn.pif), tgt=opi_idx))
+                
+                # Pil and opis shouldn't have names, clean them out
+                # parent_gromet_fn.pil[opi_idx-1].name = None
+                opi.name = None
+        else:
+            print(node.source_refs[0])
         
         for opo in gromet_predicate_fn.opo:
             parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
@@ -1506,9 +1645,31 @@ class ToGrometPass:
         # However, we can also have variables coming in from other sources such as an opi.
         # This is a temporary fix for the specific case in the CHIME model, but will need to be revisited
         if isinstance(parent_cast_node, AnnCastFunctionDef):
-            parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=len(parent_gromet_fn.pic), tgt=len(parent_gromet_fn.opi)))
+            if parent_gromet_fn.pic == None and parent_gromet_fn.opi == None: # TODO: double check this guard to see if it's necessary
+                print(node.source_refs[0])
+                parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=-1, tgt=-1))
+            elif parent_gromet_fn.opi == None:
+                print(node.source_refs[0])
+                parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=len(parent_gromet_fn.pic), tgt=-1))
+            elif parent_gromet_fn.pic == None:
+                print(node.source_refs[0])
+                parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=-1, tgt=len(parent_gromet_fn.opi)))
+            else:
+                parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=len(parent_gromet_fn.pic), tgt=len(parent_gromet_fn.opi)))
+
+            # parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=len(parent_gromet_fn.pic), tgt=len(parent_gromet_fn.opi)))
         else:
-            parent_gromet_fn.wfc = insert_gromet_object(parent_gromet_fn.wfc, GrometWire(src=len(parent_gromet_fn.pic),tgt=len(parent_gromet_fn.pof)))
+            if parent_gromet_fn.pic == None and parent_gromet_fn.pof == None: # TODO: double check this guard as well
+                print(node.source_refs[0])
+                parent_gromet_fn.wfc = insert_gromet_object(parent_gromet_fn.wfc, GrometWire(src=-1,tgt=-1))
+            elif parent_gromet_fn.pif == None:
+                print(node.source_refs[0])
+                parent_gromet_fn.wfc = insert_gromet_object(parent_gromet_fn.wfc, GrometWire(src=-1,tgt=len(parent_gromet_fn.pof)))
+            elif parent_gromet_fn.poc == None:
+                print(node.source_refs[0])
+                parent_gromet_fn.wfc = insert_gromet_object(parent_gromet_fn.wfc, GrometWire(src=len(parent_gromet_fn.pic),tgt=-1))
+            else:
+                parent_gromet_fn.wfc = insert_gromet_object(parent_gromet_fn.wfc, GrometWire(src=len(parent_gromet_fn.pic),tgt=len(parent_gromet_fn.pof)))
         
         ########### Predicate generation
 
@@ -1519,7 +1680,16 @@ class ToGrometPass:
 
         # Create the predicate's opo and wire it appropriately
         gromet_predicate_fn.opo = insert_gromet_object(gromet_predicate_fn.opo, GrometPort(box=len(gromet_predicate_fn.b)))
-        gromet_predicate_fn.wfopo = insert_gromet_object(gromet_predicate_fn.wfopo, GrometWire(src=len(gromet_predicate_fn.opo),tgt=len(gromet_predicate_fn.pof)))
+        if gromet_predicate_fn.opo == None and gromet_predicate_fn.pof == None: # TODO: double check this guard to see if it's necessary
+            gromet_predicate_fn.wfopo = insert_gromet_object(gromet_predicate_fn.wfopo, GrometWire(src=-1, tgt=-1))
+        elif gromet_predicate_fn.pof == None:
+            gromet_predicate_fn.wfopo = insert_gromet_object(gromet_predicate_fn.wfopo, GrometWire(src=len(gromet_predicate_fn.opo), tgt=-1))
+        elif gromet_predicate_fn.opo == None:
+            gromet_predicate_fn.wfopo = insert_gromet_object(gromet_predicate_fn.wfopo, GrometWire(src=-1, tgt=len(gromet_predicate_fn.pof)))
+        else:
+            gromet_predicate_fn.wfopo = insert_gromet_object(gromet_predicate_fn.wfopo, GrometWire(src=len(gromet_predicate_fn.opo), tgt=len(gromet_predicate_fn.pof)))
+
+        # gromet_predicate_fn.wfopo = insert_gromet_object(gromet_predicate_fn.wfopo, GrometWire(src=len(gromet_predicate_fn.opo),tgt=len(gromet_predicate_fn.pof)))
 
         ref = node.expr.source_refs[0]
         metadata = self.insert_metadata(self.create_source_code_reference(ref))
@@ -1531,8 +1701,13 @@ class ToGrometPass:
         parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
 
         # TODO: put this in a loop to handle more than one argument
-        parent_gromet_fn.wl_cargs = insert_gromet_object(parent_gromet_fn.wl_cargs, GrometWire(src=len(parent_gromet_fn.pif),
-                                                                                                tgt=len(parent_gromet_fn.pic)))
+        if parent_gromet_fn.pic != None:
+            parent_gromet_fn.wl_cargs = insert_gromet_object(parent_gromet_fn.wl_cargs, GrometWire(src=len(parent_gromet_fn.pif),
+                                                                                                    tgt=len(parent_gromet_fn.pic)))
+        else:
+            print(node.source_refs[0])
+            parent_gromet_fn.wl_cargs = insert_gromet_object(parent_gromet_fn.wl_cargs, GrometWire(src=len(parent_gromet_fn.pif),
+                                                                                                    tgt=-1))
         
         ########### If true generation
 
@@ -1584,46 +1759,71 @@ class ToGrometPass:
 
         # print("-------------- IF FALSE ---")
         # Visit the else (if cond false part) of the gromet fn
-        body_else_fn = GrometFN()
-        body_else_fn.b = insert_gromet_object(body_else_fn.b, GrometBoxFunction(function_type=FunctionType.FUNCTION))
-        self.gromet_module.attributes = insert_gromet_object(self.gromet_module.attributes, TypedValue(type=AttributeType.FN, value=body_else_fn))
-        self.set_index()
+        if len(node.orelse) > 0: # NOTE: guards against when there's no else to the if statement
+            body_else_fn = GrometFN()
+            body_else_fn.b = insert_gromet_object(body_else_fn.b, GrometBoxFunction(function_type=FunctionType.FUNCTION))
+            self.gromet_module.attributes = insert_gromet_object(self.gromet_module.attributes, TypedValue(type=AttributeType.FN, value=body_else_fn))
+            self.set_index()
 
-        ref = node.orelse[0].source_refs[0]
-        metadata = self.insert_metadata(self.create_source_code_reference(ref))
-        body_else_bf = GrometBoxFunction(function_type=FunctionType.FUNCTION, contents=len(self.gromet_module.attributes), metadata=metadata)
+            ref = node.orelse[0].source_refs[0]
+            metadata = self.insert_metadata(self.create_source_code_reference(ref))
+            body_else_bf = GrometBoxFunction(function_type=FunctionType.FUNCTION, contents=len(self.gromet_module.attributes), metadata=metadata)
 
-        parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, body_else_bf)
-        gromet_bc.body_else = len(parent_gromet_fn.bf) # NOTE: this is an index to the bf array of the Gromet FN this if statement is in
-        
-        for (_,val) in node.expr_used_vars.items():
-            parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
-
-        for (_,val) in node.modified_vars.items():
-            parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=val, box=len(parent_gromet_fn.bf)))
-        
-        # copy the old var environments over since we're going into a function
-        previous_func_def_args = deepcopy(self.var_environment["args"])
-        previous_local_args = deepcopy(self.var_environment["local"])
-
-        self.var_environment["args"] = {}
-
-        # TODO: determine a better for loop that only grabs what appears in the body of the if_true
-        for (_,val) in node.expr_used_vars.items():
-            body_else_fn.opi = insert_gromet_object(body_else_fn.opi, GrometPort(box=len(body_else_fn.b)))
-            arg_env = self.var_environment["args"]
-            arg_env[val] = (AnnCastFunctionDef(None,None,None,None), body_else_fn.opi[-1], len(body_else_fn.opi)-1)
+            parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, body_else_bf)
+            gromet_bc.body_else = len(parent_gromet_fn.bf) # NOTE: this is an index to the bf array of the Gromet FN this if statement is in
             
-        for (_,val) in node.modified_vars.items():
-            body_else_fn.opo = insert_gromet_object(body_else_fn.opo, GrometPort(name=val, box=len(body_else_fn.b)))
+            for (_,val) in node.expr_used_vars.items():
+                parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=len(parent_gromet_fn.bf)))
 
-        self.handle_function_def(AnnCastFunctionDef(None,None,None,None), body_else_fn, node.orelse)
-        
-        # restore previous var environments
-        self.var_environment["args"] = previous_func_def_args  
-        self.var_environment["local"] = previous_local_args 
+            for (_,val) in node.modified_vars.items():
+                parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=val, box=len(parent_gromet_fn.bf)))
+            
+            # copy the old var environments over since we're going into a function
+            previous_func_def_args = deepcopy(self.var_environment["args"])
+            previous_local_args = deepcopy(self.var_environment["local"])
+
+            self.var_environment["args"] = {}
+
+            # TODO: determine a better for loop that only grabs what appears in the body of the if_true
+            for (_,val) in node.expr_used_vars.items():
+                body_else_fn.opi = insert_gromet_object(body_else_fn.opi, GrometPort(box=len(body_else_fn.b)))
+                arg_env = self.var_environment["args"]
+                arg_env[val] = (AnnCastFunctionDef(None,None,None,None), body_else_fn.opi[-1], len(body_else_fn.opi)-1)
+                
+            for (_,val) in node.modified_vars.items():
+                body_else_fn.opo = insert_gromet_object(body_else_fn.opo, GrometPort(name=val, box=len(body_else_fn.b)))
+
+            self.handle_function_def(AnnCastFunctionDef(None,None,None,None), body_else_fn, node.orelse)
+            
+            # restore previous var environments
+            self.var_environment["args"] = previous_func_def_args  
+            self.var_environment["local"] = previous_local_args 
 
         # print("-------------- IF DONE  ---")
+
+    @_visit.register
+    def visit_model_import(self, node: AnnCastModelImport, parent_gromet_fn, parent_cast_node):
+        name = node.name
+        alias = node.alias
+        symbol = node.symbol
+        all = node.all
+
+        # self.import collection maintains a dictionary of
+        # name:(alias, [symbols], all boolean flag)
+        # pairs that we can use to look up later
+        if name in self.import_collection: # If this import already exists, then perhaps we add a new symbol to its list of symbols
+            if symbol != None:
+                if self.import_collection[name][1] == None:
+                    self.import_collection[name] = (self.import_collection[name][0], [], self.import_collection[name][2])
+                self.import_collection[name][1].append(symbol)
+            self.import_collection[name] = (self.import_collection[name][0], self.import_collection[name][1], all)
+            # self.import_collection[name][2] = all # Update the all field if necessary
+        else: # Otherwise we haven't seen this import yet and we add its fields and potential symbol accordingly
+            if symbol == None:
+                self.import_collection[name] = (alias,[],all)
+            else:
+                self.import_collection[name] = (alias,[symbol],all)
+
 
 
     @_visit.register
@@ -1688,15 +1888,15 @@ class ToGrometPass:
         pass
 
     @_visit.register
-    def visit_set(self, node: AnnCastSet, subgraph):
+    def visit_set(self, node: AnnCastSet, parent_gromet_fn, parent_cast_node):
         pass
 
     @_visit.register
-    def visit_string(self, node: AnnCastString, subgraph):
+    def visit_string(self, node: AnnCastString, parent_gromet_fn, parent_cast_node):
         pass
 
     @_visit.register
-    def visit_subscript(self, node: AnnCastSubscript, subgraph):
+    def visit_subscript(self, node: AnnCastSubscript, parent_gromet_fn, parent_cast_node):
         pass
 
     @_visit.register

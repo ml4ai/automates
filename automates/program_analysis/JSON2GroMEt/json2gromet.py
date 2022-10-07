@@ -29,7 +29,7 @@ from automates.gromet.metadata import (
     CodeFileReference
 
 )
-from automates.gromet.fn import TypedValue
+from automates.gromet.fn import TypedValue, ImportReference
 
 
 def json_to_gromet(path):
@@ -48,8 +48,12 @@ def json_to_gromet(path):
     for fn in json_object["attributes"]:
         # TODO: Add support for types other than FN
         type = fn["type"]
-        value = TypedValue(type="FN", value=parse_function_network(fn["value"]))
-        
+
+        if type == "FN":
+            value = TypedValue(type=type, value=parse_function_network(fn["value"]))
+        elif type == "IMPORT":
+            value = TypedValue(type=type, value=parse_import_reference(fn["value"]))
+
         if not gromet_module.attributes:
             gromet_module.attributes = [value]
         else:
@@ -91,7 +95,10 @@ def parse_function_network(obj):
 
                     # Some objects will have to be manually imported still
                     if "value" in entry:
-                        gromet_object.value = LiteralValue(value_type=entry["value"]["value_type"], value=entry["value"]["value"])
+                        try:
+                            gromet_object.value = LiteralValue(value_type=entry["value"]["value_type"], value=entry["value"]["value"])
+                        except:
+                            print("HERE", entry)
                 elif table == "bc":
                     gromet_object = GrometBoxConditional()
                 elif table == "bl":
@@ -206,11 +213,23 @@ def parse_metadata(obj):
     return metadata_object
 
 
+def parse_import_reference(obj):
+    import_object = ImportReference()
+    
+    import_basic_datatypes(obj, import_object)
+    
+    if "uri" in obj:
+        import_object.uri = TypedValue()
+        import_basic_datatypes(obj["uri", import_object.uri]) 
+        # TODO: Potentially fill out uri.value type for typed value
+
+    return import_object
+
 def import_basic_datatypes(obj, gromet_obj):
     for field, value in obj.items():
         if type(value) != list and type(value) != dict:                         
             setattr(gromet_obj, field, value)
 
         # TODO: Make this only print when there is an unhandled case
-        # else:
-        #     print(f"Could not automatically import field: {field}. Make sure it is being manually imported")
+        #else:
+        #    print(f"Could not automatically import field: {field}. Make sure it is being manually imported")

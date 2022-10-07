@@ -63,7 +63,7 @@ C.source_refs = [SourceRef(file_name, None, None, 1, line_count)]
 os.chdir(old_path)
 out_cast = cast.CAST([C], "python")
 
-if True:
+if False:
     V = CASTToAGraphVisitor(out_cast)
     last_slash_idx = file_name.rfind("/")
     file_ending_idx = file_name.rfind(".")

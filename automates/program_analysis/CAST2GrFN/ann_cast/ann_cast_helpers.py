@@ -369,7 +369,7 @@ def func_container_name_from_name_node(node) -> str:
     if isinstance(node, AnnCastAttribute):
         return f"{node.attr.name}_id{node.attr.id}"
     else:
-        return f"{node.name}_id{node.id}"    
+        return f"{node.name}_id{node.id}"
 
 def func_def_argument_name(node, arg_index: int) -> str:
     """

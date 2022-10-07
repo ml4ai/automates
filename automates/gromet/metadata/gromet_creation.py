@@ -42,7 +42,7 @@ class GrometCreation(Metadata):
     if hasattr(Metadata, "attribute_map"):
         attribute_map.update(Metadata.attribute_map)
 
-    def __init__(self, metadata_type='gromet_creation', gromet_version='0.1.2', *args, **kwargs):  # noqa: E501
+    def __init__(self, metadata_type='gromet_creation', gromet_version='0.1.4', *args, **kwargs):  # noqa: E501
         """GrometCreation - a model defined in Swagger"""  # noqa: E501
         self._metadata_type = None
         self._gromet_version = None

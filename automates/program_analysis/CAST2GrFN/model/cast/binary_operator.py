@@ -46,6 +46,8 @@ class BinaryOperator(object):
     GTE = "Gte"
     IN = "In"
     NOTIN = "NotIn"
+    NOTIS = "NotIs"
+    IS = "Is"
     """
     Attributes:
       swagger_types (dict): The key is attribute name

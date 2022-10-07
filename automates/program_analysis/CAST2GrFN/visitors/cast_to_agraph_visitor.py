@@ -22,6 +22,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     ModelBreak,
     ModelContinue,
     ModelIf,
+    ModelImport,
     ModelReturn,
     Module,
     Name,
@@ -740,6 +741,34 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         for n in orelse:
             self.G.add_edge(orelse_uid, n)
+
+        return node_uid
+    
+    @visit.register
+    def _(self, node: AnnCastModelImport):
+        """Visits a ModelImport (Import statement) node.
+        name, alias, symbol, all
+
+        The node's UID is returned."""
+
+        node_uid = uuid.uuid4()
+
+        # TODO: Handle strings of If/Elif/Elif/... constructs
+        self.G.add_node(node_uid, label=f"Import {node.name}\nAlias: {node.alias}\nSymbol: {node.symbol}\nAll: {node.all}")
+
+        return node_uid
+    
+    @visit.register
+    def _(self, node: ModelImport):
+        """Visits a ModelImport (Import statement) node.
+        name, alias, symbol, all
+
+        The node's UID is returned."""
+
+        node_uid = uuid.uuid4()
+
+        # TODO: Handle strings of If/Elif/Elif/... constructs
+        self.G.add_node(node_uid, label=f"Import {node.name}\nAlias: {node.alias}\nSymbol: {node.symbol}\nAll: {node.all}")
 
         return node_uid
 

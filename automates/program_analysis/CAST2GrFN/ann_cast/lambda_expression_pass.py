@@ -395,6 +395,10 @@ class LambdaExpressionPass:
         return node.expr_str
 
     @_visit.register
+    def visit_model_import(self, node: AnnCastModelImport) -> str:
+        pass
+
+    @_visit.register
     def visit_model_if(self, node: AnnCastModelIf) -> str:
         # top interface lambda
         node.top_interface_lambda = lambda_for_interface(node.top_interface_in)

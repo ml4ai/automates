@@ -1,3 +1,4 @@
+from re import A
 import typing
 from collections import defaultdict
 from functools import singledispatchmethod
@@ -90,7 +91,7 @@ class IdCollapsePass:
         self.visit(node.right, at_module_scope)
         # The AnnCastTuple is added to handle scenarios where an assignment
         # is made by assigning to a tuple of values, as opposed to one singular value
-        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple) or isinstance(node.left, AnnCastAttribute), f"id_collapse: visit_assigment: node.left is not AnnCastVar it is {type(node.left)}"
+        assert isinstance(node.left, AnnCastVar) or isinstance(node.left, AnnCastTuple) or isinstance(node.left, AnnCastAttribute), f"id_collapse: visit_assigment: node.left is {type(node.left)}"
         self.visit(node.left, at_module_scope)
 
     @_visit.register
@@ -108,15 +109,26 @@ class IdCollapsePass:
 
     @_visit.register
     def visit_call(self, node: AnnCastCall, at_module_scope):
-        assert isinstance(node.func, AnnCastName) or isinstance(node.func, AnnCastAttribute)
+        if isinstance(node.func, AnnCastLiteralValue):
+            return
+
+        assert isinstance(node.func, AnnCastName) or isinstance(node.func, AnnCastAttribute), f"node.func is type f{type(node.func)}"
         if isinstance(node.func, AnnCastName):
             node.func.id = self.collapse_id(node.func.id)
             node.invocation_index = self.next_function_invocation(node.func.id)
         else:
+            if isinstance(node.func.value, AnnCastCall):
+                self.visit(node.func.value, at_module_scope)
+            elif isinstance(node.func.value, AnnCastAttribute):
+                self.visit(node.func.value, at_module_scope)
+            elif isinstance(node.func.value, AnnCastSubscript):
+                self.visit(node.func.value, at_module_scope)
+            elif isinstance(node.func.value, AnnCastBinaryOp):
+                self.visit(node.func.value, at_module_scope)
+            else:
+                node.func.value.id = self.collapse_id(node.func.value.id)
             node.func.attr.id = self.collapse_id(node.func.attr.id)
-            node.func.value.id = self.collapse_id(node.func.value.id)
             node.invocation_index = self.next_function_invocation(node.func.attr.id)
-            
             
         # cache Call node to later determine if this Call has a FunctionDef
         call_name = call_container_name(node)
@@ -192,6 +204,10 @@ class IdCollapsePass:
     @_visit.register
     def visit_return(self, node: AnnCastModelReturn, at_module_scope):
         self.visit(node.value, at_module_scope)
+
+    @_visit.register
+    def visit_model_import(self, node: AnnCastModelImport, at_module_scope):
+        pass
 
     @_visit.register
     def visit_module(self, node: AnnCastModule, at_module_scope):
