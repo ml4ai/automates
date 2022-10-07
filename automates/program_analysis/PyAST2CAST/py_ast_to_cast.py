@@ -292,7 +292,44 @@ class PyASTToCAST():
 
     @singledispatchmethod
     def visit(self, node: AstNode, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
+        print(f"Trying to visit a node of type {type(node)} but a visitor doesn't exist")
+        print(f"This is at line {node.lineno}")
         pass
+
+    @visit.register
+    def visit_JoinedStr(self, node: ast.JoinedStr, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
+        print("JoinedStr not generating CAST yet")
+        source_code_data_type = ["Python","3.8","List"]
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        return [LiteralValue(StructureType.LIST, "NotImplemented", source_code_data_type, ref)]
+
+    @visit.register
+    def visit_Delete(self, node: ast.Delete, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
+        print("Delete not generating CAST yet")
+        source_code_data_type = ["Python","3.8","List"]
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        return [LiteralValue(StructureType.LIST, "NotImplemented", source_code_data_type, ref)]
+
+    @visit.register
+    def visit_Ellipsis(self, node: ast.Ellipsis, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
+        print("Ellipsis not generating CAST yet")
+        source_code_data_type = ["Python","3.8","List"]
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        return [LiteralValue(StructureType.LIST, "NotImplemented", source_code_data_type, ref)]
+    
+    @visit.register
+    def visit_Slice(self, node: ast.Slice, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
+        print("Slice not generating CAST yet")
+        source_code_data_type = ["Python","3.8","List"]
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=-1, col_end=-1, row_start=-1, row_end=-1)]
+        return [LiteralValue(StructureType.LIST, "NotImplemented", source_code_data_type, ref)]
+    
+    @visit.register
+    def visit_ExtSlice(self, node: ast.ExtSlice, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
+        print("ExtSlice not generating CAST yet")
+        source_code_data_type = ["Python","3.8","List"]
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=-1, col_end=-1, row_start=-1, row_end=-1)]
+        return [LiteralValue(StructureType.LIST, "NotImplemented", source_code_data_type, ref)]
 
     @visit.register
     def visit_Assign(self, node: ast.Assign, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -486,147 +523,40 @@ class PyASTToCAST():
         Returns:
             Attribute: A CAST Attribute node representing an Attribute access
         """
-
-
-        # TODO: aliasing
-
-        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        # node.value and node.attr 
+        # node.value is some kind of AST node
+        # node.attr is a string (or perhaps name) 
 
         # node.value.id gets us module name (string)
         # node.attr gets us attribute we're accessing (string)
         # helper(node.attr) -> "module_name".node.attr
+
+        # x.T -> node.value: the node x (Name) -> node.attr is just "T" 
+
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+
+        value_cast = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)
+        unique_name = node.attr # TODO: This unique name might change to better reflect what it belongs to (i.e. x.T instead of just T)
+
+        if isinstance(node.ctx,ast.Load):
+            if unique_name not in curr_scope_id_dict:
+                if unique_name in prev_scope_id_dict:
+                    curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
+                else:
+                    if unique_name not in self.global_identifier_dict: # added for random.seed not exising, and other modules like that. in other words for functions in modules that we don't have visibility for. 
+                        self.insert_next_id(self.global_identifier_dict, unique_name)
+                    curr_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
+        if isinstance(node.ctx,ast.Store):
+            if unique_name not in curr_scope_id_dict:
+                if unique_name in prev_scope_id_dict:
+                    curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
+                else:
+                    self.insert_next_id(curr_scope_id_dict, unique_name)
+
+        attr_cast = Name(name=node.attr, id=curr_scope_id_dict[unique_name])
+
+        return [Attribute(value_cast[0], attr_cast, source_refs=ref)]
         
-        curr = node.value
-        
-        print("---------------------------------")
-        print(f"prev_scope:   {prev_scope_id_dict}")
-        print(f"curr_scope:   {curr_scope_id_dict}")
-        print(f"global_scope: {self.global_identifier_dict}")
-        print("---------------------------------")
-        
-
-        # foo.bar.x, foo.bar().x, etc..
-        # (multiple layers of attributes)
-        if isinstance(curr, ast.Attribute):
-            # Construct the name that corresponds to this attribute
-            # that is, x.y.z.w, w is the attribute and x.y.z is the name
-            temp = curr
-            name_list = []
-            while isinstance(temp, ast.Attribute):
-                name_list.insert(0,temp.attr)
-                temp = temp.value       
-            if isinstance(temp, ast.Name):
-                name_list.insert(0, temp.id)
-
-            unique_name = ".".join(name_list)
-
-            if isinstance(curr.ctx,ast.Load):
-                if unique_name not in curr_scope_id_dict:
-                    if unique_name in prev_scope_id_dict:
-                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
-                    else:
-                        if unique_name not in self.global_identifier_dict:
-                            self.insert_next_id(self.global_identifier_dict, unique_name)
-                        curr_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
-                
-            if isinstance(curr.ctx,ast.Store):
-                if unique_name not in curr_scope_id_dict:
-                    if unique_name in prev_scope_id_dict:
-                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
-                    else:
-                        self.insert_next_id(curr_scope_id_dict, unique_name)
-
-
-        # foo.x, foo.bar(), etc...
-        # (one single layer of attribute)
-        elif isinstance(curr, ast.Name):
-            unique_name = construct_unique_name(curr.id, node.attr)
-        
-            if isinstance(curr.ctx,ast.Load):
-                if unique_name not in curr_scope_id_dict:
-                    if unique_name in prev_scope_id_dict:
-                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
-                    else:
-                        if unique_name not in self.global_identifier_dict: # added for random.seed not exising, and other modules like that. in other words for functions in modules that we don't have visibility for. 
-                            self.insert_next_id(self.global_identifier_dict, unique_name)
-                        curr_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
-                
-            if isinstance(curr.ctx,ast.Store):
-                if unique_name not in curr_scope_id_dict:
-                    if unique_name in prev_scope_id_dict:
-                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
-                    else:
-                        self.insert_next_id(curr_scope_id_dict, unique_name)
-
-        elif isinstance(curr, ast.Subscript):
-            curr_value = curr.value
-            while isinstance(curr_value, ast.Subscript):
-                curr_value = curr_value.value
-            
-            if isinstance(curr_value, ast.Name):
-                unique_name = construct_unique_name(curr_value.id, node.attr)
-
-                if isinstance(curr.ctx,ast.Load):
-                    if unique_name not in curr_scope_id_dict:
-                        if unique_name in prev_scope_id_dict:
-                            curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
-                        else:
-                            if unique_name not in self.global_identifier_dict: # added for random.seed not exising, and other modules like that. in other words for functions in modules that we don't have visibility for. 
-                                self.insert_next_id(self.global_identifier_dict, unique_name)
-                            curr_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
-                    
-                if isinstance(curr.ctx,ast.Store):
-                    if unique_name not in curr_scope_id_dict:
-                        if unique_name in prev_scope_id_dict:
-                            curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
-                        else:
-                            self.insert_next_id(curr_scope_id_dict, unique_name)
-            else:
-                raise NotImplementedError(f"Node type: {type(node)} with value {type(curr_value)} not recognized")
-
-        elif isinstance(curr, ast.Constant):
-            unique_name = construct_unique_name(curr.value, node.attr)
-            if isinstance(node.ctx,ast.Load):
-                if unique_name not in curr_scope_id_dict:
-                    if unique_name in prev_scope_id_dict:
-                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
-                    else:
-                        if unique_name not in self.global_identifier_dict: # added for random.seed not exising, and other modules like that. in other words for functions in modules that we don't have visibility for. 
-                            self.insert_next_id(self.global_identifier_dict, unique_name)
-                        curr_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
-                
-            if isinstance(node.ctx,ast.Store):
-                if unique_name not in curr_scope_id_dict:
-                    if unique_name in prev_scope_id_dict:
-                        curr_scope_id_dict[unique_name] = prev_scope_id_dict[unique_name]
-                    else:
-                        self.insert_next_id(curr_scope_id_dict, unique_name)
-        elif isinstance(curr, ast.Call):
-            unique_name = construct_unique_name(self.filenames[-1], node.attr)
-            if unique_name not in prev_scope_id_dict.keys():
-
-                # If a built-in is called, then it gets added to the global dictionary if
-                # it hasn't been called before. This is to maintain one consistent ID per built-in 
-                # function
-                if unique_name not in self.global_identifier_dict.keys():
-                    self.insert_next_id(self.global_identifier_dict, unique_name)
-
-                prev_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
-
-        else:
-            raise NotImplementedError(f"Node type: {type(curr)}")
-
-        merge_dicts(prev_scope_id_dict, curr_scope_id_dict)
-        value = self.visit(node.value, prev_scope_id_dict, curr_scope_id_dict)
-        
-        attr = Name(node.attr, id=curr_scope_id_dict[unique_name], source_refs=ref)
-
-        # module_name : has an ID
-        # attr to a module: has an ID
-        # don't do just 'y', do 'module_name.y' <- whats its ID? I think it's the attr's ID
-
-        return [Attribute(value[0], attr, source_refs=ref)]
-                        # module2   y (really module2.y)
 
     @visit.register
     def visit_AugAssign(self, node:ast.AugAssign, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -809,7 +739,8 @@ class PyASTToCAST():
                     func_args.extend([Call(Name("_get", id=prev_scope_id_dict[unique_name], source_refs=ref), args, source_refs=ref)])
                 else:
                     res = self.visit(arg, prev_scope_id_dict, curr_scope_id_dict)
-                    func_args.extend(res)
+                    if res != None:
+                        func_args.extend(res)
 
         # g(3,id=4) TODO: Think more about this 
         if len(node.keywords) > 0:
@@ -912,6 +843,8 @@ class PyASTToCAST():
             ast.GtE: BinaryOperator.GTE,
             ast.In: BinaryOperator.IN,
             ast.NotIn: BinaryOperator.NOTIN,
+            ast.IsNot: BinaryOperator.NOTIS,
+            ast.Is: BinaryOperator.IS
         }
 
         # Fetch the first element (which is in left)
@@ -964,6 +897,8 @@ class PyASTToCAST():
             return [LiteralValue(StructureType.LIST, node.value, source_code_data_type, ref)]
         elif node.value is None:
             return [LiteralValue(None, None, source_code_data_type, ref)]
+        elif isinstance(node.value,type(...)):
+            return []
         else:
             raise TypeError(f"Type {str(type(node.value))} not supported")
 
@@ -1003,8 +938,8 @@ class PyASTToCAST():
             for piece in node.values:
                 values.extend(self.visit(piece, prev_scope_id_dict, curr_scope_id_dict))
 
-        k = [e.value for e in keys]
-        v = [e.value for e in values]
+        k = [e.value if hasattr(e,"value") else e for e in keys]
+        v = [e.value if hasattr(e,"value") else e for e in values]
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         return [LiteralValue(StructureType.MAP, str(dict(list(zip(k,v)))), source_code_data_type=["Python","3.8",str(dict)], source_refs=ref)]
@@ -1470,7 +1405,6 @@ class PyASTToCAST():
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
         names = node.names
-        print(names)
         to_ret = []
         for alias in names:
             as_name = alias.asname
@@ -1491,46 +1425,10 @@ class PyASTToCAST():
                 name = alias.asname
 
             # TODO: Could use a flag to mark a Module as an import (old)
-            print(orig_name)
             if orig_name in BUILTINS or find_std_lib_module(orig_name):
                 self.insert_next_id(self.global_identifier_dict, name)
                 to_ret.append(ModelImport(name=orig_name, alias=as_name, symbol=None, all=False))
-            #else:
-             # path = f"./{orig_name.replace('.','/')}.py"
-             #   true_module_name = self.aliases[name] if name in self.aliases else name
-              #  if true_module_name in self.visited:
-               #     return [Module(name=true_module_name,body=[],source_refs=ref)]
-                #else:
-                 #   file_contents = open(path).read()
-                  #  self.filenames.append(true_module_name)
-                   # self.visited.add(true_module_name)
-                    
-                    #self.insert_next_id(self.global_identifier_dict, true_module_name)
-
-                 #   to_ret = self.visit(ast.parse(file_contents), {}, {})
-                  #  self.filenames.pop()
-                   # return to_ret
         return to_ret
-        """
-        # If we find the file by searching the path, then this is a user-imported module
-        if os.path.isfile(path):
-            true_module_name = self.aliases[name] if name in self.aliases else name
-            if true_module_name in self.visited:
-                return [Module(name=true_module_name,body=[],source_refs=ref)]
-            else:
-                file_contents = open(path).read()
-                self.filenames.append(true_module_name)
-                self.visited.add(true_module_name)
-                
-                self.insert_next_id(self.global_identifier_dict, true_module_name)
-
-                to_ret = self.visit(ast.parse(file_contents), {}, {})
-                self.filenames.pop()
-                return to_ret
-        else:
-            self.insert_next_id(self.global_identifier_dict, name)
-            return [Module(name=name,body=[],source_refs=ref)]
-        """
 
     @visit.register
     def visit_ImportFrom(self, node:ast.ImportFrom, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -1567,42 +1465,6 @@ class PyASTToCAST():
                     to_ret.append(ModelImport(name=name, alias=None, symbol=alias.name, all=False)) #, source_ref=ref))
 
         return to_ret
-        """
-        path = f"./{name.replace('.','/')}.py"
-        if os.path.isfile(path):
-            true_name = self.aliases[name] if name in self.aliases else name
-            if name in self.visited:
-                ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-                return [Module(name=name,body=[],source_refs=ref)]
-            else:
-                file_contents = open(path).read()
-                self.visited.add(name)
-                self.filenames.append(path.split("/")[-1])
-                contents = ast.parse(file_contents)
-
-                # Importing individual functions
-                if name is not None: 
-                    funcs = []
-                    for func in names:
-                        for n in contents.body:
-                            if isinstance(n,ast.FunctionDef) and n.name == func.name: 
-                                funcs.append(n)
-                                break
-
-                    visited_funcs = []
-                    for f in funcs:
-                        visited_funcs.extend(self.visit(f, {}, {}))
-                    
-                    self.filenames.pop()
-                    return visited_funcs
-                else: # Importing the entire file
-                    full_file = self.visit(contents, {}, {})
-                    self.filenames.pop()
-                    return full_file
-        else:
-            ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-            return [Module(name=name,body=[],source_refs=ref)]
-        """
 
 
     @visit.register
@@ -1766,17 +1628,19 @@ class PyASTToCAST():
     @visit.register
     def visit_Pass(self, node: ast.Pass, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """A PyAST Pass visitor, for essentially NOPs."""
-
-        return []
+        source_code_data_type = ["Python","3.8","List"]
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        return [LiteralValue(StructureType.LIST, "NotImplemented", source_code_data_type, ref)]
 
     @visit.register
-    def visit_Raise(self, node: ast.Raise, prev_scope_id_dict: Dict):
+    def visit_Raise(self, node: ast.Raise, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         """A PyAST Raise visitor, for Raising exceptions
 
            TODO: To be implemented.
         """
-
-        return []
+        source_code_data_type = ["Python","3.8","List"]
+        ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        return [LiteralValue(StructureType.LIST, "NotImplemented", source_code_data_type, ref)]
 
     @visit.register
     def visit_Return(self, node: ast.Return, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -1949,7 +1813,11 @@ class PyASTToCAST():
         elif isinstance(slc,ast.ExtSlice):
             dims = slc.dims 
             result = []
+            source_code_data_type = ["Python","3.8","List"]
+            ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+            return [LiteralValue(StructureType.LIST, "NotImplemented", source_code_data_type, ref)]
             
+            """
             if isinstance(node.value,ast.Call):
                 if isinstance(node.value.func,ast.Attribute):
                     lists = [node.value.func.attr]
@@ -2060,6 +1928,7 @@ class PyASTToCAST():
                     result.extend([list_var,loop_var,slice_loop])
 
             return result
+            """
         else:
             sl = self.visit(slc, prev_scope_id_dict, curr_scope_id_dict)
 

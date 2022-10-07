@@ -109,12 +109,21 @@ class IdCollapsePass:
 
     @_visit.register
     def visit_call(self, node: AnnCastCall, at_module_scope):
-        assert isinstance(node.func, AnnCastName) or isinstance(node.func, AnnCastAttribute)
+        if isinstance(node.func, AnnCastLiteralValue):
+            return
+
+        assert isinstance(node.func, AnnCastName) or isinstance(node.func, AnnCastAttribute), f"node.func is type f{type(node.func)}"
         if isinstance(node.func, AnnCastName):
             node.func.id = self.collapse_id(node.func.id)
             node.invocation_index = self.next_function_invocation(node.func.id)
         else:
             if isinstance(node.func.value, AnnCastCall):
+                self.visit(node.func.value, at_module_scope)
+            elif isinstance(node.func.value, AnnCastAttribute):
+                self.visit(node.func.value, at_module_scope)
+            elif isinstance(node.func.value, AnnCastSubscript):
+                self.visit(node.func.value, at_module_scope)
+            elif isinstance(node.func.value, AnnCastBinaryOp):
                 self.visit(node.func.value, at_module_scope)
             else:
                 node.func.value.id = self.collapse_id(node.func.value.id)
