@@ -32,7 +32,7 @@ def dictionary_to_gromet_json(o, fold_level=3, indent=4, level=0, parent_key="")
         space = ""
     ret = ""
     if isinstance(o, str):
-        ret += '"' + o + '"'
+        ret += json.dumps(o) #json.dumps() will properly escape special characters
     elif isinstance(o, bool):
         ret += "true" if o else "false"
     elif isinstance(o, float):
