@@ -35,7 +35,6 @@ from automates.gromet.metadata import (
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.PyAST2CAST.modules_list import BUILTINS, find_func_in_module, find_std_lib_module
 
-cons = "num"
 PRIMITIVES = {"Add" : ("+", ["Number","Number"], ["Number"]), "Sub" : ("-", ["Number","Number"], ["Number"]),
               "Mult" : ("*", ["Number","Number"], ["Number"]), "Div" : ("/", ["Number","Number"], ["Number"]), 
               "Lt": ("<", ["Element","Element"], ["Boolean"]), "Gt": (">", ["Element","Element"], ["Boolean"]), 
@@ -60,10 +59,11 @@ PRIMITIVES = {"Add" : ("+", ["Number","Number"], ["Number"]), "Sub" : ("-", ["Nu
              "range" : ("range", ["Element"], ["Range"]),
              "sum" : ("sum", ["Element"], ["Integer"]),
              "_member": ("_member",[],[]), "_add": ("_add",[],[]), "_delete": ("_delete",[],[]), "print": ("print",[],[]),   
-             "_List": ("_List",[],[]), "_List_"+cons: ("_List_"+cons,[],[]), "_Array": ("",[],[]), 
-             "_Array_"+cons: ("_Array_"+cons,[],[]), "_Tuple": ("",[],[]), "_Tuple_"+cons: ("_Tuple_"+cons,[],[]), "_Set": ("",[],[]),
+             "_List": ("_List",[],[]), "_List_num": ("_List_num",[],[]), "_Array": ("",[],[]), 
+             "_Array_num": ("_Array_num",[],[]), "_Tuple": ("",[],[]), "_Tuple_num": ("_Tuple_num",[],[]), "_Set": ("",[],[]),
              "_Map": ("_Map", [], []), "_Map_set": ("_Map_set", ["_Map", "Any", "Any"], ["_Map"]), "_Map_get": ("_Map_get", ["_Map", "_Any"], ["Any"]),
-             "set": ("set", ["","",""], [""]), "new_Record": ("new_Record", [""], [""]), "new_Field": ("new_Field", ["", ""], [""]),
+             "new_Record": ("new_Record", [""], [""]), "new_Field": ("new_Field", ["", ""], [""]),
+             "_get": ("get", ["","",""], [""]), "_set": ("set", ["","",""], [""]),
              "isinstance": ("isinstance", ["", ""], [""]), "type": ("type", [""], [""])
              }
 
@@ -488,7 +488,7 @@ class ToGrometPass:
                     for elem in node.left.values:
                         ref = elem.source_refs[0]
                         metadata = self.create_source_code_reference(ref)
-                        parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=elem.val.name, box=len(parent_gromet_fn.bf), metadata=[metadata]))
+                        parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=elem.val.name, box=len(parent_gromet_fn.bf), metadata=self.insert_metadata(metadata)))
                         self.add_var_to_env(elem.val.name, elem, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
                 else:
                     if node.right.func.name in self.record.keys():
@@ -515,7 +515,7 @@ class ToGrometPass:
                                 for x in elem.values:
                                     ref = x.source_refs[0]
                                     metadata = self.create_source_code_reference(ref)
-                                    parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=x.val.name, box=len(parent_gromet_fn.bf), metadata=[metadata]))
+                                    parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=x.val.name, box=len(parent_gromet_fn.bf), metadata=self.insert_metadata(metadata)))
                                     self.add_var_to_env(x.val.name, x, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
                             else:
                                 self.add_var_to_env(elem.val.name, elem, parent_gromet_fn.pof[pof_idx], pof_idx, parent_cast_node)
@@ -1005,11 +1005,12 @@ class ToGrometPass:
                 elif isinstance(arg, AnnCastBinaryOp):
                     self.wire_binary_op_args(arg, parent_gromet_fn)
 
-            if self.gromet_module.attributes[-1].type == AttributeType.FN: # TODO: double check this guard
-                primitive_fn_opi = self.gromet_module.attributes[-1].value.opi
-                if primitive_fn_opi != None: # TODO: double check this guard later and remove it if necessary
-                    for i,opi in enumerate(primitive_fn_opi,1):
-                        opi.name = None
+            # if self.gromet_module.attributes[-1].type == AttributeType.FN: # TODO: double check this guard
+              #  primitive_fn_opi = self.gromet_module.attributes[-1].value.opi
+               # if primitive_fn_opi != None: # TODO: double check this guard later and remove it if necessary
+                #    for i,opi in enumerate(primitive_fn_opi,1):
+                 #       pass
+                        # opi.name = None # NOTE: This assignment screws up with the for loop wiring
             return         
 
         arg_fn_pofs = []
