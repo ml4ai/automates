@@ -80,14 +80,26 @@ def construct_unique_name(attr_name, var_name):
 
 def get_node_name(ast_node):
     if isinstance(ast_node, ast.Assign):
-        return ast_node[0].id
+        return [ast_node[0].id]
     elif isinstance(ast_node, ast.Attribute):
-        return ""
+        return [""]
+    elif isinstance(ast_node, Var):
+        return [ast_node.val.name]
     elif isinstance(ast_node, Assignment):
         if isinstance(ast_node.left, Subscript):
-            return ast_node.left.value.name
+            return [ast_node.left.value.name]
         else:
-            return ast_node.left.val.name
+            return get_node_name(ast_node.left)
+    elif isinstance(ast_node, Tuple):
+        names = []
+        for e in ast_node.values:
+            names.extend(get_node_name(e))
+        return names
+    elif isinstance(ast_node, LiteralValue) and ast_node.value_type == StructureType.LIST:
+        names = []
+        for e in ast_node.value:
+            names.extend(get_node_name(e))
+        return names
     elif isinstance(ast_node, Subscript):
         raise TypeError(f"Type {ast_node} not supported")
     else:
@@ -268,7 +280,7 @@ class PyASTToCAST():
         elif isinstance(piece, ast.Name):
             ref = [self.filenames[-1], piece.col_offset, piece.end_col_offset, piece.lineno, piece.end_lineno]
             # return ast.Name(id=piece.id, ctx=ast.Store(), col_offset=None, end_col_offset=None, lineno=None, end_lineno=None)
-            return ast.Name(id=piece.id, ctx=ast.Store(), col_offset=[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4])
+            return ast.Name(id=piece.id, ctx=ast.Store(), col_offset=ref[1], end_col_offset=ref[2], lineno=ref[3], end_lineno=ref[4])
         elif isinstance(piece, ast.Subscript): # for iters (generator.iter)
             return piece.value
         elif isinstance(piece, ast.Call):
@@ -1534,13 +1546,14 @@ class PyASTToCAST():
             # Update the global dictionary at this time so that the IDs are defined
             # and are correct
             if isinstance(piece, ast.Assign):
-                var_name = get_node_name(to_add[0])
+                names = get_node_name(to_add[0])
 
-                temp_id = curr_scope_id_dict[var_name]
-                del curr_scope_id_dict[var_name]
-                unique_name = construct_unique_name(self.filenames[-1], var_name)
-                curr_scope_id_dict[unique_name] = temp_id
-                merge_dicts(curr_scope_id_dict, self.global_identifier_dict)
+                for var_name in names:
+                    temp_id = curr_scope_id_dict[var_name]
+                    del curr_scope_id_dict[var_name]
+                    unique_name = construct_unique_name(self.filenames[-1], var_name)
+                    curr_scope_id_dict[unique_name] = temp_id
+                    merge_dicts(curr_scope_id_dict, self.global_identifier_dict)
 
             if isinstance(to_add,Module):
                 body.extend([to_add])
