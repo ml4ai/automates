@@ -37,56 +37,11 @@ from automates.gromet.metadata import (
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.PyAST2CAST.modules_list import BUILTINS, find_func_in_module, find_std_lib_module
 
-PRIMITIVES = {"Add" : ("+", ["Number","Number"], ["Number"]), "Sub" : ("-", ["Number","Number"], ["Number"]),
-              "Mult" : ("*", ["Number","Number"], ["Number"]), "Div" : ("/", ["Number","Number"], ["Number"]), 
-              "Lt": ("<", ["Element","Element"], ["Boolean"]), "Gt": (">", ["Element","Element"], ["Boolean"]), 
-              "Lte": ("<=", ["Element","Element"], ["Boolean"]), "Gte": (">=", ["Element","Element"], ["Boolean"]), 
-              "Eq": ("==", ["Element","Element"], ["Boolean"]), 
-              "And": ("and", ["Element","Element"], ["Boolean"]),
-              "Or": ("or", ["Element","Element"], ["Boolean"]),
-              "NotIs": ("NotIs", ["Element","Element"], ["Boolean"]),
-              "Is": ("Is", ["Element","Element"], ["Boolean"]),
-              "NotEq" : ("!=", ["Number","Number"], ["Boolean"]), "Pow": ("**", ["Number","Number"], ["Number"]),
-              "BitAnd" : ("&", ["Number", "Number"], ["Number"]),
-              "BitOr" : ("|", ["Number", "Number"], ["Number"]),
-              "BitXor" : ("^", ["Number", "Number"], ["Number"]),
-              "LShift" : ("<<", ["Number", "Number"], ["Number"]),
-              "RShift" : (">>", ["Number", "Number"], ["Number"]),
-             "_List_get" : ("_List_get", ["List", "Integer"], ["Element"]), 
-             "_List_set" : ("_List_set", ["List", "Integer", "Element"], ["List"]), 
-             "_Array_get" : "", "_Array_set" : "", 
-             "_Tuple_get" : "", "_Tuple_set" : "",
-             "iter" : ("_iter", ["Element"], ["Iterator"]), 
-             "next": ("_next", ["Element"], ["Element", "Iterator", "Boolean"]), 
-             "range" : ("range", ["Element"], ["Range"]),
-             "sum" : ("sum", ["Element"], ["Integer"]),
-             "_member": ("_member",[],[]), "_add": ("_add",[],[]), "_delete": ("_delete",[],[]), "print": ("print",[],[]),   
-             "_List": ("_List",[],[]), "_List_num": ("_List_num",[],[]), "_Array": ("",[],[]), 
-             "_Array_num": ("_Array_num",[],[]), "_Tuple": ("",[],[]), "_Tuple_num": ("_Tuple_num",[],[]), "_Set": ("",[],[]),
-             "_Map": ("_Map", [], []), "_Map_set": ("_Map_set", ["_Map", "Any", "Any"], ["_Map"]), "_Map_get": ("_Map_get", ["_Map", "_Any"], ["Any"]),
-             "new_Record": ("new_Record", [""], [""]), "new_Field": ("new_Field", ["", ""], [""]),
-             "_get": ("get", ["","",""], [""]), "_set": ("set", ["","",""], [""]),
-             "isinstance": ("isinstance", ["", ""], [""]), "type": ("type", [""], [""])
-             }
-
-#PRIMITIVES = {"Add" : "+", "Sub": "-", "Mult" : "*", "Div" : "/", "Lt": "<", "Gt": ">", "Eq": "==", "Pow": "**", "NotEq": "!=",
- #            "_List_get" : "", "_List_set" : "", "_Array_get" : "", "_Array_set" : "", "_Tuple_get" : "", "_Tuple_set" : "",
-  #           "_iter" : "", "_next": "", "_member": "", "_add": "", "_delete": "", "print": "", "_get": "", "_set": "",
-   #          "_List": "", "_List_"+cons: "", "_Array": "", "_Array_"+cons: "", "_Tuple": "", "_Tuple_"+cons: "", "_Set": "", 
-    #         "_Map": "", "_Map_set": "", "_Map_get": "", "sum": ""}
+from automates.gromet.primitive_map import get_shorthand, get_inputs, get_outputs, is_primitive 
 
 def is_inline(func_name):
     # Tells us which functions should be inlined in GroMEt (i.e. don't make GroMEt FNs for these)
     return func_name == "iter" or func_name == "next" or func_name == "range"
-
-def primitive_short(func_name):
-    return PRIMITIVES[func_name][0]
-
-def primitive_inputs(func_name):
-    return PRIMITIVES[func_name][1]
-
-def primitive_outputs(func_name):
-    return PRIMITIVES[func_name][2]
 
 def insert_gromet_object(t: list, obj):
     """ Inserts a GroMEt object obj into a GroMEt table t
@@ -267,9 +222,6 @@ class ToGrometPass:
         idx = len(self.gromet_module.attributes)
         self.gromet_module._attributes[-1].index = idx
 
-    def is_primitive(self, func_name):
-        return func_name in PRIMITIVES.keys()
-
     def handle_primitive_function(self, node: AnnCastCall, parent_gromet_fn, parent_cast_node, from_assignment):
         """ Creates an Expression GroMEt FN for the primitive function stored in node.
             Then it gets wired up to its parent_gromet_fn appropriately 
@@ -318,7 +270,7 @@ class ToGrometPass:
                   #  primitive_fn.pif = insert_gromet_object(primitive_fn.pif, GrometPort(box=primitive_bf_loc))
                    # primitive_fn.wfopi = insert_gromet_object(primitive_fn.wfopi, GrometWire(src=len(primitive_fn.pif), tgt=len(primitive_fn.opi)))
 
-            for i in range(len(primitive_outputs(func_name))):
+            for i in range(len(get_outputs(func_name, "CAST"))):
                 parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=inline_bf_loc))
         else:
             # Create the Expression FN and its box function 
@@ -516,6 +468,7 @@ class ToGrometPass:
             # Assignment for 
             # x = foo(...)
             # x,y,z = foo(...)
+            
             func_bf_idx = self.visit(node.right, parent_gromet_fn, node)
             # NOTE: x = foo(...) <- foo returns multiple values that get packed
             # Several conditions for this 
@@ -828,7 +781,7 @@ class ToGrometPass:
         # NOTE/TODO Maintain a table of primitive operators that when queried give you back
         # their signatures that can be used for generating 
         # A global mapping is maintained but it isnt being used for their signatures yet
-        parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=primitive_short(node.op), function_type=FunctionType.PRIMITIVE, metadata=self.insert_metadata(metadata)))
+        parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(name=get_shorthand(node.op, "CAST"), function_type=FunctionType.PRIMITIVE, metadata=self.insert_metadata(metadata)))
 
         # After we visit the left and right they (in all scenarios but one) append a POF 
         # The one case where it doesnt happen is when the left or right are variables in the expression
@@ -1010,7 +963,7 @@ class ToGrometPass:
         # Are considered 'primitive' operations, in other words calls to them aren't 
         # considered function calls but rather they're considered expressions, so we 
         # call a special handler to handle these
-        if self.is_primitive(node.func.name) and not in_module[0]:
+        if is_primitive(node.func.name, "CAST") and not in_module[0]:
             self.handle_primitive_function(node, parent_gromet_fn, parent_cast_node, from_assignment)
 
             # Handle the primitive's arguments that don't involve expressions of more than 1 variable
@@ -1310,7 +1263,7 @@ class ToGrometPass:
                     self.wire_return_node(val, gromet_fn)
                 else: 
                     self.wire_return_name(val.name, gromet_fn, i)
-        elif isinstance(val, AnnCastLiteralValue) and val.value_type == StructureType.LIST:
+        elif isinstance(node, AnnCastLiteralValue) and node.val.value_type == StructureType.LIST:
             ret_vals = list(node.value)
             for (i,val) in enumerate(ret_vals,1):
                 if isinstance(val, AnnCastBinaryOp):
