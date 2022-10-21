@@ -1460,6 +1460,7 @@ class ToGrometPass:
 
         # Create the pil ports that the gromet box loop uses
         # Also, create any necessary wires that the pil uses
+        print(node.used_vars.items())
         for (_,val) in node.used_vars.items():
             parent_gromet_fn.pil = insert_gromet_object(parent_gromet_fn.pil, GrometPort(name=val,box=len(parent_gromet_fn.bl)))
             if val in self.var_environment["local"]:
