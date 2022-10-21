@@ -31,7 +31,7 @@ class RecordField:
 @dataclass
 class Record(object):
     name: str
-    fields: list[RecordField]
+    fields: "list[RecordField]"
 
 class IsInstance(object):
     source_language_name = {"Python": "isinstance"}
@@ -693,7 +693,7 @@ class IteratorSet_next(object):
     shorthand = "IteratorSet_next"
     documentation = ""
 
-    def exec(iterator_input: Iterator[set]) -> tuple[Any, Iterator[set], bool]:
+    def exec(iterator_input: Iterator[set]) -> "tuple[Any, Iterator[set], bool]":
         current_element = None
         # We have to wrap this code in a try except block because of the call to next()
         # next() will throw an error if you've reached the end of the iterator
@@ -713,7 +713,7 @@ class IteratorTuple_next(object):
     shorthand = "IteratorTuple_next"
     documentation = ""
 
-    def exec(iterator_input: Iterator[tuple]) -> tuple[Any, Iterator[tuple], bool]:
+    def exec(iterator_input: Iterator[tuple]) -> "tuple[Any, Iterator[tuple], bool]":
         current_element = None
         # We have to wrap this code in a try except block because of the call to next()
         # next() will throw an error if you've reached the end of the iterator
@@ -733,7 +733,7 @@ class IteratorArray_next(object):
     shorthand = "IteratorArray_next"
     documentation = ""
 
-    def exec(iterator_input: Iterator) -> tuple[Any, Iterator, bool]: # TODO: Can we say Iterator[numpy.ndarray]
+    def exec(iterator_input: Iterator) -> "tuple[Any, Iterator, bool]": # TODO: Can we say Iterator[numpy.ndarray]
         current_element = None
         # We have to wrap this code in a try except block because of the call to next()
         # next() will throw an error if you've reached the end of the iterator
@@ -753,7 +753,7 @@ class IteratorList_next(object):
     shorthand = "IteratorList_next"
     documentation = ""
 
-    def exec(iterator_input: Iterator[list]) -> tuple[Any, Iterator[list], bool]:
+    def exec(iterator_input: Iterator[list]) -> "tuple[Any, Iterator[list], bool]":
         current_element = None
         # We have to wrap this code in a try except block because of the call to next()
         # next() will throw an error if you've reached the end of the iterator
@@ -773,7 +773,7 @@ class IteratorMap_next(object):
     shorthand = "IteratorMap_next"
     documentation = ""
 
-    def exec(iterator_input: Iterator[dict]) -> tuple[Any, Iterator[dict], bool]:
+    def exec(iterator_input: Iterator[dict]) -> "tuple[Any, Iterator[dict], bool]":
         current_element = None
         # We have to wrap this code in a try except block because of the call to next()
         # next() will throw an error if you've reached the end of the iterator

@@ -1226,7 +1226,8 @@ class PyASTToCAST():
                     ), col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
 
         loop_collection = [ast.For(target=self.identify_piece(first_gen.target, prev_scope_id_dict, curr_scope_id_dict),
-                                    iter=self.identify_piece(first_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
+                                    iter=first_gen.iter,
+                                    #iter=self.identify_piece(first_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
                                     body=innermost_loop_body,orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
 
 
@@ -1297,7 +1298,8 @@ class PyASTToCAST():
                                             type_comment=None,col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
 
         loop_collection = [ast.For(target= self.identify_piece(first_gen.target, prev_scope_id_dict, curr_scope_id_dict),
-                                    iter=self.identify_piece(first_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
+                                    iter=first_gen.iter,
+                                    #iter=self.identify_piece(first_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
                                     body=[innermost_loop_body],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])]
 
         # Every other loop in the list comprehension wraps itself around the previous loop that we 
@@ -1308,13 +1310,15 @@ class PyASTToCAST():
                 # TODO: if multiple ifs exist per a single generator then we have to expand this
                 curr_if = curr_gen.ifs[0]
                 next_loop = ast.For(target=self.identify_piece(curr_gen.target, prev_scope_id_dict, curr_scope_id_dict),
-                                iter=self.identify_piece(curr_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
+                                iter=curr_gen.iter,
+                                #iter=self.identify_piece(curr_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
                                 body=[ast.If(test=curr_if, body=[loop_collection[0]],
                                 orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])],
                             orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
             else:
                 next_loop = ast.For(target=self.identify_piece(curr_gen.target, prev_scope_id_dict, curr_scope_id_dict),
-                                        iter=self.identify_piece(curr_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
+                                        iter=curr_gen.iter,
+                                        #iter=self.identify_piece(curr_gen.iter, prev_scope_id_dict, curr_scope_id_dict),
                                         body=[loop_collection[0]],orelse=[],col_offset=ref[1],end_col_offset=ref[2],lineno=ref[3],end_lineno=ref[4])
             loop_collection.insert(0, next_loop)
             i = i - 1

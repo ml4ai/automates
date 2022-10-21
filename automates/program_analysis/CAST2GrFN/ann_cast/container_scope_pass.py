@@ -241,7 +241,9 @@ class ContainerScopePass:
 
     @_visit.register
     def visit_attribute(self, node: AnnCastAttribute, base_func_scopestr, enclosing_con_scope, assign_side):
-        pass
+        # TODO: what to do with the attr?
+        print(f"Attribute: Value type{type(node.value)}")
+        self.visit(node.value, base_func_scopestr, enclosing_con_scope, assign_side)
 
     @_visit.register
     def visit_binary_op(self, node: AnnCastBinaryOp, base_func_scopestr, enclosing_con_scope, assign_side):
@@ -285,6 +287,9 @@ class ContainerScopePass:
         # queue node to process globals through interfaces later if we have the associated FunctionDef
         if node.has_func_def:
             self.calls_to_process.append(node)
+        
+        if isinstance(node.func, AnnCastAttribute):
+            self.visit(node.func, base_func_scopestr, enclosing_con_scope, assign_side)
 
         # For a call, we do not care about the arguments source refs
         return self.visit_node_list(node.arguments, base_func_scopestr, enclosing_con_scope, assign_side)
