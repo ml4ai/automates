@@ -798,12 +798,7 @@ class CASTGenericSet:
     outputs =  [Field("indexible_output", "Indexable")]
     shorthand = "_set"
     documentation = "The cast currently uses generic primitive operators (_get, _set, iter, next) while the  Gromet uses specific operators (IteratorMap_next). These primitive ops are a tempory fix for that mismatch"
-class CASTGenericRange:
-    source_language_name = {"CAST":"range"} 
-    inputs = [Field("input", "Any")] #TODO: What is the input to range?
-    outputs =  [Field("range_output", "Range")]
-    shorthand = "range"
-    documentation = ""
+
 class CASTGenericIter:
     source_language_name = {"CAST":"iter"} 
     inputs = [Field("iterable_input", "Iterable")]
@@ -816,13 +811,26 @@ class CASTGenericNext:
     outputs =  [Field("element", "Any"), Field("iterator_output", "Iterator"), Field("stop_condition", "Boolean")]
     shorthand = "next"
     documentation = "The cast currently uses generic primitive operators (_get, _set, iter, next) while the  Gromet uses specific operators (IteratorMap_next). These primitive ops are a tempory fix for that mismatch"
-class CASTGenericPrint: #TODO: How should print work? Will likely not be a CASTGeneric function
+
+class Print: #TODO: How should print work? Will likely not be a CASTGeneric function
     source_language_name = {"CAST":"print"} 
     inputs = [Field("input", "Any")]
     outputs =  []
     shorthand = "print"
     documentation = "The cast currently uses generic primitive operators (_get, _set, iter, next) while the  Gromet uses specific operators (IteratorMap_next). These primitive ops are a tempory fix for that mismatch"
 
+    def exec(input: Any) -> None:
+        print(input)
+
+class Range:
+    source_language_name = {"CAST":"range"} 
+    inputs = [Field("input", "Integer")] #TODO: What is the input to range?
+    outputs =  [Field("range_output", "Range")]
+    shorthand = "range"
+    documentation = ""
+
+    def exec(input: int) -> range:
+        return range(input)
 #### Interface for accessing fields of classes
 def get_class_obj(op: str, language: str, debug=False) -> Any: #TODO: Update the type hints for this
     global primitive_map
