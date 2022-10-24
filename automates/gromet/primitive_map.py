@@ -288,23 +288,23 @@ class Gte(object):
    
 class In(object): #TODO: How should In and NotIn work? What is the difference between in, member, List_in?
     source_language_name = {"Python":"In", "CAST":"In"}
-    inputs = [Field("element", "Any"), Field("container", "Any")]
+    inputs = [Field("container_input", "Any"), Field("value", "Any")]
     outputs =  [Field("result", "Boolean")]
     shorthand = "in"
     documentation = ""
 
-    def exec(element: Any, container: Any) -> bool:
-        return element in container
+    def exec(container_input: Any, value: Any) -> bool:
+        return value in container_input
 
 class NotIn(object): #TODO: How should In and NotIn work? What is the difference between in, member, List_in?
     source_language_name = {"Python":"NotIn", "CAST":"NotIn"}
-    inputs = [Field("element", "Any"), Field("container", "Any")]
+    inputs = [Field("container_input", "Any"), Field("value", "Any")]
     outputs =  [Field("result", "Boolean")]
     shorthand = "not in"
     documentation = ""
 
-    def exec(element: Any, container: Any) -> bool:
-        return element not in container
+    def exec(container_input: Any, value: Any) -> bool:
+        return value not in container_input
        
 class Set_new_Iterator(object):
     source_language_name = {"Python":"Set_new_Iterator"} 
@@ -337,7 +337,14 @@ class new_Set(object):
         return set(elements) 
    
 class member(object): #TODO: Still unsure the difference between this and in
-    pass
+    source_language_name = {"Python":"member"} 
+    inputs = [Field("set_input", "Set", True), Field("value", "Any")]
+    outputs =  [Field("result", "Boolean")]
+    shorthand = "member"
+    documentation = ""
+
+    def exec(set_input: set, value: Any) -> set:
+        return value in set_input
 
 class add_elm(object):
     source_language_name = {"Python":"add_elm"} 
