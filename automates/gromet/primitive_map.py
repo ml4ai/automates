@@ -5,17 +5,7 @@ import numpy
 import sys
 import inspect
 
-# TODO: isinstance, type primitives
-'''
-Operator List:
 
-System Operators
-IsInstance - Mostly supported, need to add Type type 
-Type - Mostly supported, need to add Type type 
-
-Unary Operators
-
-'''
 @dataclass(frozen=True) 
 class Field:
     name: str
@@ -32,46 +22,6 @@ class RecordField:
 class Record(object):
     name: str
     fields: "list[RecordField]"
-
-class IsInstance(object):
-    source_language_name = {"Python": "isinstance"}
-    inputs = [Field("operand", "Any"), Field("type", "Type")] # TODO: Get confirmation on adding Type field
-    outputs =  [Field("result", "Boolean")]
-    shorthand = "type"
-    documentation = ""
-    
-    def exec(operand: Any, type: type) -> bool: # TODO: Fix name of right argument
-        return isinstance(operand, type)
-
-class Type(object):
-    source_language_name = {"Python": "type"}
-    inputs = [Field("operand", "Any")]
-    outputs =  [Field("result", "Type")]
-    shorthand = "type"
-    documentation = ""
-    
-    def exec(operand: Any) ->type:
-        return type(operand)
-
-class Is(object):
-    source_language_name = {"Python": "is", "CAST":"Is"} #TODO: Should Python/CAST be Is or is?
-    inputs = [Field("operand1", "Any"), Field("operand2", "Any")]
-    outputs =  [Field("result", "Boolean")]
-    shorthand = "is"
-    documentation = ""
-    
-    def exec(operand1: Any, operand2: Any) -> bool:
-        return operand1 is operand2
-
-class NotIs(object):
-    source_language_name = {"Python": "is not", "CAST":"NotIs"} #TODO: What should Python name be here?
-    inputs = [Field("operand1", "Any"), Field("operand2", "Any")]
-    outputs =  [Field("result", "Boolean")]
-    shorthand = "not is"
-    documentation = ""
-    
-    def exec(operand1: Any, operand2: Any) -> bool:
-        return operand1 is not operand2
 
 class UAdd(object):
     source_language_name = {"Python": "UAdd", "CAST": "UAdd"}
@@ -216,7 +166,7 @@ class LShift(object):
     def exec(operand1: Union[int, float, complex], operand2: Union[int, float, complex]) -> Union[int, float, complex]:
         return operand1 << operand2
 
-class LShift(object):
+class RShift(object):
     source_language_name = {"Python":"RShift", "GCC":"rshift_expr", "CAST": "RShift"}
     inputs = [Field("operand1", "Number"), Field("operand2", "Number")]
     outputs =  [Field("result", "Number")]
@@ -337,10 +287,24 @@ class Gte(object):
         return number1 >= number2
    
 class In(object): #TODO: How should In and NotIn work? What is the difference between in, member, List_in?
-    pass
+    source_language_name = {"Python":"In", "CAST":"In"}
+    inputs = [Field("container_input", "Any"), Field("value", "Any")]
+    outputs =  [Field("result", "Boolean")]
+    shorthand = "in"
+    documentation = ""
+
+    def exec(container_input: Any, value: Any) -> bool:
+        return value in container_input
 
 class NotIn(object): #TODO: How should In and NotIn work? What is the difference between in, member, List_in?
-    pass
+    source_language_name = {"Python":"NotIn", "CAST":"NotIn"}
+    inputs = [Field("container_input", "Any"), Field("value", "Any")]
+    outputs =  [Field("result", "Boolean")]
+    shorthand = "not in"
+    documentation = ""
+
+    def exec(container_input: Any, value: Any) -> bool:
+        return value not in container_input
        
 class Set_new_Iterator(object):
     source_language_name = {"Python":"Set_new_Iterator"} 
@@ -373,7 +337,14 @@ class new_Set(object):
         return set(elements) 
    
 class member(object): #TODO: Still unsure the difference between this and in
-    pass
+    source_language_name = {"Python":"member"} 
+    inputs = [Field("set_input", "Set", True), Field("value", "Any")]
+    outputs =  [Field("result", "Boolean")]
+    shorthand = "member"
+    documentation = ""
+
+    def exec(set_input: set, value: Any) -> set:
+        return value in set_input
 
 class add_elm(object):
     source_language_name = {"Python":"add_elm"} 
@@ -798,12 +769,7 @@ class CASTGenericSet:
     outputs =  [Field("indexible_output", "Indexable")]
     shorthand = "_set"
     documentation = "The cast currently uses generic primitive operators (_get, _set, iter, next) while the  Gromet uses specific operators (IteratorMap_next). These primitive ops are a tempory fix for that mismatch"
-class CASTGenericRange:
-    source_language_name = {"CAST":"range"} 
-    inputs = [Field("input", "Any")] #TODO: What is the input to range?
-    outputs =  [Field("range_output", "Range")]
-    shorthand = "range"
-    documentation = ""
+
 class CASTGenericIter:
     source_language_name = {"CAST":"iter"} 
     inputs = [Field("iterable_input", "Iterable")]
@@ -816,12 +782,67 @@ class CASTGenericNext:
     outputs =  [Field("element", "Any"), Field("iterator_output", "Iterator"), Field("stop_condition", "Boolean")]
     shorthand = "next"
     documentation = "The cast currently uses generic primitive operators (_get, _set, iter, next) while the  Gromet uses specific operators (IteratorMap_next). These primitive ops are a tempory fix for that mismatch"
-class CASTGenericPrint: #TODO: How should print work? Will likely not be a CASTGeneric function
+
+class Is(object):
+    source_language_name = {"Python": "is", "CAST":"Is"} #TODO: Should Python/CAST be Is or is?
+    inputs = [Field("operand1", "Any"), Field("operand2", "Any")]
+    outputs =  [Field("result", "Boolean")]
+    shorthand = "is"
+    documentation = ""
+    
+    def exec(operand1: Any, operand2: Any) -> bool:
+        return operand1 is operand2
+
+class NotIs(object):
+    source_language_name = {"Python": "is not", "CAST":"NotIs"} #TODO: What should Python name be here?
+    inputs = [Field("operand1", "Any"), Field("operand2", "Any")]
+    outputs =  [Field("result", "Boolean")]
+    shorthand = "not is"
+    documentation = ""
+    
+    def exec(operand1: Any, operand2: Any) -> bool:
+        return operand1 is not operand2
+
+class IsInstance(object):
+    source_language_name = {"Python": "isinstance"}
+    inputs = [Field("operand", "Any"), Field("type", "Type")] # TODO: Get confirmation on adding Type field
+    outputs =  [Field("result", "Boolean")]
+    shorthand = "type"
+    documentation = ""
+    
+    def exec(operand: Any, type: type) -> bool: # TODO: Fix name of right argument
+        return isinstance(operand, type)
+
+class Type(object):
+    source_language_name = {"Python": "type"}
+    inputs = [Field("operand", "Any")]
+    outputs =  [Field("result", "Type")]
+    shorthand = "type"
+    documentation = ""
+    
+    def exec(operand: Any) ->type:
+        return type(operand)
+
+
+class Print: #TODO: How should print work? Will likely not be a CASTGeneric function
     source_language_name = {"CAST":"print"} 
     inputs = [Field("input", "Any")]
     outputs =  []
     shorthand = "print"
     documentation = "The cast currently uses generic primitive operators (_get, _set, iter, next) while the  Gromet uses specific operators (IteratorMap_next). These primitive ops are a tempory fix for that mismatch"
+
+    def exec(input: Any) -> None:
+        print(input)
+
+class Range:
+    source_language_name = {"CAST":"range"} 
+    inputs = [Field("input", "Integer")] #TODO: What is the input to range?
+    outputs =  [Field("range_output", "Range")]
+    shorthand = "range"
+    documentation = ""
+
+    def exec(input: int) -> range:
+        return range(input)
 
 #### Interface for accessing fields of classes
 def get_class_obj(op: str, language: str, debug=False) -> Any: #TODO: Update the type hints for this
