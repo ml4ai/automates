@@ -1,4 +1,4 @@
-from typing import Iterator, Union, Any
+from typing import Iterator, Union, Tuple, Dict, List, Set, Any
 from dataclasses import dataclass
 import numpy
 
@@ -664,7 +664,7 @@ class IteratorSet_next(object):
     shorthand = "IteratorSet_next"
     documentation = ""
 
-    def exec(iterator_input: Iterator[set]) -> "tuple[Any, Iterator[set], bool]":
+    def exec(iterator_input: Iterator[set]) -> Tuple[Any, Iterator[Set], bool]:
         current_element = None
         # We have to wrap this code in a try except block because of the call to next()
         # next() will throw an error if you've reached the end of the iterator
@@ -684,7 +684,7 @@ class IteratorTuple_next(object):
     shorthand = "IteratorTuple_next"
     documentation = ""
 
-    def exec(iterator_input: Iterator[tuple]) -> "tuple[Any, Iterator[tuple], bool]":
+    def exec(iterator_input: Iterator[tuple]) -> Tuple[Any, Iterator[Tuple], bool]:
         current_element = None
         # We have to wrap this code in a try except block because of the call to next()
         # next() will throw an error if you've reached the end of the iterator
@@ -704,7 +704,7 @@ class IteratorArray_next(object):
     shorthand = "IteratorArray_next"
     documentation = ""
 
-    def exec(iterator_input: Iterator) -> "tuple[Any, Iterator, bool]": # TODO: Can we say Iterator[numpy.ndarray]
+    def exec(iterator_input: Iterator) -> Tuple[Any, Iterator, bool]: # TODO: Can we say Iterator[numpy.ndarray]
         current_element = None
         # We have to wrap this code in a try except block because of the call to next()
         # next() will throw an error if you've reached the end of the iterator
@@ -724,7 +724,7 @@ class IteratorList_next(object):
     shorthand = "IteratorList_next"
     documentation = ""
 
-    def exec(iterator_input: Iterator[list]) -> "tuple[Any, Iterator[list], bool]":
+    def exec(iterator_input: Iterator[List]) -> Tuple[Any, Iterator[List], bool]:
         current_element = None
         # We have to wrap this code in a try except block because of the call to next()
         # next() will throw an error if you've reached the end of the iterator
@@ -744,7 +744,7 @@ class IteratorMap_next(object):
     shorthand = "IteratorMap_next"
     documentation = ""
 
-    def exec(iterator_input: Iterator[dict]) -> "tuple[Any, Iterator[dict], bool]":
+    def exec(iterator_input: Iterator[dict]) -> Tuple[Any, Iterator[Dict], bool]:
         current_element = None
         # We have to wrap this code in a try except block because of the call to next()
         # next() will throw an error if you've reached the end of the iterator
