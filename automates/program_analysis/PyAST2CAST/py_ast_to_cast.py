@@ -757,7 +757,12 @@ class PyASTToCAST():
         # g(3,id=4) TODO: Think more about this 
         if len(node.keywords) > 0:
             for arg in node.keywords:
-                kw_args.extend(self.visit(arg.value, prev_scope_id_dict, curr_scope_id_dict))
+                print(prev_scope_id_dict)
+                print(curr_scope_id_dict)
+                val = self.visit(arg.value, prev_scope_id_dict, curr_scope_id_dict)[0]
+                assign_node = Assignment(left=Var(Name(name=arg.arg, id=-1),type="float"),right=val)
+                kw_args.append(assign_node)
+                #kw_args.extend(self.visit(arg.value, prev_scope_id_dict, curr_scope_id_dict))
 
         args = func_args + kw_args
 
