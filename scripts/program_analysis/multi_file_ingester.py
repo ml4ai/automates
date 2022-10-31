@@ -26,8 +26,8 @@ print(f"  With root directory as specified in: {path}")
 print(f"  Ingesting the files as specified in: {files}")
 
 # TODO have path specified in command line
-# TODO correct end / in path
-# TODO Do we want the full path to root directory, or just relative
+# DONE correct end / in path file
+
 
 root_dir = open(path, "r").read().strip()
 file_list = open(files,"r").readlines()
