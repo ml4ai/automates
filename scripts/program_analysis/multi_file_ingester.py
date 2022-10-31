@@ -1,6 +1,8 @@
 import argparse
 import glob
 
+import os.path
+
 from automates.gromet.fn import (
     GrometFNModuleCollection,
 )
@@ -23,13 +25,17 @@ print(f"Ingesting system: {system_name}")
 print(f"  With root directory as specified in: {path}")
 print(f"  Ingesting the files as specified in: {files}")
 
+# TODO have path specified in command line
+# TODO correct end / in path
+# TODO Do we want the full path to root directory, or just relative
+
 root_dir = open(path, "r").read().strip()
 file_list = open(files,"r").readlines()
 
 module_collection = GrometFNModuleCollection(schema_version="0.1.5", name=system_name, modules=[], module_index=[], executables=[])
 
 for f in file_list:
-    full_file = root_dir + f.strip()
+    full_file = os.path.join(os.path.normpath(root_dir), f)
     
     # Open the file
     # TODO: Do we want to open the CAST or the Python source? 
@@ -46,13 +52,23 @@ for f in file_list:
         # and store its path in the 'module_index' field
         module_collection.modules.append(generated_gromet)
         
-        # TODO: Change this so that it's the dotted path from the root
+        # DONE: Change this so that it's the dotted path from the root
         # i.e. like model.view.sir" like it shows up in Python
-        module_collection.module_index.append(full_file)
+        source_directory = os.path.basename(os.path.normpath(root_dir)) # We just need the last directory of the path, not the complete path 
+        os_module_path = os.path.join(source_directory, f)
+        python_module_path = os_module_path.replace("/", ".").removesuffix(".py")
+        module_collection.module_index.append(python_module_path)
 
-        # TODO: Determine how we know a gromet goes in the 'executable' field
-    except:
-        print("")
+        # Done: Determine how we know a gromet goes in the 'executable' field
+        # We do this by finding all user_defined top level functions in the Gromet
+        # and check if the name 'main' is among them 
+        function_networks = [fn.value for fn in generated_gromet.attributes if fn.type is "FN"]
+        defined_functions = [fn.b[0].name for fn in function_networks if fn.b[0].function_type is "FUNCTION"]
+        if "main" in defined_functions:
+            module_collection.executables.append(python_module_path)
+
+    except ImportError:
+        print("FAILURE")
     
     
 # After we go through the whole system, we can then write out the module_collection
