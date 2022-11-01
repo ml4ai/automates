@@ -445,6 +445,8 @@ def build_fullid(var_name: str, id: int, version: int, con_scopestr: str):
       'var_name.id.version.con_scopestr'
     """
     pieces = [var_name, str(id), str(version), con_scopestr]
+    if(pieces[0] == None):
+        pieces[0] = ""
     return FULLID_SEP.join(pieces)
 
 def parse_fullid(fullid: str) -> typing.Dict:

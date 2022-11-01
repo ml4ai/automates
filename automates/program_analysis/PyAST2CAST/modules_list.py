@@ -2,11 +2,14 @@ BUILTINS = ["__future__","__main__","_thread","abc","aifc","argparse","array","a
 import importlib
 
 def find_std_lib_module(module_name):
-    library = importlib.util.find_spec(module_name)
-    if library == None:
+    try:
+        library = importlib.util.find_spec(module_name)
+        if library == None:
+            return False
+        print(f"found {library.name}")
+        return True 
+    except:
         return False
-    print(f"found {library.name}")
-    return True 
 
 def find_func_in_module(module_name, func_name):
     """When a module is imported using

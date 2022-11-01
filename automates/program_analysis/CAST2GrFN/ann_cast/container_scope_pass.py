@@ -242,7 +242,6 @@ class ContainerScopePass:
     @_visit.register
     def visit_attribute(self, node: AnnCastAttribute, base_func_scopestr, enclosing_con_scope, assign_side):
         # TODO: what to do with the attr?
-        print(f"Attribute: Value type{type(node.value)}")
         self.visit(node.value, base_func_scopestr, enclosing_con_scope, assign_side)
 
     @_visit.register
@@ -434,11 +433,11 @@ class ContainerScopePass:
         return node.grfn_con_src_ref
 
     @_visit.register
-    def visit_model_break(self, node: AnnCastModelBreak, assign_side):
+    def visit_model_break(self, node: AnnCastModelBreak, base_func_scopestr, enclosing_con_scope, assign_side):
         pass
 
     @_visit.register
-    def visit_model_continue(self, node: AnnCastModelContinue, assign_side):
+    def visit_model_continue(self, node: AnnCastModelContinue, base_func_scopestr, enclosing_con_scope, assign_side):
         pass
 
     @_visit.register

@@ -253,7 +253,7 @@ class ToGrometPass:
                     if parent_gromet_fn.pof != None: # TODO: Check this guard later
                         parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=len(parent_gromet_fn.pof)))
                     else:
-                        print(node.source_refs[0])
+                        # print(node.source_refs[0])
                         parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=-1))
 
                 #if isinstance(arg, AnnCastBinaryOp) or isinstance(arg, AnnCastLiteralValue) or isinstance(arg, AnnCastCall):
@@ -343,9 +343,9 @@ class ToGrometPass:
         elif isinstance(parent_cast_node, AnnCastFunctionDef) or isinstance(parent_cast_node, AnnCastModelIf) or isinstance(parent_cast_node, AnnCastLoop):
             local_env = self.var_environment["local"] 
             local_env[var_name] = (parent_cast_node, var_pof, var_pof_idx)
-        else:
-            print(f"error: add_var_to_env: we came from{type(parent_cast_node)}")
-            sys.exit()
+        # else:
+            # print(f"error: add_var_to_env: we came from{type(parent_cast_node)}")
+            # sys.exit()
 
     def find_gromet(self, func_name):
         """ Attempts to find func_name in self.gromet_module.attributes
@@ -508,7 +508,7 @@ class ToGrometPass:
                     self.create_unpack(node.left.values, parent_gromet_fn, parent_cast_node)
                 elif isinstance(node.right.func, AnnCastAttribute):
                     if parent_gromet_fn.pof == None: # TODO: check this guard later
-                        print(node.source_refs[0])
+                        # print(node.source_refs[0])
                         parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.val.name, box=-1))
                     else: 
                         parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.val.name, box=len(parent_gromet_fn.pof)))
@@ -548,7 +548,7 @@ class ToGrometPass:
                     if parent_gromet_fn.pof != None: # TODO: come back and fix this guard later
                         pof_idx = len(parent_gromet_fn.pof)-i
                     else:
-                        print(node.source_refs[0])
+                        # print(node.source_refs[0])
                         pof_idx = -1
                     if parent_gromet_fn.pof != None: # TODO: come back and fix this guard later
                         self.add_var_to_env(elem.val.name, elem, parent_gromet_fn.pof[pof_idx], pof_idx, parent_cast_node)
@@ -561,8 +561,12 @@ class ToGrometPass:
         elif isinstance(node.right, AnnCastLiteralValue):
             # Assignment for 
             # LiteralValue (i.e. 3)
-            ref = node.source_refs[0]
-            metadata = self.create_source_code_reference(ref)
+            if(node.source_refs == None):
+                ref = []
+                metadata = None
+            else:
+                ref = node.source_refs[0]
+                metadata = self.create_source_code_reference(ref)
             
             # Make Expression GrometFN
             new_gromet = GrometFN()
@@ -581,6 +585,7 @@ class ToGrometPass:
             self.set_index()
 
             # Make the 'call' box function that connects the expression to the parent and creates its output port
+            # print(node.source_refs)
             parent_gromet_fn.bf = insert_gromet_object(parent_gromet_fn.bf, GrometBoxFunction(function_type=FunctionType.EXPRESSION, contents=len(self.gromet_module.attributes), metadata=self.insert_metadata(metadata)))
             parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.val.name, box=len(parent_gromet_fn.bf)))
 
@@ -616,13 +621,13 @@ class ToGrometPass:
             # of the tree rooted in node.right needs to be wired to the output port out (OPO)
             # of the GExpression of this AnnCastAssignment
             if new_gromet.opo == None and new_gromet.pof == None: # TODO: double check this guard to see if it's necessary
-                print(node.source_refs[0])
+                # print(node.source_refs[0])
                 new_gromet.wfopo = insert_gromet_object(new_gromet.wfopo, GrometWire(src=-1, tgt=-1))
             elif new_gromet.pof == None:
-                print(node.source_refs[0])
+                # print(node.source_refs[0])
                 new_gromet.wfopo = insert_gromet_object(new_gromet.wfopo, GrometWire(src=len(new_gromet.opo), tgt=-1))
             elif new_gromet.opo == None:
-                print(node.source_refs[0])
+                # print(node.source_refs[0])
                 new_gromet.wfopo = insert_gromet_object(new_gromet.wfopo, GrometWire(src=-1, tgt=len(new_gromet.pof)))
             else:
                 new_gromet.wfopo = insert_gromet_object(new_gromet.wfopo, GrometWire(src=len(new_gromet.opo), tgt=len(new_gromet.pof)))
@@ -653,6 +658,15 @@ class ToGrometPass:
             # Put the final pof in the GroMEt expression call, and add its respective variable to the variable environment
             if isinstance(node.left, AnnCastAttribute):            
                 parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.attr.name, box=len(parent_gromet_fn.bf)))
+            elif isinstance(node.left, AnnCastTuple): # TODO: double check that this addition is correct
+                for (i,elem) in enumerate(node.left.values,1):
+                    if parent_gromet_fn.pof != None: # TODO: come back and fix this guard later
+                        pof_idx = len(parent_gromet_fn.pof)-i
+                    else:
+                        pof_idx = -1
+                    if parent_gromet_fn.pof != None: # TODO: come back and fix this guard later
+                        self.add_var_to_env(elem.val.name, elem, parent_gromet_fn.pof[pof_idx], pof_idx, parent_cast_node)
+                        parent_gromet_fn.pof[pof_idx].name = elem.val.name
             else:
                 parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(name=node.left.val.name, box=len(parent_gromet_fn.bf)))
 
@@ -664,6 +678,15 @@ class ToGrometPass:
 
             if isinstance(node.left, AnnCastAttribute):            
                 self.add_var_to_env(node.left.attr.name, node.left, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
+            elif isinstance(node.left, AnnCastTuple): # TODO: double check that this addition is correct
+                for (i,elem) in enumerate(node.left.values,1):
+                    if parent_gromet_fn.pof != None: # TODO: come back and fix this guard later
+                        pof_idx = len(parent_gromet_fn.pof)-i
+                    else:
+                        pof_idx = -1
+                    if parent_gromet_fn.pof != None: # TODO: come back and fix this guard later
+                        self.add_var_to_env(elem.val.name, elem, parent_gromet_fn.pof[pof_idx], pof_idx, parent_cast_node)
+                        parent_gromet_fn.pof[pof_idx].name = elem.val.name
             else:
                 self.add_var_to_env(node.left.val.name, node.left, parent_gromet_fn.pof[-1], len(parent_gromet_fn.pof)-1, parent_cast_node)
 
@@ -895,7 +918,7 @@ class ToGrometPass:
         if isinstance(node.func, AnnCastAttribute):
             self.visit(node.func, parent_gromet_fn, node)
             if(parent_gromet_fn.bf == None): # NOTE: remove this guard when we've resolved the case
-                print(node.source_refs[0])
+                # print(node.source_refs[0])
                 func_call_idx = -1
             else:
                 func_call_idx = len(parent_gromet_fn.bf)
@@ -913,7 +936,7 @@ class ToGrometPass:
                 elif not isinstance(arg, AnnCastName):
                     self.visit(arg, parent_gromet_fn, node)
                     if parent_gromet_fn.pof == None: # TODO: check this guard later
-                        print(node.source_refs[0])
+                        # print(node.source_refs[0])
                         arg_fn_pofs.append(None) # Store the pof index so we can use it later in wiring
                     else:
                         arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
@@ -1012,7 +1035,7 @@ class ToGrometPass:
                 if parent_gromet_fn.pof != None: # TODO: check this guard later
                     arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
                 else:
-                    print(node.source_refs[0])
+                    # print(node.source_refs[0])
                     arg_fn_pofs.append(None)
             else:
                 arg_fn_pofs.append(None)
@@ -1413,7 +1436,7 @@ class ToGrometPass:
 
         # Create the pil ports that the gromet box loop uses
         # Also, create any necessary wires that the pil uses
-        print(node.used_vars.items())
+        # print(node.used_vars.items())
         for (_,val) in node.used_vars.items():
             parent_gromet_fn.pil = insert_gromet_object(parent_gromet_fn.pil, GrometPort(name=val,box=len(parent_gromet_fn.bl)))
             if val in self.var_environment["local"]:
@@ -1646,13 +1669,13 @@ class ToGrometPass:
         # This is a temporary fix for the specific case in the CHIME model, but will need to be revisited
         if isinstance(parent_cast_node, AnnCastFunctionDef):
             if parent_gromet_fn.pic == None and parent_gromet_fn.opi == None: # TODO: double check this guard to see if it's necessary
-                print(node.source_refs[0])
+                # print(node.source_refs[0])
                 parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=-1, tgt=-1))
             elif parent_gromet_fn.opi == None:
-                print(node.source_refs[0])
+                # print(node.source_refs[0])
                 parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=len(parent_gromet_fn.pic), tgt=-1))
             elif parent_gromet_fn.pic == None:
-                print(node.source_refs[0])
+                # print(node.source_refs[0])
                 parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=-1, tgt=len(parent_gromet_fn.opi)))
             else:
                 parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=len(parent_gromet_fn.pic), tgt=len(parent_gromet_fn.opi)))
@@ -1660,13 +1683,13 @@ class ToGrometPass:
             # parent_gromet_fn.wcopi = insert_gromet_object(parent_gromet_fn.wcopi, GrometWire(src=len(parent_gromet_fn.pic), tgt=len(parent_gromet_fn.opi)))
         else:
             if parent_gromet_fn.pic == None and parent_gromet_fn.pof == None: # TODO: double check this guard as well
-                print(node.source_refs[0])
+                # print(node.source_refs[0])
                 parent_gromet_fn.wfc = insert_gromet_object(parent_gromet_fn.wfc, GrometWire(src=-1,tgt=-1))
-            elif parent_gromet_fn.pif == None:
-                print(node.source_refs[0])
+            elif parent_gromet_fn.pic == None:
+                # print(node.source_refs[0])
                 parent_gromet_fn.wfc = insert_gromet_object(parent_gromet_fn.wfc, GrometWire(src=-1,tgt=len(parent_gromet_fn.pof)))
-            elif parent_gromet_fn.poc == None:
-                print(node.source_refs[0])
+            elif parent_gromet_fn.pof == None:
+                # print(node.source_refs[0])
                 parent_gromet_fn.wfc = insert_gromet_object(parent_gromet_fn.wfc, GrometWire(src=len(parent_gromet_fn.pic),tgt=-1))
             else:
                 parent_gromet_fn.wfc = insert_gromet_object(parent_gromet_fn.wfc, GrometWire(src=len(parent_gromet_fn.pic),tgt=len(parent_gromet_fn.pof)))
@@ -1705,7 +1728,7 @@ class ToGrometPass:
             parent_gromet_fn.wl_cargs = insert_gromet_object(parent_gromet_fn.wl_cargs, GrometWire(src=len(parent_gromet_fn.pif),
                                                                                                     tgt=len(parent_gromet_fn.pic)))
         else:
-            print(node.source_refs[0])
+            # print(node.source_refs[0])
             parent_gromet_fn.wl_cargs = insert_gromet_object(parent_gromet_fn.wl_cargs, GrometWire(src=len(parent_gromet_fn.pif),
                                                                                                     tgt=-1))
         
