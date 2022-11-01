@@ -26,38 +26,45 @@ def get_args():
     parser.add_argument("--gromet",
             help="Generates GroMEt using the AnnCAST. CAST -> AnnCast -> GroMEt",
             action="store_true")
+    parser.add_argument("--agraph",
+            help="Generates a pdf of the Annotated CAST",
+            action="store_true")
     parser.add_argument("cast_json", 
             help="input CAST.json file")
     options = parser.parse_args()
     return options
 
-def main():
+def ann_cast_pipeline(cast_instance, to_file=True, gromet=False, grfn_2_2=False, a_graph=False, from_obj=False):
     """cast_to_annotated.py
 
-    This program reads a JSON file that contains the CAST representation
+    This function reads a JSON file that contains the CAST representation
     of a program, and transforms it to annotated CAST. It then calls a
     series of passes that each augment the information in the annotatd CAST nodes
     in preparation for the GrFN generation.
    
     One command-line argument is expected, namely the name of the JSON file that
     contains the CAST data.
+    TODO: Update this docstring as the program has been tweaked so that this is a function instead of
+    the program
     """
 
-    args = get_args()
+    if from_obj:
+        f_name = ""
+        cast = cast_instance
+    else:
+        # TODO: make filename creation more resilient
+        f_name = f_name.split("/")[-1]
+        f_name = f_name.replace("--CAST.json", "")
+        f_name = cast_instance
+        file_contents = open(f_name, "r").read()
 
-    f_name = args.cast_json
-    file_contents = open(f_name).read()
-
-    cast_json = CAST([], "python")
-    cast = cast_json.from_json_str(file_contents)
+        cast_json = CAST([], "python")
+        cast = cast_json.from_json_str(file_contents)
 
     visitor = CastToAnnotatedCastVisitor(cast)
     # The Annotated Cast is an attribute of the PipelineState object
-    pipeline_state = visitor.generate_annotated_cast(args.grfn_2_2)
+    pipeline_state = visitor.generate_annotated_cast(grfn_2_2)
 
-    # TODO: make filename creation more resilient
-    f_name = f_name.split("/")[-1]
-    f_name = f_name.replace("--CAST.json", "")
 
     print("Calling IdCollapsePass------------------------")
     IdCollapsePass(pipeline_state)
@@ -72,9 +79,10 @@ def main():
     # that the generated GrFN uuids will not be consistent with GrFN uuids
     # created during test runtime. So, do not use these GrFN jsons as expected 
     # json for testing
-    #agraph = CASTToAGraphVisitor(pipeline_state)
-    #pdf_file_name = f"{f_name}-AnnCast.pdf"
-    #graph.to_pdf(pdf_file_name)
+    if a_graph:
+        agraph = CASTToAGraphVisitor(pipeline_state)
+        pdf_file_name = f"{f_name}-AnnCast.pdf"
+        agraph.to_pdf(pdf_file_name)
 
     print("\nCalling GrfnVarCreationPass-------------------")
     GrfnVarCreationPass(pipeline_state)
@@ -85,13 +93,16 @@ def main():
     print("\nCalling LambdaExpressionPass-------------------")
     LambdaExpressionPass(pipeline_state)
     
-    if args.gromet:
+    if gromet:
         print("\nCalling ToGrometPass-----------------------")
         ToGrometPass(pipeline_state)
-
-        with open(f"{f_name}--Gromet-FN-auto.json","w") as f:
-            gromet_collection_dict = pipeline_state.gromet_collection.to_dict()
-            f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+        
+        if to_file:
+            with open(f"{f_name}--Gromet-FN-auto.json","w") as f:
+                gromet_collection_dict = pipeline_state.gromet_collection.to_dict()
+                f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+        else:
+            return pipeline_state.gromet_collection
     else:
         print("\nCalling ToGrfnPass-------------------")
         ToGrfnPass(pipeline_state)
@@ -105,6 +116,22 @@ def main():
         pickled_file_name = f"{f_name}--AnnCast.pickled"
         with open(pickled_file_name,"wb") as pkfile:
             dill.dump(pipeline_state, pkfile)
+
+
+def main():
+    """cast_to_annotated.py
+
+    This program reads a JSON file that contains the CAST representation
+    of a program, and transforms it to annotated CAST. It then calls a
+    series of passes that each augment the information in the annotatd CAST nodes
+    in preparation for the GrFN generation.
+   
+    One command-line argument is expected, namely the name of the JSON file that
+    contains the CAST data.
+    """
+
+    args = get_args()
+    ann_cast_pipeline(args.cast_json, gromet=args.gromet, grfn_2_2=args.grfn_2_2, a_graph=args.agraph, from_obj=False)
 
 
 if __name__ == "__main__":

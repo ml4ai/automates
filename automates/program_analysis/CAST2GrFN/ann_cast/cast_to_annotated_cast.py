@@ -164,7 +164,7 @@ class CastToAnnotatedCastVisitor():
 
     @_visit.register
     def visit_model_continue(self, node: ModelContinue):
-        return AnnCastModelContinue(node.source_refs)
+        return AnnCastModelContinue(node)
 
     @_visit.register
     def visit_model_import(self, node: ModelImport):
