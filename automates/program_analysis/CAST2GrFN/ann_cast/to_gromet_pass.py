@@ -37,7 +37,7 @@ from automates.gromet.metadata import (
 from automates.program_analysis.CAST2GrFN.ann_cast.annotated_cast import *
 from automates.program_analysis.PyAST2CAST.modules_list import BUILTINS, find_func_in_module, find_std_lib_module
 
-from automates.gromet.primitive_map import get_shorthand, get_inputs, get_outputs, is_primitive 
+from automates.gromet.execution_engine.primitive_map import get_shorthand, get_inputs, get_outputs, is_primitive 
 
 def is_inline(func_name):
     # Tells us which functions should be inlined in GroMEt (i.e. don't make GroMEt FNs for these)
