@@ -146,7 +146,7 @@ class ToGrometPass:
         # generally, programs are complex, so a collection of GroMEt FNs is usually created
         # visiting nodes adds FNs 
         self.gromet_module = GrometFNModule(schema="FN", 
-                                            schema_version="0.1.4", 
+                                            schema_version="0.1.5", 
                                             name="",
                                             fn=None, 
                                             attributes=[], 
@@ -159,12 +159,31 @@ class ToGrometPass:
         # When a record type is initiatied we keep track of its name and record type here
         self.initialized_records = {}
 
+        # Initialize the table of function arguments
+        self.function_arguments = {}
+
         # the fullid of a AnnCastName node is a string which includes its 
         # variable name, numerical id, version, and scope
         for node in self.pipeline_state.nodes:
             self.visit(node, parent_gromet_fn=None, parent_cast_node=None)
 
         pipeline_state.gromet_collection = self.gromet_module
+                    
+    def build_function_arguments_table(self, nodes):
+        """ Iterates through all the function definitions at the module
+            level and creates a table that maps their function names to a map
+            of its arguments with position values
+
+            NOTE: functions within functions aren't currently supported
+
+        """
+        for node in nodes:
+            if isinstance(node, AnnCastFunctionDef):
+                self.function_arguments[node.name.name] = {}
+                for i,arg in enumerate(node.func_args,1):
+                    self.function_arguments[node.name.name][arg.val.name] = i
+
+        print(self.function_arguments)
                     
     def wire_from_var_env(self, name, gromet_fn):
         if name in self.var_environment["local"]:
@@ -1030,6 +1049,14 @@ class ToGrometPass:
                 self.visit(arg, parent_gromet_fn, node)
                 parent_gromet_fn.pof = insert_gromet_object(parent_gromet_fn.pof, GrometPort(box=len(parent_gromet_fn.bf)))
                 arg_fn_pofs.append(len(parent_gromet_fn.pof)) # Store the pof index so we can use it later in wiring
+            elif isinstance(arg, AnnCastAssignment): # 'default' argument assignment
+                print("Hey")
+
+                # TODO: Need to figure out how to appropriately map
+                # argument assignments to the right ports
+                self.visit(arg.right, parent_gromet_fn, node)
+                print(parent_gromet_fn.pof)
+                arg_fn_pofs.append(len(parent_gromet_fn.pof))
             elif not isinstance(arg, AnnCastName):
                 self.visit(arg, parent_gromet_fn, node)
                 if parent_gromet_fn.pof != None: # TODO: check this guard later
@@ -1086,7 +1113,7 @@ class ToGrometPass:
             pof = arg_fn_pofs[idx]
             parent_gromet_fn.pif = insert_gromet_object(parent_gromet_fn.pif, GrometPort(box=func_call_idx))
             if isinstance(arg, AnnCastName):
-                # print("----"+arg.name)
+                print("----"+arg.name)
                 self.wire_from_var_env(arg.name, parent_gromet_fn)
                 if arg.name not in self.var_environment["global"] and arg.name not in self.var_environment["local"] and arg.name not in self.var_environment["args"]:   
                     parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=len(parent_gromet_fn.pof)))
@@ -1094,6 +1121,9 @@ class ToGrometPass:
                 for v in arg.values:
                     if hasattr(v, "name"):
                         self.wire_from_var_env(v.name, parent_gromet_fn)
+            elif isinstance(arg, AnnCastAssignment):
+                named_port = self.function_arguments[node.func.name][arg.left.val.name]
+                parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=named_port,tgt=pof))
             else:
                 parent_gromet_fn.wff = insert_gromet_object(parent_gromet_fn.wff, GrometWire(src=len(parent_gromet_fn.pif),tgt=pof))
         
@@ -1892,6 +1922,8 @@ class ToGrometPass:
 
         # Set the name of the outer Gromet module to be the source file name
         self.gromet_module.name = file_name.replace(".py", "")
+        
+        self.build_function_arguments_table(node.body)
         
         self.visit_node_list(node.body, new_gromet, node)
 

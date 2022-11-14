@@ -312,9 +312,26 @@ class PyASTToCAST():
     @visit.register
     def visit_JoinedStr(self, node: ast.JoinedStr, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
         #print("JoinedStr not generating CAST yet")
-        source_code_data_type = ["Python","3.8","List"]
+        str_pieces = []
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
-        return [LiteralValue(StructureType.LIST, "NotImplemented", source_code_data_type, ref)]
+        for s in node.values:
+            source_code_data_type = ["Python","3.8",str(type("str"))]
+            if isinstance(s, ast.Str):
+                str_pieces.append(LiteralValue(StructureType.LIST,s.s, source_code_data_type, ref))
+            else:
+                f_string_val = self.visit(s.value, prev_scope_id_dict, curr_scope_id_dict)
+                str_pieces.append(LiteralValue(StructureType.LIST,f_string_val, source_code_data_type, ref))
+                    
+        unique_name = construct_unique_name(self.filenames[-1], "Add")
+        if unique_name not in prev_scope_id_dict.keys():
+            # If a built-in is called, then it gets added to the global dictionary if
+            # it hasn't been called before. This is to maintain one consistent ID per built-in 
+            # function
+            if unique_name not in self.global_identifier_dict.keys():
+                self.insert_next_id(self.global_identifier_dict, unique_name)
+
+            prev_scope_id_dict[unique_name] = self.global_identifier_dict[unique_name]
+        return[Call(Name("Add", id=prev_scope_id_dict[unique_name], source_refs=ref), str_pieces, source_refs=ref)]
 
     @visit.register
     def visit_GeneratorExp(self, node: ast.GeneratorExp, prev_scope_id_dict: Dict, curr_scope_id_dict: Dict):
@@ -978,6 +995,11 @@ class PyASTToCAST():
         v = [e.value if hasattr(e,"value") else e for e in values]
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
+        for key in k:
+            if isinstance(key, Tuple):
+                return [LiteralValue(StructureType.MAP, "", source_code_data_type=["Python","3.8",str(dict)], source_refs=ref)]
+
+        # return [LiteralValue(StructureType.MAP, str(dict(list(zip(k,v)))), source_code_data_type=["Python","3.8",str(dict)], source_refs=ref)]
         return [LiteralValue(StructureType.MAP, str(list(zip(k,v))), source_code_data_type=["Python","3.8",str(dict)], source_refs=ref)]
 
     @visit.register
