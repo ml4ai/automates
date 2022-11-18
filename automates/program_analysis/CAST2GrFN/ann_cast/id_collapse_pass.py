@@ -84,6 +84,7 @@ class IdCollapsePass:
         """
         Visit each AnnCastNode, collapsing AnnCastName ids along the way
         """
+        print(node.source_refs[0])
         raise Exception(f"Unimplemented AST node of type: {type(node)}")
 
     @_visit.register
@@ -125,6 +126,8 @@ class IdCollapsePass:
                 self.visit(node.func.value, at_module_scope)
             elif isinstance(node.func.value, AnnCastBinaryOp):
                 self.visit(node.func.value, at_module_scope)
+            elif isinstance(node.func.value, AnnCastAssignment):
+                self.visit(node.func.value, at_module_scope)
             else:
                 node.func.value.id = self.collapse_id(node.func.value.id)
             node.func.attr.id = self.collapse_id(node.func.attr.id)
@@ -141,7 +144,7 @@ class IdCollapsePass:
         at_module_scope = False
 
         # Currently, bases doesn't have anything
-        self.visit_node_list(node.bases, at_module_scope)
+        # self.visit_node_list(node.bases, at_module_scope)
 
         # Each func is an AnnCastFuncDef node
         self.visit_node_list(node.funcs, at_module_scope)

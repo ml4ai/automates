@@ -23,7 +23,7 @@ import sys
 import json
 
 
-def dictionary_to_gromet_json(o, fold_level=3, indent=4, level=0, parent_key=""):
+def dictionary_to_gromet_json(o, fold_level=5, indent=4, level=0, parent_key=""):
     if level < fold_level:
         newline = "\n"
         space = " "
@@ -57,13 +57,13 @@ def dictionary_to_gromet_json(o, fold_level=3, indent=4, level=0, parent_key="")
             ret += space * indent * (level+1)
             ret += '"' + str(k) + '":' + space
             if k == "fn": 
-                ret += dictionary_to_gromet_json(v, 2, indent, level+1, k)
-            elif k == "attributes":
                 ret += dictionary_to_gromet_json(v, 4, indent, level+1, k)
+            elif k == "attributes":
+                ret += dictionary_to_gromet_json(v, 6, indent, level+1, k)
             elif k == "bf" and parent_key == "fn":
-                ret += dictionary_to_gromet_json(v, 3, indent, level+1, k)
-            elif k == "bf" and parent_key == "value":
                 ret += dictionary_to_gromet_json(v, 5, indent, level+1, k)
+            elif k == "bf" and parent_key == "value":
+                ret += dictionary_to_gromet_json(v, 7, indent, level+1, k)
             else:
                 ret += dictionary_to_gromet_json(v, fold_level, indent, level+1, k)
         ret += newline + space * indent * level + "}"
