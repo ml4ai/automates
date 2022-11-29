@@ -5,6 +5,21 @@ import itertools
 from automates.gromet.execution_engine.types.defined_types import Field, Sequence
 
 #TODO: Check the correctness for numpy arrays - How do n>1d arrays work in this case
+
+class Sequence_get(object):
+    source_language_name = {"CAST":"sequence_get"}
+    inputs = [Field("sequence_input", "Sequence"), Field("index", "DimensionalIndex")]
+    outputs = [Field("sequence_output", "Sequence")]
+    shorthand = "sequence_get"
+    documentation = ""
+
+class Sequence_set(object):
+    source_language_name = {"CAST":"sequence_set"}
+    inputs = [Field("sequence_input", "Sequence"), Field("index", "DimensionalIndex"), Field("element", "Any")]
+    outputs = [Field("sequence_output", "Sequence")]
+    shorthand = "sequence_set"
+    documentation = ""
+
 class Sequence_concatenate(object):
     source_language_name = {"CAST":"concatenate"}
     inputs = [Field("sequence_inputs", "Sequence", True)]

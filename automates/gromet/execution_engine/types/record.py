@@ -21,3 +21,16 @@ class new_Field(object):
         return record_input.fields.append(RecordField(field_name, value_type, None)) # #TODO: Do we need to set a default value?
 
 
+class Record_get(object):
+    source_language_name = {"CAST":"record_get"}
+    inputs = [Field("record_input", "Record"), Field("index", "String")]
+    outputs = [Field("field_output", "Field")]
+    shorthand = "record_get"
+    documentation = ""
+
+class Record_set(object):
+    source_language_name = {"CAST":"record_set"}
+    inputs = [Field("record_input", "Record"), Field("index", "String"), Field("element", "Any")]
+    outputs = [Field("record_output", "Record")]
+    shorthand = "record_set"
+    documentation = ""
