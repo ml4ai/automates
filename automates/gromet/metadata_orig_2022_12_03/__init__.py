@@ -18,7 +18,7 @@ from automates.gromet.metadata.bibjson import Bibjson
 from automates.gromet.metadata.code_file_reference import CodeFileReference
 from automates.gromet.metadata.equation_definition import EquationDefinition
 from automates.gromet.metadata.equation_extraction import EquationExtraction
-from automates.gromet.metadata.equation_literal_value import EquationLiteralValue
+from automates.gromet.metadata.equation_parameter import EquationParameter
 from automates.gromet.metadata.gromet_creation import GrometCreation
 from automates.gromet.metadata.literal_value import LiteralValue
 from automates.gromet.metadata.metadata import Metadata
@@ -31,10 +31,8 @@ from automates.gromet.metadata.source_code_loop_update import SourceCodeLoopUpda
 from automates.gromet.metadata.source_code_port_default_val import SourceCodePortDefaultVal
 from automates.gromet.metadata.source_code_port_keyword_arg import SourceCodePortKeywordArg
 from automates.gromet.metadata.source_code_reference import SourceCodeReference
-from automates.gromet.metadata.text_description import TextDescription
+from automates.gromet.metadata.text_definition import TextDefinition
 from automates.gromet.metadata.text_extraction import TextExtraction
-from automates.gromet.metadata.text_extraction_metadata import TextExtractionMetadata
-from automates.gromet.metadata.text_literal_value import TextLiteralValue
-from automates.gromet.metadata.text_units import TextUnits
+from automates.gromet.metadata.text_parameter import TextParameter
 from automates.gromet.metadata.textual_document_collection import TextualDocumentCollection
 from automates.gromet.metadata.textual_document_reference import TextualDocumentReference
