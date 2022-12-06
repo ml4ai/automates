@@ -22,6 +22,7 @@ from automates.gromet.metadata.equation_literal_value import EquationLiteralValu
 from automates.gromet.metadata.gromet_creation import GrometCreation
 from automates.gromet.metadata.literal_value import LiteralValue
 from automates.gromet.metadata.metadata import Metadata
+from automates.gromet.metadata.program_analysis_record_bookkeeping import ProgramAnalysisRecordBookkeeping
 from automates.gromet.metadata.provenance import Provenance
 from automates.gromet.metadata.source_code_collection import SourceCodeCollection
 from automates.gromet.metadata.source_code_comment import SourceCodeComment
@@ -34,6 +35,7 @@ from automates.gromet.metadata.source_code_reference import SourceCodeReference
 from automates.gromet.metadata.text_description import TextDescription
 from automates.gromet.metadata.text_extraction import TextExtraction
 from automates.gromet.metadata.text_extraction_metadata import TextExtractionMetadata
+from automates.gromet.metadata.text_grounding import TextGrounding
 from automates.gromet.metadata.text_literal_value import TextLiteralValue
 from automates.gromet.metadata.text_units import TextUnits
 from automates.gromet.metadata.textual_document_collection import TextualDocumentCollection
