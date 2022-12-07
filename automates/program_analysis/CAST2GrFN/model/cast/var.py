@@ -30,27 +30,32 @@ class Var(AstNode):
     """
     swagger_types = {
         'val': 'Name',
-        'type': 'VarType'
+        'type': 'VarType',
+        'default_value': 'LiteralValue'
     }
     if hasattr(AstNode, "swagger_types"):
         swagger_types.update(AstNode.swagger_types)
 
     attribute_map = {
         'val': 'val',
-        'type': 'type'
+        'type': 'type',
+        'default_value': 'default_value'
     }
     if hasattr(AstNode, "attribute_map"):
         attribute_map.update(AstNode.attribute_map)
 
-    def __init__(self, val=None, type=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, val=None, type=None, default_value=None, *args, **kwargs):  # noqa: E501
         """Var - a model defined in Swagger"""  # noqa: E501
         self._val = None
         self._type = None
+        self._default_value = None
         self.discriminator = None
         if val is not None:
             self.val = val
         if type is not None:
             self.type = type
+        if default_value is not None:
+            self.default_value = default_value
         AstNode.__init__(self, *args, **kwargs)
 
     @property
@@ -94,6 +99,27 @@ class Var(AstNode):
         """
 
         self._type = type
+
+    @property
+    def default_value(self):
+        """Gets the default_value of this Var.  # noqa: E501
+
+
+        :return: The default_value of this Var.  # noqa: E501
+        :rtype: LiteralValue
+        """
+        return self._default_value
+
+    @default_value.setter
+    def default_value(self, default_value):
+        """Sets the default_value of this Var.
+
+
+        :param default_value: The default_value of this Var.  # noqa: E501
+        :type: LiteralValue
+        """
+
+        self._default_value = default_value
 
     def to_dict(self):
         """Returns the model properties as a dict"""
