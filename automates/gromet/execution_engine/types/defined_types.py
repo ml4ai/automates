@@ -13,18 +13,9 @@ class Record(object):
     name: str
     fields: "list[RecordField]"
 
-@dataclass
-class Slice(object):
-    lower: int
-    upper: int
-    step: int
-@dataclass
-class ExtendedSlice(object):
-    dims: List[Slice, int]
-
 
 Sequence = Union[range, List, numpy.ndarray, Tuple]
 Iterable = Union[Set, Sequence, Dict]
 Indexable = Union[Sequence, Dict, Record]
-DimensionalIndex = Union[Slice, ExtendedSlice]
+DimensionalIndex = Union[slice, int]
 
