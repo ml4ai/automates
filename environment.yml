@@ -23,7 +23,7 @@ dependencies:
   - openssl=1.1.1i=h2bbff1b_0
   - pip=20.3.3=py37haa95532_0
   - pygraphviz=1.5=py37_0
-  - python=3.7.9=h60c2a47_0
+  - python=3.9.0=h6244533_2
   - scipy=1.5.2=py37h9439919_0
   - setuptools=51.0.0=py37haa95532_2
   - six=1.15.0=py37haa95532_0
