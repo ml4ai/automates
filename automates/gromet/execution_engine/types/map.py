@@ -1,13 +1,11 @@
-from typing import Dict
+from typing import Dict, Any
+from defined_types import Hashable
+def new_Map() -> Dict:
+    return {}
 
-from automates.gromet.execution_engine.types.defined_types import Field
+def Map_get(map_input: Dict, index: Hashable) -> Any:
+    return map_input[index]
 
-class new_Map(object): # TODO: Should we have inputs for this?
-    source_language_name = {"Python":"new_Map"} 
-    inputs = []
-    outputs =  [Field("map_output", "Map")]
-    shorthand = "new_Map"
-    documentation = ""
-
-    def exec() -> Dict:
-        return {}
+def Map_set(map_input: Dict, index: Hashable, element: Any):
+    map_input[index] = element
+    return map_input
