@@ -2,12 +2,6 @@ import numpy
 from typing import Union, List, Tuple, Dict, Set, Any
 from dataclasses import dataclass
 
-@dataclass(frozen=True)
-class Field:
-    name: str
-    type: str
-    variatic: bool = False
-
 @dataclass
 class RecordField:
     name: str
@@ -19,8 +13,18 @@ class Record(object):
     name: str
     fields: "list[RecordField]"
 
+@dataclass
+class Slice(object):
+    lower: int
+    upper: int
+    step: int
+@dataclass
+class ExtendedSlice(object):
+    dims: List[Slice, int]
+
+
 Sequence = Union[range, List, numpy.ndarray, Tuple]
 Iterable = Union[Set, Sequence, Dict]
 Indexable = Union[Sequence, Dict, Record]
-
+DimensionalIndex = Union[Slice, ExtendedSlice]
 
