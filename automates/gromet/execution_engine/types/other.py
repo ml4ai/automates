@@ -87,7 +87,7 @@ class Print: #TODO: How should print work? Will likely not be a CASTGeneric func
 
 class Range:
     source_language_name = {"CAST":"range"} 
-    inputs = [Field("input", "Integer")] #TODO: What is the input to range?
+    inputs = [Field("stop", "integer"), Field("start", "integer", default_val=0), Field("step", "integer", default_val=1)] #TODO: What is the input to range?
     outputs =  [Field("range_output", "Range")]
     shorthand = "range"
     documentation = ""

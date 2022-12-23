@@ -10,6 +10,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
 from automates.program_analysis.CAST2GrFN.visitors.cast_to_agraph_visitor import (
     CASTToAGraphVisitor,
 )
+from automates.utils.script_functions import python_to_cast
 
 def get_args():
     parser = argparse.ArgumentParser("Runs Python to CAST pipeline on input Python source file.")
@@ -33,6 +34,7 @@ def get_args():
     options = parser.parse_args()
     return options
 
+"""
 def python_to_cast(pyfile_path, agraph=False, astprint=False, std_out=False, rawjson=False, legacy=False, cast_obj=False):
     # Open Python file as a giant string
     file_handle = open(pyfile_path)
@@ -101,7 +103,7 @@ def python_to_cast(pyfile_path, agraph=False, astprint=False, std_out=False, raw
                 print("Writing CAST to "+out_name+"--CAST.json")
                 out_handle = open(out_name+"--CAST.json","w")
                 out_handle.write(out_cast.to_json_str())
-        
+"""        
 
 def main():
     """main

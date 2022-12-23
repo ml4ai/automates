@@ -16,6 +16,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.lambda_expression_pass import
 from automates.program_analysis.CAST2GrFN.ann_cast.to_grfn_pass import ToGrfnPass
 from automates.program_analysis.CAST2GrFN.ann_cast.to_gromet_pass import ToGrometPass
 
+from automates.utils.script_functions import ann_cast_pipeline
 from automates.utils.fold import dictionary_to_gromet_json, del_nulls
 
 def get_args():
@@ -34,19 +35,20 @@ def get_args():
     options = parser.parse_args()
     return options
 
+"""
 def ann_cast_pipeline(cast_instance, to_file=True, gromet=False, grfn_2_2=False, a_graph=False, from_obj=False):
-    """cast_to_annotated.py
-
-    This function reads a JSON file that contains the CAST representation
-    of a program, and transforms it to annotated CAST. It then calls a
-    series of passes that each augment the information in the annotatd CAST nodes
-    in preparation for the GrFN generation.
+#    cast_to_annotated.py
+#
+ #   This function reads a JSON file that contains the CAST representation
+  #  of a program, and transforms it to annotated CAST. It then calls a
+   # series of passes that each augment the information in the annotatd CAST nodes
+#    in preparation for the GrFN generation.
    
-    One command-line argument is expected, namely the name of the JSON file that
-    contains the CAST data.
-    TODO: Update this docstring as the program has been tweaked so that this is a function instead of
-    the program
-    """
+ #   One command-line argument is expected, namely the name of the JSON file that
+  #  contains the CAST data.
+   # TODO: Update this docstring as the program has been tweaked so that this is a function instead of
+    #the program
+ #   
 
     if from_obj:
         f_name = ""
@@ -117,7 +119,7 @@ def ann_cast_pipeline(cast_instance, to_file=True, gromet=False, grfn_2_2=False,
         pickled_file_name = f"{f_name}--AnnCast.pickled"
         with open(pickled_file_name,"wb") as pkfile:
             dill.dump(pipeline_state, pkfile)
-
+"""
 
 def main():
     """cast_to_annotated.py
@@ -132,7 +134,7 @@ def main():
     """
 
     args = get_args()
-    ann_cast_pipeline(args.cast_json, gromet=args.gromet, grfn_2_2=args.grfn_2_2, a_graph=args.agraph, from_obj=False)
+    ann_cast_pipeline(args.cast_json, gromet=args.gromet, grfn_2_2=args.grfn_2_2, a_graph=args.agraph, from_obj=False, indent_level=2)
 
 
 if __name__ == "__main__":

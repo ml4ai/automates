@@ -327,12 +327,22 @@ class CASTToAGraphVisitor(CASTVisitor):
         # TODO: Where should bases field be used?
         funcs = []
         fields = []
+        bases = []
         if len(node.funcs) > 0:
             funcs = self.visit_list(node.funcs)
         if len(node.fields) > 0:
             fields = self.visit_list(node.fields)
+        if len(node.bases) > 0:
+            bases = self.visit_list(node.bases)
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid, label="Record: " + node.name)
+
+        # Add bases to the graph (currently name nodes)
+        base_uid = uuid.uuid4()
+        self.G.add_node(base_uid, label="Parent Classes (bases)")
+        self.G.add_edge(node_uid, base_uid)
+        for n in bases:
+            self.G.add_edge(base_uid, n)
 
         # Add attributes to the graph
         attr_uid = uuid.uuid4()
@@ -937,7 +947,10 @@ class CASTToAGraphVisitor(CASTVisitor):
                 break
 
         if not class_init:
-            self.G.add_node(node_uid, label=node.name + " (id: " + str(node.id)+")")
+            if node.name == None:
+                self.G.add_node(node_uid, label="NONAME (id: " + str(node.id)+")")
+            else:
+                self.G.add_node(node_uid, label=node.name + " (id: " + str(node.id)+")")
 
         return node_uid
 
@@ -1059,5 +1072,12 @@ class CASTToAGraphVisitor(CASTVisitor):
     @visit.register
     def _(self, node: Var):
         """Visits a Var node by visiting its value"""
-        val = self.visit(node.val)
-        return val
+        if node.default_value == None:
+            val = self.visit(node.val)
+            return val
+        else:
+            val = self.visit(node.default_value)
+            node_uid = uuid.uuid4()
+            self.G.add_node(node_uid, label=f"{node.val.name} (id: {str(node.val.id)})") # value: {node.default_value.value}")
+            self.G.add_edge(node_uid, val)
+            return node_uid

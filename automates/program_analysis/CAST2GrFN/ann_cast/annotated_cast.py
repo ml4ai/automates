@@ -956,16 +956,18 @@ class AnnCastUnaryOp(AnnCastNode):
         return UnaryOp.__str__(self)
 
 class AnnCastVar(AnnCastNode):
-    def __init__(self, val, type, source_refs):
+    def __init__(self, val, type, default_value, source_refs):
         super().__init__(self)
         self.val = val
         self.type = type
+        self.default_value = default_value
         self.source_refs = source_refs
 
     def to_dict(self):
         result = super().to_dict()
         result["val"] = self.val.to_dict()
         result["type"] = str(self.type)
+        result["default_value"] = str(self.default_value)
         return result
 
     def equiv(self, other):
