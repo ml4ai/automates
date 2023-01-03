@@ -18,11 +18,11 @@ from automates.gromet.metadata import (
     SourceCodeLoopUpdate,
     TextualDocumentCollection,
     TextualDocumentReference,
-    TextDefinition,
-    TextParameter,
+    TextDescription,
+    TextLiteralValue,
     EquationDefinition,
     EquationExtraction,
-    EquationParameter,
+    EquationLiteralValue,
     TextExtraction,
     GrometCreation,
     SourceCodeCollection,
@@ -132,9 +132,9 @@ def parse_metadata(obj):
         "source_code_collection": SourceCodeCollection,
         "textual_document_collection": TextualDocumentCollection,
         "equation_definition": EquationDefinition,
-        "equation_parameter": EquationParameter,
-        "text_definition": TextDefinition,
-        "text_parameter": TextParameter
+        "equation_parameter": EquationLiteralValue,
+        "text_definition": TextDescription,
+        "text_parameter": TextLiteralValue
     }
 
     # All metadata have a provenance and metadata_type
