@@ -143,8 +143,8 @@ class IdCollapsePass:
     def visit_record_def(self, node: AnnCastRecordDef, at_module_scope):
         at_module_scope = False
 
-        # Currently, bases doesn't have anything
-        # self.visit_node_list(node.bases, at_module_scope)
+        # Each base should be an AnnCastName node
+        self.visit_node_list(node.bases, at_module_scope)
 
         # Each func is an AnnCastFuncDef node
         self.visit_node_list(node.funcs, at_module_scope)
@@ -239,6 +239,8 @@ class IdCollapsePass:
     @_visit.register
     def visit_var(self, node: AnnCastVar, at_module_scope):
         self.visit(node.val, at_module_scope)
+        if node.default_value != None:
+            self.visit(node.default_value, at_module_scope)
 
     ### Old visitors for literal values
     @_visit.register
