@@ -3,7 +3,7 @@ import json
 import requests
 import argparse
 
-def module_to_json(root_path: str, system_filepaths: str, system_name: str) -> str:
+def system_to_json(root_path: str, system_filepaths: str, system_name: str) -> str:
     files=[]
     blobs=[]
 
@@ -16,7 +16,9 @@ def module_to_json(root_path: str, system_filepaths: str, system_name: str) -> s
         with open(full_path, "r") as f:
             blobs.append(f.read())
     
-    return json.dumps({"files":files, "blobs":blobs, "name": system_name})
+    root_name = os.path.basename(os.path.normpath(root_path))
+
+    return json.dumps({"files":files, "blobs":blobs, "system_name": system_name, "root_name":root_name})
     
 parser = argparse.ArgumentParser()
 parser.add_argument("host", type=str)
@@ -29,8 +31,9 @@ parser.add_argument("system_name", type=str)
 args = parser.parse_args()
 
 url = f"http://{args.host}:{args.port}"
-data = module_to_json(args.root_path, args.system_filepaths, args.system_name)
-with open("test.json", "w") as f:
-    f.write(data)
-x = requests.post(url, data=data)
-print(x.text)
+data = system_to_json(args.root_path, args.system_filepaths, args.system_name)
+response = requests.post(url, data=data)
+
+print(data)
+with open(f"{args.system_name}--Gromet-FN-auto.json", "w") as f:
+    f.write(response.json())
