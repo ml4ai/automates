@@ -21,7 +21,7 @@ def get_args():
     options = parser.parse_args()
     return options
 
-def process_file_system(system_name, path, files):
+def process_file_system(system_name, path, files, write_to_file=False):
     root_dir = path.strip()
     file_list = open(files,"r").readlines()
 
@@ -63,14 +63,12 @@ def process_file_system(system_name, path, files):
         except ImportError:
             print("FAILURE")
         
-        
-    # After we go through the whole system, we can then write out the module_collection
-    with open(f"{system_name}--Gromet-FN-auto.json","w") as f:
-        gromet_collection_dict = module_collection.to_dict()
-        f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+    if write_to_file:
+        with open(f"{system_name}--Gromet-FN-auto.json","w") as f:
+            gromet_collection_dict = module_collection.to_dict()
+            f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
 
-
-
+    return module_collection
 
 def main():
     args = get_args()
@@ -88,7 +86,7 @@ def main():
     # TODO have path specified in command line
     # DONE correct end / in path file
 
-main()
+#main()
 
 # files = glob.glob(path + '/**/*.py', recursive=True)
 # print(files)
