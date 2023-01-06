@@ -1,0 +1,48 @@
+# Info: Code2FN Dockerfile
+
+FROM  ubuntu:latest
+CMD   bash
+# ==============================================================================
+# INSTALL SOFTWARE VIA THE UBUNTU PACKAGE MANAGER
+# =============================================================================
+ARG DEBIAN_FRONTEND=noninteractive
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+RUN apt-get update && \
+  apt-get -y --no-install-recommends install apt-utils
+
+# Use individual commands to prevent excess time usage when re-building
+RUN apt-get -y --no-install-recommends install graphviz libgraphviz-dev
+RUN apt-get -y --no-install-recommends install python3.10 python3-pip python3-venv
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# =============================================================================
+
+# =============================================================================
+# CREATE A PYTHON VENV AND UPGRADE PYTHON TOOLS
+# =============================================================================
+ENV VIRTUAL_ENV=/opt/automates_venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN pip install --upgrade setuptools
+RUN pip install wheel
+# =============================================================================
+
+# =============================================================================
+# SETUP THE AUTOMATES REPOSITORY AND ENVIRONMENT
+# =============================================================================
+RUN mkdir -p /automates/automates
+COPY setup.py /automates/
+COPY automates /automates/automates
+WORKDIR /automates
+RUN pip install -e .
+# =============================================================================
+
+# =============================================================================
+# SETUP THE ENVIRONMENT FOR FASTAPI SERVER
+# =============================================================================
+RUN pip install uvicorn
+RUN pip install FASTAPI
+COPY scripts/program_analysis /automates/scripts/program_analysis
+WORKDIR /automates/scripts/program_analysis/
+# =============================================================================

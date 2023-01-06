@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  Code2FN:
+    image: code2fn:latest
+    container_name: Code2FN
+    ports:
+    - "8000:8000"
+    command: ["uvicorn", "fastapi_server:app", "--host", "0.0.0.0", "--port", "8000"]
+
