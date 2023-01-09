@@ -42,7 +42,7 @@ setup(
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
     keywords="assembling models from software",
     packages=find_packages(),
@@ -85,7 +85,7 @@ setup(
         "fastparquet"
     ],
     extras_require=EXTRAS_REQUIRE,
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     entry_points={
         "console_scripts": [
             "codex = automates.apps.CodeExplorer.app:main",
