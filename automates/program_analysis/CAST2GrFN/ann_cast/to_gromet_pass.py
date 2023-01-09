@@ -1125,7 +1125,10 @@ class ToGrometPass:
                     elif arg.right.name in self.var_environment["args"]:
                         var_env = self.var_environment["args"]
                     else:
+                        #print(self.var_environment["args"].keys())
+                        #print(self.var_environment["local"].keys())
                         var_env = self.var_environment["global"]
+
                     entry = var_env[arg.right.name]
                     arg_fn_pofs.append(entry[2]+1)
                 else:
@@ -1975,6 +1978,7 @@ class ToGrometPass:
             arg_env = self.var_environment["args"]
             arg_env[val] = (AnnCastFunctionDef(None,None,None,None), body_if_fn.opi[-1], len(body_if_fn.opi)-1)
             
+        print(node.modified_vars.items())
         for (_,val) in node.modified_vars.items():
             body_if_fn.opo = insert_gromet_object(body_if_fn.opo, GrometPort(name=val, box=len(body_if_fn.b)))
 
