@@ -8,6 +8,7 @@ from automates.gromet.fn import (
     GrometFN,
     GrometPort,
     GrometWire,
+    GrometFNModuleCollection,
     LiteralValue,
 )
 from automates.gromet.metadata import (
@@ -16,9 +17,12 @@ from automates.gromet.metadata import (
     SourceCodeDataType,
     SourceCodeLoopInit,
     SourceCodeLoopUpdate,
+    SourceCodeComment,
     TextualDocumentCollection,
     TextualDocumentReference,
     TextDescription,
+    TextGrounding,
+    TextUnits,
     TextLiteralValue,
     EquationDefinition,
     EquationExtraction,
@@ -26,11 +30,13 @@ from automates.gromet.metadata import (
     TextExtraction,
     GrometCreation,
     SourceCodeCollection,
-    CodeFileReference
+    CodeFileReference,
+    SourceCodePortDefaultVal,
+    SourceCodePortKeywordArg,
+    ProgramAnalysisRecordBookkeeping
 
 )
 from automates.gromet.fn import TypedValue, ImportReference
-
 
 def json_to_gromet(path):
     # Read JSON from file
@@ -38,42 +44,56 @@ def json_to_gromet(path):
         json_string = f.read()
     json_object = json.loads(json_string)
 
-    # Creat Module object
-    gromet_module = GrometFNModule()
-        
-    # Create the function network for top level module
-    gromet_module.fn = parse_function_network(json_object["fn"])
-
-    # Import Attributes
-    for fn in json_object["attributes"]:
-        # TODO: Add support for types other than FN
-        type = fn["type"]
-
-        if type == "FN":
-            value = TypedValue(type=type, value=parse_function_network(fn["value"]))
-        elif type == "IMPORT":
-            value = TypedValue(type=type, value=parse_import_reference(fn["value"]))
-
-        if not gromet_module.attributes:
-            gromet_module.attributes = [value]
-        else:
-            gromet_module.attributes.append(value)
-
-    # Import Metadata
-    for collection in json_object["metadata_collection"]:
-        gromet_metadata_collection = []
-        for metadata in collection:
-            gromet_metadata_collection.append(parse_metadata(metadata))
-        
-        if not gromet_module.metadata_collection:
-            gromet_module.metadata_collection = [gromet_metadata_collection]
-        else:
-            gromet_module.metadata_collection.append(gromet_metadata_collection)
+    # Create top level module collectio
+    gromet_collection = GrometFNModuleCollection()
+    import_basic_datatypes(json_object, gromet_collection)
     
-    # Import basic data type fields
-    import_basic_datatypes(json_object, gromet_module)
-    
-    return gromet_module
+    # Since module_index and executables are lists, they are not imported automatically
+    # and need to be imported manually at this point
+    gromet_collection.module_index = json_object["module_index"]
+    gromet_collection.executables = json_object["executables"] 
+
+    for module in json_object["modules"]:
+        # Creat Module object
+        gromet_module = GrometFNModule()
+            
+        # Create the function network for top level module
+        gromet_module.fn = parse_function_network(module["fn"])
+
+        # Import Attributes
+        for fn in module["attributes"]:
+            type = fn["type"]
+            if type == "FN":
+                value = TypedValue(type=type, value=parse_function_network(fn["value"]))
+            elif type == "IMPORT":
+                value = TypedValue(type=type, value=parse_import_reference(fn["value"]))
+
+            if not gromet_module.attributes:
+                gromet_module.attributes = [value]
+            else:
+                gromet_module.attributes.append(value)
+
+        # Import Metadata
+        for collection in module["metadata_collection"]:
+            gromet_metadata_collection = []
+            for metadata in collection:
+                gromet_metadata_collection.append(parse_metadata(metadata))
+            
+            if not gromet_module.metadata_collection:
+                gromet_module.metadata_collection = [gromet_metadata_collection]
+            else:
+                gromet_module.metadata_collection.append(gromet_metadata_collection)
+        
+        # Import basic data type fields
+        import_basic_datatypes(module, gromet_module)
+        
+        # Add module to collection
+        if not gromet_collection.modules:
+            gromet_collection.modules = [gromet_module]
+        else:
+            gromet_collection.modules.append(gromet_module)
+
+    return gromet_collection
 
 
 def parse_function_network(obj):
@@ -128,13 +148,18 @@ def parse_metadata(obj):
         "source_code_data_type": SourceCodeDataType,
         "source_code_loop_init": SourceCodeLoopInit,
         "source_code_loop_update": SourceCodeLoopUpdate,
+        "source_code_port_keyword_arg": SourceCodePortKeywordArg,
+        "source_code_port_default_val": SourceCodePortDefaultVal,
+        "program_analysis_record_bookkeeping": ProgramAnalysisRecordBookkeeping,
+        "source_code_comment": SourceCodeComment,
         "gromet_creation": GrometCreation,
         "source_code_collection": SourceCodeCollection,
         "textual_document_collection": TextualDocumentCollection,
         "equation_definition": EquationDefinition,
         "equation_parameter": EquationLiteralValue,
         "text_definition": TextDescription,
-        "text_parameter": TextLiteralValue
+        "text_literal_value": TextLiteralValue,
+        "text_units": TextUnits
     }
 
     # All metadata have a provenance and metadata_type
@@ -147,8 +172,7 @@ def parse_metadata(obj):
     # Load type specific data for types that have object fields. 
     # Types that only contain basic data type fields will be created automatically
     if metadata_type == "source_code_collection":
-        metadata_object = SourceCodeCollection(metadata_type=metadata_type, provenance=provenance)
-
+        
         if "files" in obj: 
             #SourceCodeCollection.files is a list of CodeFileReference objects
             metadata_object.files = []
@@ -157,8 +181,13 @@ def parse_metadata(obj):
                 import_basic_datatypes(file, code_file_reference)
                 metadata_object.files.append(code_file_reference) 
        
+    elif metadata_type == "program_analysis_record_bookkeeping":
+        if "field_declarations" in obj:
+            metadata_object.field_declarations = obj["field_declarations"]
+        if "method_declarations" in obj:
+            metadata_object.method_declarations = obj["method_declarations"]
+            
     elif metadata_type == "textual_document_collection":
-        metadata_object = TextualDocumentCollection(metadata_type=metadata_type, provenance=provenance)
         
         if "documents" in obj:
             # TextualDocumentCollection.documents is a list of TextualDocumentReference objects
@@ -174,14 +203,12 @@ def parse_metadata(obj):
                 metadata_object.documents.append(textual_document_reference)
         
     elif metadata_type == "equation_definition":
-        metadata_object = EquationDefinition(metadata_type=metadata_type, provenance=provenance)
 
         if "equation_extraction" in obj:
             metadata_object.equation_extraction = EquationExtraction()
             import_basic_datatypes(obj["equation_extraction"], metadata_object.equation_extraction)
 
-    elif metadata_type == "equation_parameter":
-        metadata_object = EquationParameter(metadata_type=metadata_type, provenance=provenance)
+    elif metadata_type == "equation_literal_value":
         
         if "equation_extraction" in obj:
             metadata_object.equation_extraction = EquationExtraction()
@@ -190,22 +217,42 @@ def parse_metadata(obj):
             metadata_object.value = LiteralValue()
             import_basic_datatypes(obj["value"], metadata_object.value)
 
-    elif metadata_type == "text_definition":
-        metadata_object = TextDefinition(metadata_type=metadata_type, provenance=provenance)
+    elif metadata_type == "text_description":
 
         if "text_extraction" in obj:
             metadata_object.text_extraction = TextExtraction()
             import_basic_datatypes(obj["text_extraction"], metadata_object.text_extraction)
+        if "grounding" in obj:
+            metadata_object.grounding = []
+            for entry in obj["grounding"]:
+                grounding = TextGrounding()
+                import_basic_datatypes(entry, grounding)
+                metadata_object.grounding.append(grounding)
     
-    elif metadata_type == "text_parameter":
-        metadata_object = TextParameter(metadata_type=metadata_type, provenance=provenance)
-
+    elif metadata_type == "text_literal_value":
         if "text_extraction" in obj:
             metadata_object.text_extraction = TextExtraction()
             import_basic_datatypes(obj["text_extraction"], metadata_object.text_extraction)
+        if "grounding" in obj:
+            metadata_object.grounding = []
+            for entry in obj["grounding"]:
+                grounding = TextGrounding()
+                import_basic_datatypes(entry, grounding)
+                metadata_object.grounding.append(grounding)
         if "value" in obj:
             metadata_object.value = LiteralValue()
             import_basic_datatypes(obj["value"], metadata_object.value)
+    
+    elif metadata_type == "text_units":
+        if "text_extraction" in obj:
+            metadata_object.text_extraction = TextExtraction()
+            import_basic_datatypes(obj["text_extraction"], metadata_object.text_extraction)
+        if "grounding" in obj:
+            metadata_object.grounding = []
+            for entry in obj["grounding"]:
+                grounding = TextGrounding()
+                import_basic_datatypes(entry, grounding)
+                metadata_object.grounding.append(grounding)
 
     # Import remaining metadata fields of basic type
     import_basic_datatypes(obj, metadata_object)

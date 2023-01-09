@@ -25,7 +25,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.to_grfn_pass import ToGrfnPas
 from automates.program_analysis.CAST2GrFN.ann_cast.to_gromet_pass import ToGrometPass
 
 
-def process_file_system(system_name, path, files):
+def process_file_system(system_name, path, files, write_to_file=False):
     root_dir = path.strip()
     file_list = open(files,"r").readlines()
 
@@ -69,9 +69,12 @@ def process_file_system(system_name, path, files):
         
         
     # After we go through the whole system, we can then write out the module_collection
-    with open(f"{system_name}--Gromet-FN-auto.json","w") as f:
-        gromet_collection_dict = module_collection.to_dict()
-        f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+    if write_to_file:
+        with open(f"{system_name}--Gromet-FN-auto.json","w") as f:
+            gromet_collection_dict = module_collection.to_dict()
+            f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+
+    return module_collection
 
 def python_to_cast(pyfile_path, agraph=False, astprint=False, std_out=False, rawjson=False, legacy=False, cast_obj=False):
     # Open Python file as a giant string
