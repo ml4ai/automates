@@ -7,6 +7,7 @@ class Field:
     name: str
     type: str
     variatic: bool = False
+    default_val: Any = None
 
 @dataclass
 class RecordField:
