@@ -1005,7 +1005,6 @@ class VariableVersionPass:
         # Everything is versioned correctly
         self.visit_node_list(node.funcs, assign_lhs)
         
-        pass
 
     @_visit.register
     def visit_dict(self, node: AnnCastDict, assign_lhs: bool):

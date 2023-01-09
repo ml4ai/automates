@@ -25,7 +25,7 @@ from automates.program_analysis.CAST2GrFN.ann_cast.to_grfn_pass import ToGrfnPas
 from automates.program_analysis.CAST2GrFN.ann_cast.to_gromet_pass import ToGrometPass
 
 
-def process_file_system(system_name, path, files):
+def process_file_system(system_name, path, files, write_to_file=False):
     root_dir = path.strip()
     file_list = open(files,"r").readlines()
 
@@ -69,9 +69,12 @@ def process_file_system(system_name, path, files):
         
         
     # After we go through the whole system, we can then write out the module_collection
-    with open(f"{system_name}--Gromet-FN-auto.json","w") as f:
-        gromet_collection_dict = module_collection.to_dict()
-        f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+    if write_to_file:
+        with open(f"{system_name}--Gromet-FN-auto.json","w") as f:
+            gromet_collection_dict = module_collection.to_dict()
+            f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+
+    return module_collection
 
 def python_to_cast(pyfile_path, agraph=False, astprint=False, std_out=False, rawjson=False, legacy=False, cast_obj=False):
     # Open Python file as a giant string
@@ -98,6 +101,7 @@ def python_to_cast(pyfile_path, agraph=False, astprint=False, std_out=False, raw
     # using the astpp module 
     if astprint:
         # astpp.parseprint(file_contents)
+        print("AST Printing Currently Disabled")
         pass
 
     # 'Root' the current working directory so that it's where the 
@@ -145,7 +149,7 @@ def python_to_cast(pyfile_path, agraph=False, astprint=False, std_out=False, raw
 
 
 
-def ann_cast_pipeline(cast_instance, to_file=True, gromet=False, grfn_2_2=False, a_graph=False, from_obj=False):
+def ann_cast_pipeline(cast_instance, to_file=True, gromet=False, grfn_2_2=False, a_graph=False, from_obj=False, indent_level=0):
     """cast_to_annotated.py
 
     This function reads a JSON file that contains the CAST representation
@@ -165,7 +169,6 @@ def ann_cast_pipeline(cast_instance, to_file=True, gromet=False, grfn_2_2=False,
     else:
         f_name = cast_instance
         f_name = f_name.split("/")[-1]
-        f_name = f_name.replace("--CAST.json", "")
         file_contents = open(f_name, "r").read()
 
         cast_json = CAST([], "python")
@@ -190,6 +193,7 @@ def ann_cast_pipeline(cast_instance, to_file=True, gromet=False, grfn_2_2=False,
     # that the generated GrFN uuids will not be consistent with GrFN uuids
     # created during test runtime. So, do not use these GrFN jsons as expected 
     # json for testing
+    f_name = f_name.replace("--CAST.json", "")
     if a_graph:
         agraph = CASTToAGraphVisitor(pipeline_state)
         pdf_file_name = f"{f_name}-AnnCast.pdf"
@@ -211,7 +215,7 @@ def ann_cast_pipeline(cast_instance, to_file=True, gromet=False, grfn_2_2=False,
         if to_file:
             with open(f"{f_name}--Gromet-FN-auto.json","w") as f:
                 gromet_collection_dict = pipeline_state.gromet_collection.to_dict()
-                f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict)))
+                f.write(dictionary_to_gromet_json(del_nulls(gromet_collection_dict), level=indent_level))
         else:
             return pipeline_state.gromet_collection
     else:
