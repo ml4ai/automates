@@ -4,106 +4,108 @@ import itertools
 
 from automates.gromet.execution_engine.types.defined_types import Field, Sequence
 
-class Sequence_concatenate(object): #TODO: Check implementation of *args
-    source_language_name = {}
+#TODO: Check the correctness for numpy arrays - How do n>1d arrays work in this case
+
+class Sequence_get(object):
+    source_language_name = {"CAST":"sequence_get"}
+    inputs = [Field("sequence_input", "Sequence"), Field("index", "DimensionalIndex")]
+    outputs = [Field("sequence_output", "Sequence")]
+    shorthand = "sequence_get"
+    documentation = ""
+
+class Sequence_set(object):
+    source_language_name = {"CAST":"sequence_set"}
+    inputs = [Field("sequence_input", "Sequence"), Field("index", "DimensionalIndex"), Field("element", "Any")]
+    outputs = [Field("sequence_output", "Sequence")]
+    shorthand = "sequence_set"
+    documentation = ""
+
+class Sequence_concatenate(object):
+    source_language_name = {"CAST":"concatenate"}
     inputs = [Field("sequence_inputs", "Sequence", True)]
     outputs = [Field("sequence_output", "Sequence")]
     shorthand = ""
     documentation = ""
 
     def exec(*sequence_inputs : Sequence) -> Sequence:
-        if isinstance(list(sequence_inputs)[0], numpy.ndarray):
-            return Sequence_concatenate.Array_concatenate()
-        elif isinstance(list(sequence_inputs)[0], List):
-            return Sequence_concatenate.List_concatenate()
-        elif isinstance(list(sequence_inputs)[0], Tuple):
-            return Sequence_concatenate.Tuple_concatenate()
-        else:
-            # Range does not support concatenate, so this is a placeholde
-            pass
+        # TODO: How do we handle type checking, whose responsibility should it be?
+        assert type(sequence_inputs[0] != range) # Range type doesn't support concatenation 
+        assert all(isinstance(sequence, type(sequence_inputs[0])) for sequence in sequence_inputs) # Cannot concatenate sequences of different types
 
-    def List_concatenate(*list_inputs: List) -> List:
-        return sum(list_inputs, [])
-    def Array_concatenate(*array_inputs: numpy.ndarray) -> numpy.ndarray:
+        if isinstance(sequence_inputs[0], numpy.ndarray):
+            Sequence_concatenate.Array_concatenate(sequence_inputs)
+        else:
+            return type(sequence_inputs[0])(itertools.chain.from_iterable(sequence_inputs))
+
+    def Array_concatenate(array_inputs: Tuple[numpy.ndarray, ...]) -> numpy.ndarray:
         return numpy.concatenate(array_inputs)
-    def Tuple_concatenate(*tuple_inputs: Tuple) -> Tuple:
-        return sum(tuple_inputs, ())
+
         
 
 class Sequence_replicate(object):
-    source_language_name = {}
+    source_language_name = {"CAST":"replicate"}
     inputs = [Field("sequence_input", "Sequence"), Field("count", "Integer") ]
     outputs = [Field("sequence_output", "Sequence")]
     shorthand = ""
     documentation = ""
 
     def exec(sequence_input: Sequence, count: int) -> Sequence:
-        if isinstance(sequence_input, List):
-            return Sequence_replicate.List_replicate(sequence_input, count)
-        elif isinstance(sequence_input, numpy.ndarray):
+        assert type(sequence_input != range)
+        if isinstance(sequence_input, numpy.ndarray):
             return Sequence_replicate.Array_replicate(sequence_input, count)
+        else:
+            return sequence_input*count
     
     def Array_replicate(array_input: numpy.ndarray, count: int) -> numpy.ndarray:
         return numpy.tile(array_input, count)
 
-
-
-class List_replicate(object):
-    source_language_name = {}
-    inputs = [Field("list_input", "List"), Field("count", "Integer") ]
-    outputs = [Field("list_output", "List")]
-    shorthand = ""
-    documentation = ""
-
-    def exec(list_input: List, count: int) -> List:
-        return [list_input]*count
    
-class List_length(object):
-    source_language_name = {}
-    inputs = [Field("list_input", "List")]
+class Sequence_length(object):
+    source_language_name = {"CAST": "length"}
+    inputs = [Field("sequence_input", "Sequence")]
     outputs = [Field("length", "Integer")]
     shorthand = ""
     documentation = ""
 
-    def exec(list_input: List) -> int:
-        return len(list_input)
+    def exec(sequence_input: Sequence) -> int:
+        return len(sequence_input)
 
-class List_min(object):
-    source_language_name = {}
-    inputs = [Field("list_input", "List")]
+class Sequence_min(object):
+    source_language_name = {"CAST": "min"}
+    inputs = [Field("sequence_input", "Sequence")]
     outputs = [Field("minimum", "Any")]
     shorthand = ""
     documentation = ""
 
-    def exec(list_input: List) -> Any:
-        return min(list_input)
+    def exec(sequence_input: Sequence) -> Any:
+        return min(list(sequence_input))
 
-class List_max(object):
-    source_language_name = {}
-    inputs = [Field("list_input", "List")]
+class Sequence_max(object):
+    source_language_name = {"CAST": "max"}
+    inputs = [Field("sequence_input", "Sequence")]
     outputs = [Field("maximum", "Any")]
     shorthand = ""
     documentation = ""
 
-    def exec(list_input: List) -> Any:
-        return max(list_input)
+    def exec(sequence_input: Sequence) -> Any:
+        return max(list(sequence_input))
 
-class List_count(object):
-    source_language_name = {}
-    inputs = [Field("list_input", "List"), Field("element", "Any")]
+class Sequence_count(object):
+    source_language_name = {"CAST": "count"}
+    inputs = [Field("sequence_input", "Sequence"), Field("element", "Any")]
     outputs = [Field("count", "Integer")]
     shorthand = ""
     documentation = ""
 
-    def exec(list_input: List, element: Any) -> Any:
-        return list_input.count(element)
+    def exec(sequence_input: Sequence, element: Any) -> Any:
+        return list(sequence_input).count(element)
 
-class List_index(object):
-    source_language_name = {}
+class Sequence_index(object):
+    source_language_name = {"CAST": "index"}
     inputs = [Field("list_input", "List"), Field("element", "Any")]
     outputs = [Field("index", "Integer")]
     shorthand = ""
     documentation = ""
 
     def exec(list_input: List, element: Any) -> Any:
-        return list_input.index(element)
+        return list(list_input).index(element)

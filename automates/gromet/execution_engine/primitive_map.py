@@ -87,5 +87,5 @@ for class_name, class_obj in primitive_ops:
                 cast_primitive_dict[class_obj.source_language_name["CAST"]] = class_obj
   
 primitive_map = {"Python": python_primitive_dict, "GCC": gcc_primitive_dict, "CAST": cast_primitive_dict}
-print(primitive_map["CAST"])
+
 
