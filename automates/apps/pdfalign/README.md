@@ -91,7 +91,7 @@ If you instead use virtualenvwrapper, do:
 Once the virtual environment is activated, then in this directory, run the
 following commands to install the pdfminer package:
 
-    pip install -e git+ssh://git@github.com/ml4ai/pdfminer.six.git#egg=pdfminer.six
+    pip install -e git+https://github.com/ml4ai/pdfminer.six.git#egg=pdfminer.six
 
 #### 2.1.5 Installing and launching pdfalign
 
