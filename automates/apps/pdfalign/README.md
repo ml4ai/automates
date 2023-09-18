@@ -1,4 +1,4 @@
-# pdfalign annotation tool 
+# pdfalign annotation tool
 
 PDFAlign is a tool to facilitate annotation of mathematical formula identifiers
 in scientific papers and link them to their textual descriptions.
@@ -100,8 +100,8 @@ methods below.
 
 ##### 2.1.5.1 Using curl
 
-You can either just get the `pdfalign` script and its dependencies using 
-  
+You can either just get the `pdfalign` script and its dependencies using
+
     pip install lxml webcolors pdf2image tqdm
     curl -O https://raw.githubusercontent.com/ml4ai/automates/master/pdfalign/pdfalign.py
 
@@ -112,9 +112,9 @@ Then, launch it with:
 ##### 2.1.5.2 Installing pdfalign as a package
 
 Or install it as a package within the virtual environment, with an 'entry point'.
-  
+
     git clone https://github.com/ml4ai/automates
-    cd automates/pdfalign
+    cd automates/automates/apps/pdfalign
     pip install -e .
 
 Then, launch it with:
